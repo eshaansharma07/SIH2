@@ -479,8 +479,9 @@ export function getLocalCues(tradeType, district) {
     avgInventoryTurnoverDays: 18,
     avgDigitalSharePercent: 31,
     festivalCues: [
-      { festival: "Navratri & Dussehra", timing: "Next 2 weeks", demandSurge: "+35%", priorityItems: "Sabudana, Kuttu flour, Sendha namak, Mustard oil, Ghee, Pooja brass items" },
-      { festival: "Diwali & Dhanteras", timing: "In 3 weeks", demandSurge: "+45%", priorityItems: "Dry fruits gift boxes, Sugar, Besan, Diyas, Mithaai ingredients, Cooking oils" }
+      { festival: "Navratri & Dussehra", timing: "Early October (Oct 3–12)", demandSurge: "+35%", priorityItems: "Sabudana, Kuttu flour, Sendha namak, Mustard oil, Ghee, Pooja brass items" },
+      { festival: "Diwali & Dhanteras", timing: "Late October (Oct 29 – Nov 1)", demandSurge: "+48%", priorityItems: "Dry fruits gift boxes, Sugar, Besan, Diyas, Mithaai ingredients, Cooking oils" },
+      { festival: "Kharif Paddy Harvest Payout", timing: "Mid-November", demandSurge: "+28%", priorityItems: "Bulk 50kg grain bags, Tea packs, Higher value branded goods" }
     ]
   };
 }

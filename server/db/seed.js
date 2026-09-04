@@ -245,9 +245,9 @@ export function seedDatabase() {
     18,
     31.5,
     JSON.stringify([
-      { festival: "Navratri & Dussehra", timing: "Next 2 weeks", demandSurge: "+35%", priorityItems: "Sabudana, Kuttu flour, Sendha namak, Mustard oil, Ghee, Pooja brass items" },
-      { festival: "Diwali & Dhanteras", timing: "In 3 weeks", demandSurge: "+45%", priorityItems: "Dry fruits gift boxes, Sugar, Besan, Diyas, Mithaai ingredients, Cooking oils" },
-      { festival: "Kharif Paddy Harvest Payout", timing: "Early November", demandSurge: "+28%", priorityItems: "Bulk 50kg grain bags, Tea packs, Higher value branded goods" }
+      { festival: "Navratri & Dussehra", timing: "Early October (Oct 3–12)", demandSurge: "+35%", priorityItems: "Sabudana, Kuttu flour, Sendha namak, Mustard oil, Ghee, Pooja brass items" },
+      { festival: "Diwali & Dhanteras", timing: "Late October (Oct 29 – Nov 1)", demandSurge: "+48%", priorityItems: "Dry fruits gift boxes, Sugar, Besan, Diyas, Mithaai ingredients, Cooking oils" },
+      { festival: "Kharif Paddy Harvest Payout", timing: "Mid-November", demandSurge: "+28%", priorityItems: "Bulk 50kg grain bags, Tea packs, Higher value branded goods" }
     ])
   );
 
@@ -261,8 +261,8 @@ export function seedDatabase() {
     12,
     24.0,
     JSON.stringify([
-      { festival: "Lagan & Shaadi Season", timing: "Mid November", demandSurge: "+80%", priorityItems: "Festive Kurta suits, Blouse materials, Thread laces, Fall piko supplies" },
-      { festival: "Diwali New Clothes", timing: "In 3 weeks", demandSurge: "+60%", priorityItems: "School uniforms and festive children wear alteration" }
+      { festival: "Diwali New Clothes", timing: "Late October", demandSurge: "+60%", priorityItems: "Festive children wear, kurta pajamas & school alterations" },
+      { festival: "Lagan & Shaadi Season", timing: "Mid-to-Late November", demandSurge: "+80%", priorityItems: "Festive Kurta suits, Blouse materials, Thread laces, Fall piko supplies" }
     ])
   );
 
@@ -276,8 +276,8 @@ export function seedDatabase() {
     25,
     40.0,
     JSON.stringify([
-      { festival: "Diwali Earthen Crafts", timing: "In 3 weeks", demandSurge: "+110%", priorityItems: "Terracotta diyas, Clay Lakshmi-Ganesh idols, Handcrafted torans" },
-      { festival: "UP ODOP Melas", timing: "Winter", demandSurge: "+50%", priorityItems: "Export quality indigenous pottery & wood crafts" }
+      { festival: "Diwali Earthen Crafts & Diyas", timing: "Late October (Oct 29 – Nov 1)", demandSurge: "+110%", priorityItems: "Terracotta diyas, Clay Lakshmi-Ganesh idols, Handcrafted torans" },
+      { festival: "UP ODOP Melas & Winter Fairs", timing: "December", demandSurge: "+50%", priorityItems: "Export quality indigenous pottery & wood crafts" }
     ])
   );
 
