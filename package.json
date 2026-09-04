@@ -1,0 +1,12 @@
+{
+  "name": "vyapaar-saathi",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Vyapaar Saathi — Hyper-Local Business Advisory and Financial Structuring Assistant for Rural Micro-Entrepreneurs",
+  "scripts": {
+    "start:server": "cd server && npm start",
+    "start:client": "cd client && npm run dev",
+    "seed": "cd server && npm run seed"
+  },
+  "keywords": ["rural-fintech", "micro-entrepreneurs", "kirana", "sih", "ai-advisory", "credit-scoring"]
+}

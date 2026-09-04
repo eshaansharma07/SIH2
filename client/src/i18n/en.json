@@ -1,0 +1,90 @@
+{
+  "appName": "Vyapaar Saathi",
+  "appTagline": "AI Rural Business & Credit Advisor",
+  "hindiAppName": "व्यापार साथी",
+  "nav": {
+    "dashboard": "Dashboard",
+    "advisor": "Advisor Saathi",
+    "cashflow": "Bahi-Khata",
+    "credit": "Credit Score",
+    "schemes": "Govt Schemes",
+    "dossier": "Bank Dossier",
+    "profile": "Shop Profile"
+  },
+  "dashboard": {
+    "welcome": "Namaste",
+    "welcomeSub": "Here is today's business radar and financial structuring health for your shop.",
+    "loadDemo": "Load Ramesh Demo",
+    "demoActive": "Ramesh's Kirana (Demo Active)",
+    "localDemandTitle": "What's Happening Near You",
+    "localDemandSubtitle": "Hyper-local festival & harvest demand radar for Balrampur district",
+    "creditScoreTitle": "Alternative Credit Score",
+    "viewBreakdown": "View Factor Breakdown",
+    "financialSummaryTitle": "4-Month Cash Flow Snapshot (Baseline, Monsoon Dip & Festival Surge)",
+    "totalSales": "Total Sales Recorded",
+    "netSurplus": "Net Cash Surplus",
+    "pendingUdhaar": "Pending Customer Udhaar",
+    "digitalShare": "Digital (UPI) Share",
+    "peerBenchTitle": "Balrampur District Peer Reality Check",
+    "peerBenchSub": "Anonymized comparison with similar rural kirana stores",
+    "quickAskTitle": "Ask Your Advisor Saathi",
+    "logSaleBtn": "Log Today's Sale"
+  },
+  "advisor": {
+    "title": "Hyper-Local Business Advisor",
+    "subtitle": "Grounded in your shop's actual cash flow, village location, and festival calendar.",
+    "placeholder": "Ask in plain language (e.g., Should I buy extra mustard oil for Diwali?)...",
+    "send": "Ask Saathi",
+    "groundedBadge": "Grounded in Your Real Shop Data",
+    "samplePromptsTitle": "Suggested Rural Inquiries",
+    "dataContext": "Inspect Data Fed to AI",
+    "hideContext": "Hide Context"
+  },
+  "cashflow": {
+    "title": "Bahi-Khata & Cash Flow Ledger",
+    "subtitle": "Simple numeric touch logging designed for rural micro-entrepreneurs. Minimal typing.",
+    "newEntryBtn": "+ Record Transaction",
+    "tabAll": "All Transactions",
+    "tabUdhaar": "Customer Udhaar Book",
+    "totalIncome": "Total Recorded Sales",
+    "totalExpense": "Stock & Expenses",
+    "netProfit": "Net Surplus",
+    "customer": "Customer / Vendor",
+    "amount": "Amount",
+    "type": "Type",
+    "mode": "Mode",
+    "date": "Date",
+    "reminderSent": "WhatsApp payment reminder simulated!"
+  },
+  "credit": {
+    "title": "Vikasit Saathi Credit Score",
+    "subtitle": "Transparent, explainable alternative credit built from your daily transaction discipline — not a black box.",
+    "scoreLabel": "Alternative Credit Score",
+    "factorsTitle": "Explainable Scoring Pillars",
+    "simulatorTitle": "Interactive Score Simulator",
+    "simulatorSub": "See how practical actions improve your bankability score",
+    "checklistTitle": "Bank Loan Readiness Checklist",
+    "checklistSub": "Milestones required by bank managers before loan sanction"
+  },
+  "schemes": {
+    "title": "Government Schemes & Loan Matcher",
+    "subtitle": "Rule-based matching against real Indian schemes with zero-collateral options & subsidies.",
+    "tabMatched": "Your Ranked Matches",
+    "tabLibrary": "All Schemes Directory",
+    "whyQualify": "Why You Qualify",
+    "requiredDocs": "Required Documents",
+    "howToApply": "How to Apply (Next Steps)",
+    "dossierBtn": "Generate Bankable Loan Dossier",
+    "maxLoan": "Max Loan",
+    "interestRate": "Interest Rate",
+    "subsidy": "Govt Subsidy",
+    "collateral": "Collateral Requirement"
+  },
+  "dossier": {
+    "title": "Bankable Financial Statement",
+    "subtitle": "Official credit readiness dossier formatted for Bank Managers and Priority Sector Lending (PSL).",
+    "printBtn": "Print / Save PDF Dossier",
+    "certifiedBadge": "Vyapaar Saathi Verified Statement",
+    "forBranch": "For Branch Manager & Credit Appraiser Review"
+  }
+}

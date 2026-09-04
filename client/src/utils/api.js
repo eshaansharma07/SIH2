@@ -1,0 +1,61 @@
+const BASE_URL = '/api';
+
+async function request(endpoint, options = {}) {
+  const url = `${BASE_URL}${endpoint}`;
+  const defaultHeaders = {
+    'Content-Type': 'application/json',
+  };
+
+  const response = await fetch(url, {
+    ...options,
+    headers: {
+      ...defaultHeaders,
+      ...options.headers,
+    },
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.json().catch(() => ({}));
+    throw new Error(errorBody.error || `HTTP error ${response.status}`);
+  }
+
+  return response.json();
+}
+
+export const api = {
+  // Shop profile
+  getShopCurrent: (shopId = 'ramesh-kirana') => request(`/shop/current?shopId=${shopId}`),
+  setupShop: (data) => request('/shop/setup', { method: 'POST', body: JSON.stringify(data) }),
+  resetDemoShop: () => request('/shop/reset-demo', { method: 'POST' }),
+  updateShop: (id, data) => request(`/shop/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+
+  // Transactions & Bahi-Khata
+  getTransactions: (shopId = 'ramesh-kirana', type = '', limit = 50) => 
+    request(`/transactions?shopId=${shopId}${type ? `&type=${type}` : ''}&limit=${limit}`),
+  createTransaction: (data) => request('/transactions', { method: 'POST', body: JSON.stringify(data) }),
+  getTransactionSummary: (shopId = 'ramesh-kirana') => request(`/transactions/summary?shopId=${shopId}`),
+  getUdhaarLedger: (shopId = 'ramesh-kirana') => request(`/transactions/udhaar-ledger?shopId=${shopId}`),
+
+  // Credit Scoring
+  getCreditScore: (shopId = 'ramesh-kirana') => request(`/credit-score?shopId=${shopId}`),
+  simulateCreditScore: (payload) => request('/credit-score/simulate', { method: 'POST', body: JSON.stringify(payload) }),
+
+  // Schemes
+  getMatchedSchemes: (shopId = 'ramesh-kirana') => request(`/schemes/match?shopId=${shopId}`),
+  getAllSchemes: (category = '', maxAmount = '') => {
+    let q = '';
+    if (category) q += `?category=${encodeURIComponent(category)}`;
+    if (maxAmount) q += `${q ? '&' : '?'}maxAmount=${maxAmount}`;
+    return request(`/schemes${q}`);
+  },
+  getSchemeDetail: (id) => request(`/schemes/${id}`),
+
+  // Advisory
+  chatAdvisor: (shopId = 'ramesh-kirana', question) => 
+    request('/advisor/chat', { method: 'POST', body: JSON.stringify({ shopId, question }) }),
+  getAdvisorHistory: (shopId = 'ramesh-kirana') => request(`/advisor/history?shopId=${shopId}`),
+  getSeasonalCues: (shopId = 'ramesh-kirana') => request(`/advisor/cues?shopId=${shopId}`),
+
+  // Bank Dossier
+  generateDossier: (shopId = 'ramesh-kirana') => request(`/dossier/generate?shopId=${shopId}`),
+};
