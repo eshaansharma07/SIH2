@@ -12,6 +12,7 @@ export function NumericKeypadModal({ isOpen, onClose, onTransactionSaved, shopId
   const [customerName, setCustomerName] = useState('');
   const [loading, setLoading] = useState(false);
   const [successToast, setSuccessToast] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   if (!isOpen) return null;
 
@@ -32,8 +33,6 @@ export function NumericKeypadModal({ isOpen, onClose, onTransactionSaved, shopId
   const handleClear = () => {
     setAmountStr('');
   };
-
-  const [errorMessage, setErrorMessage] = useState('');
 
   const handleSubmit = async () => {
     const amount = Number(amountStr);
