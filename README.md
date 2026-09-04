@@ -4,16 +4,20 @@
 ### *"Your Rural Business Companion & Financial Structuring Guide"*
 **Smart India Hackathon (SIH) — Problem Statement 26091**
 
+[![Vercel Deployment](https://img.shields.io/badge/Live_Demo-vyapaar--saathi--nine.vercel.app-000000.svg?logo=vercel)](https://vyapaar-saathi-nine.vercel.app)
 [![React](https://img.shields.io/badge/Frontend-React_18_%2B_TailwindCSS-E05D44.svg)](https://reactjs.org/)
 [![Node.js](https://img.shields.io/badge/Backend-Node.js_%2B_Express-339933.svg)](https://nodejs.org/)
 [![SQLite](https://img.shields.io/badge/Database-SQLite_WAL-003B57.svg)](https://www.sqlite.org/)
 [![MongoDB Atlas](https://img.shields.io/badge/Cloud_Sync-MongoDB_Atlas-47A248.svg)](https://www.mongodb.com/atlas)
 [![Google Gemini API](https://img.shields.io/badge/AI_Engine-Gemini_2.5_Flash-4285F4.svg)](https://aistudio.google.com/)
+[![Google Calendar API](https://img.shields.io/badge/Calendar-Google_Calendar_API-4285F4.svg)](https://calendar.google.com/)
 [![i18n](https://img.shields.io/badge/Languages-Hindi_%7C_English_%2B_8_More-C15324.svg)](#-multilingual-ready-architecture-i18n)
 
 <p align="center">
   <em>An AI-driven hyper-local business advisory and transparent alternative credit structuring assistant built specifically for India's 63+ million rural micro-entrepreneurs.</em>
 </p>
+
+### 🌐 **Live Production App:** [https://vyapaar-saathi-nine.vercel.app](https://vyapaar-saathi-nine.vercel.app)
 
 [Live Prototype Flow](#-end-to-end-live-demo-walkthrough) • [Problem & Target User](#-problem-context--target-user) • [Core Modules](#-core-modules) • [Design System](#-authentic-indian-village-bazaar-design-system) • [Quick Start](#-quick-start-instructions)
 
