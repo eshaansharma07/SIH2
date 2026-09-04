@@ -21,9 +21,12 @@ async function request(endpoint, options = {}) {
 
     return response.json();
   } catch (err) {
-    // If the proxied /api call fails (e.g. Vite proxy EPERM or socket drop),
-    // automatically failover to direct backend at http://127.0.0.1:3001/api
-    if (API_BASE_URL === '/api') {
+    // If the proxied /api call fails during local dev (e.g. Vite proxy socket drop),
+    // failover to direct local backend at http://127.0.0.1:3001/api
+    const isLocalhost = typeof window !== 'undefined' && 
+      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+
+    if (API_BASE_URL === '/api' && isLocalhost) {
       try {
         const directRes = await fetch(`http://127.0.0.1:3001/api${endpoint}`, {
           ...options,
@@ -33,7 +36,7 @@ async function request(endpoint, options = {}) {
           },
         });
         if (directRes.ok) {
-          API_BASE_URL = 'http://127.0.0.1:3001/api'; // switch permanently for this session
+          API_BASE_URL = 'http://127.0.0.1:3001/api';
           return directRes.json();
         }
       } catch (_) {

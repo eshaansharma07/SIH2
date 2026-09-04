@@ -2,11 +2,20 @@
   "name": "vyapaar-saathi",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "description": "Vyapaar Saathi — Hyper-Local Business Advisory and Financial Structuring Assistant for Rural Micro-Entrepreneurs",
   "scripts": {
+    "build": "cd client && npm install && npm run build",
     "start:server": "cd server && npm start",
     "start:client": "cd client && npm run dev",
     "seed": "cd server && npm run seed"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.8.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "mongodb": "^7.6.0"
   },
   "keywords": ["rural-fintech", "micro-entrepreneurs", "kirana", "sih", "ai-advisory", "credit-scoring"]
 }

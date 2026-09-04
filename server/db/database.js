@@ -1,15 +1,34 @@
 import Database from 'better-sqlite3';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const dbPath = path.join(__dirname, 'vyapaar_saathi.db');
+let dbPath = path.join(__dirname, 'vyapaar_saathi.db');
+
+// Handle Vercel / AWS Lambda read-only filesystem by using /tmp
+if (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME) {
+  const tmpPath = path.join('/tmp', 'vyapaar_saathi.db');
+  try {
+    if (!fs.existsSync(tmpPath) && fs.existsSync(dbPath)) {
+      fs.copyFileSync(dbPath, tmpPath);
+    }
+  } catch (err) {
+    console.warn('[Database] Copy to /tmp notice:', err.message);
+  }
+  dbPath = tmpPath;
+}
+
 const db = new Database(dbPath);
 
-// Enable WAL mode for better concurrency and performance
-db.pragma('journal_mode = WAL');
+// Enable WAL mode if supported
+try {
+  db.pragma('journal_mode = WAL');
+} catch (e) {
+  // Ignore in environments where WAL is restricted
+}
 
 // Initialize tables
 db.exec(`

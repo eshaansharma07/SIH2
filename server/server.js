@@ -20,7 +20,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Health check
-app.get('/api/health', (req, res) => {
+app.get(['/api/health', '/health'], (req, res) => {
   res.json({
     status: 'ok',
     service: 'Vyapaar Saathi API',
@@ -29,17 +29,24 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Mount Routes
-app.use('/api/shop', shopRoutes);
-app.use('/api/transactions', transactionRoutes);
-app.use('/api/credit-score', creditRoutes);
-app.use('/api/schemes', schemeRoutes);
-app.use('/api/advisor', advisoryRoutes);
-app.use('/api/dossier', dossierRoutes);
+// Mount Routes on both /api and root paths for seamless serverless rewrite handling
+const routeMap = [
+  ['/shop', shopRoutes],
+  ['/transactions', transactionRoutes],
+  ['/credit-score', creditRoutes],
+  ['/schemes', schemeRoutes],
+  ['/advisor', advisoryRoutes],
+  ['/dossier', dossierRoutes]
+];
+
+for (const [routePath, router] of routeMap) {
+  app.use(`/api${routePath}`, router);
+  app.use(routePath, router);
+}
 
 // Root fallback
 app.get('/', (req, res) => {
-  res.send('Vyapaar Saathi API Server is running on port ' + PORT);
+  res.send('Vyapaar Saathi API Server is running');
 });
 
 // Auto seed if running fresh
@@ -49,6 +56,10 @@ try {
   console.log('Seed check:', e.message);
 }
 
-app.listen(PORT, () => {
-  console.log(`🚀 Vyapaar Saathi Backend Server running at http://localhost:${PORT}`);
-});
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`🚀 Vyapaar Saathi Backend Server running at http://localhost:${PORT}`);
+  });
+}
+
+export default app;
