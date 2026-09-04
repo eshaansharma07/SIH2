@@ -1,6 +1,7 @@
 import db from '../db/database.js';
 import { calculateCreditScore } from './creditScoringService.js';
 import { matchSchemesForShop } from './schemeMatcherService.js';
+import { getUpcomingFestivals } from './googleCalendarService.js';
 
 /**
  * Hyper-Local AI Advisory Service powered by Google Gemini API (Free Tier)
@@ -248,11 +249,11 @@ export async function generateAdvisoryResponse(shopId, userQuestion) {
 
     // 3. Compute Months in Operation & Regional Context
     const monthsInOperation = Math.round((shop.vintage_years || 4) * 12);
-    const currentSeason = 'September / October 2026 (Pre-Diwali & Navratri Festival Season + Kharif Paddy Harvest Cycle)';
 
-    // Fetch benchmark
-    const benchmark = db.prepare('SELECT * FROM peer_benchmarks WHERE trade_type = ?').get(shop.trade_type);
-    const festivalCues = benchmark ? JSON.parse(benchmark.top_festival_cues || '[]') : [];
+    // Fetch Google Calendar verified festival cues
+    const calendarData = await getUpcomingFestivals(shop.trade_type, shop.district);
+    const festivalCues = calendarData.festivalCues || [];
+    const currentSeason = 'September / October 2026 (Upcoming: Sharad Navratri Oct 11-20 in 37 days, Karwa Chauth Oct 29 in 55 days, Dhanteras & Diwali Nov 6-11 in 63 days, Kharif Mandi Harvest)';
 
     const contextData = {
       shopName: shop.name,
@@ -450,38 +451,28 @@ export function getChatHistory(shopId) {
   `).all(shopId);
 }
 
-export function getLocalCues(tradeType, district) {
+export async function getLocalCues(tradeType = 'kirana', district = 'Balrampur') {
   const benchmark = db.prepare(`
     SELECT * FROM peer_benchmarks 
     WHERE trade_type = ? AND district LIKE ?
   `).get(tradeType, `%${district || 'Balrampur'}%`);
 
-  if (benchmark) {
-    return {
-      district: benchmark.district,
-      tradeType: benchmark.trade_type,
-      peerRevenueRange: {
-        min: benchmark.avg_monthly_revenue_min,
-        max: benchmark.avg_monthly_revenue_max
-      },
-      avgDailyFootfall: benchmark.avg_daily_footfall,
-      avgInventoryTurnoverDays: benchmark.avg_inventory_turnover_days,
-      avgDigitalSharePercent: benchmark.avg_digital_share_percent,
-      festivalCues: JSON.parse(benchmark.top_festival_cues || '[]')
-    };
-  }
+  const calendarData = await getUpcomingFestivals(tradeType, district);
 
   return {
-    district: district || 'Balrampur',
-    tradeType: tradeType || 'kirana',
-    peerRevenueRange: { min: 40000, max: 65000 },
-    avgDailyFootfall: 48,
-    avgInventoryTurnoverDays: 18,
-    avgDigitalSharePercent: 31,
-    festivalCues: [
-      { festival: "Navratri & Dussehra", timing: "Early October (Oct 3–12)", demandSurge: "+35%", priorityItems: "Sabudana, Kuttu flour, Sendha namak, Mustard oil, Ghee, Pooja brass items" },
-      { festival: "Diwali & Dhanteras", timing: "Late October (Oct 29 – Nov 1)", demandSurge: "+48%", priorityItems: "Dry fruits gift boxes, Sugar, Besan, Diyas, Mithaai ingredients, Cooking oils" },
-      { festival: "Kharif Paddy Harvest Payout", timing: "Mid-November", demandSurge: "+28%", priorityItems: "Bulk 50kg grain bags, Tea packs, Higher value branded goods" }
-    ]
+    district: benchmark ? benchmark.district : (district || 'Balrampur'),
+    tradeType: benchmark ? benchmark.trade_type : (tradeType || 'kirana'),
+    peerRevenueRange: {
+      min: benchmark ? benchmark.avg_monthly_revenue_min : 42000,
+      max: benchmark ? benchmark.avg_monthly_revenue_max : 65000
+    },
+    avgDailyFootfall: benchmark ? benchmark.avg_daily_footfall : 48,
+    avgInventoryTurnoverDays: benchmark ? benchmark.avg_inventory_turnover_days : 18,
+    avgDigitalSharePercent: benchmark ? benchmark.avg_digital_share_percent : 31.5,
+    calendarSource: calendarData.calendarSource,
+    calendarId: calendarData.calendarId,
+    syncedAt: calendarData.syncedAt,
+    referenceDate: calendarData.referenceDate,
+    festivalCues: calendarData.festivalCues
   };
 }

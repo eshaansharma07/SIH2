@@ -31,8 +31,8 @@ router.get('/history', (req, res) => {
   }
 });
 
-// Hyper-Local Seasonal Demand Cues & District Peer Benchmarks
-router.get('/cues', (req, res) => {
+// Hyper-Local Seasonal Demand Cues & District Peer Benchmarks (Powered by Google Calendar)
+router.get('/cues', async (req, res) => {
   try {
     const shopId = req.query.shopId || 'ramesh-kirana';
     const shop = db.prepare('SELECT * FROM shops WHERE id = ?').get(shopId);
@@ -40,7 +40,7 @@ router.get('/cues', (req, res) => {
     const tradeType = shop ? shop.trade_type : 'kirana';
     const district = shop ? shop.district : 'Balrampur';
 
-    const cuesData = getLocalCues(tradeType, district);
+    const cuesData = await getLocalCues(tradeType, district);
     res.json({ success: true, data: cuesData });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });

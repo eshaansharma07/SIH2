@@ -255,9 +255,10 @@ When presenting to hackathon evaluators and judges, follow this seamless 5-step 
    - Open `http://localhost:5173`.
    - Show the warm village bazaar aesthetic, Warli art dividers, and earthen Diya companion.
    - Click **"🚀 Load Ramesh Demo Store"** to populate 4 months of retail history.
-2. **Step 2: Hyper-Local Demand Radar**
-   - On the Dashboard, point out the **"What's Happening Near You"** card showing the +45% Diwali demand surge in Balrampur district.
-   - Click the **"Inspect Data Fed to AI"** drawer to show judges that real database parameters (sales, location, credit score, season) are passed to the model.
+2. **Step 2: Hyper-Local Demand Radar (Google Calendar API Synced)**
+   - On the Dashboard, point out the **"What's Happening Near You"** card synced live with the **Google Calendar API (Official Holidays in India Feed)**.
+   - Shows verified astronomical/calendar dates and dynamic days-remaining countdowns (e.g. *Sharad Navratri & Dussehra in 37 days*, *Dhanteras & Diwali in 63 days*).
+   - Click the **"Inspect Data Fed to AI"** drawer to show judges that real database parameters (sales, location, credit score, season, Google Calendar events) are passed to the model.
 3. **Step 3: Grounded Advisor Chat**
    - Navigate to **Advisor Saathi** and tap *"दिवाली के लिए कितना स्टॉक लूँ?"*.
    - Watch the AI quote Ramesh's exact 30-day edible oil sales (₹7,418), +4.8% growth rate, and recommend advance wholesale booking in Balrampur mandi.

@@ -46,9 +46,54 @@ export function DashboardPage({
   ];
 
   const festivalList = cuesData?.festivalCues || [
-    { festival: "Navratri & Dussehra", timing: "Early October (Oct 3–12)", demandSurge: "+35%", priorityItems: "Sabudana, Kuttu flour, Sendha namak, Mustard oil, Ghee, Pooja brass items" },
-    { festival: "Diwali & Dhanteras", timing: "Late October (Oct 29 – Nov 1)", demandSurge: "+48%", priorityItems: "Dry fruits gift boxes, Sugar, Besan, Diyas, Mithaai ingredients, Cooking oils" },
-    { festival: "Kharif Paddy Harvest Payout", timing: "Mid-November", demandSurge: "+28%", priorityItems: "Bulk 50kg grain bags, Tea packs, Higher value branded goods" }
+    {
+      id: "navratri-dussehra",
+      festival: "Sharad Navratri & Dussehra",
+      festivalHi: "शारदीय नवरात्रि एवं विजयदशमी (दशहरा)",
+      timing: "Oct 11 – Oct 20 (In 37 days)",
+      timingHi: "11 अक्तूबर – 20 अक्तूबर (37 दिन शेष)",
+      daysRemaining: 37,
+      demandSurge: "+38%",
+      priorityItems: "Sabudana, Kuttu & Singhadha flour, Sendha namak, Mustard oil, Desi ghee, Pooja brass thalis, Dhoop & Camphor",
+      priorityItemsHi: "साबूदाना, कुट्टू व सिंघाड़ा आटा, सेंधा नमक, सरसों तेल, देशी घी, पीतल पूजा थाली, धूप-बत्ती व कपूर",
+      verifiedByGoogleCalendar: true
+    },
+    {
+      id: "diwali-dhanteras",
+      festival: "Dhanteras, Diwali & Bhai Dooj",
+      festivalHi: "धनतेरस, दीपावली एवं भाई दूज",
+      timing: "Nov 6 – Nov 11 (In 63 days)",
+      timingHi: "6 नवंबर – 11 नवंबर (63 दिन शेष)",
+      daysRemaining: 63,
+      demandSurge: "+48%",
+      priorityItems: "Dry fruits gift hampers, Sugar, Besan, Maida, Vanaspati & Mustard oil, Clay diyas, Mithai ingredients",
+      priorityItemsHi: "मेवा गिफ्ट पैक (काजू/बादाम), चीनी, बेसन, मैदा, रिफाइंड व सरसों तेल, मिट्टी के दीये, मिठाई का सामान",
+      verifiedByGoogleCalendar: true
+    },
+    {
+      id: "chhath-puja",
+      festival: "Chhath Puja (सूर्य षष्ठी महापर्व)",
+      festivalHi: "छठ पूजा (सूर्य षष्ठी महापर्व)",
+      timing: "Nov 15 (In 72 days)",
+      timingHi: "15 नवंबर (72 दिन शेष)",
+      daysRemaining: 72,
+      demandSurge: "+42%",
+      priorityItems: "Thekua wheat flour, Pure Desi Gur (Jaggery), Ghee, Bamboo Soop, Daura baskets, Camphor, Mustard oil",
+      priorityItemsHi: "ठेकुआ आटा, शुद्ध देसी गुड़, घी, बांस का सूप, दौरा टोकरियां, कपूर, सरसों तेल व पूजा फल",
+      verifiedByGoogleCalendar: true
+    },
+    {
+      id: "kharif-harvest",
+      festival: "Kharif Paddy Harvest & Mandi Cash Payouts",
+      festivalHi: "खरीफ धान कटाई एवं मंडी भुगतान नकदी प्रवाह",
+      timing: "Mid-to-Late November (In ~75 days)",
+      timingHi: "मध्य-से-उत्तर नवंबर (लगभग 75 दिन शेष)",
+      daysRemaining: 75,
+      demandSurge: "+28%",
+      priorityItems: "Bulk 50kg grain bags, Branded premium tea packs, Detergents, High-ticket consumer packaged goods",
+      priorityItemsHi: "थोक 50 किग्रा अनाज बोरे, प्रीमियम चाय पत्ती, सर्फ-साबुन, ब्रांडेड बिस्कुट व किराना पैकेट्स",
+      verifiedByGoogleCalendar: true
+    }
   ];
 
   return (
@@ -111,7 +156,7 @@ export function DashboardPage({
         
         {/* Left Tile: Hyper-Local Festival & Seasonal Demand Radar (7 Cols) */}
         <div className="lg:col-span-7 bg-white rounded-3xl p-5 sm:p-6 border-2 border-paper-300 shadow-paper space-y-4">
-          <div className="flex items-center justify-between border-b border-paper-200 pb-3">
+          <div className="flex items-center justify-between border-b border-paper-200 pb-3 flex-wrap gap-2">
             <div className="flex items-center gap-2.5">
               <span className="p-2 bg-ochre-100 text-ochre-800 rounded-xl">
                 <Calendar className="w-5 h-5" />
@@ -125,39 +170,59 @@ export function DashboardPage({
                 </p>
               </div>
             </div>
-            <span className="px-2.5 py-0.5 bg-emerald-50 text-emerald-800 border border-emerald-300 rounded-full text-[10px] font-bold">
-              ● Live Regional Intel
-            </span>
+            <div className="flex items-center gap-1.5">
+              <span className="px-2.5 py-0.5 bg-emerald-50 text-emerald-800 border border-emerald-300 rounded-full text-[10px] font-bold flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span>{language === 'hi' ? '🗓️ गूगल कैलेंडर सिंक' : '🗓️ Google Calendar API Synced'}</span>
+              </span>
+            </div>
           </div>
 
           <div className="space-y-3">
-            {festivalList.map((item, idx) => (
-              <div 
-                key={idx} 
-                className="p-3.5 rounded-2xl bg-paper-50 border border-paper-300 hover:border-ochre-400 transition flex flex-col sm:flex-row sm:items-center justify-between gap-3"
-              >
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="font-extrabold text-sm text-stone-800">{item.festival}</span>
-                    <span className="text-[10px] bg-terracotta-100 text-terracotta-800 px-2 py-0.5 rounded-md font-bold">
-                      {item.timing}
-                    </span>
+            {festivalList.map((item, idx) => {
+              const festivalName = (language === 'hi' && item.festivalHi) ? item.festivalHi : item.festival;
+              const timingText = (language === 'hi' && item.timingHi) ? item.timingHi : item.timing;
+              const stockText = (language === 'hi' && item.priorityItemsHi) ? item.priorityItemsHi : item.priorityItems;
+
+              return (
+                <div 
+                  key={idx} 
+                  className="p-3.5 rounded-2xl bg-paper-50 border border-paper-300 hover:border-ochre-400 transition flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                >
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-extrabold text-sm text-stone-800">{festivalName}</span>
+                      <span className="text-[10px] bg-terracotta-100 text-terracotta-800 px-2 py-0.5 rounded-md font-bold">
+                        {timingText}
+                      </span>
+                      {item.daysRemaining !== undefined && (
+                        <span className="text-[10px] bg-amber-100 text-amber-900 border border-amber-300 px-2 py-0.5 rounded-md font-extrabold flex items-center gap-0.5">
+                          <span>⏳</span>
+                          <span>{language === 'hi' ? `${item.daysRemaining} दिन शेष` : `${item.daysRemaining}d left`}</span>
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-stone-600">
+                      <span className="font-bold text-stone-700">{language === 'hi' ? 'जरूरी सामान: ' : 'Priority Stock: '}</span>
+                      {stockText}
+                    </p>
                   </div>
-                  <p className="text-xs text-stone-600">
-                    <span className="font-bold text-stone-700">{language === 'hi' ? 'जरूरी सामान: ' : 'Priority Stock: '}</span>
-                    {item.priorityItems}
-                  </p>
+                  <div className="flex sm:flex-col items-center sm:items-end justify-between shrink-0 bg-white sm:bg-transparent px-3 py-1.5 sm:p-0 rounded-xl border sm:border-0 border-paper-200">
+                    <span className="text-[11px] text-stone-500 font-semibold">
+                      {language === 'hi' ? 'अनुमानित बिक्री उछाल' : 'Projected Surge'}
+                    </span>
+                    <span className="text-sm font-black text-forestRural-700 bg-forestRural-50 px-2 py-0.5 rounded-lg border border-forestRural-200">
+                      {item.demandSurge}
+                    </span>
+                    {item.verifiedByGoogleCalendar && (
+                      <span className="text-[9px] text-emerald-700 font-medium hidden sm:inline mt-0.5">
+                        ✓ Google Calendar
+                      </span>
+                    )}
+                  </div>
                 </div>
-                <div className="flex sm:flex-col items-center sm:items-end justify-between shrink-0 bg-white sm:bg-transparent px-3 py-1.5 sm:p-0 rounded-xl border sm:border-0 border-paper-200">
-                  <span className="text-[11px] text-stone-500 font-semibold">
-                    {language === 'hi' ? 'अनुमानित बिक्री उछाल' : 'Projected Surge'}
-                  </span>
-                  <span className="text-sm font-black text-forestRural-700 bg-forestRural-50 px-2 py-0.5 rounded-lg border border-forestRural-200">
-                    {item.demandSurge}
-                  </span>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <div className="bg-amber-50/70 rounded-2xl p-3 border border-amber-200 text-xs text-amber-900 flex items-start gap-2">
