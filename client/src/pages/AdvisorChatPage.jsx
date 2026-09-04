@@ -223,7 +223,7 @@ export function AdvisorChatPage({ shop, initialPrompt = '', onPromptUsed }) {
                   {msg.source && (
                     <div className="mt-2 pt-1 border-t border-stone-200 text-[10px] text-stone-600 flex items-center gap-1 font-mono">
                       <Sparkles className="w-2.5 h-2.5 text-ochre-700" />
-                      <span>{msg.source === 'claude-api' ? 'Powered by Claude API (Live)' : 'Grounded Rural Advisory Engine'}</span>
+                      <span>{msg.source === 'gemini-2.5-flash' ? '✨ Powered by Google Gemini 2.5 Flash (Live AI)' : '🌾 Grounded Rural Advisory Engine (Safety Net)'}</span>
                     </div>
                   )}
                 </div>

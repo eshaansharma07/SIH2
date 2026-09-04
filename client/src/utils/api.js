@@ -1,25 +1,47 @@
-const BASE_URL = '/api';
+let API_BASE_URL = '/api';
 
 async function request(endpoint, options = {}) {
-  const url = `${BASE_URL}${endpoint}`;
   const defaultHeaders = {
     'Content-Type': 'application/json',
   };
 
-  const response = await fetch(url, {
-    ...options,
-    headers: {
-      ...defaultHeaders,
-      ...options.headers,
-    },
-  });
+  try {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      ...options,
+      headers: {
+        ...defaultHeaders,
+        ...options.headers,
+      },
+    });
 
-  if (!response.ok) {
-    const errorBody = await response.json().catch(() => ({}));
-    throw new Error(errorBody.error || `HTTP error ${response.status}`);
+    if (!response.ok) {
+      const errorBody = await response.json().catch(() => ({}));
+      throw new Error(errorBody.error || `HTTP error ${response.status}`);
+    }
+
+    return response.json();
+  } catch (err) {
+    // If the proxied /api call fails (e.g. Vite proxy EPERM or socket drop),
+    // automatically failover to direct backend at http://127.0.0.1:3001/api
+    if (API_BASE_URL === '/api') {
+      try {
+        const directRes = await fetch(`http://127.0.0.1:3001/api${endpoint}`, {
+          ...options,
+          headers: {
+            ...defaultHeaders,
+            ...options.headers,
+          },
+        });
+        if (directRes.ok) {
+          API_BASE_URL = 'http://127.0.0.1:3001/api'; // switch permanently for this session
+          return directRes.json();
+        }
+      } catch (_) {
+        // Continue to throw original error if both fail
+      }
+    }
+    throw err;
   }
-
-  return response.json();
 }
 
 export const api = {
