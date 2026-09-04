@@ -25,7 +25,8 @@ export function DashboardPage({
   cuesData, 
   onOpenKeypad, 
   onNavigateTab, 
-  onAskPrompt 
+  onAskPrompt,
+  onStartDemoTour
 }) {
   const { t, language } = useTranslation();
 
@@ -81,18 +82,25 @@ export function DashboardPage({
 
           <div className="flex flex-col sm:flex-row items-stretch gap-2.5 w-full md:w-auto shrink-0">
             <button
+              onClick={onStartDemoTour}
+              className="px-4 py-3 bg-gradient-to-r from-ochre-400 via-amber-400 to-ochre-300 hover:brightness-105 active:scale-95 text-stone-950 font-black text-xs sm:text-sm rounded-2xl shadow-xl flex items-center justify-center gap-2 border border-ochre-200 transition"
+            >
+              <Sparkles className="w-4 h-4 text-terracotta-800 animate-spin" />
+              <span>{language === 'hi' ? '🎬 2-मिनट लाइव डेमो' : '🎬 Start Live Demo'}</span>
+            </button>
+            <button
               onClick={onOpenKeypad}
-              className="px-5 py-3 bg-ochre-400 hover:bg-ochre-300 active:scale-95 text-stone-900 font-extrabold text-xs sm:text-sm rounded-2xl shadow-lg flex items-center justify-center gap-2 transition"
+              className="px-4 py-3 bg-white/20 hover:bg-white/30 active:scale-95 text-white font-bold text-xs sm:text-sm rounded-2xl border border-white/30 flex items-center justify-center gap-2 transition"
             >
               <PlusCircle className="w-4 h-4" />
-              <span>{language === 'hi' ? 'आज की बिक्री दर्ज करें' : 'Log Today\'s Sale'}</span>
+              <span>{language === 'hi' ? 'बिक्री दर्ज करें' : 'Log Sale'}</span>
             </button>
             <button
               onClick={() => onNavigateTab('advisor')}
-              className="px-4 py-3 bg-white/15 hover:bg-white/25 active:scale-95 text-white font-bold text-xs sm:text-sm rounded-2xl border border-white/20 flex items-center justify-center gap-1.5 transition"
+              className="px-4 py-3 bg-white/10 hover:bg-white/20 active:scale-95 text-white font-bold text-xs sm:text-sm rounded-2xl border border-white/20 flex items-center justify-center gap-1.5 transition"
             >
               <Sparkles className="w-4 h-4 text-ochre-300" />
-              <span>{language === 'hi' ? 'सलाहकार से पूछें' : 'Ask Advisor'}</span>
+              <span>{language === 'hi' ? 'सलाहकार' : 'Ask AI'}</span>
             </button>
           </div>
         </div>

@@ -9,6 +9,7 @@ import { BankDossierPage } from './pages/BankDossierPage';
 import { ShopProfilePage } from './pages/ShopProfilePage';
 import { OnboardingPage } from './pages/OnboardingPage';
 import { NumericKeypadModal } from './components/NumericKeypadModal';
+import { InteractiveDemoTour } from './components/InteractiveDemoTour';
 import { WarliBorder } from './components/WarliMotif';
 import { api } from './utils/api';
 import { useTranslation } from './i18n/LanguageContext';
@@ -21,6 +22,7 @@ export default function App() {
   const [summaryData, setSummaryData] = useState(null);
   const [cuesData, setCuesData] = useState(null);
   const [keypadOpen, setKeypadOpen] = useState(false);
+  const [demoTourOpen, setDemoTourOpen] = useState(false);
   const [initialAdvisorPrompt, setInitialAdvisorPrompt] = useState('');
   const [refreshKey, setRefreshKey] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -91,6 +93,7 @@ export default function App() {
         setActiveTab={setActiveTab} 
         currentShop={currentShop}
         onReloadDemo={handleReloadDemo}
+        onStartDemoTour={() => setDemoTourOpen(true)}
       />
 
       {/* Main Page Container */}
@@ -116,6 +119,7 @@ export default function App() {
             onOpenKeypad={() => setKeypadOpen(true)}
             onNavigateTab={(tab) => setActiveTab(tab)}
             onAskPrompt={handleAskPrompt}
+            onStartDemoTour={() => setDemoTourOpen(true)}
           />
         )}
 
@@ -176,6 +180,17 @@ export default function App() {
         onClose={() => setKeypadOpen(false)}
         onTransactionSaved={handleTransactionSaved}
         shopId={currentShop?.id || 'ramesh-kirana'}
+      />
+
+      {/* Interactive Animated Guided Demo Tour for SIH Judges */}
+      <InteractiveDemoTour
+        isOpen={demoTourOpen}
+        onClose={() => setDemoTourOpen(false)}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        setKeypadOpen={setKeypadOpen}
+        setInitialAdvisorPrompt={setInitialAdvisorPrompt}
+        onReloadDemo={handleReloadDemo}
       />
 
       {/* Footer */}

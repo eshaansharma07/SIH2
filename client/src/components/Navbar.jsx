@@ -17,7 +17,7 @@ import { SaathiAvatar } from './SaathiAvatar';
 import { useTranslation } from '../i18n/LanguageContext';
 import { api } from '../utils/api';
 
-export function Navbar({ activeTab, setActiveTab, currentShop, onReloadDemo }) {
+export function Navbar({ activeTab, setActiveTab, currentShop, onReloadDemo, onStartDemoTour }) {
   const { t, language, toggleLanguage } = useTranslation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
@@ -74,19 +74,29 @@ export function Navbar({ activeTab, setActiveTab, currentShop, onReloadDemo }) {
           </span>
         </div>
 
-        {/* Right: 1-Click Demo Reload + Multilingual Selector */}
+        {/* Right: Live Interactive Demo + 1-Click Demo Reload + Multilingual Selector */}
         <div className="flex items-center gap-2 shrink-0">
           
+          {/* Prominent Animated Interactive Demo Tour Button */}
+          <button
+            onClick={onStartDemoTour}
+            title="Start automated interactive walkthrough for Hackathon Judges"
+            className="flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-terracotta-600 to-ochre-600 hover:from-terracotta-700 hover:to-ochre-700 text-white rounded-lg text-[11px] font-extrabold shadow-sm active:scale-95 transition border border-ochre-400"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-ochre-200 animate-spin" />
+            <span>{language === 'hi' ? '🎬 लाइव डेमो मोड' : '🎬 Live Demo Mode'}</span>
+          </button>
+
           {/* 1-Click Demo Reset Button */}
           <button
             onClick={handleResetDemo}
             disabled={resetting}
             title="Reset to Ramesh's 90-day seeded retail history"
-            className="flex items-center gap-1 px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 rounded-lg text-[11px] font-bold shadow-xs active:scale-95 transition"
+            className="hidden sm:flex items-center gap-1 px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 rounded-lg text-[11px] font-bold shadow-xs active:scale-95 transition"
           >
             <RotateCcw className={`w-3 h-3 ${resetting ? 'animate-spin' : ''}`} />
-            <span className="hidden xs:inline">
-              {resetting ? 'Loading...' : (language === 'hi' ? 'रमेश डेमो लोड करें' : 'Ramesh Demo')}
+            <span>
+              {resetting ? 'Loading...' : (language === 'hi' ? 'रमेश रीसेट' : 'Reset Ramesh')}
             </span>
           </button>
 
