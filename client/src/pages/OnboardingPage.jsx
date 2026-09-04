@@ -41,9 +41,12 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
     { id: 'repair', name: 'बढ़ईगीरी व मरम्मत', nameEn: 'Carpentry & Repair', icon: Wrench, color: 'text-stone-700 bg-stone-100 border-stone-300' },
   ];
 
+  const [errorMsg, setErrorMsg] = useState('');
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setErrorMsg('');
     try {
       const selectedTrade = trades.find(t => t.id === tradeType);
       const res = await api.setupShop({
@@ -61,7 +64,7 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
       });
       onComplete?.(res.shop);
     } catch (err) {
-      alert('Error creating shop: ' + err.message);
+      setErrorMsg(err.message || 'Error creating shop');
     } finally {
       setLoading(false);
     }
@@ -122,6 +125,12 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          {errorMsg && (
+            <div className="bg-rose-50 border border-rose-300 text-rose-800 text-xs px-4 py-2.5 rounded-xl font-semibold flex items-center justify-between">
+              <span>⚠️ {errorMsg}</span>
+              <button onClick={() => setErrorMsg('')} className="text-rose-600 hover:text-rose-900 font-bold ml-2">✕</button>
+            </div>
+          )}
           
           {/* Trade Category Picker (Large Cards with Icons) */}
           <div>

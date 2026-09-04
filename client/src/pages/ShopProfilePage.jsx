@@ -25,18 +25,20 @@ export function ShopProfilePage({ shop, onShopUpdated, onReloadDemo }) {
   const [state, setState] = useState(shop?.state || 'Uttar Pradesh');
   const [vintage, setVintage] = useState(shop?.vintage_years || 4);
   const [bank, setBank] = useState(shop?.bank_account_type || 'Gramin Bank (Aryavart Bank)');
-  const [apiKey, setApiKey] = useState(localStorage.getItem('vyapaar_claude_api_key') || '');
+  const [apiKey, setApiKey] = useState(localStorage.getItem('vyapaar_gemini_api_key') || '');
   const [savedSuccess, setSavedSuccess] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSaveProfile = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setErrorMsg('');
     try {
       if (apiKey) {
-        localStorage.setItem('vyapaar_claude_api_key', apiKey);
+        localStorage.setItem('vyapaar_gemini_api_key', apiKey);
       } else {
-        localStorage.removeItem('vyapaar_claude_api_key');
+        localStorage.removeItem('vyapaar_gemini_api_key');
       }
 
       const res = await api.updateShop(shop?.id || 'ramesh-kirana', {
@@ -57,7 +59,7 @@ export function ShopProfilePage({ shop, onShopUpdated, onReloadDemo }) {
       setSavedSuccess(true);
       setTimeout(() => setSavedSuccess(false), 2500);
     } catch (err) {
-      alert('Error saving profile: ' + err.message);
+      setErrorMsg(err.message || 'Error updating profile');
     } finally {
       setLoading(false);
     }
@@ -86,6 +88,12 @@ export function ShopProfilePage({ shop, onShopUpdated, onReloadDemo }) {
       {/* Main Settings Form */}
       <div className="bg-white rounded-3xl p-6 sm:p-8 border-2 border-paper-300 shadow-paper space-y-6">
         <form onSubmit={handleSaveProfile} className="space-y-5">
+          {errorMsg && (
+            <div className="bg-rose-50 border border-rose-300 text-rose-800 text-xs px-4 py-2.5 rounded-xl font-semibold flex items-center justify-between">
+              <span>⚠️ {errorMsg}</span>
+              <button onClick={() => setErrorMsg('')} className="text-rose-600 hover:text-rose-900 font-bold ml-2">✕</button>
+            </div>
+          )}
           
           <div className="border-b border-paper-200 pb-3">
             <h2 className="text-sm font-extrabold text-stone-900 uppercase tracking-wider">

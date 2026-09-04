@@ -33,14 +33,17 @@ export function NumericKeypadModal({ isOpen, onClose, onTransactionSaved, shopId
     setAmountStr('');
   };
 
+  const [errorMessage, setErrorMessage] = useState('');
+
   const handleSubmit = async () => {
     const amount = Number(amountStr);
     if (!amount || amount <= 0) {
-      alert(language === 'hi' ? 'कृपया सही राशि दर्ज करें' : 'Please enter a valid amount');
+      setErrorMessage(language === 'hi' ? 'कृपया सही राशि दर्ज करें' : 'Please enter a valid amount');
       return;
     }
 
     setLoading(true);
+    setErrorMessage('');
     try {
       await api.createTransaction({
         shopId,
@@ -57,11 +60,12 @@ export function NumericKeypadModal({ isOpen, onClose, onTransactionSaved, shopId
         setSuccessToast(false);
         setAmountStr('');
         setCustomerName('');
+        setErrorMessage('');
         onTransactionSaved?.();
         onClose();
       }, 700);
     } catch (err) {
-      alert('Error saving: ' + err.message);
+      setErrorMessage(err.message || (language === 'hi' ? 'लेन-देन दर्ज करने में त्रुटि आई' : 'Failed to record transaction'));
     } finally {
       setLoading(false);
     }
@@ -105,6 +109,20 @@ export function NumericKeypadModal({ isOpen, onClose, onTransactionSaved, shopId
 
         {/* Scrollable Body */}
         <div className="p-4 overflow-y-auto space-y-3.5 flex-1">
+          {errorMessage && (
+            <div className="bg-rose-50 border border-rose-300 text-rose-800 text-xs px-3.5 py-2 rounded-xl flex items-center justify-between gap-2">
+              <div className="flex items-center gap-1.5">
+                <span>⚠️</span>
+                <span className="font-semibold">{errorMessage}</span>
+              </div>
+              <button 
+                onClick={() => setErrorMessage('')}
+                className="text-rose-600 hover:text-rose-900 text-xs font-bold px-1"
+              >
+                ✕
+              </button>
+            </div>
+          )}
           
           {/* 1. Transaction Type Selector (Large 4 Buttons) */}
           <div>
