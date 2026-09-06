@@ -19,6 +19,14 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Prevent stale HTTP / CDN / 304 caching across serverless Lambda instances
+app.use((req, res, next) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  next();
+});
+
 // Health check
 app.get(['/api/health', '/health'], (req, res) => {
   res.json({

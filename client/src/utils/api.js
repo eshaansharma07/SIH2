@@ -1,18 +1,31 @@
 let API_BASE_URL = '/api';
 
 async function request(endpoint, options = {}) {
+  const isGet = !options.method || options.method.toUpperCase() === 'GET';
+  let cleanEndpoint = endpoint;
+  if (isGet) {
+    const separator = cleanEndpoint.includes('?') ? '&' : '?';
+    cleanEndpoint = `${cleanEndpoint}${separator}_t=${Date.now()}`;
+  }
+
   const defaultHeaders = {
     'Content-Type': 'application/json',
+    'Cache-Control': 'no-cache, no-store, must-revalidate',
+    'Pragma': 'no-cache',
+    'Expires': '0',
+  };
+
+  const fetchOptions = {
+    ...options,
+    cache: 'no-store',
+    headers: {
+      ...defaultHeaders,
+      ...options.headers,
+    },
   };
 
   try {
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-      ...options,
-      headers: {
-        ...defaultHeaders,
-        ...options.headers,
-      },
-    });
+    const response = await fetch(`${API_BASE_URL}${cleanEndpoint}`, fetchOptions);
 
     if (!response.ok) {
       const errorBody = await response.json().catch(() => ({}));
@@ -28,13 +41,7 @@ async function request(endpoint, options = {}) {
 
     if (API_BASE_URL === '/api' && isLocalhost) {
       try {
-        const directRes = await fetch(`http://127.0.0.1:3001/api${endpoint}`, {
-          ...options,
-          headers: {
-            ...defaultHeaders,
-            ...options.headers,
-          },
-        });
+        const directRes = await fetch(`http://127.0.0.1:3001/api${cleanEndpoint}`, fetchOptions);
         if (directRes.ok) {
           API_BASE_URL = 'http://127.0.0.1:3001/api';
           return directRes.json();

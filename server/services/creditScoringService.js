@@ -5,14 +5,14 @@ import db from '../db/database.js';
  * Designed for rural micro-entrepreneurs lacking formal CIBIL scores.
  * Computes an explainable score between 300 and 850.
  */
-export function calculateCreditScore(shopId) {
+export function calculateCreditScore(shopId, transactionsOverride = null) {
   const shop = db.prepare('SELECT * FROM shops WHERE id = ?').get(shopId);
   if (!shop) {
     throw new Error('Shop not found');
   }
 
-  // Fetch transactions from the last 90 days
-  const transactions = db.prepare(`
+  // Fetch transactions from the last 90 days (use override from MongoDB if supplied)
+  const transactions = transactionsOverride || db.prepare(`
     SELECT * FROM transactions 
     WHERE shop_id = ? 
     ORDER BY date DESC

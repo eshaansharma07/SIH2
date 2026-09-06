@@ -26,6 +26,7 @@ export default function App() {
   const [initialAdvisorPrompt, setInitialAdvisorPrompt] = useState('');
   const [refreshKey, setRefreshKey] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [latestTx, setLatestTx] = useState(null);
 
   useEffect(() => {
     loadAllShopData();
@@ -45,7 +46,18 @@ export default function App() {
         ]);
 
         if (credRes.success) setCreditData(credRes);
-        if (sumRes.success) setSummaryData(sumRes.summary);
+        if (sumRes.success) {
+          setSummaryData(prev => {
+            if (!prev) return sumRes.summary;
+            return {
+              ...sumRes.summary,
+              totalIncome: Math.max(prev.totalIncome || 0, sumRes.summary.totalIncome || 0),
+              totalExpense: Math.max(prev.totalExpense || 0, sumRes.summary.totalExpense || 0),
+              netSurplus: (Math.max(prev.totalIncome || 0, sumRes.summary.totalIncome || 0)) - (Math.max(prev.totalExpense || 0, sumRes.summary.totalExpense || 0)),
+              pendingUdhaar: sumRes.summary.pendingUdhaar !== undefined ? sumRes.summary.pendingUdhaar : prev.pendingUdhaar
+            };
+          });
+        }
         if (cuesRes.success) setCuesData(cuesRes.data);
       }
     } catch (err) {
@@ -55,7 +67,87 @@ export default function App() {
     }
   };
 
-  const handleTransactionSaved = () => {
+  const handleTransactionSaved = (newTx) => {
+    if (newTx) {
+      setLatestTx(newTx);
+
+      // Optimistically update summaryData immediately (0ms delay)
+      setSummaryData(prev => {
+        if (!prev) return prev;
+        const amt = Number(newTx.amount) || 0;
+        let newIncome = prev.totalIncome || 0;
+        let newExpense = prev.totalExpense || 0;
+        let newUdhaarGiven = prev.totalUdhaarGiven || 0;
+        let newUdhaarRepaid = prev.totalUdhaarRepaid || 0;
+        let newCash = prev.cashIncome || 0;
+        let newUpi = prev.upiIncome || 0;
+
+        if (newTx.type === 'income') {
+          newIncome += amt;
+          if (newTx.payment_mode === 'cash') newCash += amt;
+          if (newTx.payment_mode === 'upi') newUpi += amt;
+        } else if (newTx.type === 'expense') {
+          newExpense += amt;
+        } else if (newTx.type === 'udhaar_given') {
+          newUdhaarGiven += amt;
+        } else if (newTx.type === 'udhaar_repaid') {
+          newUdhaarRepaid += amt;
+          newIncome += amt;
+          if (newTx.payment_mode === 'upi') newUpi += amt;
+          else newCash += amt;
+        }
+
+        const newSurplus = newIncome - newExpense;
+        const newPending = Math.max(0, newUdhaarGiven - newUdhaarRepaid);
+        const newDigitalShare = newIncome > 0 ? Math.round((newUpi / newIncome) * 100) : 0;
+
+        return {
+          ...prev,
+          totalIncome: Math.round(newIncome),
+          totalExpense: Math.round(newExpense),
+          netSurplus: Math.round(newSurplus),
+          pendingUdhaar: Math.round(newPending),
+          totalUdhaarGiven: Math.round(newUdhaarGiven),
+          totalUdhaarRepaid: Math.round(newUdhaarRepaid),
+          cashIncome: Math.round(newCash),
+          upiIncome: Math.round(newUpi),
+          digitalSharePct: newDigitalShare
+        };
+      });
+
+      // Also optimistically bump creditData metrics
+      setCreditData(prev => {
+        if (!prev || !prev.metrics) return prev;
+        const amt = Number(newTx.amount) || 0;
+        const m = prev.metrics;
+        let totalIncome = m.totalIncome || 0;
+        let netSurplus = m.netSurplus || 0;
+        let totalUdhaarPending = m.totalUdhaarPending || 0;
+
+        if (newTx.type === 'income') {
+          totalIncome += amt;
+          netSurplus += amt;
+        } else if (newTx.type === 'expense') {
+          netSurplus -= amt;
+        } else if (newTx.type === 'udhaar_given') {
+          totalUdhaarPending += amt;
+        } else if (newTx.type === 'udhaar_repaid') {
+          totalUdhaarPending = Math.max(0, totalUdhaarPending - amt);
+          netSurplus += amt;
+        }
+
+        return {
+          ...prev,
+          metrics: {
+            ...m,
+            totalIncome,
+            netSurplus,
+            totalUdhaarPending
+          }
+        };
+      });
+    }
+
     setRefreshKey(prev => prev + 1);
   };
 
@@ -136,6 +228,8 @@ export default function App() {
             shop={currentShop}
             onOpenKeypad={() => setKeypadOpen(true)}
             refreshKey={refreshKey}
+            latestTx={latestTx}
+            onTransactionSaved={handleTransactionSaved}
           />
         )}
 

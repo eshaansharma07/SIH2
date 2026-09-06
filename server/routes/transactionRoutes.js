@@ -1,15 +1,35 @@
 import express from 'express';
 import db from '../db/database.js';
+import { getTransactionsCollection } from '../db/mongoClient.js';
 
 const router = express.Router();
 
 // Get transactions for a shop
-router.get('/', (req, res) => {
+router.get('/', async (req, res) => {
   try {
     const shopId = req.query.shopId || 'ramesh-kirana';
     const limit = Number(req.query.limit) || 100;
     const type = req.query.type; // optional filter: income, expense, udhaar_given, udhaar_repaid
 
+    // 1. Try fetching from MongoDB Atlas if connected
+    try {
+      const col = await getTransactionsCollection();
+      if (col) {
+        const filter = { shop_id: shopId };
+        if (type) filter.type = type;
+        const mongoTxs = await col.find(filter)
+          .sort({ date: -1, created_at: -1 })
+          .limit(limit)
+          .toArray();
+        if (mongoTxs && mongoTxs.length > 0) {
+          return res.json({ success: true, count: mongoTxs.length, transactions: mongoTxs });
+        }
+      }
+    } catch (mongoErr) {
+      console.warn('[MongoDB Atlas] Fallback to SQLite for GET /:', mongoErr.message);
+    }
+
+    // 2. Fallback to SQLite
     let query = 'SELECT * FROM transactions WHERE shop_id = ?';
     const params = [shopId];
 
@@ -29,7 +49,7 @@ router.get('/', (req, res) => {
 });
 
 // Add a new transaction (from Bahi-Khata tactile logger)
-router.post('/', (req, res) => {
+router.post('/', async (req, res) => {
   try {
     const {
       shopId = 'ramesh-kirana',
@@ -51,6 +71,10 @@ router.post('/', (req, res) => {
     }
 
     const id = `tx-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`;
+    const assignedCategory = category || (type === 'income' ? 'Daily Counter Sales' : type === 'expense' ? 'Shop Supplies' : 'Customer Khata');
+    const assignedPaymentMode = type.startsWith('udhaar') ? 'khata' : payment_mode;
+
+    // 1. Insert into SQLite
     const insert = db.prepare(`
       INSERT INTO transactions (id, shop_id, date, type, amount, category, payment_mode, customer_vendor_name, notes)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -62,13 +86,35 @@ router.post('/', (req, res) => {
       date,
       type,
       Number(amount),
-      category || (type === 'income' ? 'Daily Counter Sales' : type === 'expense' ? 'Shop Supplies' : 'Customer Khata'),
-      payment_mode,
+      assignedCategory,
+      assignedPaymentMode,
       customer_vendor_name,
       notes
     );
 
     const newTx = db.prepare('SELECT * FROM transactions WHERE id = ?').get(id);
+
+    // 2. Also persist in MongoDB Atlas for cross-container serverless persistence
+    try {
+      const col = await getTransactionsCollection();
+      if (col) {
+        await col.insertOne({
+          id,
+          shop_id: shopId,
+          date,
+          type,
+          amount: Number(amount),
+          category: assignedCategory,
+          payment_mode: assignedPaymentMode,
+          customer_vendor_name,
+          notes,
+          created_at: newTx?.created_at || new Date().toISOString()
+        });
+      }
+    } catch (mongoErr) {
+      console.warn('[MongoDB Atlas] Cloud insert notice:', mongoErr.message);
+    }
+
     res.json({ success: true, transaction: newTx });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
@@ -76,14 +122,29 @@ router.post('/', (req, res) => {
 });
 
 // Financial summary (Overall, 30 days, Cash vs UPI, Charts data)
-router.get('/summary', (req, res) => {
+router.get('/summary', async (req, res) => {
   try {
     const shopId = req.query.shopId || 'ramesh-kirana';
-    const txs = db.prepare(`
-      SELECT * FROM transactions 
-      WHERE shop_id = ? 
-      ORDER BY date ASC
-    `).all(shopId);
+
+    let txs = [];
+    // 1. Try reading from MongoDB Atlas
+    try {
+      const col = await getTransactionsCollection();
+      if (col) {
+        txs = await col.find({ shop_id: shopId }).sort({ date: 1 }).toArray();
+      }
+    } catch (mongoErr) {
+      console.warn('[MongoDB Atlas] Fallback to SQLite for /summary:', mongoErr.message);
+    }
+
+    // 2. Fallback to SQLite
+    if (!txs || txs.length === 0) {
+      txs = db.prepare(`
+        SELECT * FROM transactions 
+        WHERE shop_id = ? 
+        ORDER BY date ASC
+      `).all(shopId);
+    }
 
     let totalIncome = 0;
     let totalExpense = 0;
@@ -93,7 +154,6 @@ router.get('/summary', (req, res) => {
     let totalUpiIncome = 0;
 
     const monthlyMap = {}; // { 'Month Name': { income, expense, profit } }
-    const dailyMap = {}; // last 14 days
 
     txs.forEach(t => {
       const monthKey = t.date.substring(0, 7);
@@ -156,14 +216,32 @@ router.get('/summary', (req, res) => {
 });
 
 // Udhaar Ledger (Customer balances & repayment tracking)
-router.get('/udhaar-ledger', (req, res) => {
+router.get('/udhaar-ledger', async (req, res) => {
   try {
     const shopId = req.query.shopId || 'ramesh-kirana';
-    const txs = db.prepare(`
-      SELECT * FROM transactions 
-      WHERE shop_id = ? AND (type = 'udhaar_given' OR type = 'udhaar_repaid')
-      ORDER BY date DESC
-    `).all(shopId);
+
+    let txs = [];
+    // 1. Try reading from MongoDB Atlas
+    try {
+      const col = await getTransactionsCollection();
+      if (col) {
+        txs = await col.find({
+          shop_id: shopId,
+          type: { $in: ['udhaar_given', 'udhaar_repaid'] }
+        }).sort({ date: -1 }).toArray();
+      }
+    } catch (mongoErr) {
+      console.warn('[MongoDB Atlas] Fallback to SQLite for /udhaar-ledger:', mongoErr.message);
+    }
+
+    // 2. Fallback to SQLite
+    if (!txs || txs.length === 0) {
+      txs = db.prepare(`
+        SELECT * FROM transactions 
+        WHERE shop_id = ? AND (type = 'udhaar_given' OR type = 'udhaar_repaid')
+        ORDER BY date DESC
+      `).all(shopId);
+    }
 
     const customerMap = {};
 

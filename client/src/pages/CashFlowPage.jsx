@@ -16,7 +16,7 @@ import {
 import { api } from '../utils/api';
 import { useTranslation } from '../i18n/LanguageContext';
 
-export function CashFlowPage({ shop, onOpenKeypad, refreshKey }) {
+export function CashFlowPage({ shop, onOpenKeypad, refreshKey, latestTx, onTransactionSaved }) {
   const { t, language } = useTranslation();
   const [activeTab, setActiveTab] = useState('all'); // 'all' or 'udhaar'
   const [transactions, setTransactions] = useState([]);
@@ -25,6 +25,109 @@ export function CashFlowPage({ shop, onOpenKeypad, refreshKey }) {
   const [filterType, setFilterType] = useState('');
   const [loading, setLoading] = useState(true);
   const [reminderToast, setReminderToast] = useState(null);
+  const [justUpdated, setJustUpdated] = useState(false);
+
+  // 1. Instant 0ms Optimistic Update when a new transaction is logged
+  useEffect(() => {
+    if (!latestTx) return;
+
+    // Immediately trigger green pulse on KPI cards
+    setJustUpdated(true);
+    const timer = setTimeout(() => setJustUpdated(false), 2500);
+
+    // A. Prepend transaction to list if not already present
+    setTransactions(prev => {
+      if (prev.some(t => t.id === latestTx.id)) return prev;
+      return [latestTx, ...prev];
+    });
+
+    // B. Instantly recompute 4 KPI Summary Cards
+    setSummary(prev => {
+      if (!prev) return prev;
+      const amt = Number(latestTx.amount) || 0;
+      let newIncome = prev.totalIncome || 0;
+      let newExpense = prev.totalExpense || 0;
+      let newUdhaarGiven = prev.totalUdhaarGiven || 0;
+      let newUdhaarRepaid = prev.totalUdhaarRepaid || 0;
+      let newCash = prev.cashIncome || 0;
+      let newUpi = prev.upiIncome || 0;
+
+      if (latestTx.type === 'income') {
+        newIncome += amt;
+        if (latestTx.payment_mode === 'cash') newCash += amt;
+        if (latestTx.payment_mode === 'upi') newUpi += amt;
+      } else if (latestTx.type === 'expense') {
+        newExpense += amt;
+      } else if (latestTx.type === 'udhaar_given') {
+        newUdhaarGiven += amt;
+      } else if (latestTx.type === 'udhaar_repaid') {
+        newUdhaarRepaid += amt;
+        newIncome += amt;
+        if (latestTx.payment_mode === 'upi') newUpi += amt;
+        else newCash += amt;
+      }
+
+      const newSurplus = newIncome - newExpense;
+      const newPending = Math.max(0, newUdhaarGiven - newUdhaarRepaid);
+      const newDigitalShare = newIncome > 0 ? Math.round((newUpi / newIncome) * 100) : 0;
+
+      // Update monthly trend for active month
+      const txMonth = (latestTx.date || new Date().toISOString()).substring(0, 7);
+      let updatedTrend = prev.monthlyTrend ? [...prev.monthlyTrend] : [];
+      const mIdx = updatedTrend.findIndex(m => m.month === txMonth);
+      if (mIdx >= 0) {
+        const m = { ...updatedTrend[mIdx] };
+        if (latestTx.type === 'income') m.income += amt;
+        else if (latestTx.type === 'expense') m.expense += amt;
+        m.profit = m.income - m.expense;
+        updatedTrend[mIdx] = m;
+      }
+
+      return {
+        ...prev,
+        totalIncome: Math.round(newIncome),
+        totalExpense: Math.round(newExpense),
+        netSurplus: Math.round(newSurplus),
+        pendingUdhaar: Math.round(newPending),
+        totalUdhaarGiven: Math.round(newUdhaarGiven),
+        totalUdhaarRepaid: Math.round(newUdhaarRepaid),
+        cashIncome: Math.round(newCash),
+        upiIncome: Math.round(newUpi),
+        digitalSharePct: newDigitalShare,
+        monthlyTrend: updatedTrend
+      };
+    });
+
+    // C. Update Udhaar Ledger if it was customer credit
+    if (latestTx.type === 'udhaar_given' || latestTx.type === 'udhaar_repaid') {
+      const custName = latestTx.customer_vendor_name || 'Village Customer';
+      setUdhaarLedger(prev => {
+        const list = [...prev];
+        const idx = list.findIndex(c => c.customerName?.toLowerCase() === custName.toLowerCase());
+        const amt = Number(latestTx.amount) || 0;
+        if (idx >= 0) {
+          const c = { ...list[idx] };
+          if (latestTx.type === 'udhaar_given') c.totalGiven += amt;
+          else c.totalRepaid += amt;
+          c.balanceOwed = Math.max(0, c.totalGiven - c.totalRepaid);
+          c.lastDate = latestTx.date;
+          list[idx] = c;
+        } else {
+          list.push({
+            customerName: custName,
+            totalGiven: latestTx.type === 'udhaar_given' ? amt : 0,
+            totalRepaid: latestTx.type === 'udhaar_repaid' ? amt : 0,
+            balanceOwed: latestTx.type === 'udhaar_given' ? amt : 0,
+            lastDate: latestTx.date,
+            history: []
+          });
+        }
+        return list.sort((a, b) => b.balanceOwed - a.balanceOwed);
+      });
+    }
+
+    return () => clearTimeout(timer);
+  }, [latestTx]);
 
   useEffect(() => {
     loadData();
@@ -40,8 +143,37 @@ export function CashFlowPage({ shop, onOpenKeypad, refreshKey }) {
         api.getUdhaarLedger(shopId)
       ]);
 
-      if (txRes.transactions) setTransactions(txRes.transactions);
-      if (sumRes.summary) setSummary(sumRes.summary);
+      if (txRes.transactions) {
+        setTransactions(prev => {
+          // Merge preserving any optimistic local transactions
+          const serverMap = new Map(txRes.transactions.map(t => [t.id, t]));
+          const merged = [...txRes.transactions];
+          for (const localTx of prev) {
+            if (!serverMap.has(localTx.id)) {
+              merged.unshift(localTx);
+            }
+          }
+          return merged;
+        });
+      }
+
+      if (sumRes.summary) {
+        setSummary(prev => {
+          if (!prev) return sumRes.summary;
+          const higherIncome = Math.max(prev.totalIncome || 0, sumRes.summary.totalIncome || 0);
+          const higherExpense = Math.max(prev.totalExpense || 0, sumRes.summary.totalExpense || 0);
+          return {
+            ...sumRes.summary,
+            totalIncome: higherIncome,
+            totalExpense: higherExpense,
+            netSurplus: higherIncome - higherExpense,
+            pendingUdhaar: sumRes.summary.pendingUdhaar !== undefined ? sumRes.summary.pendingUdhaar : prev.pendingUdhaar,
+            totalUdhaarGiven: Math.max(prev.totalUdhaarGiven || 0, sumRes.summary.totalUdhaarGiven || 0),
+            totalUdhaarRepaid: Math.max(prev.totalUdhaarRepaid || 0, sumRes.summary.totalUdhaarRepaid || 0)
+          };
+        });
+      }
+
       if (udhRes.ledger) setUdhaarLedger(udhRes.ledger);
     } catch (err) {
       console.error('Error loading cash flow data:', err);
@@ -90,47 +222,63 @@ export function CashFlowPage({ shop, onOpenKeypad, refreshKey }) {
       </div>
 
       {/* 2. Top Summary KPI Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
-        <div className="bg-white p-4 rounded-2xl border border-paper-300 shadow-xs">
-          <span className="text-[11px] font-bold text-stone-500 block mb-1">
-            {t('cashflow.totalIncome')}
-          </span>
-          <div className="text-xl sm:text-2xl font-black text-forestRural-700">
-            ₹{summary?.totalIncome?.toLocaleString('en-IN') || '0'}
+      <div className="space-y-1.5">
+        {justUpdated && (
+          <div className="flex items-center gap-1.5 text-xs text-forestRural-700 font-extrabold px-1 animate-fadeIn">
+            <span className="inline-block w-2 h-2 rounded-full bg-forestRural-500 animate-ping" />
+            <span>{language === 'hi' ? '✓ बही-खाता तुरंत अपडेट हुआ (+0ms)' : '✓ Bahi-Khata values updated instantly (+0ms)'}</span>
           </div>
-          <span className="text-[10px] text-stone-500 font-medium">90 {language === 'hi' ? 'दिन की कुल बिक्री' : 'days total'}</span>
-        </div>
+        )}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+          <div className={`bg-white p-4 rounded-2xl border transition duration-300 shadow-xs ${
+            justUpdated ? 'border-forestRural-500 bg-forestRural-50/20 ring-2 ring-forestRural-200' : 'border-paper-300'
+          }`}>
+            <span className="text-[11px] font-bold text-stone-500 block mb-1">
+              {t('cashflow.totalIncome')}
+            </span>
+            <div className="text-xl sm:text-2xl font-black text-forestRural-700 transition-all">
+              ₹{summary?.totalIncome?.toLocaleString('en-IN') || '0'}
+            </div>
+            <span className="text-[10px] text-stone-500 font-medium">90 {language === 'hi' ? 'दिन की कुल बिक्री' : 'days total'}</span>
+          </div>
 
-        <div className="bg-white p-4 rounded-2xl border border-paper-300 shadow-xs">
-          <span className="text-[11px] font-bold text-stone-500 block mb-1">
-            {t('cashflow.totalExpense')}
-          </span>
-          <div className="text-xl sm:text-2xl font-black text-stone-800">
-            ₹{summary?.totalExpense?.toLocaleString('en-IN') || '0'}
+          <div className={`bg-white p-4 rounded-2xl border transition duration-300 shadow-xs ${
+            justUpdated ? 'border-terracotta-500 bg-terracotta-50/20 ring-2 ring-terracotta-200' : 'border-paper-300'
+          }`}>
+            <span className="text-[11px] font-bold text-stone-500 block mb-1">
+              {t('cashflow.totalExpense')}
+            </span>
+            <div className="text-xl sm:text-2xl font-black text-stone-800 transition-all">
+              ₹{summary?.totalExpense?.toLocaleString('en-IN') || '0'}
+            </div>
+            <span className="text-[10px] text-stone-500 font-medium">{language === 'hi' ? 'थोक माल खरीद + किराया' : 'Stock & operating costs'}</span>
           </div>
-          <span className="text-[10px] text-stone-500 font-medium">{language === 'hi' ? 'थोक माल खरीद + किराया' : 'Stock & operating costs'}</span>
-        </div>
 
-        <div className="bg-white p-4 rounded-2xl border border-paper-300 shadow-xs">
-          <span className="text-[11px] font-bold text-stone-500 block mb-1">
-            {t('cashflow.netProfit')}
-          </span>
-          <div className="text-xl sm:text-2xl font-black text-forestRural-700">
-            ₹{summary?.netSurplus?.toLocaleString('en-IN') || '0'}
+          <div className={`bg-white p-4 rounded-2xl border transition duration-300 shadow-xs ${
+            justUpdated ? 'border-forestRural-500 bg-forestRural-50/20 ring-2 ring-forestRural-200' : 'border-paper-300'
+          }`}>
+            <span className="text-[11px] font-bold text-stone-500 block mb-1">
+              {t('cashflow.netProfit')}
+            </span>
+            <div className="text-xl sm:text-2xl font-black text-forestRural-700 transition-all">
+              ₹{summary?.netSurplus?.toLocaleString('en-IN') || '0'}
+            </div>
+            <span className="text-[10px] text-forestRural-700 font-bold bg-forestRural-50 px-1.5 py-0.5 rounded">
+              +28.8% {language === 'hi' ? 'शुद्ध मार्जिन' : 'net margin'}
+            </span>
           </div>
-          <span className="text-[10px] text-forestRural-700 font-bold bg-forestRural-50 px-1.5 py-0.5 rounded">
-            +28.8% {language === 'hi' ? 'शुद्ध मार्जिन' : 'net margin'}
-          </span>
-        </div>
 
-        <div className="bg-white p-4 rounded-2xl border border-paper-300 shadow-xs">
-          <span className="text-[11px] font-bold text-stone-500 block mb-1">
-            {language === 'hi' ? 'बकाया ग्राहक उधार' : 'Pending Udhaar Book'}
-          </span>
-          <div className="text-xl sm:text-2xl font-black text-ochre-700">
-            ₹{summary?.pendingUdhaar?.toLocaleString('en-IN') || '0'}
+          <div className={`bg-white p-4 rounded-2xl border transition duration-300 shadow-xs ${
+            justUpdated ? 'border-ochre-500 bg-ochre-50/20 ring-2 ring-ochre-200' : 'border-paper-300'
+          }`}>
+            <span className="text-[11px] font-bold text-stone-500 block mb-1">
+              {language === 'hi' ? 'बकाया ग्राहक उधार' : 'Pending Udhaar Book'}
+            </span>
+            <div className="text-xl sm:text-2xl font-black text-ochre-700 transition-all">
+              ₹{summary?.pendingUdhaar?.toLocaleString('en-IN') || '0'}
+            </div>
+            <span className="text-[10px] text-ochre-800 font-semibold">{language === 'hi' ? 'सुरक्षित सीमा के अंदर' : 'Within safe limits'}</span>
           </div>
-          <span className="text-[10px] text-ochre-800 font-semibold">{language === 'hi' ? 'सुरक्षित सीमा के अंदर' : 'Within safe limits'}</span>
         </div>
       </div>
 

@@ -74,10 +74,17 @@ router.post('/setup', (req, res) => {
 });
 
 // Reset / reload Ramesh's Kirana Demo Shop
-router.post('/reset-demo', (req, res) => {
+router.post('/reset-demo', async (req, res) => {
   try {
     seedDatabase();
     const shop = db.prepare('SELECT * FROM shops WHERE id = ?').get('ramesh-kirana');
+    
+    // Sync freshly seeded transactions to MongoDB Atlas in background
+    try {
+      const { syncToMongoDB } = await import('../db/mongoSync.js');
+      syncToMongoDB().catch(e => console.warn('[MongoDB Atlas] Background sync on reset-demo error:', e.message));
+    } catch (_) {}
+
     res.json({ success: true, message: 'Demo shop reloaded with 90 days of transactions', shop });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });

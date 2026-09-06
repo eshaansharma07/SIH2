@@ -1,13 +1,25 @@
 import express from 'express';
 import { calculateCreditScore } from '../services/creditScoringService.js';
+import { getTransactionsCollection } from '../db/mongoClient.js';
 
 const router = express.Router();
 
 // Get current alternative credit score & factor breakdown
-router.get('/', (req, res) => {
+router.get('/', async (req, res) => {
   try {
     const shopId = req.query.shopId || 'ramesh-kirana';
-    const scoreData = calculateCreditScore(shopId);
+
+    let txs = null;
+    try {
+      const col = await getTransactionsCollection();
+      if (col) {
+        txs = await col.find({ shop_id: shopId }).sort({ date: -1 }).toArray();
+      }
+    } catch (mongoErr) {
+      console.warn('[MongoDB Atlas] Fallback to SQLite for credit score:', mongoErr.message);
+    }
+
+    const scoreData = calculateCreditScore(shopId, txs && txs.length > 0 ? txs : null);
     res.json({ success: true, ...scoreData });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });

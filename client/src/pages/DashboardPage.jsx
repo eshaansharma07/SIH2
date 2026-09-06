@@ -30,12 +30,12 @@ export function DashboardPage({
 }) {
   const { t, language } = useTranslation();
 
-  const metrics = creditData?.metrics || {
-    totalIncome: summaryData?.totalIncome || 148500,
-    netSurplus: summaryData?.netSurplus || 42800,
-    totalUdhaarPending: summaryData?.pendingUdhaar || 4650,
-    digitalSharePct: summaryData?.digitalSharePct || 34,
-    loggedDaysCount: 84
+  const metrics = {
+    totalIncome: summaryData?.totalIncome ?? creditData?.metrics?.totalIncome ?? 148500,
+    netSurplus: summaryData?.netSurplus ?? creditData?.metrics?.netSurplus ?? 42800,
+    totalUdhaarPending: summaryData?.pendingUdhaar ?? creditData?.metrics?.totalUdhaarPending ?? 4650,
+    digitalSharePct: summaryData?.digitalSharePct ?? creditData?.metrics?.digitalSharePct ?? 34,
+    loggedDaysCount: creditData?.metrics?.loggedDaysCount || 84
   };
 
   const sampleQuestions = [
