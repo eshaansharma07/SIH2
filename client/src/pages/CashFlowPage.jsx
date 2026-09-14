@@ -11,7 +11,9 @@ import {
   Check, 
   Smartphone, 
   Banknote, 
-  MessageCircle 
+  MessageCircle,
+  Clock,
+  ArrowRight
 } from 'lucide-react';
 import { api } from '../utils/api';
 import { useTranslation } from '../i18n/LanguageContext';
@@ -31,17 +33,16 @@ export function CashFlowPage({ shop, onOpenKeypad, refreshKey, latestTx, onTrans
   useEffect(() => {
     if (!latestTx) return;
 
-    // Immediately trigger green pulse on KPI cards
     setJustUpdated(true);
     const timer = setTimeout(() => setJustUpdated(false), 2500);
 
-    // A. Prepend transaction to list if not already present
+    // Prepend transaction to list
     setTransactions(prev => {
       if (prev.some(t => t.id === latestTx.id)) return prev;
       return [latestTx, ...prev];
     });
 
-    // B. Instantly recompute 4 KPI Summary Cards
+    // Instantly recompute 4 KPI Summary Cards
     setSummary(prev => {
       if (!prev) return prev;
       const amt = Number(latestTx.amount) || 0;
@@ -71,7 +72,6 @@ export function CashFlowPage({ shop, onOpenKeypad, refreshKey, latestTx, onTrans
       const newPending = Math.max(0, newUdhaarGiven - newUdhaarRepaid);
       const newDigitalShare = newIncome > 0 ? Math.round((newUpi / newIncome) * 100) : 0;
 
-      // Update monthly trend for active month
       const txMonth = (latestTx.date || new Date().toISOString()).substring(0, 7);
       let updatedTrend = prev.monthlyTrend ? [...prev.monthlyTrend] : [];
       const mIdx = updatedTrend.findIndex(m => m.month === txMonth);
@@ -98,7 +98,6 @@ export function CashFlowPage({ shop, onOpenKeypad, refreshKey, latestTx, onTrans
       };
     });
 
-    // C. Update Udhaar Ledger if it was customer credit
     if (latestTx.type === 'udhaar_given' || latestTx.type === 'udhaar_repaid') {
       const custName = latestTx.customer_vendor_name || 'Village Customer';
       setUdhaarLedger(prev => {
@@ -145,7 +144,6 @@ export function CashFlowPage({ shop, onOpenKeypad, refreshKey, latestTx, onTrans
 
       if (txRes.transactions) {
         setTransactions(prev => {
-          // Merge preserving any optimistic local transactions
           const serverMap = new Map(txRes.transactions.map(t => [t.id, t]));
           const merged = [...txRes.transactions];
           for (const localTx of prev) {
@@ -184,7 +182,7 @@ export function CashFlowPage({ shop, onOpenKeypad, refreshKey, latestTx, onTrans
 
   const handleSimulateReminder = (customer) => {
     const msg = language === 'hi'
-      ? `नमस्ते ${customer.customerName} जी, ${shop?.name || 'रमेश किराना स्टोर'} पर आपका ₹${customer.balanceOwed} का राशन हिसाब बाकी है। सुविधा अनुसार भुगतान करें। धन्यवाद!`
+      ? `नमस्ते ${customer.customerName} जी, ${shop?.name || 'रमेश किराना'} पर आपका ₹${customer.balanceOwed} का हिसाब बाकी है। सुविधा अनुसार भुगतान करें। धन्यवाद!`
       : `Namaste ${customer.customerName}, your grocery khata balance at ${shop?.name || 'Ramesh Kirana'} is ₹${customer.balanceOwed}. Please settle when convenient. Thank you!`;
 
     setReminderToast({ name: customer.customerName, message: msg });
@@ -196,108 +194,97 @@ export function CashFlowPage({ shop, onOpenKeypad, refreshKey, latestTx, onTrans
   return (
     <div className="space-y-6 pb-12 animate-fadeIn">
       
-      {/* 1. Header & Quick Add CTA */}
-      <div className="bg-white rounded-3xl p-5 sm:p-6 border-2 border-paper-300 shadow-paper flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* 1. Header & Primary CTA */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <span className="p-2 bg-terracotta-100 text-terracotta-800 rounded-xl">
-              <BookOpen className="w-5 h-5" />
-            </span>
-            <h1 className="text-xl font-black text-stone-900">
-              {t('cashflow.title')}
+            <h1 className="text-2xl font-black tracking-tight text-slate-900 font-sans">
+              {language === 'hi' ? 'दैनिक बही-खाता' : 'Bahi-Khata Ledger'}
             </h1>
+            <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700">
+              {transactions.length} entries
+            </span>
           </div>
-          <p className="text-xs text-stone-500 mt-1">
-            {t('cashflow.subtitle')}
+          <p className="text-xs text-slate-500 mt-0.5">
+            {language === 'hi' ? 'सटीक दैनिक आय-व्यय एवं ग्राहक उधारी खाता' : 'Daily sales, wholesale purchases, and customer credit ledger'}
           </p>
         </div>
 
         <button
           onClick={onOpenKeypad}
-          className="px-6 py-3.5 bg-terracotta-600 hover:bg-terracotta-700 active:scale-95 text-white font-extrabold text-sm rounded-2xl shadow-lg flex items-center justify-center gap-2 transition"
+          className="px-5 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20 transition self-start sm:self-auto"
         >
-          <PlusCircle className="w-5 h-5" />
-          <span>{t('cashflow.newEntryBtn')}</span>
+          <PlusCircle className="w-4 h-4" />
+          <span>{language === 'hi' ? 'नया लेन-देन दर्ज करें' : 'Log Transaction'}</span>
         </button>
       </div>
 
-      {/* 2. Top Summary KPI Cards */}
-      <div className="space-y-1.5">
+      {/* 2. Top Summary KPI Cards (Clean Minimalist Apple Style) */}
+      <div className="space-y-2">
         {justUpdated && (
-          <div className="flex items-center gap-1.5 text-xs text-forestRural-700 font-extrabold px-1 animate-fadeIn">
-            <span className="inline-block w-2 h-2 rounded-full bg-forestRural-500 animate-ping" />
-            <span>{language === 'hi' ? '✓ बही-खाता तुरंत अपडेट हुआ (+0ms)' : '✓ Bahi-Khata values updated instantly (+0ms)'}</span>
+          <div className="flex items-center gap-1.5 text-xs text-emerald-600 font-extrabold px-1 animate-fadeIn">
+            <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+            <span>✓ Bahi-Khata updated instantly (+0ms)</span>
           </div>
         )}
+
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
-          <div className={`bg-white p-4 rounded-2xl border transition duration-300 shadow-xs ${
-            justUpdated ? 'border-forestRural-500 bg-forestRural-50/20 ring-2 ring-forestRural-200' : 'border-paper-300'
-          }`}>
-            <span className="text-[11px] font-bold text-stone-500 block mb-1">
-              {t('cashflow.totalIncome')}
+          <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-card">
+            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+              {language === 'hi' ? 'कुल बिक्री' : 'Recorded Sales'}
             </span>
-            <div className="text-xl sm:text-2xl font-black text-forestRural-700 transition-all">
+            <div className="text-2xl sm:text-3xl font-black text-slate-900 tabular-nums tracking-tight">
               ₹{summary?.totalIncome?.toLocaleString('en-IN') || '0'}
             </div>
-            <span className="text-[10px] text-stone-500 font-medium">90 {language === 'hi' ? 'दिन की कुल बिक्री' : 'days total'}</span>
+            <span className="text-[11px] font-semibold text-slate-400 mt-1 block">90 days total</span>
           </div>
 
-          <div className={`bg-white p-4 rounded-2xl border transition duration-300 shadow-xs ${
-            justUpdated ? 'border-terracotta-500 bg-terracotta-50/20 ring-2 ring-terracotta-200' : 'border-paper-300'
-          }`}>
-            <span className="text-[11px] font-bold text-stone-500 block mb-1">
-              {t('cashflow.totalExpense')}
+          <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-card">
+            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+              {language === 'hi' ? 'माल खरीद + खर्च' : 'Stock & Expenses'}
             </span>
-            <div className="text-xl sm:text-2xl font-black text-stone-800 transition-all">
+            <div className="text-2xl sm:text-3xl font-black text-slate-900 tabular-nums tracking-tight">
               ₹{summary?.totalExpense?.toLocaleString('en-IN') || '0'}
             </div>
-            <span className="text-[10px] text-stone-500 font-medium">{language === 'hi' ? 'थोक माल खरीद + किराया' : 'Stock & operating costs'}</span>
+            <span className="text-[11px] font-semibold text-slate-400 mt-1 block">Inventory & bills</span>
           </div>
 
-          <div className={`bg-white p-4 rounded-2xl border transition duration-300 shadow-xs ${
-            justUpdated ? 'border-forestRural-500 bg-forestRural-50/20 ring-2 ring-forestRural-200' : 'border-paper-300'
-          }`}>
-            <span className="text-[11px] font-bold text-stone-500 block mb-1">
-              {t('cashflow.netProfit')}
+          <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-card">
+            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+              {language === 'hi' ? 'शुद्ध बचत / लाभ' : 'Net Surplus'}
             </span>
-            <div className="text-xl sm:text-2xl font-black text-forestRural-700 transition-all">
+            <div className="text-2xl sm:text-3xl font-black text-emerald-600 tabular-nums tracking-tight">
               ₹{summary?.netSurplus?.toLocaleString('en-IN') || '0'}
             </div>
-            <span className="text-[10px] text-forestRural-700 font-bold bg-forestRural-50 px-1.5 py-0.5 rounded">
-              +28.8% {language === 'hi' ? 'शुद्ध मार्जिन' : 'net margin'}
-            </span>
+            <span className="text-[11px] font-semibold text-emerald-600 mt-1 block">+28.8% margin</span>
           </div>
 
-          <div className={`bg-white p-4 rounded-2xl border transition duration-300 shadow-xs ${
-            justUpdated ? 'border-ochre-500 bg-ochre-50/20 ring-2 ring-ochre-200' : 'border-paper-300'
-          }`}>
-            <span className="text-[11px] font-bold text-stone-500 block mb-1">
+          <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-card">
+            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
               {language === 'hi' ? 'बकाया ग्राहक उधार' : 'Pending Udhaar Book'}
             </span>
-            <div className="text-xl sm:text-2xl font-black text-ochre-700 transition-all">
+            <div className="text-2xl sm:text-3xl font-black text-amber-600 tabular-nums tracking-tight">
               ₹{summary?.pendingUdhaar?.toLocaleString('en-IN') || '0'}
             </div>
-            <span className="text-[10px] text-ochre-800 font-semibold">{language === 'hi' ? 'सुरक्षित सीमा के अंदर' : 'Within safe limits'}</span>
+            <span className="text-[11px] font-semibold text-amber-600 mt-1 block">Within safe ratio</span>
           </div>
         </div>
       </div>
 
-      {/* 3. 4-Month Seasonal Cash Flow Pattern (Monsoon Dip & Festival Surge) */}
+      {/* 3. 4-Month Seasonal Cash Flow Timeline */}
       {summary?.monthlyTrend && summary.monthlyTrend.length > 0 && (
-        <div className="bg-white rounded-3xl p-5 sm:p-6 border-2 border-paper-300 shadow-paper space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-paper-200 pb-3">
+        <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-card space-y-4">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
             <div>
-              <h2 className="text-base font-extrabold text-stone-900">
-                {language === 'hi' ? '4 माह का मौसमी नकदी प्रवाह (Cash Flow Pattern)' : '4-Month Cash Flow & Seasonal Trend'}
+              <h2 className="text-base font-extrabold text-slate-900 tracking-tight">
+                {language === 'hi' ? '4 माह का मौसमी नकदी प्रवाह' : '4-Month Seasonal Cash Flow Pattern'}
               </h2>
-              <p className="text-[11px] text-stone-500">
-                {language === 'hi'
-                  ? 'रमेश किराना स्टोर का वास्तविक 4 महीने का चक्र — ग्रीष्मकालीन बेसलाइन, जुलाई मानसून मंदी और त्योहारी उछाल'
-                  : 'Ramesh\'s Kirana Store — Steady Summer baseline, July monsoon road waterlogging dip, and pre-festival surge'}
+              <p className="text-xs text-slate-500">
+                Baseline, July monsoon dip, and pre-festival surge cycle
               </p>
             </div>
-            <span className="px-3 py-1 bg-terracotta-50 text-terracotta-800 border border-terracotta-300 rounded-full text-xs font-bold self-start sm:self-auto">
-              {language === 'hi' ? '4 माह का ऑडिट' : '4 Months Audited'}
+            <span className="px-3 py-1 bg-slate-100 text-slate-700 rounded-full text-xs font-bold">
+              4 Months Audited
             </span>
           </div>
 
@@ -309,276 +296,213 @@ export function CashFlowPage({ shop, onOpenKeypad, refreshKey, latestTx, onTrans
               return (
                 <div 
                   key={m.month}
-                  className={`p-3.5 rounded-2xl border flex flex-col justify-between space-y-3 transition ${
+                  className={`p-4 rounded-2xl border transition ${
                     isDip 
-                      ? 'bg-indigoRural-50/60 border-indigoRural-200 ring-1 ring-indigoRural-300' 
+                      ? 'bg-slate-50 border-indigo-200' 
                       : isSpike 
-                      ? 'bg-amber-50/80 border-amber-300 ring-1 ring-amber-400' 
-                      : 'bg-paper-50 border-paper-300'
+                      ? 'bg-amber-50/60 border-amber-200' 
+                      : 'bg-white border-slate-200/80'
                   }`}
                 >
-                  <div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-black text-stone-800">{m.label || m.month}</span>
-                      <span className={`text-[9px] font-black px-1.5 py-0.5 rounded ${
-                        isDip ? 'bg-indigoRural-200 text-indigoRural-900' :
-                        isSpike ? 'bg-amber-200 text-amber-900' :
-                        'bg-paper-200 text-stone-700'
-                      }`}>
-                        {m.patternTag || 'Baseline'}
-                      </span>
-                    </div>
-                    <p className="text-[10px] text-stone-500 mt-0.5">{m.narrative}</p>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-bold text-slate-900">{m.label || m.month}</span>
+                    <span className={`text-[9px] font-extrabold px-1.5 py-0.5 rounded-full ${
+                      isDip ? 'bg-indigo-100 text-indigo-800' :
+                      isSpike ? 'bg-amber-100 text-amber-900' :
+                      'bg-slate-100 text-slate-600'
+                    }`}>
+                      {m.patternTag?.split(' ')[1] || 'Baseline'}
+                    </span>
                   </div>
 
-                  {/* Revenue vs Expenses Bars */}
-                  <div className="space-y-1.5 text-[11px]">
+                  <div className="space-y-1.5 text-xs">
                     <div className="flex justify-between items-baseline">
-                      <span className="text-stone-500 text-[10px] font-semibold">{language === 'hi' ? 'बिक्री:' : 'Sales:'}</span>
-                      <strong className="text-forestRural-700 text-xs font-black">₹{m.income?.toLocaleString('en-IN')}</strong>
+                      <span className="text-slate-400 text-[10px] font-bold uppercase">Sales</span>
+                      <strong className="text-slate-900 font-extrabold tabular-nums">₹{m.income?.toLocaleString('en-IN')}</strong>
                     </div>
-                    <div className="w-full bg-stone-200 h-2 rounded-full overflow-hidden">
+                    <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
                       <div 
-                        className={`h-full rounded-full transition-all duration-700 ${
-                          isDip ? 'bg-indigoRural-500' : isSpike ? 'bg-amber-500' : 'bg-forestRural-600'
+                        className={`h-full rounded-full ${
+                          isDip ? 'bg-indigo-500' : isSpike ? 'bg-amber-500' : 'bg-emerald-500'
                         }`}
                         style={{ width: `${Math.min(100, (m.income / 85000) * 100)}%` }}
                       />
                     </div>
-
-                    <div className="flex justify-between items-baseline text-[10px] text-stone-500 pt-0.5">
-                      <span>{language === 'hi' ? 'माल/खर्च:' : 'Costs:'}</span>
-                      <span className="font-semibold text-stone-700">₹{m.expense?.toLocaleString('en-IN')}</span>
-                    </div>
-
-                    <div className="pt-1 border-t border-stone-200 flex justify-between items-baseline">
-                      <span className="text-[10px] text-stone-600 font-bold">{language === 'hi' ? 'शुद्ध बचत:' : 'Net Surplus:'}</span>
-                      <span className="text-[11px] font-black text-forestRural-700">₹{m.profit?.toLocaleString('en-IN')}</span>
+                    <div className="flex justify-between items-baseline text-[10px] text-slate-500 pt-1">
+                      <span>Surplus</span>
+                      <span className="font-bold text-emerald-600 tabular-nums">₹{m.profit?.toLocaleString('en-IN')}</span>
                     </div>
                   </div>
                 </div>
               );
             })}
           </div>
-
-          <div className="p-3 bg-amber-50/70 border border-amber-200 rounded-2xl text-xs text-stone-700 flex items-start gap-2 leading-relaxed">
-            <span className="text-base shrink-0">🏛️</span>
-            <div>
-              <strong className="font-bold text-amber-900">{language === 'hi' ? 'बैंक प्रबंधक क्रेडिट विश्लेषण: ' : 'Bank Appraisal Insight: '}</strong>
-              {language === 'hi'
-                ? 'जुलाई में मानसून बाढ़ व कीचड़ के कारण 32% बिक्री घटने के बावजूद रमेश जी ने माल खरीद को नियंत्रित रखा और दुकान सकारात्मक नकदी प्रवाह (+Surplus) में रही। यह अनुशासन सिद्ध करता है कि रमेश जी किसी भी मौसम में बैंक की ईएमआई आसानी से चुका सकते हैं।'
-                : 'Despite a ~32% dip during July monsoon waterlogging, Ramesh scaled down stock purchases to maintain positive operational surplus throughout. This proven cash-flow discipline guarantees uninterrupted debt service for bank loans.'}
-            </div>
-          </div>
         </div>
       )}
 
-      {/* 3. Simulated WhatsApp Reminder Notification Toast */}
+      {/* WhatsApp Simulated Toast */}
       {reminderToast && (
-        <div className="bg-emerald-50 border-2 border-emerald-400 p-4 rounded-2xl shadow-lg flex items-start gap-3 animate-fadeIn">
+        <div className="bg-emerald-50 border border-emerald-300 p-4 rounded-2xl shadow-lg flex items-start gap-3 animate-fadeIn">
           <MessageCircle className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
-          <div className="space-y-1">
-            <span className="text-xs font-bold text-emerald-900">
-              📲 {language === 'hi' ? 'व्हाट्सएप पर विनम्र तगादा संदेश तैयार:' : 'WhatsApp Payment Reminder Sent:'}
+          <div className="space-y-1 text-xs">
+            <span className="font-bold text-emerald-900">
+              📲 WhatsApp Payment Reminder Sent to {reminderToast.name}:
             </span>
-            <p className="text-xs text-emerald-800 font-mono bg-white p-2.5 rounded-xl border border-emerald-200">
+            <p className="text-emerald-800 bg-white p-2 rounded-xl border border-emerald-200 font-mono">
               "{reminderToast.message}"
             </p>
           </div>
         </div>
       )}
 
-      {/* 4. Tab Navigator (All Daily Entries vs Customer Udhaar Book) */}
-      <div className="bg-white rounded-3xl border-2 border-paper-300 shadow-paper overflow-hidden">
-        <div className="flex border-b border-paper-200 bg-paper-50 px-4 pt-3 gap-2">
-          <button
-            onClick={() => setActiveTab('all')}
-            className={`pb-3 px-4 text-xs sm:text-sm font-extrabold border-b-2 transition ${
-              activeTab === 'all'
-                ? 'border-terracotta-600 text-terracotta-700'
-                : 'border-transparent text-stone-600 hover:text-stone-800'
-            }`}
-          >
-            📋 {t('cashflow.tabAll')} ({transactions.length})
-          </button>
+      {/* 4. Revolut / Apple Wallet Style Transaction Stream */}
+      <div className="bg-white rounded-3xl border border-slate-200/80 shadow-card overflow-hidden">
+        
+        {/* Segment Tabs */}
+        <div className="flex items-center justify-between p-4 border-b border-slate-100 bg-slate-50/50">
+          <div className="flex gap-1 p-1 bg-slate-100 rounded-2xl">
+            <button
+              onClick={() => setActiveTab('all')}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition ${
+                activeTab === 'all' 
+                  ? 'bg-white text-slate-900 shadow-xs' 
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              📋 All Transactions ({transactions.length})
+            </button>
+            <button
+              onClick={() => setActiveTab('udhaar')}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+                activeTab === 'udhaar' 
+                  ? 'bg-white text-slate-900 shadow-xs' 
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <span>📖 Customer Udhaar Book</span>
+              <span className="text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.2 rounded-full font-bold">
+                ₹{summary?.pendingUdhaar || '1,050'}
+              </span>
+            </button>
+          </div>
 
-          <button
-            onClick={() => setActiveTab('udhaar')}
-            className={`pb-3 px-4 text-xs sm:text-sm font-extrabold border-b-2 transition flex items-center gap-1.5 ${
-              activeTab === 'udhaar'
-                ? 'border-ochre-600 text-ochre-800'
-                : 'border-transparent text-stone-600 hover:text-stone-800'
-            }`}
-          >
-            <span>📖 {t('cashflow.tabUdhaar')}</span>
-            <span className="text-[10px] bg-ochre-100 text-ochre-800 px-2 py-0.5 rounded-full font-black">
-              ₹{summary?.pendingUdhaar || '4,650'}
-            </span>
-          </button>
+          {/* Quick Filter Pills for Tab 1 */}
+          {activeTab === 'all' && (
+            <div className="hidden sm:flex items-center gap-1.5 text-xs">
+              {['', 'income', 'expense', 'udhaar_given'].map(t => (
+                <button
+                  key={t}
+                  onClick={() => setFilterType(t)}
+                  className={`px-3 py-1 rounded-xl font-bold text-xs transition ${
+                    filterType === t 
+                      ? 'bg-slate-900 text-white' 
+                      : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'
+                  }`}
+                >
+                  {t === '' ? 'All' : t === 'income' ? 'Sales' : t === 'expense' ? 'Costs' : 'Udhaar'}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
-        {/* Tab 1: All Transactions */}
+        {/* Tab 1: All Transactions Feed */}
         {activeTab === 'all' && (
-          <div>
-            {/* Filter Pills */}
-            <div className="p-3 bg-paper-100/50 border-b border-paper-200 flex items-center gap-2 overflow-x-auto text-xs">
-              <span className="text-stone-500 font-bold text-[11px] whitespace-nowrap">Filter:</span>
-              <button
-                onClick={() => setFilterType('')}
-                className={`px-3 py-1 rounded-lg font-bold transition ${
-                  filterType === '' ? 'bg-stone-800 text-white' : 'bg-white text-stone-700 border border-stone-300'
-                }`}
-              >
-                All
-              </button>
-              <button
-                onClick={() => setFilterType('income')}
-                className={`px-3 py-1 rounded-lg font-bold transition ${
-                  filterType === 'income' ? 'bg-forestRural-700 text-white' : 'bg-white text-stone-700 border border-stone-300'
-                }`}
-              >
-                🟢 {language === 'hi' ? 'बिक्री (Sales)' : 'Sales'}
-              </button>
-              <button
-                onClick={() => setFilterType('expense')}
-                className={`px-3 py-1 rounded-lg font-bold transition ${
-                  filterType === 'expense' ? 'bg-terracotta-700 text-white' : 'bg-white text-stone-700 border border-stone-300'
-                }`}
-              >
-                🔴 {language === 'hi' ? 'खर्च (Expenses)' : 'Expenses'}
-              </button>
-              <button
-                onClick={() => setFilterType('udhaar_given')}
-                className={`px-3 py-1 rounded-lg font-bold transition ${
-                  filterType === 'udhaar_given' ? 'bg-ochre-700 text-white' : 'bg-white text-stone-700 border border-stone-300'
-                }`}
-              >
-                🟡 {language === 'hi' ? 'उधार दिया' : 'Udhaar Given'}
-              </button>
-              <button
-                onClick={() => setFilterType('udhaar_repaid')}
-                className={`px-3 py-1 rounded-lg font-bold transition ${
-                  filterType === 'udhaar_repaid' ? 'bg-indigoRural-700 text-white' : 'bg-white text-stone-700 border border-stone-300'
-                }`}
-              >
-                🔵 {language === 'hi' ? 'उधार लौटाया' : 'Udhaar Repaid'}
-              </button>
-            </div>
+          <div className="divide-y divide-slate-100 max-h-[500px] overflow-y-auto">
+            {transactions.length === 0 ? (
+              <div className="p-12 text-center text-slate-400 text-sm">
+                No transactions recorded yet.
+              </div>
+            ) : (
+              transactions.map(tx => {
+                const isIncome = tx.type === 'income';
+                const isExpense = tx.type === 'expense';
+                const isUdhaarGiven = tx.type === 'udhaar_given';
 
-            {/* List */}
-            <div className="divide-y divide-paper-200 max-h-[500px] overflow-y-auto">
-              {transactions.length === 0 ? (
-                <div className="p-8 text-center text-stone-500 text-sm">
-                  {language === 'hi' ? 'कोई लेन-देन नहीं मिला।' : 'No transactions recorded yet.'}
-                </div>
-              ) : (
-                transactions.map(tx => {
-                  const isIncome = tx.type === 'income';
-                  const isExpense = tx.type === 'expense';
-                  const isUdhaarGiven = tx.type === 'udhaar_given';
-                  const isUdhaarRepaid = tx.type === 'udhaar_repaid';
-
-                  return (
-                    <div key={tx.id} className="p-3.5 sm:p-4 hover:bg-paper-50 transition flex items-center justify-between gap-3 text-xs">
-                      
-                      <div className="flex items-center gap-3">
-                        <span className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
-                          isIncome ? 'bg-forestRural-100 text-forestRural-800' :
-                          isExpense ? 'bg-terracotta-100 text-terracotta-800' :
-                          isUdhaarGiven ? 'bg-ochre-100 text-ochre-800' :
-                          'bg-indigoRural-100 text-indigoRural-800'
-                        }`}>
-                          {isIncome ? '🟢' : isExpense ? '🔴' : isUdhaarGiven ? '🟡' : '🔵'}
-                        </span>
-
-                        <div className="space-y-0.5">
-                          <div className="flex items-center gap-2">
-                            <span className="font-extrabold text-stone-900 text-xs sm:text-sm">
-                              {tx.category}
-                            </span>
-                            <span className="text-[10px] px-1.5 py-0.2 bg-paper-200 text-stone-600 rounded font-semibold uppercase">
-                              {tx.payment_mode}
-                            </span>
-                          </div>
-                          <p className="text-[11px] text-stone-500">
-                            {tx.customer_vendor_name ? `👤 ${tx.customer_vendor_name} • ` : ''}
-                            📅 {tx.date}
-                          </p>
-                        </div>
+                return (
+                  <div key={tx.id} className="p-4 hover:bg-slate-50/80 transition flex items-center justify-between gap-4">
+                    
+                    <div className="flex items-center gap-3.5">
+                      <div className={`w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-sm shrink-0 ${
+                        isIncome ? 'bg-emerald-50 text-emerald-600 border border-emerald-200/60' :
+                        isExpense ? 'bg-rose-50 text-rose-600 border border-rose-200/60' :
+                        isUdhaarGiven ? 'bg-amber-50 text-amber-600 border border-amber-200/60' :
+                        'bg-indigo-50 text-indigo-600 border border-indigo-200/60'
+                      }`}>
+                        {isIncome ? '↓' : isExpense ? '↑' : '⏱'}
                       </div>
 
-                      <div className="text-right shrink-0">
-                        <div className={`text-sm sm:text-base font-black ${
-                          isIncome ? 'text-forestRural-700' :
-                          isExpense ? 'text-terracotta-700' :
-                          isUdhaarGiven ? 'text-ochre-700' :
-                          'text-indigoRural-700'
-                        }`}>
-                          {isIncome || isUdhaarRepaid ? '+' : '-'}₹{tx.amount.toLocaleString('en-IN')}
+                      <div className="space-y-0.5">
+                        <div className="flex items-center gap-2">
+                          <span className="font-extrabold text-sm text-slate-900">{tx.category}</span>
+                          <span className="text-[10px] font-extrabold px-1.5 py-0.2 rounded-md bg-slate-100 text-slate-600 uppercase">
+                            {tx.payment_mode}
+                          </span>
                         </div>
-                        <span className="text-[10px] text-stone-600 capitalize">
-                          {tx.type.replace('_', ' ')}
-                        </span>
+                        <p className="text-xs text-slate-400 font-medium">
+                          {tx.customer_vendor_name ? `${tx.customer_vendor_name} • ` : ''}
+                          {tx.date}
+                        </p>
                       </div>
-
                     </div>
-                  );
-                })
-              )}
-            </div>
+
+                    <div className="text-right">
+                      <div className={`text-base font-black tabular-nums ${
+                        isIncome || tx.type === 'udhaar_repaid' ? 'text-emerald-600' : 'text-slate-900'
+                      }`}>
+                        {isIncome || tx.type === 'udhaar_repaid' ? '+' : '-'}₹{tx.amount.toLocaleString('en-IN')}
+                      </div>
+                      <span className="text-[10px] text-slate-400 capitalize font-medium">
+                        {tx.type.replace('_', ' ')}
+                      </span>
+                    </div>
+
+                  </div>
+                );
+              })
+            )}
           </div>
         )}
 
-        {/* Tab 2: Customer Udhaar Book (Khata Ledger) */}
+        {/* Tab 2: Customer Udhaar Khata */}
         {activeTab === 'udhaar' && (
-          <div className="p-4 sm:p-5 space-y-4">
-            <div className="p-3 bg-ochre-50 border border-ochre-200 rounded-2xl text-xs text-ochre-900 flex items-start gap-2">
-              <Users className="w-4 h-4 text-ochre-700 shrink-0 mt-0.5" />
-              <p>
-                {language === 'hi'
-                  ? 'यह आपके गांव के उन नियमित ग्राहकों की सूची है जिनका दुकान पर उधार बकाया है। 1-क्लिक में व्हाट्सएप द्वारा सौम्य भुगतान स्मरण भेजें।'
-                  : 'Ledger of village regulars with outstanding khata credit. Tap the WhatsApp icon to simulate a polite payment reminder.'}
-              </p>
-            </div>
-
-            <div className="divide-y divide-paper-200 border border-paper-300 rounded-2xl overflow-hidden bg-white">
-              {udhaarLedger.map((cust, idx) => (
-                <div key={idx} className="p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-                  
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <span className="font-extrabold text-sm text-stone-900">
-                        👤 {cust.customerName}
-                      </span>
-                      <span className="text-[10px] bg-paper-200 text-stone-600 px-2 py-0.5 rounded-full font-medium">
-                        Last entry: {cust.lastDate}
-                      </span>
+          <div className="divide-y divide-slate-100 max-h-[500px] overflow-y-auto">
+            {udhaarLedger.length === 0 ? (
+              <div className="p-12 text-center text-slate-400 text-sm">
+                No active udhaar accounts.
+              </div>
+            ) : (
+              udhaarLedger.map((cust, idx) => (
+                <div key={idx} className="p-4 hover:bg-slate-50/80 transition flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-2xl bg-amber-50 text-amber-700 border border-amber-200/60 flex items-center justify-center font-bold text-sm">
+                      {cust.customerName.charAt(0)}
                     </div>
-                    <p className="text-[11px] text-stone-500">
-                      {language === 'hi' ? 'कुल दिया:' : 'Total Taken:'} ₹{cust.totalGiven.toLocaleString('en-IN')} | {language === 'hi' ? 'वापस किया:' : 'Repaid:'} ₹{cust.totalRepaid.toLocaleString('en-IN')}
-                    </p>
+                    <div>
+                      <div className="font-extrabold text-sm text-slate-900">{cust.customerName}</div>
+                      <div className="text-xs text-slate-400 font-medium">Last active: {cust.lastDate}</div>
+                    </div>
                   </div>
 
-                  <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0">
-                    <div className="text-left sm:text-right">
-                      <span className="text-[10px] text-stone-500 font-semibold block">{language === 'hi' ? 'बकाया राशि' : 'Balance Owed'}</span>
-                      <span className="text-base font-black text-terracotta-700">
+                  <div className="flex items-center gap-4">
+                    <div className="text-right">
+                      <div className="text-base font-black text-amber-600 tabular-nums">
                         ₹{cust.balanceOwed.toLocaleString('en-IN')}
-                      </span>
+                      </div>
+                      <span className="text-[10px] text-slate-400">Balance Owed</span>
                     </div>
 
                     <button
                       onClick={() => handleSimulateReminder(cust)}
-                      className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold text-xs rounded-xl shadow-xs flex items-center gap-1.5 transition"
+                      className="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-xs rounded-xl border border-emerald-200 transition active:scale-95 flex items-center gap-1.5"
                     >
                       <MessageCircle className="w-3.5 h-3.5" />
-                      <span>{language === 'hi' ? 'तगादा भेजें' : 'Send Reminder'}</span>
+                      <span>WhatsApp</span>
                     </button>
                   </div>
-
                 </div>
-              ))}
-            </div>
+              ))
+            )}
           </div>
         )}
 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Check, Delete, ArrowRight, User, Tag, Calendar, Banknote } from 'lucide-react';
+import { X, Check, Delete, ArrowRight, User, Tag, Calendar, Banknote, ShieldCheck } from 'lucide-react';
 import { api } from '../utils/api';
 import { useTranslation } from '../i18n/LanguageContext';
 
@@ -17,7 +17,7 @@ export function NumericKeypadModal({ isOpen, onClose, onTransactionSaved, shopId
   if (!isOpen) return null;
 
   const handleKeyPress = (char) => {
-    if (amountStr.length >= 7) return; // limit max
+    if (amountStr.length >= 7) return;
     setAmountStr(prev => prev + char);
   };
 
@@ -75,10 +75,9 @@ export function NumericKeypadModal({ isOpen, onClose, onTransactionSaved, shopId
         setCustomerName('');
         setErrorMessage('');
         onClose();
-      }, 600);
+      }, 500);
     } catch (err) {
       console.warn('Offline / network error, applying optimistic save:', err.message);
-      // Even if network drops, apply optimistic save for rural offline resiliency
       onTransactionSaved?.(localTx);
       setSuccessToast(true);
       setTimeout(() => {
@@ -87,7 +86,7 @@ export function NumericKeypadModal({ isOpen, onClose, onTransactionSaved, shopId
         setCustomerName('');
         setErrorMessage('');
         onClose();
-      }, 600);
+      }, 500);
     } finally {
       setLoading(false);
     }
@@ -103,152 +102,171 @@ export function NumericKeypadModal({ isOpen, onClose, onTransactionSaved, shopId
   const commonVillageCustomers = ['Masterji Ramswaroop', 'Dharmendra Yadav', 'Suresh Carpenter', 'Panchayat Sahayak Amit', 'Chachi Kunti Devi'];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-stone-900/60 backdrop-blur-sm animate-fadeIn">
-      <div className="w-full max-w-md bg-paper-100 rounded-3xl border-2 border-terracotta-300 shadow-2xl overflow-hidden flex flex-col max-h-[95vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-slate-950/40 backdrop-blur-md animate-fadeIn">
+      <div className="w-full max-w-sm bg-white rounded-3xl border border-slate-200/80 shadow-2xl overflow-hidden flex flex-col max-h-[95vh] transition-all">
         
-        {/* Header */}
-        <div className="bg-gradient-to-r from-terracotta-700 to-terracotta-800 text-white px-5 py-3.5 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <span className="p-1.5 bg-terracotta-900/40 rounded-lg">
-              <Banknote className="w-5 h-5 text-ochre-300" />
-            </span>
-            <div>
-              <h3 className="text-base font-bold">
-                {language === 'hi' ? 'दैनिक बही-खाता प्रविष्टि' : 'Log Cash Flow Transaction'}
-              </h3>
-              <p className="text-[11px] text-terracotta-200">
-                {language === 'hi' ? 'बड़े अंकों वाला टच पैड • कम लिखना' : 'Numeric Touch Logger • Low Literacy Friendly'}
-              </p>
-            </div>
+        {/* Header: Minimalist Apple Style */}
+        <div className="px-5 pt-4 pb-2 flex items-center justify-between border-b border-slate-100">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-indigo-600 animate-pulse" />
+            <h3 className="text-sm font-extrabold text-slate-900 tracking-tight">
+              {language === 'hi' ? 'लेन-देन दर्ज करें' : 'Log Transaction'}
+            </h3>
           </div>
           <button 
             onClick={onClose}
-            className="p-1.5 rounded-full hover:bg-white/10 transition text-terracotta-200 hover:text-white"
+            className="p-1 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Scrollable Body */}
-        <div className="p-4 overflow-y-auto space-y-3.5 flex-1">
+        {/* Body Content */}
+        <div className="p-4 space-y-3 flex-1 overflow-y-auto">
+          
           {errorMessage && (
-            <div className="bg-rose-50 border border-rose-300 text-rose-800 text-xs px-3.5 py-2 rounded-xl flex items-center justify-between gap-2">
-              <div className="flex items-center gap-1.5">
-                <span>⚠️</span>
-                <span className="font-semibold">{errorMessage}</span>
-              </div>
-              <button 
-                onClick={() => setErrorMessage('')}
-                className="text-rose-600 hover:text-rose-900 text-xs font-bold px-1"
-              >
-                ✕
-              </button>
+            <div className="bg-rose-50 border border-rose-200 text-rose-700 text-xs px-3 py-2 rounded-xl flex items-center justify-between">
+              <span>{errorMessage}</span>
+              <button onClick={() => setErrorMessage('')} className="font-bold">✕</button>
             </div>
           )}
-          
-          {/* 1. Transaction Type Selector (Large 4 Buttons) */}
-          <div>
-            <label className="block text-xs font-bold text-stone-600 mb-1.5">
-              {language === 'hi' ? 'लेन-देन का प्रकार चुनें' : 'Transaction Type'}
-            </label>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => { setType('income'); setCategory('Daily Counter Sales'); }}
-                className={`py-2.5 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition ${
-                  type === 'income'
-                    ? 'bg-forestRural-600 text-white border-forestRural-700 shadow-sm'
-                    : 'bg-white text-stone-700 border-paper-400 hover:border-forestRural-400'
-                }`}
-              >
-                <span>🟢</span>
-                <span>{language === 'hi' ? 'दुकान बिक्री (आवक)' : 'Shop Sale (Income)'}</span>
-              </button>
 
-              <button
-                type="button"
-                onClick={() => { setType('expense'); setCategory('Wholesale Stock Purchase'); }}
-                className={`py-2.5 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition ${
-                  type === 'expense'
-                    ? 'bg-terracotta-600 text-white border-terracotta-700 shadow-sm'
-                    : 'bg-white text-stone-700 border-paper-400 hover:border-terracotta-400'
-                }`}
-              >
-                <span>🔴</span>
-                <span>{language === 'hi' ? 'माल खरीदा / खर्च' : 'Stock Expense'}</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => { setType('udhaar_given'); setCategory('Monthly Grocery Khata'); }}
-                className={`py-2 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition ${
-                  type === 'udhaar_given'
-                    ? 'bg-ochre-600 text-white border-ochre-700 shadow-sm'
-                    : 'bg-white text-stone-700 border-paper-400 hover:border-ochre-400'
-                }`}
-              >
-                <span>🟡</span>
-                <span>{language === 'hi' ? 'उधार दिया (खाता)' : 'Udhaar Given'}</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => { setType('udhaar_repaid'); setCategory('Milk Settlement Return'); }}
-                className={`py-2 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition ${
-                  type === 'udhaar_repaid'
-                    ? 'bg-indigoRural-600 text-white border-indigoRural-700 shadow-sm'
-                    : 'bg-white text-stone-700 border-paper-400 hover:border-indigoRural-400'
-                }`}
-              >
-                <span>🔵</span>
-                <span>{language === 'hi' ? 'उधार वापस मिला' : 'Udhaar Repaid'}</span>
-              </button>
-            </div>
+          {/* 1. Transaction Type Segmented Pill Bar */}
+          <div className="grid grid-cols-3 gap-1 p-1 bg-slate-100 rounded-2xl">
+            <button
+              type="button"
+              onClick={() => { setType('income'); setCategory('Daily Counter Sales'); }}
+              className={`py-2 text-xs font-extrabold rounded-xl transition ${
+                type === 'income' 
+                  ? 'bg-emerald-600 text-white shadow-xs' 
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              {language === 'hi' ? 'बिक्री' : 'Sale'}
+            </button>
+            <button
+              type="button"
+              onClick={() => { setType('expense'); setCategory('Wholesale Stock Purchase'); }}
+              className={`py-2 text-xs font-extrabold rounded-xl transition ${
+                type === 'expense' 
+                  ? 'bg-rose-600 text-white shadow-xs' 
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              {language === 'hi' ? 'खर्च' : 'Expense'}
+            </button>
+            <button
+              type="button"
+              onClick={() => { setType('udhaar_given'); setCategory('Monthly Grocery Khata'); }}
+              className={`py-2 text-xs font-extrabold rounded-xl transition ${
+                type.startsWith('udhaar') 
+                  ? 'bg-amber-500 text-white shadow-xs' 
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              {language === 'hi' ? 'उधार' : 'Udhaar'}
+            </button>
           </div>
 
-          {/* 2. Big Amount Display */}
-          <div className="bg-white rounded-2xl border-2 border-stone-300 p-3 flex items-center justify-between shadow-inner">
-            <div className="flex items-center gap-1.5">
-              <span className="text-2xl font-black text-stone-500">₹</span>
-              <span className="text-3xl font-extrabold text-stone-900 tracking-tight min-h-[36px] flex items-center">
+          {/* 2. Hero Currency Amount Display (Apple CashApp Style) */}
+          <div className="py-3 px-4 bg-slate-50 rounded-2xl border border-slate-200/60 flex items-center justify-between">
+            <span className="text-xl font-bold text-slate-400">₹</span>
+            <div className="flex-1 text-right overflow-x-auto">
+              <span className={`font-black tracking-tight tabular-nums transition-all ${
+                amountStr.length > 5 ? 'text-3xl' : 'text-4xl'
+              } ${amountStr ? 'text-slate-900' : 'text-slate-300'}`}>
                 {amountStr ? Number(amountStr).toLocaleString('en-IN') : '0'}
               </span>
             </div>
-            {amountStr && (
-              <button 
-                onClick={handleClear}
-                className="text-xs text-stone-400 hover:text-stone-700 font-semibold px-2 py-1 bg-stone-100 rounded-md"
-              >
-                {language === 'hi' ? 'साफ़' : 'Clear'}
-              </button>
-            )}
           </div>
 
-          {/* 3. Quick Preset Increment Chips (+50, +100, +500, +1000) */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5">
-            <span className="text-[10px] font-bold text-stone-500 whitespace-nowrap">
-              {language === 'hi' ? 'त्वरित जोड़ें:' : 'Quick Add:'}
-            </span>
-            {[50, 100, 200, 500, 1000, 2000].map(val => (
+          {/* 3. Preset Quick Pills */}
+          <div className="flex items-center justify-between gap-1.5">
+            {[100, 500, 1000, 2000].map(val => (
               <button
                 key={val}
                 type="button"
                 onClick={() => handleAddPreset(val)}
-                className="px-2.5 py-1 text-xs font-bold bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 rounded-lg shadow-sm whitespace-nowrap active:scale-95 transition"
+                className="flex-1 py-1 px-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition active:scale-95"
               >
-                +₹{val}
+                +{val}
               </button>
             ))}
+            <button
+              type="button"
+              onClick={handleClear}
+              className="py-1 px-2.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-600 text-xs font-bold transition"
+            >
+              C
+            </button>
           </div>
 
-          {/* 4. Tactile Touch Numeric Keypad */}
-          <div className="grid grid-cols-3 gap-2 bg-stone-100 p-2.5 rounded-2xl border border-stone-200">
-            {['1', '2', '3', '4', '5', '6', '7', '8', '9', '00', '0'].map((digit) => (
+          {/* 4. Customer Name for Udhaar or Payment Mode for Sale */}
+          {type.startsWith('udhaar') ? (
+            <div className="space-y-1">
+              <input
+                type="text"
+                value={customerName}
+                onChange={(e) => setCustomerName(e.target.value)}
+                placeholder={language === 'hi' ? 'ग्राहक का नाम (e.g. मास्टरजी)' : 'Customer Name (e.g. Masterji)'}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+              <div className="flex gap-1 overflow-x-auto py-1">
+                {commonVillageCustomers.slice(0, 3).map(c => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => setCustomerName(c)}
+                    className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 whitespace-nowrap"
+                  >
+                    {c.split(' ')[0]}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setPaymentMode('cash')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${
+                    paymentMode === 'cash' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-600'
+                  }`}
+                >
+                  💵 Cash
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPaymentMode('upi')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${
+                    paymentMode === 'upi' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'
+                  }`}
+                >
+                  📱 UPI QR
+                </button>
+              </div>
+
+              <select
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                className="px-2.5 py-1.5 bg-slate-100 text-slate-700 font-semibold rounded-xl text-xs border-0 focus:ring-2 focus:ring-indigo-500"
+              >
+                {(categoriesByType[type] || categoriesByType.income).map(cat => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {/* 5. Tactile Numeric Touch Keypad Grid (Apple Circular Buttons) */}
+          <div className="grid grid-cols-3 gap-2 pt-1 select-none">
+            {['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0'].map(digit => (
               <button
                 key={digit}
                 type="button"
                 onClick={() => handleKeyPress(digit)}
-                className="h-11 bg-white hover:bg-paper-50 active:bg-amber-100 rounded-xl font-extrabold text-lg text-stone-800 border border-stone-200 shadow-sm flex items-center justify-center transition active:scale-95"
+                className="h-11 rounded-2xl bg-slate-100 hover:bg-slate-200 active:scale-90 text-slate-900 text-lg font-extrabold flex items-center justify-center transition shadow-2xs"
               >
                 {digit}
               </button>
@@ -256,105 +274,35 @@ export function NumericKeypadModal({ isOpen, onClose, onTransactionSaved, shopId
             <button
               type="button"
               onClick={handleBackspace}
-              className="h-11 bg-terracotta-50 hover:bg-terracotta-100 active:bg-terracotta-200 rounded-xl font-bold text-terracotta-800 border border-terracotta-200 shadow-sm flex items-center justify-center transition active:scale-95"
+              className="h-11 rounded-2xl bg-slate-200 hover:bg-slate-300 active:scale-90 text-slate-700 flex items-center justify-center transition"
             >
               <Delete className="w-5 h-5" />
             </button>
           </div>
 
-          {/* 5. Payment Mode (Cash vs UPI vs Khata) */}
-          {!type.startsWith('udhaar') && (
-            <div>
-              <label className="block text-xs font-bold text-stone-600 mb-1">
-                {language === 'hi' ? 'भुगतान का माध्यम' : 'Payment Mode'}
-              </label>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setPaymentMode('cash')}
-                  className={`py-2 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition ${
-                    paymentMode === 'cash'
-                      ? 'bg-amber-700 text-white border-amber-800'
-                      : 'bg-white text-stone-700 border-stone-200 hover:border-amber-300'
-                  }`}
-                >
-                  💵 {language === 'hi' ? 'नकदी (Cash)' : 'Cash'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setPaymentMode('upi')}
-                  className={`py-2 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition ${
-                    paymentMode === 'upi'
-                      ? 'bg-indigoRural-700 text-white border-indigoRural-800'
-                      : 'bg-white text-stone-700 border-stone-200 hover:border-indigoRural-300'
-                  }`}
-                >
-                  📱 {language === 'hi' ? 'डिजिटल यूपीआई (QR / PhonePe)' : 'Digital UPI (QR)'}
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* 6. Customer or Vendor Name (Especially for Udhaar / Khata) */}
-          <div>
-            <label className="block text-xs font-bold text-stone-600 mb-1">
-              {type === 'expense' 
-                ? (language === 'hi' ? 'थोक व्यापारी / मंडी का नाम' : 'Vendor / Mandi Supplier')
-                : (language === 'hi' ? 'ग्राहक का नाम (उधार / विशेष ग्राहक)' : 'Customer Name (Optional for cash sales)')}
-            </label>
-            <input
-              type="text"
-              value={customerName}
-              onChange={(e) => setCustomerName(e.target.value)}
-              placeholder={type === 'expense' ? 'उदा. गल्ला मंडी बलरामपुर' : 'उदा. मास्टरजी रामस्वरूप'}
-              className="w-full text-xs px-3 py-2 bg-white rounded-xl border border-stone-300 focus:outline-none focus:border-terracotta-500"
-            />
-            {type.startsWith('udhaar') && (
-              <div className="flex flex-wrap gap-1 mt-1.5">
-                {commonVillageCustomers.slice(0, 4).map(name => (
-                  <button
-                    key={name}
-                    type="button"
-                    onClick={() => setCustomerName(name)}
-                    className="text-[10px] bg-paper-200 hover:bg-paper-300 text-stone-700 px-2 py-0.5 rounded-md border border-paper-400"
-                  >
-                    + {name.split(' ')[0]}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-        </div>
-
-        {/* Footer Submit Button */}
-        <div className="p-3 bg-white border-t border-paper-300">
+          {/* 6. Primary Action Save Button */}
           <button
             type="button"
             onClick={handleSubmit}
             disabled={loading || !amountStr || Number(amountStr) <= 0}
-            className={`w-full py-3.5 px-4 rounded-2xl font-bold text-sm text-white shadow-lg flex items-center justify-center gap-2 transition ${
-              !amountStr || Number(amountStr) <= 0
-                ? 'bg-stone-300 cursor-not-allowed'
-                : successToast
-                ? 'bg-emerald-600'
-                : 'bg-terracotta-600 hover:bg-terracotta-700 active:scale-[0.98]'
+            className={`w-full py-3.5 rounded-2xl font-extrabold text-sm flex items-center justify-center gap-2 shadow-lg transition active:scale-[0.98] ${
+              successToast
+                ? 'bg-emerald-600 text-white'
+                : 'bg-indigo-600 hover:bg-indigo-700 text-white disabled:opacity-50 disabled:cursor-not-allowed'
             }`}
           >
             {successToast ? (
               <>
-                <Check className="w-5 h-5" />
-                <span>{language === 'hi' ? 'बही-खाते में दर्ज हो गया!' : 'Recorded in Bahi-Khata!'}</span>
+                <Check className="w-5 h-5 animate-bounce" />
+                <span>{language === 'hi' ? 'सफलतापूर्वक दर्ज हुआ!' : 'Saved Instantly!'}</span>
               </>
-            ) : loading ? (
-              <span>{language === 'hi' ? 'दर्ज हो रहा है...' : 'Saving...'}</span>
             ) : (
-              <>
-                <span>{language === 'hi' ? 'बही-खाते में जोड़ें' : 'Save to Bahi-Khata'}</span>
-                <ArrowRight className="w-4 h-4" />
-              </>
+              <span>
+                {language === 'hi' ? 'दर्ज करें (Save)' : 'Save Transaction'}
+              </span>
             )}
           </button>
+
         </div>
 
       </div>

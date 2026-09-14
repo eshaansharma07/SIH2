@@ -4,38 +4,41 @@
 
 @layer base {
   body {
-    background-color: #FAF7F2;
-    background-image: 
-      radial-gradient(#E8DFC9 0.75px, transparent 0.75px),
-      radial-gradient(#E8DFC9 0.75px, #FAF7F2 0.75px);
-    background-size: 30px 30px;
-    background-position: 0 0, 15px 15px;
-    color: #292524;
-    font-family: 'Nunito', system-ui, -apple-system, sans-serif;
+    background-color: #F8FAFC;
+    color: #0F172A;
+    font-family: 'Plus Jakarta Sans', 'Outfit', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   h1, h2, h3, .font-display {
-    font-family: 'Rozha One', 'Nunito', serif;
+    font-family: 'Outfit', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    letter-spacing: -0.02em;
   }
 }
 
-/* Custom Scrollbars */
+.tabular-nums {
+  font-feature-settings: "tnum";
+  font-variant-numeric: tabular-nums;
+}
+
+/* Custom Sleek Apple-style Scrollbars */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #F4EFE6;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #D5C7B2;
+  background: #CBD5E1;
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #C15324;
+  background: #94A3B8;
 }
 
 /* Print Optimization for Bankable Dossier */

@@ -69,16 +69,16 @@ export function ShopProfilePage({ shop, onShopUpdated, onReloadDemo }) {
     <div className="max-w-3xl mx-auto space-y-6 pb-12 animate-fadeIn">
       
       {/* Header */}
-      <div className="bg-white rounded-3xl p-5 sm:p-6 border-2 border-paper-300 shadow-paper">
-        <div className="flex items-center gap-2.5">
-          <span className="p-2 bg-terracotta-100 text-terracotta-800 rounded-xl">
+      <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200/80 shadow-card">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-2xl bg-slate-100 text-slate-800 flex items-center justify-center shrink-0">
             <Settings className="w-5 h-5" />
-          </span>
+          </div>
           <div>
-            <h1 className="text-xl font-black text-stone-900">
+            <h1 className="text-xl font-black text-slate-900 tracking-tight">
               {language === 'hi' ? 'दुकान प्रोफ़ाइल एवं सेटिंग्स' : 'Shop Profile & Settings'}
             </h1>
-            <p className="text-xs text-stone-500">
+            <p className="text-xs text-slate-500">
               {language === 'hi' ? 'अपनी दुकान की जानकारी, बैंक खाता और एआई सेटिंग्स अपडेट करें' : 'Manage your enterprise details, banking records, and AI key'}
             </p>
           </div>
@@ -86,88 +86,88 @@ export function ShopProfilePage({ shop, onShopUpdated, onReloadDemo }) {
       </div>
 
       {/* Main Settings Form */}
-      <div className="bg-white rounded-3xl p-6 sm:p-8 border-2 border-paper-300 shadow-paper space-y-6">
+      <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-card space-y-6">
         <form onSubmit={handleSaveProfile} className="space-y-5">
           {errorMsg && (
-            <div className="bg-rose-50 border border-rose-300 text-rose-800 text-xs px-4 py-2.5 rounded-xl font-semibold flex items-center justify-between">
+            <div className="bg-rose-50 border border-rose-200 text-rose-800 text-xs px-4 py-2.5 rounded-xl font-semibold flex items-center justify-between">
               <span>⚠️ {errorMsg}</span>
               <button onClick={() => setErrorMsg('')} className="text-rose-600 hover:text-rose-900 font-bold ml-2">✕</button>
             </div>
           )}
           
-          <div className="border-b border-paper-200 pb-3">
-            <h2 className="text-sm font-extrabold text-stone-900 uppercase tracking-wider">
+          <div className="border-b border-slate-100 pb-3">
+            <h2 className="text-xs font-black text-slate-900 uppercase tracking-wider">
               {language === 'hi' ? 'मूल विवरण' : 'Primary Information'}
             </h2>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold text-stone-700 mb-1">
+              <label className="block text-xs font-bold text-slate-700 mb-1.5">
                 {language === 'hi' ? 'दुकान का नाम' : 'Enterprise Name'}
               </label>
               <input
                 type="text"
                 value={shopName}
                 onChange={(e) => setShopName(e.target.value)}
-                className="w-full px-3.5 py-2.5 bg-paper-50 rounded-xl border border-stone-300 text-xs font-semibold focus:outline-none focus:border-terracotta-500"
+                className="w-full px-3.5 py-2.5 bg-slate-50 focus:bg-white rounded-xl border border-slate-200 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-stone-700 mb-1">
+              <label className="block text-xs font-bold text-slate-700 mb-1.5">
                 {language === 'hi' ? 'दुकानदार / स्वामी का नाम' : 'Proprietor Name'}
               </label>
               <input
                 type="text"
                 value={ownerName}
                 onChange={(e) => setOwnerName(e.target.value)}
-                className="w-full px-3.5 py-2.5 bg-paper-50 rounded-xl border border-stone-300 text-xs font-semibold focus:outline-none focus:border-terracotta-500"
+                className="w-full px-3.5 py-2.5 bg-slate-50 focus:bg-white rounded-xl border border-slate-200 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
-              <label className="block text-xs font-bold text-stone-700 mb-1">
+              <label className="block text-xs font-bold text-slate-700 mb-1.5">
                 {language === 'hi' ? 'गांव / मोहल्ला' : 'Village'}
               </label>
               <input
                 type="text"
                 value={village}
                 onChange={(e) => setVillage(e.target.value)}
-                className="w-full px-3.5 py-2 bg-paper-50 rounded-xl border border-stone-300 text-xs font-semibold"
+                className="w-full px-3.5 py-2.5 bg-slate-50 focus:bg-white rounded-xl border border-slate-200 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-stone-700 mb-1">
+              <label className="block text-xs font-bold text-slate-700 mb-1.5">
                 {language === 'hi' ? 'जिला (District)' : 'District'}
               </label>
               <input
                 type="text"
                 value={district}
                 onChange={(e) => setDistrict(e.target.value)}
-                className="w-full px-3.5 py-2 bg-paper-50 rounded-xl border border-stone-300 text-xs font-semibold"
+                className="w-full px-3.5 py-2.5 bg-slate-50 focus:bg-white rounded-xl border border-slate-200 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-stone-700 mb-1">
+              <label className="block text-xs font-bold text-slate-700 mb-1.5">
                 {language === 'hi' ? 'राज्य (State)' : 'State'}
               </label>
               <input
                 type="text"
                 value={state}
                 onChange={(e) => setState(e.target.value)}
-                className="w-full px-3.5 py-2 bg-paper-50 rounded-xl border border-stone-300 text-xs font-semibold"
+                className="w-full px-3.5 py-2.5 bg-slate-50 focus:bg-white rounded-xl border border-slate-200 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold text-stone-700 mb-1">
+              <label className="block text-xs font-bold text-slate-700 mb-1.5">
                 {language === 'hi' ? 'व्यापार अनुभव (वर्ष)' : 'Vintage (Years)'}
               </label>
               <input
@@ -175,12 +175,12 @@ export function ShopProfilePage({ shop, onShopUpdated, onReloadDemo }) {
                 step="0.5"
                 value={vintage}
                 onChange={(e) => setVintage(e.target.value)}
-                className="w-full px-3.5 py-2.5 bg-paper-50 rounded-xl border border-stone-300 text-xs font-semibold"
+                className="w-full px-3.5 py-2.5 bg-slate-50 focus:bg-white rounded-xl border border-slate-200 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-stone-700 mb-1">
+              <label className="block text-xs font-bold text-slate-700 mb-1.5">
                 {language === 'hi' ? 'बैंक खाता विवरण' : 'Bank Account Type'}
               </label>
               <input
@@ -188,20 +188,20 @@ export function ShopProfilePage({ shop, onShopUpdated, onReloadDemo }) {
                 value={bank}
                 onChange={(e) => setBank(e.target.value)}
                 placeholder="उदा. Aryavart Gramin Bank"
-                className="w-full px-3.5 py-2.5 bg-paper-50 rounded-xl border border-stone-300 text-xs font-semibold"
+                className="w-full px-3.5 py-2.5 bg-slate-50 focus:bg-white rounded-xl border border-slate-200 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition"
               />
             </div>
           </div>
 
           {/* AI Settings Section (Gemini API Key Free Tier) */}
-          <div className="pt-4 border-t border-paper-200 space-y-3">
+          <div className="pt-4 border-t border-slate-100 space-y-3">
             <div className="flex items-center gap-2">
-              <Key className="w-4 h-4 text-ochre-700" />
-              <h2 className="text-sm font-extrabold text-stone-900">
+              <Key className="w-4 h-4 text-amber-600" />
+              <h2 className="text-xs font-black text-slate-900 uppercase tracking-wider">
                 {language === 'hi' ? 'Google Gemini API (फ्री टियर)' : 'Google Gemini API (Free Tier via Google AI Studio)'}
               </h2>
             </div>
-            <p className="text-xs text-stone-500 leading-relaxed">
+            <p className="text-xs text-slate-500 leading-relaxed">
               {language === 'hi'
                 ? 'व्यापार साथी बिना किसी एपीआई कुंजी के भी 6 पूर्व-निर्मित स्थानीय सलाह परिदृश्यों (Safety Net) पर पूरी तरह काम करता है। यदि आप लाइव जेमिनी 2.5 फ्लैश टेस्ट करना चाहते हैं तो अपनी निःशुल्क Google AI Studio कुंजी यहाँ दर्ज करें।'
                 : 'Vyapaar Saathi operates smoothly without an API key using 6 grounded rural fallback scenarios. To enable live gemini-2.5-flash responses, paste your free Google AI Studio key below.'}
@@ -211,7 +211,7 @@ export function ShopProfilePage({ shop, onShopUpdated, onReloadDemo }) {
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
               placeholder="AIzaSy..."
-              className="w-full px-3.5 py-2.5 bg-paper-50 rounded-xl border border-stone-300 text-xs font-mono"
+              className="w-full px-3.5 py-2.5 bg-slate-50 focus:bg-white rounded-xl border border-slate-200 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition"
             />
           </div>
 
@@ -219,7 +219,7 @@ export function ShopProfilePage({ shop, onShopUpdated, onReloadDemo }) {
             <button
               type="button"
               onClick={onReloadDemo}
-              className="px-4 py-2 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 rounded-xl font-bold text-xs flex items-center gap-1.5 transition"
+              className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 rounded-xl font-bold text-xs flex items-center gap-1.5 transition active:scale-95"
             >
               <RotateCcw className="w-3.5 h-3.5" />
               <span>{language === 'hi' ? 'रमेश 90-दिन डेमो रीसेट करें' : 'Reset Demo to Ramesh'}</span>
@@ -228,11 +228,11 @@ export function ShopProfilePage({ shop, onShopUpdated, onReloadDemo }) {
             <button
               type="submit"
               disabled={loading}
-              className="px-6 py-2.5 bg-terracotta-600 hover:bg-terracotta-700 text-white font-extrabold text-xs rounded-xl shadow-md flex items-center gap-1.5 transition"
+              className="px-6 py-2.5 bg-slate-900 hover:bg-slate-800 active:scale-95 text-white font-bold text-xs rounded-xl shadow-xs flex items-center gap-1.5 transition"
             >
               {savedSuccess ? (
                 <>
-                  <Check className="w-4 h-4 text-white" />
+                  <Check className="w-4 h-4 text-emerald-400" />
                   <span>{language === 'hi' ? 'सुरक्षित हो गया!' : 'Changes Saved!'}</span>
                 </>
               ) : (
@@ -243,8 +243,6 @@ export function ShopProfilePage({ shop, onShopUpdated, onReloadDemo }) {
 
         </form>
       </div>
-
-      <WarliBorder className="my-3 opacity-60" />
 
     </div>
   );

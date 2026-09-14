@@ -168,16 +168,16 @@ export default function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-paper-100 flex flex-col items-center justify-center p-6 text-stone-700">
-        <div className="w-10 h-10 border-4 border-terracotta-300 border-t-terracotta-600 rounded-full animate-spin mb-3" />
-        <span className="font-display text-lg font-bold text-terracotta-800">व्यापार साथी (Vyapaar Saathi)</span>
-        <span className="text-xs text-stone-500">ग्रामीण बही-खाता एवं सलाहकार इंजन लोड हो रहा है...</span>
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 text-slate-700 font-sans">
+        <div className="w-10 h-10 border-3 border-slate-200 border-t-indigo-600 rounded-full animate-spin mb-4" />
+        <span className="font-display text-lg font-black tracking-tight text-slate-900">व्यापार साथी (Vyapaar Saathi)</span>
+        <span className="text-xs text-slate-400 mt-1 font-medium">ग्रामीण बही-खाता एवं सलाहकार इंजन लोड हो रहा है...</span>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-paper-100 flex flex-col font-sans text-stone-800 selection:bg-terracotta-200 selection:text-terracotta-900">
+    <div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-900 selection:bg-indigo-100 selection:text-indigo-900 antialiased">
       
       {/* Top Navbar */}
       <Navbar 
@@ -288,20 +288,17 @@ export default function App() {
       />
 
       {/* Footer */}
-      <footer className="print:hidden border-t border-paper-300 bg-paper-200/60 py-6 px-4 text-center text-xs text-stone-600">
-        <div className="max-w-4xl mx-auto space-y-2">
+      <footer className="print:hidden border-t border-slate-200/80 bg-white/60 backdrop-blur-md py-6 px-4 text-center text-xs text-slate-500">
+        <div className="max-w-4xl mx-auto space-y-1.5">
           <div className="flex items-center justify-center gap-2">
-            <span className="font-extrabold text-terracotta-800 font-display">व्यापार साथी (Vyapaar Saathi)</span>
-            <span>•</span>
-            <span className="text-[11px] bg-terracotta-100 text-terracotta-800 font-bold px-2 py-0.5 rounded border border-terracotta-300">
+            <span className="font-black text-slate-900 font-display">व्यापार साथी (Vyapaar Saathi)</span>
+            <span className="text-slate-300">•</span>
+            <span className="text-[10px] bg-indigo-50 text-indigo-700 font-bold px-2 py-0.5 rounded-full border border-indigo-200">
               SIH Problem Statement 26091
             </span>
           </div>
-          <p className="text-[11px] text-stone-500">
-            AI-Driven Hyper-Local Business Advisory and Financial Structuring Assistant for Rural Micro-Entrepreneurs in India.
-          </p>
-          <p className="text-[10px] text-stone-400">
-            Engineered with Warli Folk Art Aesthetics • Explainable Alternative Credit Scoring • 10 Verified Real Indian Schemes
+          <p className="text-[11px] text-slate-400">
+            Hyper-Local Business Intelligence & Alternative Credit Structuring for Rural Micro-Enterprises.
           </p>
         </div>
       </footer>

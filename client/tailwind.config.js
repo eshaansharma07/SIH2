@@ -64,13 +64,16 @@ export default {
         }
       },
       fontFamily: {
-        sans: ['"Nunito"', '"Outfit"', 'system-ui', '-apple-system', 'sans-serif'],
-        display: ['"Rozha One"', '"Cinzel"', 'serif'],
+        sans: ['"Plus Jakarta Sans"', '"Outfit"', 'system-ui', '-apple-system', 'sans-serif'],
+        display: ['"Outfit"', '"Plus Jakarta Sans"', 'system-ui', '-apple-system', 'sans-serif'],
       },
       boxShadow: {
-        'paper': '0 2px 10px -2px rgba(120, 53, 15, 0.06), 0 1px 4px -1px rgba(120, 53, 15, 0.04)',
-        'paper-lg': '0 10px 25px -4px rgba(120, 53, 15, 0.08), 0 4px 10px -2px rgba(120, 53, 15, 0.04)',
-        'paper-hover': '0 14px 28px -5px rgba(120, 53, 15, 0.12), 0 6px 12px -3px rgba(120, 53, 15, 0.06)',
+        'paper': '0 2px 10px -2px rgba(0, 0, 0, 0.04), 0 1px 4px -1px rgba(0, 0, 0, 0.02)',
+        'paper-lg': '0 10px 25px -4px rgba(0, 0, 0, 0.06), 0 4px 10px -2px rgba(0, 0, 0, 0.02)',
+        'paper-hover': '0 14px 28px -5px rgba(0, 0, 0, 0.1), 0 6px 12px -3px rgba(0, 0, 0, 0.04)',
+        'glass': '0 8px 30px 0 rgba(0, 0, 0, 0.04)',
+        'glow-emerald': '0 0 24px rgba(16, 185, 129, 0.25)',
+        'glow-indigo': '0 0 24px rgba(99, 102, 241, 0.25)',
       },
       borderRadius: {
         'xl': '1rem',

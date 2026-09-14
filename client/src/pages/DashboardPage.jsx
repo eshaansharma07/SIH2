@@ -3,7 +3,6 @@ import {
   TrendingUp, 
   Sparkles, 
   Calendar, 
-  AlertCircle, 
   ArrowRight, 
   PlusCircle, 
   Users, 
@@ -11,11 +10,12 @@ import {
   CreditCard, 
   ShieldCheck, 
   CheckCircle2, 
-  ArrowUpRight 
+  ArrowUpRight,
+  Zap,
+  FileText,
+  Activity
 } from 'lucide-react';
 import { CreditGauge } from '../components/CreditGauge';
-import { WarliBorder, WarliSun } from '../components/WarliMotif';
-import { SaathiAvatar } from '../components/SaathiAvatar';
 import { useTranslation } from '../i18n/LanguageContext';
 
 export function DashboardPage({ 
@@ -31,67 +31,68 @@ export function DashboardPage({
   const { t, language } = useTranslation();
 
   const metrics = {
-    totalIncome: summaryData?.totalIncome ?? creditData?.metrics?.totalIncome ?? 148500,
-    netSurplus: summaryData?.netSurplus ?? creditData?.metrics?.netSurplus ?? 42800,
-    totalUdhaarPending: summaryData?.pendingUdhaar ?? creditData?.metrics?.totalUdhaarPending ?? 4650,
-    digitalSharePct: summaryData?.digitalSharePct ?? creditData?.metrics?.digitalSharePct ?? 34,
-    loggedDaysCount: creditData?.metrics?.loggedDaysCount || 84
+    totalIncome: summaryData?.totalIncome ?? creditData?.metrics?.totalIncome ?? 225857,
+    totalExpense: summaryData?.totalExpense ?? creditData?.metrics?.totalExpense ?? 162250,
+    netSurplus: summaryData?.netSurplus ?? creditData?.metrics?.netSurplus ?? 63607,
+    totalUdhaarPending: summaryData?.pendingUdhaar ?? creditData?.metrics?.totalUdhaarPending ?? 1050,
+    digitalSharePct: summaryData?.digitalSharePct ?? creditData?.metrics?.digitalSharePct ?? 37,
+    loggedDaysCount: creditData?.metrics?.loggedDaysCount || 120
   };
 
   const sampleQuestions = [
     { text: "दिवाली के लिए तेल और चीनी का कितना स्टॉक लूँ?", textEn: "How much stock of oil & sugar for Diwali?", topic: "festival_stock" },
-    { text: "ग्राहक उधार बहुत मांग रहे हैं, क्या करूँ?", textEn: "How do I manage customer udhaar?", topic: "udhaar_management" },
-    { text: "नया डीप-फ्रीज़र लेने के लिए कौन सा मुद्रा लोन मिलेगा?", textEn: "Which MUDRA loan fits for a deep freezer?", topic: "loan_freezer" },
-    { text: "अपनी दुकान का वैकल्पिक क्रेडिट स्कोर 750+ कैसे करें?", textEn: "How to raise credit score above 750?", topic: "credit_boost" }
+    { text: "ग्राहक उधार कैसे नियंत्रित करें?", textEn: "How do I manage customer udhaar?", topic: "udhaar_management" },
+    { text: "डीप-फ्रीज़र के लिए कौन सा मुद्रा लोन मिलेगा?", textEn: "Which MUDRA loan fits for a deep freezer?", topic: "loan_freezer" },
+    { text: "क्रेडिट स्कोर 750+ कैसे करें?", textEn: "How to raise credit score above 750?", topic: "credit_boost" }
   ];
 
   const festivalList = cuesData?.festivalCues || [
     {
       id: "navratri-dussehra",
       festival: "Sharad Navratri & Dussehra",
-      festivalHi: "शारदीय नवरात्रि एवं विजयदशमी (दशहरा)",
-      timing: "Oct 11 – Oct 20 (In 37 days)",
-      timingHi: "11 अक्तूबर – 20 अक्तूबर (37 दिन शेष)",
+      festivalHi: "शारदीय नवरात्रि एवं दशहरा",
+      timing: "Oct 11 – Oct 20",
+      timingHi: "11 अक्तूबर – 20 अक्तूबर",
       daysRemaining: 37,
       demandSurge: "+38%",
-      priorityItems: "Sabudana, Kuttu & Singhadha flour, Sendha namak, Mustard oil, Desi ghee, Pooja brass thalis, Dhoop & Camphor",
-      priorityItemsHi: "साबूदाना, कुट्टू व सिंघाड़ा आटा, सेंधा नमक, सरसों तेल, देशी घी, पीतल पूजा थाली, धूप-बत्ती व कपूर",
+      priorityItems: "Mustard oil, Desi ghee, Sabudana, Pooja items",
+      priorityItemsHi: "सरसों तेल, देशी घी, साबूदाना, पूजा सामग्री",
       verifiedByGoogleCalendar: true
     },
     {
       id: "diwali-dhanteras",
-      festival: "Dhanteras, Diwali & Bhai Dooj",
-      festivalHi: "धनतेरस, दीपावली एवं भाई दूज",
-      timing: "Nov 6 – Nov 11 (In 63 days)",
-      timingHi: "6 नवंबर – 11 नवंबर (63 दिन शेष)",
+      festival: "Dhanteras & Diwali",
+      festivalHi: "धनतेरस एवं दीपावली",
+      timing: "Nov 6 – Nov 11",
+      timingHi: "6 नवंबर – 11 नवंबर",
       daysRemaining: 63,
       demandSurge: "+48%",
-      priorityItems: "Dry fruits gift hampers, Sugar, Besan, Maida, Vanaspati & Mustard oil, Clay diyas, Mithai ingredients",
-      priorityItemsHi: "मेवा गिफ्ट पैक (काजू/बादाम), चीनी, बेसन, मैदा, रिफाइंड व सरसों तेल, मिट्टी के दीये, मिठाई का सामान",
+      priorityItems: "Sugar, Besan, Edible oil, Dry fruits",
+      priorityItemsHi: "चीनी, बेसन, रिफाइंड तेल, मेवा गिफ्ट पैक",
       verifiedByGoogleCalendar: true
     },
     {
       id: "chhath-puja",
-      festival: "Chhath Puja (सूर्य षष्ठी महापर्व)",
-      festivalHi: "छठ पूजा (सूर्य षष्ठी महापर्व)",
-      timing: "Nov 15 (In 72 days)",
-      timingHi: "15 नवंबर (72 दिन शेष)",
+      festival: "Chhath Puja Mahaparv",
+      festivalHi: "छठ पूजा महापर्व",
+      timing: "Nov 15",
+      timingHi: "15 नवंबर",
       daysRemaining: 72,
       demandSurge: "+42%",
-      priorityItems: "Thekua wheat flour, Pure Desi Gur (Jaggery), Ghee, Bamboo Soop, Daura baskets, Camphor, Mustard oil",
-      priorityItemsHi: "ठेकुआ आटा, शुद्ध देसी गुड़, घी, बांस का सूप, दौरा टोकरियां, कपूर, सरसों तेल व पूजा फल",
+      priorityItems: "Thekua flour, Desi Gur, Ghee, Soop",
+      priorityItemsHi: "ठेकुआ आटा, शुद्ध गुड़, घी, बांस का सूप",
       verifiedByGoogleCalendar: true
     },
     {
       id: "kharif-harvest",
-      festival: "Kharif Paddy Harvest & Mandi Cash Payouts",
-      festivalHi: "खरीफ धान कटाई एवं मंडी भुगतान नकदी प्रवाह",
-      timing: "Mid-to-Late November (In ~75 days)",
-      timingHi: "मध्य-से-उत्तर नवंबर (लगभग 75 दिन शेष)",
+      festival: "Kharif Paddy Mandi Payouts",
+      festivalHi: "खरीफ धान मंडी भुगतान",
+      timing: "Mid-to-Late November",
+      timingHi: "मध्य-से-उत्तर नवंबर",
       daysRemaining: 75,
       demandSurge: "+28%",
-      priorityItems: "Bulk 50kg grain bags, Branded premium tea packs, Detergents, High-ticket consumer packaged goods",
-      priorityItemsHi: "थोक 50 किग्रा अनाज बोरे, प्रीमियम चाय पत्ती, सर्फ-साबुन, ब्रांडेड बिस्कुट व किराना पैकेट्स",
+      priorityItems: "Bulk 50kg bags, Premium tea, Detergents",
+      priorityItemsHi: "थोक 50kg अनाज बोरे, प्रीमियम चाय पत्ती",
       verifiedByGoogleCalendar: true
     }
   ];
@@ -99,385 +100,279 @@ export function DashboardPage({
   return (
     <div className="space-y-6 animate-fadeIn pb-12">
       
-      {/* 1. Hero Welcome & Today's Hyper-Local Pulse */}
-      <div className="bg-gradient-to-r from-terracotta-700 via-terracotta-800 to-terracotta-900 text-white rounded-3xl p-5 sm:p-7 shadow-paper-lg relative overflow-hidden">
-        <div className="absolute right-4 top-2 opacity-15 pointer-events-none">
-          <WarliSun size={160} className="text-ochre-200" />
-        </div>
+      {/* 1. Apple Card Style Financial Hero Card */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950 text-white p-6 sm:p-8 shadow-xl border border-slate-700/50">
+        
+        {/* Subtle Ambient Mesh Glow */}
+        <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-1/3 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
-          <div className="space-y-1.5 max-w-xl">
+        <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+          <div className="space-y-3 max-w-xl">
             <div className="flex items-center gap-2">
-              <SaathiAvatar size="sm" />
-              <span className="text-xs font-bold text-ochre-300">
-                {language === 'hi' ? 'सलाहकार साथी बुलेटिन' : 'Daily Advisor Bulletin'}
+              <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/10 text-slate-200 text-xs font-semibold backdrop-blur-md border border-white/10">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span>{shop?.village || 'Utraula Dehat'}, {shop?.district || 'Balrampur'}</span>
+              </span>
+              <span className="px-2.5 py-1 rounded-full bg-indigo-500/20 text-indigo-300 text-xs font-bold border border-indigo-500/30">
+                {shop?.trade_name || 'Kirana & General'}
               </span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-black font-display tracking-tight text-paper-50">
-              {language === 'hi' 
-                ? `राम राम ${shop?.owner_name || 'रमेश'} जी! 🙏` 
-                : `Namaste, ${shop?.owner_name || 'Ramesh Kumar'}! 🙏`}
-            </h1>
-            <p className="text-xs sm:text-sm text-terracotta-100 leading-relaxed">
-              {language === 'hi'
-                ? `आपकी दुकान (${shop?.village || 'उतराउला देहात, बलरामपुर'}) के बही-खाते में पिछले 4 महीनों में 120 दिन का पूर्ण हिसाब दर्ज है। मानसून की मंदी के बाद त्योहारी उछाल में आपका वैकल्पिक क्रेडिट स्कोर (755/850) बैंक लोन के लिए तैयार है!`
-                : `Your enterprise in ${shop?.village || 'Balrampur'} has 120 active days logged across 4 months (baseline, monsoon dip & festive surge). Your credit score (755/850) is Prime Bankable!`}
-            </p>
+
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-black tracking-tight font-sans text-white">
+                {language === 'hi' 
+                  ? `राम राम, ${shop?.owner_name || 'रमेश'} जी` 
+                  : `Good afternoon, ${shop?.owner_name || 'Ramesh Kumar'}`}
+              </h1>
+              <p className="text-slate-300 text-xs sm:text-sm mt-1">
+                {language === 'hi'
+                  ? 'आपकी दुकान का 4 माह का हिसाब पूर्ण है और बैंक ऋण पात्रता सक्रिय है।'
+                  : '4-month cash flow audited • Prime Bankable status active for micro-loans.'}
+              </p>
+            </div>
+
+            <div className="flex items-baseline gap-3 pt-1">
+              <div className="text-3xl sm:text-4xl font-black tracking-tight tabular-nums text-white">
+                ₹{metrics.totalIncome.toLocaleString('en-IN')}
+              </div>
+              <span className="text-xs font-extrabold text-emerald-400 bg-emerald-950/60 border border-emerald-500/30 px-2.5 py-1 rounded-full">
+                +28.8% Net Surplus (₹{metrics.netSurplus.toLocaleString('en-IN')})
+              </span>
+            </div>
           </div>
 
+          {/* Quick Action Buttons */}
           <div className="flex flex-col sm:flex-row items-stretch gap-2.5 w-full md:w-auto shrink-0">
             <button
-              onClick={onStartDemoTour}
-              className="px-4 py-3 bg-gradient-to-r from-ochre-400 via-amber-400 to-ochre-300 hover:brightness-105 active:scale-95 text-stone-950 font-black text-xs sm:text-sm rounded-2xl shadow-xl flex items-center justify-center gap-2 border border-ochre-200 transition"
-            >
-              <Sparkles className="w-4 h-4 text-terracotta-800 animate-spin" />
-              <span>{language === 'hi' ? '🎬 2-मिनट लाइव डेमो' : '🎬 Start Live Demo'}</span>
-            </button>
-            <button
               onClick={onOpenKeypad}
-              className="px-4 py-3 bg-white/20 hover:bg-white/30 active:scale-95 text-white font-bold text-xs sm:text-sm rounded-2xl border border-white/30 flex items-center justify-center gap-2 transition"
+              className="px-5 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-900/30 transition"
             >
               <PlusCircle className="w-4 h-4" />
-              <span>{language === 'hi' ? 'बिक्री दर्ज करें' : 'Log Sale'}</span>
+              <span>{language === 'hi' ? 'बिक्री दर्ज करें' : 'Log Transaction'}</span>
             </button>
             <button
               onClick={() => onNavigateTab('advisor')}
-              className="px-4 py-3 bg-white/10 hover:bg-white/20 active:scale-95 text-white font-bold text-xs sm:text-sm rounded-2xl border border-white/20 flex items-center justify-center gap-1.5 transition"
+              className="px-5 py-3 rounded-2xl bg-white/15 hover:bg-white/20 active:scale-95 text-white font-bold text-xs sm:text-sm border border-white/20 backdrop-blur-md flex items-center justify-center gap-2 transition"
             >
-              <Sparkles className="w-4 h-4 text-ochre-300" />
-              <span>{language === 'hi' ? 'सलाहकार' : 'Ask AI'}</span>
+              <Sparkles className="w-4 h-4 text-indigo-300" />
+              <span>{language === 'hi' ? 'एआई सलाहकार' : 'Ask AI'}</span>
+            </button>
+            <button
+              onClick={() => onNavigateTab('dossier')}
+              className="px-4 py-3 rounded-2xl bg-white/10 hover:bg-white/15 active:scale-95 text-slate-200 font-semibold text-xs sm:text-sm border border-white/10 flex items-center justify-center gap-1.5 transition"
+              title="Official Bank Loan Dossier"
+            >
+              <FileText className="w-4 h-4" />
+              <span>{language === 'hi' ? 'बैंक फाइल' : 'Dossier'}</span>
             </button>
           </div>
         </div>
       </div>
 
-      {/* 2. Top Two Interactive Tiles: Demand Radar & Alternative Credit Score */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+      {/* 2. Top Minimalist Financial Metric Cards (Apple Wallet / Stripe Style) */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         
-        {/* Left Tile: Hyper-Local Festival & Seasonal Demand Radar (7 Cols) */}
-        <div className="lg:col-span-7 bg-white rounded-3xl p-5 sm:p-6 border-2 border-paper-300 shadow-paper space-y-4">
-          <div className="flex items-center justify-between border-b border-paper-200 pb-3 flex-wrap gap-2">
+        <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-card hover:shadow-card-hover transition duration-200">
+          <div className="flex items-center justify-between text-slate-500 text-xs font-bold uppercase tracking-wider mb-2">
+            <span>{language === 'hi' ? 'कुल बिक्री' : 'Total Revenue'}</span>
+            <span className="w-2 h-2 rounded-full bg-emerald-500" />
+          </div>
+          <div className="text-2xl sm:text-3xl font-black text-slate-900 tabular-nums tracking-tight">
+            ₹{metrics.totalIncome.toLocaleString('en-IN')}
+          </div>
+          <div className="text-[11px] font-semibold text-slate-400 mt-1">
+            {metrics.loggedDaysCount} {language === 'hi' ? 'दिन का रिकॉर्ड' : 'days logged'}
+          </div>
+        </div>
+
+        <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-card hover:shadow-card-hover transition duration-200">
+          <div className="flex items-center justify-between text-slate-500 text-xs font-bold uppercase tracking-wider mb-2">
+            <span>{language === 'hi' ? 'माल व दुकान खर्च' : 'Operating Costs'}</span>
+            <span className="w-2 h-2 rounded-full bg-rose-500" />
+          </div>
+          <div className="text-2xl sm:text-3xl font-black text-slate-900 tabular-nums tracking-tight">
+            ₹{metrics.totalExpense.toLocaleString('en-IN')}
+          </div>
+          <div className="text-[11px] font-semibold text-slate-400 mt-1">
+            {language === 'hi' ? 'थोक खरीद + किराया' : 'Stock & bills paid'}
+          </div>
+        </div>
+
+        <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-card hover:shadow-card-hover transition duration-200">
+          <div className="flex items-center justify-between text-slate-500 text-xs font-bold uppercase tracking-wider mb-2">
+            <span>{language === 'hi' ? 'शुद्ध बचत' : 'Net Surplus'}</span>
+            <span className="w-2 h-2 rounded-full bg-indigo-500" />
+          </div>
+          <div className="text-2xl sm:text-3xl font-black text-emerald-600 tabular-nums tracking-tight">
+            ₹{metrics.netSurplus.toLocaleString('en-IN')}
+          </div>
+          <div className="text-[11px] font-semibold text-emerald-600 mt-1">
+            +28.8% {language === 'hi' ? 'सकारात्मक मार्जिन' : 'healthy margin'}
+          </div>
+        </div>
+
+        <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-card hover:shadow-card-hover transition duration-200">
+          <div className="flex items-center justify-between text-slate-500 text-xs font-bold uppercase tracking-wider mb-2">
+            <span>{language === 'hi' ? 'बकाया उधार' : 'Pending Khata'}</span>
+            <span className="w-2 h-2 rounded-full bg-amber-500" />
+          </div>
+          <div className="text-2xl sm:text-3xl font-black text-amber-600 tabular-nums tracking-tight">
+            ₹{metrics.totalUdhaarPending.toLocaleString('en-IN')}
+          </div>
+          <div className="text-[11px] font-semibold text-slate-400 mt-1">
+            {language === 'hi' ? 'सुरक्षित सीमा में (18%)' : 'Healthy low ratio (<20%)'}
+          </div>
+        </div>
+
+      </div>
+
+      {/* 3. Interactive Split: Seasonal Demand Radar & Credit Score Health */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        {/* Left: Seasonal Demand Radar (7 Cols) */}
+        <div className="lg:col-span-7 bg-white rounded-3xl p-6 border border-slate-200/80 shadow-card space-y-4">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-4">
             <div className="flex items-center gap-2.5">
-              <span className="p-2 bg-ochre-100 text-ochre-800 rounded-xl">
+              <div className="p-2 rounded-xl bg-amber-50 text-amber-600 border border-amber-200/60">
                 <Calendar className="w-5 h-5" />
-              </span>
+              </div>
               <div>
-                <h2 className="text-base font-extrabold text-stone-900">
-                  {t('dashboard.localDemandTitle')}
+                <h2 className="text-base font-extrabold text-slate-900 tracking-tight">
+                  {language === 'hi' ? 'मौसमी मांग रडार (Demand Radar)' : 'Seasonal Demand Radar'}
                 </h2>
-                <p className="text-[11px] text-stone-500">
-                  📍 {shop?.district || 'Balrampur'} ({shop?.state || 'UP'}) — {shop?.trade_name || 'Kirana'}
+                <p className="text-xs text-slate-500">
+                  {shop?.district || 'Balrampur'} Mandi Demand Projections
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-1.5">
-              <span className="px-2.5 py-0.5 bg-emerald-50 text-emerald-800 border border-emerald-300 rounded-full text-[10px] font-bold flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span>{language === 'hi' ? '🗓️ गूगल कैलेंडर सिंक' : '🗓️ Google Calendar API Synced'}</span>
-              </span>
-            </div>
+
+            <span className="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-full border border-emerald-200/80">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span>Google Calendar Synced</span>
+            </span>
           </div>
 
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {festivalList.map((item, idx) => {
-              const festivalName = (language === 'hi' && item.festivalHi) ? item.festivalHi : item.festival;
-              const timingText = (language === 'hi' && item.timingHi) ? item.timingHi : item.timing;
-              const stockText = (language === 'hi' && item.priorityItemsHi) ? item.priorityItemsHi : item.priorityItems;
+              const name = (language === 'hi' && item.festivalHi) ? item.festivalHi : item.festival;
+              const timing = (language === 'hi' && item.timingHi) ? item.timingHi : item.timing;
+              const stock = (language === 'hi' && item.priorityItemsHi) ? item.priorityItemsHi : item.priorityItems;
 
               return (
                 <div 
-                  key={idx} 
-                  className="p-3.5 rounded-2xl bg-paper-50 border border-paper-300 hover:border-ochre-400 transition flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                  key={idx}
+                  className="p-4 rounded-2xl bg-slate-50 hover:bg-slate-100/80 transition border border-slate-200/70 flex flex-col justify-between gap-3"
                 >
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-extrabold text-sm text-stone-800">{festivalName}</span>
-                      <span className="text-[10px] bg-terracotta-100 text-terracotta-800 px-2 py-0.5 rounded-md font-bold">
-                        {timingText}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-extrabold text-xs text-slate-900 truncate">{name}</span>
+                      <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 shrink-0">
+                        ⏳ {item.daysRemaining}d
                       </span>
-                      {item.daysRemaining !== undefined && (
-                        <span className="text-[10px] bg-amber-100 text-amber-900 border border-amber-300 px-2 py-0.5 rounded-md font-extrabold flex items-center gap-0.5">
-                          <span>⏳</span>
-                          <span>{language === 'hi' ? `${item.daysRemaining} दिन शेष` : `${item.daysRemaining}d left`}</span>
-                        </span>
-                      )}
                     </div>
-                    <p className="text-xs text-stone-600">
-                      <span className="font-bold text-stone-700">{language === 'hi' ? 'जरूरी सामान: ' : 'Priority Stock: '}</span>
-                      {stockText}
-                    </p>
+                    <div className="text-[11px] text-slate-500 font-medium">
+                      📅 {timing}
+                    </div>
+                    <div className="text-[11px] text-slate-700 font-semibold bg-white p-2 rounded-xl border border-slate-200/60">
+                      <span className="text-slate-400 font-bold">Stock: </span>
+                      {stock}
+                    </div>
                   </div>
-                  <div className="flex sm:flex-col items-center sm:items-end justify-between shrink-0 bg-white sm:bg-transparent px-3 py-1.5 sm:p-0 rounded-xl border sm:border-0 border-paper-200">
-                    <span className="text-[11px] text-stone-500 font-semibold">
-                      {language === 'hi' ? 'अनुमानित बिक्री उछाल' : 'Projected Surge'}
-                    </span>
-                    <span className="text-sm font-black text-forestRural-700 bg-forestRural-50 px-2 py-0.5 rounded-lg border border-forestRural-200">
-                      {item.demandSurge}
-                    </span>
-                    {item.verifiedByGoogleCalendar && (
-                      <span className="text-[9px] text-emerald-700 font-medium hidden sm:inline mt-0.5">
-                        ✓ Google Calendar
-                      </span>
-                    )}
+
+                  <div className="flex items-center justify-between pt-1 border-t border-slate-200/50 text-xs">
+                    <span className="text-slate-500 font-medium">{language === 'hi' ? 'बिक्री उछाल' : 'Surge'}</span>
+                    <span className="font-extrabold text-emerald-600">{item.demandSurge}</span>
                   </div>
                 </div>
               );
             })}
           </div>
+        </div>
 
-          <div className="bg-amber-50/70 rounded-2xl p-3 border border-amber-200 text-xs text-amber-900 flex items-start gap-2">
-            <AlertCircle className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
-            <p>
-              <strong className="font-bold">{language === 'hi' ? 'सलाहकार टिप: ' : 'Advisor Alert: '}</strong>
-              {language === 'hi' 
-                ? 'दीपावली से 10 दिन पहले बलरामपुर थोक मंडी में खाद्य तेल और चीनी के दाम ₹4–₹5 प्रति किलो बढ़ सकते हैं। इस बुधवार को 35% अतिरिक्त स्टॉक बुक करें।'
-                : 'Wholesale edible oil and sugar prices typically spike in Balrampur mandi 10 days before Diwali. Pre-stock by Wednesday to lock low wholesale rates.'}
-            </p>
+        {/* Right: Credit Score & Health Dial (5 Cols) */}
+        <div className="lg:col-span-5 bg-white rounded-3xl p-6 border border-slate-200/80 shadow-card flex flex-col justify-between gap-4">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div className="flex items-center gap-2">
+              <div className="p-2 rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-200/60">
+                <ShieldCheck className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="text-base font-extrabold text-slate-900 tracking-tight">
+                  {language === 'hi' ? 'वैकल्पिक क्रेडिट स्वास्थ्य' : 'Alternative Credit Health'}
+                </h2>
+                <p className="text-xs text-slate-500">4-Pillar Non-CIBIL Metric</p>
+              </div>
+            </div>
+            <button
+              onClick={() => onNavigateTab('credit')}
+              className="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-0.5"
+            >
+              <span>{language === 'hi' ? 'सिम्युलेटर' : 'Simulate'}</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          <div className="py-2">
+            <CreditGauge 
+              score={creditData?.totalScore || 755} 
+              ratingLabel={language === 'hi' ? 'Prime Bankable (ऋण के लिए पात्र)' : 'Prime Bankable'}
+            />
+          </div>
+
+          {/* 4 Pillars Mini Bars */}
+          <div className="space-y-2 pt-2 border-t border-slate-100 text-xs">
+            <div className="flex justify-between items-center text-slate-600">
+              <span className="font-semibold">{language === 'hi' ? 'बही-खाता निरंतरता' : 'Cash Flow Regularity'}</span>
+              <span className="font-bold text-slate-900">96%</span>
+            </div>
+            <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+              <div className="bg-indigo-600 h-full rounded-full" style={{ width: '96%' }} />
+            </div>
+
+            <div className="flex justify-between items-center text-slate-600 pt-1">
+              <span className="font-semibold">{language === 'hi' ? 'मार्जिन एवं लाभ' : 'Surplus Margins'}</span>
+              <span className="font-bold text-slate-900">92%</span>
+            </div>
+            <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+              <div className="bg-emerald-500 h-full rounded-full" style={{ width: '92%' }} />
+            </div>
           </div>
         </div>
 
-        {/* Right Tile: Alternative Credit Score Gauge (5 Cols) */}
-        <div className="lg:col-span-5 bg-white rounded-3xl p-5 sm:p-6 border-2 border-paper-300 shadow-paper flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between border-b border-paper-200 pb-3 mb-3">
-              <div className="flex items-center gap-2">
-                <span className="p-2 bg-terracotta-100 text-terracotta-700 rounded-xl">
-                  <ShieldCheck className="w-5 h-5" />
-                </span>
-                <div>
-                  <h2 className="text-base font-extrabold text-stone-900">
-                    {t('dashboard.creditScoreTitle')}
-                  </h2>
-                  <p className="text-[11px] text-stone-500">
-                    {language === 'hi' ? 'पारदर्शी 4 आधार • सिबिल मुक्त' : 'Explainable 4-Pillar Metric'}
-                  </p>
-                </div>
-              </div>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
-                {creditData?.ratingBadge || 'Prime Bankable'}
-              </span>
-            </div>
+      </div>
 
-            {/* Circular Gauge */}
-            <div className="py-2 flex justify-center">
-              <CreditGauge 
-                score={creditData?.totalScore || 750} 
-                ratingLabel={creditData?.ratingLabel || 'अति उत्कृष्ट (Prime Bankable)'} 
-                compact={false}
-              />
-            </div>
-
-            {/* 4 Pillars Mini-Pills */}
-            <div className="grid grid-cols-2 gap-2 my-3 text-[11px]">
-              <div className="p-2 bg-paper-100 rounded-xl border border-paper-300">
-                <span className="text-stone-500 block">{language === 'hi' ? 'बही-खाता नियमितता' : 'Cash Flow Logging'}</span>
-                <span className="font-extrabold text-forestRural-700">96% (245/255 pts)</span>
-              </div>
-              <div className="p-2 bg-paper-100 rounded-xl border border-paper-300">
-                <span className="text-stone-500 block">{language === 'hi' ? 'बिक्री स्थिरता' : 'Revenue Trend'}</span>
-                <span className="font-extrabold text-forestRural-700">92% (195/212 pts)</span>
-              </div>
-              <div className="p-2 bg-paper-100 rounded-xl border border-paper-300">
-                <span className="text-stone-500 block">{language === 'hi' ? 'उधार अनुशासन' : 'Udhaar Discipline'}</span>
-                <span className="font-extrabold text-forestRural-700">88% (188/213 pts)</span>
-              </div>
-              <div className="p-2 bg-paper-100 rounded-xl border border-paper-300">
-                <span className="text-stone-500 block">{language === 'hi' ? 'व्यापार अनुभव' : 'Vintage & UPI'}</span>
-                <span className="font-extrabold text-forestRural-700">85% (145/170 pts)</span>
-              </div>
-            </div>
+      {/* 4. Galaxy AI / Siri Style Quick Suggestion Prompts */}
+      <div className="bg-gradient-to-r from-indigo-50/70 via-purple-50/50 to-pink-50/70 rounded-3xl p-5 sm:p-6 border border-indigo-100 space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-indigo-600" />
+            <span className="text-xs font-extrabold text-slate-800 uppercase tracking-wider">
+              {language === 'hi' ? 'साथी एआई से तुरंत पूछें' : 'Ask Saathi AI Assistant'}
+            </span>
           </div>
-
           <button
-            onClick={() => onNavigateTab('credit')}
-            className="w-full py-2.5 bg-terracotta-50 hover:bg-terracotta-100 text-terracotta-800 border border-terracotta-300 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition"
+            onClick={() => onNavigateTab('advisor')}
+            className="text-xs font-bold text-indigo-600 hover:underline flex items-center gap-1"
           >
-            <span>{language === 'hi' ? 'स्कोर विवरण एवं सुधार कैलकुलेटर देखें' : 'View Breakdown & Simulator'}</span>
+            <span>{language === 'hi' ? 'पूरी चैट खोलें' : 'Open Full Chat'}</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>
 
-      </div>
-
-      {/* 3. 90-Day Cash Flow Snapshot (4 Metrics) */}
-      <div>
-        <div className="flex items-center justify-between mb-3 px-1">
-          <h2 className="text-base font-extrabold text-stone-900">
-            {t('dashboard.financialSummaryTitle')}
-          </h2>
-          <button
-            onClick={() => onNavigateTab('cashflow')}
-            className="text-xs font-bold text-terracotta-700 hover:text-terracotta-800 flex items-center gap-1"
-          >
-            <span>{language === 'hi' ? 'पूरा बही-खाता खोलें' : 'Open Full Bahi-Khata'}</span>
-            <ArrowUpRight className="w-3.5 h-3.5" />
-          </button>
-        </div>
-
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
-          
-          <div className="bg-white p-4 rounded-2xl border border-paper-300 shadow-sm">
-            <span className="text-[11px] font-bold text-stone-500 uppercase tracking-wider block mb-1">
-              {t('dashboard.totalSales')}
-            </span>
-            <div className="text-xl sm:text-2xl font-black text-stone-900">
-              ₹{metrics.totalIncome.toLocaleString('en-IN')}
-            </div>
-            <span className="text-[10px] text-forestRural-700 font-bold bg-forestRural-50 px-2 py-0.5 rounded mt-1 inline-block">
-              ✓ {metrics.loggedDaysCount} {language === 'hi' ? 'दिन दर्ज' : 'days logged'}
-            </span>
-          </div>
-
-          <div className="bg-white p-4 rounded-2xl border border-paper-300 shadow-sm">
-            <span className="text-[11px] font-bold text-stone-500 uppercase tracking-wider block mb-1">
-              {t('dashboard.netSurplus')}
-            </span>
-            <div className="text-xl sm:text-2xl font-black text-forestRural-700">
-              ₹{metrics.netSurplus.toLocaleString('en-IN')}
-            </div>
-            <span className="text-[10px] text-stone-500 font-medium mt-1 block">
-              {language === 'hi' ? 'माल व दुकान खर्च काटकर' : 'After inventory & rent'}
-            </span>
-          </div>
-
-          <div className="bg-white p-4 rounded-2xl border border-paper-300 shadow-sm">
-            <span className="text-[11px] font-bold text-stone-500 uppercase tracking-wider block mb-1">
-              {t('dashboard.pendingUdhaar')}
-            </span>
-            <div className="text-xl sm:text-2xl font-black text-ochre-700">
-              ₹{metrics.totalUdhaarPending.toLocaleString('en-IN')}
-            </div>
-            <span className="text-[10px] text-ochre-800 font-bold bg-ochre-50 px-2 py-0.5 rounded mt-1 inline-block">
-              {language === 'hi' ? 'बिक्री का 18% (सुरक्षित)' : '18% of sales (Healthy)'}
-            </span>
-          </div>
-
-          <div className="bg-white p-4 rounded-2xl border border-paper-300 shadow-sm">
-            <span className="text-[11px] font-bold text-stone-500 uppercase tracking-wider block mb-1">
-              {t('dashboard.digitalShare')}
-            </span>
-            <div className="text-xl sm:text-2xl font-black text-indigoRural-700">
-              {metrics.digitalSharePct}%
-            </div>
-            <span className="text-[10px] text-indigoRural-800 font-bold bg-indigoRural-50 px-2 py-0.5 rounded mt-1 inline-block">
-              📱 PhonePe / UPI QR
-            </span>
-          </div>
-
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+          {sampleQuestions.map((q, i) => (
+            <button
+              key={i}
+              onClick={() => onAskPrompt(language === 'hi' ? q.text : q.textEn)}
+              className="p-3 bg-white hover:bg-slate-50 active:scale-[0.98] rounded-2xl border border-indigo-100 text-left transition shadow-xs flex items-center justify-between gap-2 text-xs font-bold text-slate-800 group"
+            >
+              <span className="truncate">{language === 'hi' ? q.text : q.textEn}</span>
+              <ArrowUpRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 shrink-0 transition" />
+            </button>
+          ))}
         </div>
       </div>
-
-      {/* 4. Peer Benchmarking Card & Quick Ask Saathi Prompts */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-        
-        {/* District Peer Benchmark Card (6 Cols) */}
-        <div className="lg:col-span-6 bg-white rounded-3xl p-5 sm:p-6 border-2 border-paper-300 shadow-paper space-y-4">
-          <div className="flex items-center gap-2.5 border-b border-paper-200 pb-3">
-            <span className="p-2 bg-indigoRural-100 text-indigoRural-800 rounded-xl">
-              <Users className="w-5 h-5" />
-            </span>
-            <div>
-              <h2 className="text-base font-extrabold text-stone-900">
-                {t('dashboard.peerBenchTitle')}
-              </h2>
-              <p className="text-[11px] text-stone-500">
-                {t('dashboard.peerBenchSub')}
-              </p>
-            </div>
-          </div>
-
-          <div className="space-y-3 text-xs">
-            <div className="flex justify-between items-center p-2.5 bg-paper-50 rounded-xl border border-paper-200">
-              <span className="text-stone-600 font-semibold">
-                {language === 'hi' ? 'बलरामपुर किराना औसत मासिक बिक्री:' : 'District Kirana Avg Monthly Turnover:'}
-              </span>
-              <span className="font-extrabold text-stone-900">₹42,000 – ₹65,000</span>
-            </div>
-
-            <div className="flex justify-between items-center p-2.5 bg-paper-50 rounded-xl border border-paper-200">
-              <span className="text-stone-600 font-semibold">
-                {language === 'hi' ? 'आपकी दुकान की वर्तमान स्थिति:' : 'Your Shop\'s Current Position:'}
-              </span>
-              <span className="font-extrabold text-forestRural-700 bg-forestRural-50 px-2 py-0.5 rounded-lg border border-forestRural-200">
-                ₹52,000 / माह (Top 35% in District)
-              </span>
-            </div>
-
-            <div className="flex justify-between items-center p-2.5 bg-paper-50 rounded-xl border border-paper-200">
-              <span className="text-stone-600 font-semibold">
-                {language === 'hi' ? 'औसत इन्वेंट्री टर्नओवर चक्र:' : 'Inventory Turnover Cycle:'}
-              </span>
-              <span className="font-extrabold text-stone-900">18 {language === 'hi' ? 'दिन' : 'days'}</span>
-            </div>
-
-            <div className="flex justify-between items-center p-2.5 bg-paper-50 rounded-xl border border-paper-200">
-              <span className="text-stone-600 font-semibold">
-                {language === 'hi' ? 'डिजिटल यूपीआई भुगतान हिस्सेदारी:' : 'Digital Payment Adoption:'}
-              </span>
-              <span className="font-extrabold text-stone-900">
-                आप: {metrics.digitalSharePct}% (जिला औसत: 31%)
-              </span>
-            </div>
-          </div>
-
-          <div className="p-3 rounded-2xl bg-paper-100 border border-paper-300 text-[11px] text-stone-600 leading-relaxed">
-            💡 <strong className="font-bold">{language === 'hi' ? 'निष्कर्ष: ' : 'Takeaway: '}</strong>
-            {language === 'hi' 
-              ? 'आपकी दुकान का टर्नओवर जिले के औसत से बेहतर है। आगामी त्योहार में ₹25,000 का अतिरिक्त माल उठाने पर आप ₹8,000–₹12,000 का अतिरिक्त शुद्ध लाभ कमा सकते हैं।'
-              : 'Your shop ranks in the top tier of Balrampur rural grocers. An additional ₹25,000 inventory buffer before Diwali will unlock ₹8,000–₹12,000 in net profit.'}
-          </div>
-        </div>
-
-        {/* Quick Ask Saathi Chips (6 Cols) */}
-        <div className="lg:col-span-6 bg-white rounded-3xl p-5 sm:p-6 border-2 border-paper-300 shadow-paper flex flex-col justify-between space-y-4">
-          <div>
-            <div className="flex items-center justify-between border-b border-paper-200 pb-3 mb-3">
-              <div className="flex items-center gap-2.5">
-                <span className="p-2 bg-ochre-100 text-ochre-800 rounded-xl">
-                  <Sparkles className="w-5 h-5" />
-                </span>
-                <div>
-                  <h2 className="text-base font-extrabold text-stone-900">
-                    {t('dashboard.quickAskTitle')}
-                  </h2>
-                  <p className="text-[11px] text-stone-500">
-                    {language === 'hi' ? '1-क्लिक में सवाल पूछें' : '1-Tap Plain-Language Inquiries'}
-                  </p>
-                </div>
-              </div>
-              <span className="text-[10px] font-bold text-terracotta-700 bg-terracotta-50 px-2 py-0.5 rounded-full border border-terracotta-200">
-                AI Powered
-              </span>
-            </div>
-
-            <div className="space-y-2">
-              {sampleQuestions.map((q, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => onAskPrompt(language === 'hi' ? q.text : q.textEn)}
-                  className="w-full text-left p-3 rounded-2xl bg-paper-50 hover:bg-terracotta-50/70 border border-paper-300 hover:border-terracotta-400 transition group flex items-center justify-between text-xs"
-                >
-                  <span className="font-bold text-stone-800 group-hover:text-terracotta-800 transition">
-                    💬 {language === 'hi' ? q.text : q.textEn}
-                  </span>
-                  <ArrowRight className="w-3.5 h-3.5 text-stone-400 group-hover:text-terracotta-600 transition shrink-0 ml-2" />
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <button
-            onClick={() => onNavigateTab('schemes')}
-            className="w-full py-3 bg-forestRural-50 hover:bg-forestRural-100 text-forestRural-800 border border-forestRural-300 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition"
-          >
-            <span>🏛️ {language === 'hi' ? 'मुद्रा एवं अन्य सरकारी लोन पात्रता देखें (96% Match)' : 'Check MUDRA & Govt Loan Matches (96% Match)'}</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </button>
-        </div>
-
-      </div>
-
-      <WarliBorder />
 
     </div>
   );

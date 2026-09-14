@@ -241,32 +241,32 @@ export function InteractiveDemoTour({
   };
 
   return (
-    <div className="fixed inset-x-0 bottom-3 z-50 px-3 max-w-4xl mx-auto animate-slideUp">
-      <div className="bg-stone-900/95 text-white backdrop-blur-md rounded-3xl border-2 border-ochre-400 shadow-2xl p-4 sm:p-5 relative overflow-hidden ring-4 ring-terracotta-500/30">
+    <div className="fixed inset-x-0 bottom-4 z-50 px-4 max-w-4xl mx-auto animate-slideUp">
+      <div className="bg-slate-900/90 text-white backdrop-blur-2xl rounded-3xl border border-white/10 shadow-2xl p-4 sm:p-5 relative overflow-hidden ring-1 ring-white/10">
         
         {/* Animated Background Shimmer */}
-        <div className="absolute inset-0 bg-gradient-to-r from-terracotta-900/40 via-ochre-900/20 to-stone-900/60 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-r from-indigo-900/20 via-slate-900/40 to-slate-900/80 pointer-events-none" />
 
         {/* Progress Bar Top */}
-        <div className="absolute top-0 left-0 right-0 h-1.5 bg-stone-800">
+        <div className="absolute top-0 left-0 right-0 h-1 bg-slate-800">
           <div 
-            className="h-full bg-gradient-to-r from-ochre-400 to-terracotta-500 transition-all duration-100 ease-linear"
+            className="h-full bg-gradient-to-r from-indigo-500 to-cyan-400 transition-all duration-100 ease-linear"
             style={{ width: `${progress}%` }}
           />
         </div>
 
         {/* Header Strip */}
-        <div className="relative z-10 flex items-center justify-between gap-3 pb-2 border-b border-stone-700/60">
+        <div className="relative z-10 flex items-center justify-between gap-3 pb-2.5 border-b border-white/10">
           <div className="flex items-center gap-2.5">
-            <span className="flex h-3 w-3 relative">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-ochre-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-ochre-500"></span>
+            <span className="flex h-2.5 w-2.5 relative">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-indigo-500"></span>
             </span>
-            <span className="text-[11px] font-black uppercase tracking-wider text-ochre-400 bg-ochre-950/80 px-2.5 py-0.5 rounded-full border border-ochre-500/40">
+            <span className="text-[11px] font-bold tracking-tight text-indigo-300 bg-indigo-500/20 px-2.5 py-0.5 rounded-full border border-indigo-500/30">
               {currentStepData.badge}
             </span>
-            <span className="hidden sm:inline text-xs text-stone-400">
-              | SIH 2024 Problem Statement 26091
+            <span className="hidden sm:inline text-xs text-slate-400 font-medium">
+              | SIH Prototype Evaluation Round 2
             </span>
           </div>
 
@@ -275,10 +275,10 @@ export function InteractiveDemoTour({
             <button
               onClick={toggleSpeech}
               title={speechEnabled ? "Mute Voice Narration" : "Enable AI Voice Narration"}
-              className={`p-1.5 rounded-xl text-xs font-bold flex items-center gap-1 border transition ${
+              className={`p-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 border transition ${
                 speechEnabled 
-                  ? 'bg-ochre-500 text-stone-950 border-ochre-300 shadow-sm' 
-                  : 'bg-stone-800 text-stone-400 border-stone-700 hover:text-white'
+                  ? 'bg-indigo-600 text-white border-indigo-500 shadow-sm' 
+                  : 'bg-white/10 text-slate-300 border-white/10 hover:bg-white/20'
               }`}
             >
               {speechEnabled ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
@@ -291,7 +291,7 @@ export function InteractiveDemoTour({
                 if (window.speechSynthesis) window.speechSynthesis.cancel();
                 onClose();
               }}
-              className="p-1.5 bg-stone-800 hover:bg-stone-700 rounded-xl text-stone-300 hover:text-white transition border border-stone-700"
+              className="p-1.5 bg-white/10 hover:bg-white/20 rounded-xl text-slate-300 hover:text-white transition border border-white/10"
             >
               <X className="w-4 h-4" />
             </button>
@@ -300,20 +300,20 @@ export function InteractiveDemoTour({
 
         {/* Center Content & Dynamic Narration */}
         <div className="relative z-10 py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-          <div className="flex items-start gap-3">
-            <div className="shrink-0 p-2.5 rounded-2xl bg-gradient-to-br from-terracotta-600 to-ochre-600 shadow-md">
-              <currentStepData.icon className="w-5 h-5 text-white" />
+          <div className="flex items-start gap-3.5">
+            <div className="shrink-0 w-10 h-10 rounded-2xl bg-white/10 border border-white/10 flex items-center justify-center text-indigo-300 shadow-xs">
+              <currentStepData.icon className="w-5 h-5" />
             </div>
 
             <div className="space-y-1">
-              <h3 className="text-sm sm:text-base font-extrabold text-white flex items-center gap-2">
+              <h3 className="text-sm sm:text-base font-bold text-white flex items-center gap-2 tracking-tight">
                 <span>{language === 'hi' ? currentStepData.titleHi : currentStepData.titleEn}</span>
               </h3>
-              <p className="text-xs text-stone-300 leading-relaxed max-w-2xl">
+              <p className="text-xs text-slate-300 leading-relaxed max-w-2xl font-normal">
                 {language === 'hi' ? currentStepData.narrationHi : currentStepData.narrationEn}
               </p>
               <div className="pt-1">
-                <span className="inline-block text-[11px] font-semibold text-ochre-300 bg-ochre-950/60 px-2 py-0.5 rounded-md border border-ochre-600/30">
+                <span className="inline-block text-[11px] font-semibold text-indigo-300 bg-indigo-500/20 px-2.5 py-0.5 rounded-full border border-indigo-500/30">
                   ⚡ {language === 'hi' ? currentStepData.highlightTextHi : currentStepData.highlightTextEn}
                 </span>
               </div>
@@ -322,7 +322,7 @@ export function InteractiveDemoTour({
         </div>
 
         {/* Bottom Control Bar */}
-        <div className="relative z-10 pt-2 border-t border-stone-800 flex items-center justify-between gap-2">
+        <div className="relative z-10 pt-2.5 border-t border-white/10 flex items-center justify-between gap-2">
           
           {/* Step Selector Dots */}
           <div className="flex items-center gap-1.5">
@@ -330,12 +330,12 @@ export function InteractiveDemoTour({
               <button
                 key={s.id}
                 onClick={() => setCurrentStep(idx)}
-                className={`h-2 rounded-full transition-all ${
+                className={`h-1.5 rounded-full transition-all ${
                   idx === currentStep 
-                    ? 'w-6 bg-ochre-400' 
+                    ? 'w-6 bg-indigo-400' 
                     : idx < currentStep 
-                    ? 'w-2 bg-stone-500' 
-                    : 'w-2 bg-stone-800'
+                    ? 'w-1.5 bg-slate-500' 
+                    : 'w-1.5 bg-slate-800'
                 }`}
               />
             ))}
@@ -348,10 +348,10 @@ export function InteractiveDemoTour({
             <button
               onClick={handlePrev}
               disabled={currentStep === 0}
-              className={`p-2 rounded-xl border text-xs font-bold transition ${
+              className={`p-2 rounded-xl border text-xs font-semibold transition ${
                 currentStep === 0 
-                  ? 'bg-stone-800 text-stone-600 border-stone-800 cursor-not-allowed' 
-                  : 'bg-stone-800 text-stone-200 border-stone-700 hover:bg-stone-700'
+                  ? 'bg-white/5 text-slate-600 border-transparent cursor-not-allowed' 
+                  : 'bg-white/10 text-slate-200 border-white/10 hover:bg-white/20'
               }`}
             >
               <SkipBack className="w-3.5 h-3.5" />
@@ -360,7 +360,7 @@ export function InteractiveDemoTour({
             {/* Play/Pause */}
             <button
               onClick={() => setIsPlaying(!isPlaying)}
-              className="px-3 py-1.5 bg-ochre-500 hover:bg-ochre-400 text-stone-950 rounded-xl font-extrabold text-xs flex items-center gap-1.5 shadow-md active:scale-95 transition"
+              className="px-3.5 py-1.5 bg-white hover:bg-slate-100 text-slate-900 rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-sm active:scale-95 transition"
             >
               {isPlaying ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5 fill-current" />}
               <span>{isPlaying ? 'Pause' : 'Play'}</span>
@@ -369,7 +369,7 @@ export function InteractiveDemoTour({
             {/* Next */}
             <button
               onClick={handleNext}
-              className="px-3.5 py-1.5 bg-terracotta-600 hover:bg-terracotta-500 text-white rounded-xl font-bold text-xs flex items-center gap-1 border border-terracotta-400 shadow-md active:scale-95 transition"
+              className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold text-xs flex items-center gap-1 shadow-sm active:scale-95 transition"
             >
               <span>{currentStep === demoSteps.length - 1 ? 'Restart' : 'Next'}</span>
               <SkipForward className="w-3.5 h-3.5" />
