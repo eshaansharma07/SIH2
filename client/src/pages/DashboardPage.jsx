@@ -20,6 +20,7 @@ import { CreditGauge } from '../components/CreditGauge';
 import { useTranslation } from '../i18n/LanguageContext';
 import { WarliBorder } from '../components/WarliMotif';
 import { Card, Badge, SectionHeader, Button } from '../components/ui';
+import { motion, useReducedMotion } from 'framer-motion';
 
 export function DashboardPage({ 
   shop, 
@@ -217,49 +218,70 @@ export function DashboardPage({
 
       {/* Progressive Onboarding Checklist (visible for non-demo real users) */}
       {!isDemoMode && !step5Complete && (
-        <Card padding="lg" className="space-y-4">
+        <Card elevation={1} padding="lg" className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <div className="p-2 rounded-xl bg-forestRural-50 border border-forestRural-200 text-forestRural-700">
+              <div className="p-2 rounded-xl bg-forestRural-50 border border-forestRural-200 text-forestRural-700 shadow-2xs">
                 <Activity className="w-4 h-4" />
               </div>
               <div>
                 <h3 className="text-sm font-black text-indigoRural-900 font-display">
                   {language === 'hi' ? 'ऑनबोर्डिंग चेकलिस्ट' : 'Onboarding Checklist'}
                 </h3>
-                <p className="text-[11px] text-indigoRural-500">{stepCountCompleted}/5 {language === 'hi' ? 'पूर्ण' : 'complete'}</p>
+                <p className="text-[11px] text-indigoRural-500 font-medium">{stepCountCompleted}/5 {language === 'hi' ? 'पूर्ण' : 'complete'}</p>
               </div>
             </div>
             {onSwitchToDemo && (
-              <button onClick={onSwitchToDemo} className="text-[11px] text-indigoRural-500 hover:text-terracotta-700 font-bold underline underline-offset-2 cursor-pointer">
+              <button onClick={onSwitchToDemo} className="text-[11px] text-indigoRural-500 hover:text-terracotta-700 font-bold underline underline-offset-2 cursor-pointer transition-colors">
                 {language === 'hi' ? 'जज डेमो देखें' : 'View Judge Demo'}
               </button>
             )}
           </div>
 
-          {/* Progress Bar */}
-          <div className="w-full h-2 bg-paper-200 rounded-full overflow-hidden">
-            <div className="h-full bg-forestRural-600 rounded-full transition-all duration-500" style={{ width: `${(stepCountCompleted / 5) * 100}%` }} />
+          {/* Smooth Animated Progress Bar */}
+          <div className="w-full h-2.5 bg-paper-200 rounded-full overflow-hidden p-0.5 border border-paper-300">
+            <motion.div 
+              className="h-full bg-gradient-to-r from-forestRural-500 to-forestRural-600 rounded-full shadow-2xs" 
+              initial={{ width: 0 }}
+              animate={{ width: `${(stepCountCompleted / 5) * 100}%` }}
+              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+            />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-5 gap-2">
-            {checklistSteps.map(step => (
-              <div key={step.id} className={`p-3 rounded-xl border text-center space-y-1 transition ${
-                step.completed ? 'bg-forestRural-50 border-forestRural-200' : step.active ? 'bg-white border-terracotta-300 shadow-2xs' : 'bg-paper-50 border-paper-200 opacity-60'
-              }`}>
+          <div className="grid grid-cols-1 sm:grid-cols-5 gap-2.5">
+            {checklistSteps.map((step) => (
+              <motion.div 
+                key={step.id} 
+                whileHover={{ y: -2, transition: { duration: 0.15 } }}
+                className={`p-3 rounded-xl border text-center space-y-1.5 transition-all ${
+                  step.completed 
+                    ? 'bg-forestRural-50/70 border-forestRural-200 shadow-2xs' 
+                    : step.active 
+                    ? 'bg-white border-terracotta-400 shadow-elevation-1 ring-1 ring-terracotta-500/20' 
+                    : 'bg-paper-50/60 border-paper-200 opacity-65'
+                }`}
+              >
                 <div className={`w-6 h-6 mx-auto rounded-full flex items-center justify-center text-[11px] font-black ${
-                  step.completed ? 'bg-forestRural-600 text-white' : step.active ? 'bg-terracotta-600 text-white' : 'bg-paper-300 text-indigoRural-500'
+                  step.completed ? 'bg-forestRural-600 text-white shadow-2xs' : step.active ? 'bg-terracotta-600 text-white shadow-2xs' : 'bg-paper-300 text-indigoRural-500'
                 }`}>
-                  {step.completed ? <Check className="w-3.5 h-3.5" /> : step.num}
+                  {step.completed ? (
+                    <motion.span 
+                      initial={{ scale: 0 }} 
+                      animate={{ scale: 1 }} 
+                      transition={{ type: 'spring', stiffness: 500, damping: 20 }}
+                    >
+                      <Check className="w-3.5 h-3.5" />
+                    </motion.span>
+                  ) : step.num}
                 </div>
                 <p className="text-[11px] font-bold text-indigoRural-900 leading-tight">{step.title}</p>
-                <p className="text-[10px] text-indigoRural-500">{step.desc}</p>
+                <p className="text-[10px] text-indigoRural-500 leading-snug">{step.desc}</p>
                 {step.active && step.action && (
-                  <button onClick={step.action} className="mt-1 text-[10px] font-bold text-terracotta-700 hover:text-terracotta-900 underline underline-offset-2 cursor-pointer">
+                  <button onClick={step.action} className="mt-1 text-[10px] font-bold text-terracotta-700 hover:text-terracotta-900 underline underline-offset-2 cursor-pointer transition-colors">
                     {step.actionText}
                   </button>
                 )}
-              </div>
+              </motion.div>
             ))}
           </div>
         </Card>

@@ -14,16 +14,24 @@ import React from 'react';
 export function Card({
   children,
   variant = 'default',
+  elevation = 1,
   padding = 'md',
   className = '',
   onClick,
   ...props
 }) {
+  const elevationClasses = {
+    0: 'shadow-none border border-paper-200',
+    1: 'shadow-elevation-1 border border-paper-300/80 hover:border-terracotta-200/80 transition-all duration-200',
+    2: 'shadow-elevation-2 border border-paper-300',
+    3: 'shadow-elevation-3 border border-paper-300'
+  };
+
   const variantStyles = {
-    default: 'bg-white border border-paper-300/80 shadow-xs hover:border-terracotta-200 transition-colors',
-    hero: 'bg-white border border-paper-300 shadow-sm relative overflow-hidden',
+    default: 'bg-white',
+    hero: 'bg-white relative overflow-hidden shadow-elevation-2 border border-paper-300',
     accent: 'bg-terracotta-50/50 border border-terracotta-200/80',
-    paper: 'bg-paper-100/90 border border-paper-300/90 shadow-2xs'
+    paper: 'bg-paper-100/90 border border-paper-300/90'
   };
 
   const paddingStyles = {
@@ -34,11 +42,12 @@ export function Card({
   };
 
   const radiusStyles = variant === 'hero' ? 'rounded-3xl' : 'rounded-2xl';
+  const chosenElevation = variant === 'hero' ? '' : (elevationClasses[elevation] || elevationClasses[1]);
 
   return (
     <div
       onClick={onClick}
-      className={`${radiusStyles} ${variantStyles[variant] || variantStyles.default} ${paddingStyles[padding] || paddingStyles.md} ${onClick ? 'cursor-pointer' : ''} ${className}`}
+      className={`${radiusStyles} ${variantStyles[variant] || variantStyles.default} ${chosenElevation} ${paddingStyles[padding] || paddingStyles.md} ${onClick ? 'cursor-pointer' : ''} ${className}`}
       {...props}
     >
       {children}

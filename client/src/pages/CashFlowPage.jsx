@@ -577,7 +577,19 @@ export function CashFlowPage({ shop, onOpenKeypad, refreshKey, latestTx, onTrans
         {/* Tab 1: All Transactions Feed */}
         {activeTab === 'all' && (
           <div className="divide-y divide-paper-200 max-h-[500px] overflow-y-auto">
-            {transactions.length === 0 ? (
+            {loading ? (
+              <div className="p-4 space-y-3">
+                {[1, 2, 3, 4].map(i => (
+                  <div key={i} className="flex items-center justify-between p-3.5 rounded-xl border border-paper-200 animate-shimmer">
+                    <div className="space-y-2 w-1/2">
+                      <div className="h-3.5 bg-paper-300/70 rounded-md w-3/5" />
+                      <div className="h-2.5 bg-paper-200 rounded-md w-2/5" />
+                    </div>
+                    <div className="h-5 bg-paper-300/70 rounded-md w-20" />
+                  </div>
+                ))}
+              </div>
+            ) : transactions.length === 0 ? (
               <div className="p-12 text-center space-y-3">
                 <div className="w-12 h-12 mx-auto rounded-2xl bg-paper-100 flex items-center justify-center text-indigoRural-400">
                   <BookOpen className="w-6 h-6" />

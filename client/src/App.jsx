@@ -14,6 +14,7 @@ import { FloatingThumbDock } from './components/FloatingThumbDock';
 import { WarliBorder } from './components/WarliMotif';
 import { api } from './utils/api';
 import { useTranslation } from './i18n/LanguageContext';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function App() {
   const { language } = useTranslation();
@@ -331,84 +332,93 @@ export default function App() {
 
       {/* Main Page Container */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 pt-5 pb-20 lg:pb-10">
-        
-        {activeTab === 'onboarding' && (
-          <OnboardingPage 
-            onComplete={handleRealRegistrationComplete}
-            onSelectDemo={handleSelectDemo}
-          />
-        )}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+            className="w-full"
+          >
+            {activeTab === 'onboarding' && (
+              <OnboardingPage 
+                onComplete={handleRealRegistrationComplete}
+                onSelectDemo={handleSelectDemo}
+              />
+            )}
 
-        {activeTab === 'dashboard' && (
-          <DashboardPage
-            shop={currentShop}
-            creditData={creditData}
-            summaryData={summaryData}
-            cuesData={cuesData}
-            onOpenKeypad={() => setKeypadOpen(true)}
-            onNavigateTab={(tab) => setActiveTab(tab)}
-            onAskPrompt={handleAskPrompt}
-            onStartDemoTour={() => setDemoTourOpen(true)}
-            isDemoMode={isDemoMode}
-            onSwitchToDemo={handleSelectDemo}
-            onSwitchToRegister={handleSwitchToRegister}
-          />
-        )}
+            {activeTab === 'dashboard' && (
+              <DashboardPage
+                shop={currentShop}
+                creditData={creditData}
+                summaryData={summaryData}
+                cuesData={cuesData}
+                onOpenKeypad={() => setKeypadOpen(true)}
+                onNavigateTab={(tab) => setActiveTab(tab)}
+                onAskPrompt={handleAskPrompt}
+                onStartDemoTour={() => setDemoTourOpen(true)}
+                isDemoMode={isDemoMode}
+                onSwitchToDemo={handleSelectDemo}
+                onSwitchToRegister={handleSwitchToRegister}
+              />
+            )}
 
-        {activeTab === 'advisor' && (
-          <AdvisorChatPage
-            shop={currentShop}
-            creditData={creditData}
-            summaryData={summaryData}
-            initialPrompt={initialAdvisorPrompt}
-            onPromptUsed={() => setInitialAdvisorPrompt('')}
-          />
-        )}
+            {activeTab === 'advisor' && (
+              <AdvisorChatPage
+                shop={currentShop}
+                creditData={creditData}
+                summaryData={summaryData}
+                initialPrompt={initialAdvisorPrompt}
+                onPromptUsed={() => setInitialAdvisorPrompt('')}
+              />
+            )}
 
-        {activeTab === 'cashflow' && (
-          <CashFlowPage
-            shop={currentShop}
-            onOpenKeypad={() => setKeypadOpen(true)}
-            refreshKey={refreshKey}
-            latestTx={latestTx}
-            onTransactionSaved={handleTransactionSaved}
-          />
-        )}
+            {activeTab === 'cashflow' && (
+              <CashFlowPage
+                shop={currentShop}
+                onOpenKeypad={() => setKeypadOpen(true)}
+                refreshKey={refreshKey}
+                latestTx={latestTx}
+                onTransactionSaved={handleTransactionSaved}
+              />
+            )}
 
-        {activeTab === 'credit' && (
-          <CreditScorePage
-            shop={currentShop}
-            creditData={creditData}
-            onNavigateTab={(tab) => setActiveTab(tab)}
-          />
-        )}
+            {activeTab === 'credit' && (
+              <CreditScorePage
+                shop={currentShop}
+                creditData={creditData}
+                onNavigateTab={(tab) => setActiveTab(tab)}
+              />
+            )}
 
-        {activeTab === 'schemes' && (
-          <SchemeMatcherPage
-            shop={currentShop}
-            creditData={creditData}
-            onNavigateTab={(tab) => setActiveTab(tab)}
-          />
-        )}
+            {activeTab === 'schemes' && (
+              <SchemeMatcherPage
+                shop={currentShop}
+                creditData={creditData}
+                onNavigateTab={(tab) => setActiveTab(tab)}
+              />
+            )}
 
-        {activeTab === 'dossier' && (
-          <BankDossierPage
-            shop={currentShop}
-            onBack={() => setActiveTab('dashboard')}
-          />
-        )}
+            {activeTab === 'dossier' && (
+              <BankDossierPage
+                shop={currentShop}
+                onBack={() => setActiveTab('dashboard')}
+              />
+            )}
 
-        {activeTab === 'profile' && (
-          <ShopProfilePage
-            shop={currentShop}
-            onShopUpdated={(updated) => {
-              setCurrentShop(updated);
-              setRefreshKey(k => k + 1);
-            }}
-            onReloadDemo={handleReloadDemo}
-          />
-        )}
-
+            {activeTab === 'profile' && (
+              <ShopProfilePage
+                shop={currentShop}
+                onShopUpdated={(updated) => {
+                  setCurrentShop(updated);
+                  setRefreshKey(k => k + 1);
+                }}
+                onReloadDemo={handleReloadDemo}
+              />
+            )}
+          </motion.div>
+        </AnimatePresence>
       </main>
 
       {/* Tactile Touch Numeric Keypad Modal */}

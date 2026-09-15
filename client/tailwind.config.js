@@ -71,10 +71,14 @@ export default {
       boxShadow: {
         'card': '0 1px 3px 0 rgba(44, 25, 18, 0.05), 0 1px 2px -1px rgba(44, 25, 18, 0.05)',
         'card-hover': '0 12px 24px -4px rgba(44, 25, 18, 0.08), 0 4px 6px -2px rgba(44, 25, 18, 0.04)',
+        'elevation-1': '0 4px 20px -4px rgba(180, 83, 9, 0.09), 0 2px 6px -2px rgba(180, 83, 9, 0.04)',
+        'elevation-2': '0 10px 28px -6px rgba(180, 83, 9, 0.14), 0 4px 10px -3px rgba(180, 83, 9, 0.06)',
+        'elevation-3': '0 20px 45px -10px rgba(30, 41, 59, 0.22), 0 8px 16px -4px rgba(30, 41, 59, 0.1)',
         'glass': '0 8px 32px 0 rgba(44, 25, 18, 0.06)',
         'saathi': '0 20px 40px -15px rgba(35, 51, 84, 0.2)',
         'glow-forest': '0 0 24px rgba(30, 82, 58, 0.2)',
         'glow-terracotta': '0 0 24px rgba(167, 66, 24, 0.2)',
+        'input-focus': '0 0 0 3px rgba(193, 83, 36, 0.14)',
       },
       borderRadius: {
         'xl': '1rem',
