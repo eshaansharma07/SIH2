@@ -100,141 +100,109 @@ export function DashboardPage({
   return (
     <div className="space-y-6 sm:space-y-8 animate-fadeIn pb-24 lg:pb-12">
       
-      {/* 1. Master-Crafted Sovereign Digital Smart Credential Pass */}
-      <div className="sovereign-pass relative overflow-hidden rounded-[32px] text-white p-6 sm:p-8 shadow-2xl border border-white/15 group">
-        {/* Background Guilloche Security Watermark & Specular Lighting */}
-        <div className="absolute inset-0 guilloche-pattern opacity-40 pointer-events-none" />
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gradient-to-bl from-indigo-500/20 via-saffron-500/10 to-transparent rounded-full blur-3xl pointer-events-none group-hover:scale-105 transition duration-700" />
-        <div className="absolute -bottom-16 -left-16 w-72 h-72 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+      {/* 1. Clean Luminous Sovereign Merchant Executive Card (Apple Studio x DPI) */}
+      <div className="sovereign-card p-6 sm:p-8 space-y-6 relative overflow-hidden bg-white border border-slate-200/90 shadow-[0_4px_24px_rgba(0,0,0,0.03)]">
+        
+        {/* Subtle Sovereign Tri-color Accent Bar */}
+        <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-orange-500 via-slate-200 to-emerald-600" />
 
-        {/* Top Physical Credential Security Strip */}
-        <div className="relative z-10 flex flex-wrap items-center justify-between gap-3 pb-5 border-b border-white/10 text-xs">
-          {/* Smartcard Chip & Contactless Glyph */}
-          <div className="flex items-center gap-3">
-            {/* Physical Gold Micro-Chip Vector */}
-            <div className="w-10 h-7 rounded-lg bg-gradient-to-br from-amber-200 via-amber-400 to-amber-600 p-[1.5px] shadow-sm flex items-center justify-center shrink-0">
-              <div className="w-full h-full rounded-[6px] bg-amber-900/20 border border-amber-900/30 flex flex-col justify-around py-0.5 px-1">
-                <div className="h-[1px] bg-amber-950/40 w-full" />
-                <div className="h-[1px] bg-amber-950/40 w-full" />
-              </div>
-            </div>
-            {/* Contactless Wave */}
-            <svg className="w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <path d="M8.5 16.5a5 5 0 0 1 0-9" />
-              <path d="M12 19a8.5 8.5 0 0 0 0-14" />
-            </svg>
-            <span className="font-mono text-[11px] text-slate-300 font-bold tracking-widest uppercase">
+        {/* Top Sovereign Verification Credentials Strip */}
+        <div className="flex flex-wrap items-center justify-between gap-3 pb-5 border-b border-slate-100 text-xs">
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <span className="px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 font-extrabold text-[11px] border border-emerald-200/80 flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span>UDYAM VERIFIED MSME</span>
+            </span>
+            <span className="text-slate-300 hidden sm:inline">•</span>
+            <span className="font-mono text-xs text-slate-500 font-bold tracking-wider">
               UDYAM-UP-18-0092478
+            </span>
+            <span className="text-slate-300 hidden sm:inline">•</span>
+            <span className="text-slate-500 text-xs font-semibold">
+              Vintage: 48 Months
             </span>
           </div>
 
-          {/* National Verification Badges */}
           <div className="flex items-center gap-2">
-            <span className="px-3.5 py-1 rounded-full bg-emerald-500/15 text-emerald-300 font-black text-[11px] border border-emerald-500/30 flex items-center gap-1.5 shadow-xs">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span>UDYAM VERIFIED MSME</span>
+            <span className="px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 font-bold text-[11px] border border-indigo-200/80 flex items-center gap-1.5">
+              <ShieldCheck className="w-3.5 h-3.5 text-indigo-600" />
+              <span>RBI PSL Tier-A Prime</span>
             </span>
-            <span className="px-3 py-1 rounded-full bg-white/10 text-slate-200 font-bold text-[11px] border border-white/15">
-              RBI PSL Tier-A Prime
+            <span className="px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 font-bold text-[11px]">
+              DPI INDIA STACK
             </span>
           </div>
         </div>
 
-        {/* Pass Core Body */}
-        <div className="relative z-10 pt-6 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-          <div className="space-y-4 max-w-xl">
+        {/* Core Hero Body */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div className="space-y-3 max-w-2xl">
             <div className="space-y-1">
-              <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-saffron-400">
-                <span>National Sovereign Merchant Credential</span>
-                <span>•</span>
-                <span>Vintage: 48 Months</span>
-              </div>
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight font-display text-white">
-                {shop?.name || 'Ramesh Kirana & General Store'}
+              <span className="text-[11px] font-black uppercase tracking-wider text-slate-400 block">
+                {language === 'hi' ? 'राष्ट्रीय सूक्ष्म उद्यम प्रोफ़ाइल' : 'National Micro-Enterprise Sovereign Profile'}
+              </span>
+              <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-slate-950 font-display">
+                {shop?.name || "Ramesh's Kirana Store"}
               </h1>
-              <p className="text-slate-300 text-xs sm:text-sm font-medium flex items-center gap-2">
-                <span className="font-semibold text-white">{shop?.owner_name || 'Ramesh Kumar'} (Proprietor)</span>
-                <span className="text-slate-500">•</span>
-                <span className="text-slate-300">{shop?.village || 'Utraula Dehat'}, {shop?.district || 'Balrampur'} (UP)</span>
+              <p className="text-slate-600 text-xs sm:text-sm font-medium flex items-center gap-2 pt-0.5">
+                <span className="font-bold text-slate-900">{shop?.owner_name || 'Ramesh Kumar'} (Proprietor)</span>
+                <span className="text-slate-300">•</span>
+                <span>{shop?.village || 'Utraula Dehat'}, {shop?.district || 'Balrampur'} (Uttar Pradesh)</span>
               </p>
             </div>
 
-            {/* Display Figures with High-Contrast Typography */}
-            <div className="flex flex-wrap items-baseline gap-6 pt-1">
+            {/* Turnover & Surplus Highlights */}
+            <div className="flex flex-wrap items-baseline gap-6 pt-2">
               <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-0.5">
-                  90-Day Audited Turnover
+                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+                  {language === 'hi' ? '90-दिवसीय सत्यापित कारोबार' : '90-Day Audited Turnover'}
                 </span>
-                <div className="text-3xl sm:text-4xl font-black tracking-tight tabular-nums font-display text-white">
+                <div className="text-3xl sm:text-4xl font-black tracking-tight tabular-nums text-slate-950 font-display">
                   ₹{metrics.totalIncome.toLocaleString('en-IN')}
                 </div>
               </div>
-              <div className="border-l border-white/15 pl-6">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-0.5">
-                  Net Operating Surplus
+              <div className="border-l border-slate-200 pl-6">
+                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+                  {language === 'hi' ? 'शुद्ध परिचालन अधिशेष' : 'Net Operating Surplus'}
                 </span>
-                <div className="text-2xl sm:text-3xl font-black tracking-tight tabular-nums font-display text-emerald-400">
+                <div className="text-2xl sm:text-3xl font-black tracking-tight tabular-nums text-emerald-600 font-display">
                   ₹{metrics.netSurplus.toLocaleString('en-IN')}
                 </div>
               </div>
-              <div className="border-l border-white/15 pl-6 hidden sm:block">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-0.5">
-                  Retained Margin
+              <div className="border-l border-slate-200 pl-6 hidden sm:block">
+                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+                  {language === 'hi' ? 'बचत मार्जिन' : 'Operating Margin'}
                 </span>
-                <div className="text-2xl sm:text-3xl font-black tracking-tight tabular-nums font-display text-indigo-300">
-                  29.6%
+                <div className="text-2xl sm:text-3xl font-black tracking-tight tabular-nums text-indigo-600 font-display">
+                  +29.6%
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Embedded Cryptographic QR Code & Tactile Hardware-style Actions */}
-          <div className="flex flex-col sm:flex-row lg:flex-col items-start lg:items-end gap-3.5 shrink-0">
-            {/* Scannable Cryptographic DPI QR Code Seal */}
-            <div className="flex items-center gap-3 p-2.5 rounded-2xl bg-white/10 border border-white/15 backdrop-blur-md">
-              <div className="w-13 h-13 bg-white rounded-xl p-1 shrink-0 flex items-center justify-center">
-                <svg className="w-full h-full text-slate-950" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M2 2h7v7H2V2zm2 2v3h3V4H4zm5-2h2v3h2V2h2v2h-2v2h3v3h-2v2h2v2h-2v2h-2v-2h-2v2H9v-2H7v2H5v-2h2v-2H5V9h2V7H5V5h4V2zm5 5h2V5h-2v2zm0 4h2V9h-2v2zm-4 0h2V9h-2v2zm-2 2h2v-2H9v2zm0 2h2v-2H9v2zm4 0h2v-2h-2v2zm2-2h2v-2h-2v2zm0 4h2v-2h-2v2zm-4 0h2v-2h-2v2zm-4 0h2v-2H9v2zM2 15h7v7H2v-7zm2 2v3h3v-3H4zm11 0h7v7h-7v-7zm2 2v3h3v-3h-3z" />
-                </svg>
-              </div>
-              <div className="text-left pr-2">
-                <div className="text-[10px] font-black text-white tracking-wider uppercase">
-                  DPI Audit Seal
-                </div>
-                <div className="text-[9px] text-slate-300 font-mono">
-                  SHA-256 #UP-92478
-                </div>
-                <div className="text-[9px] text-emerald-400 font-bold mt-0.5 flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  <span>Tamper-Evident Bank Pass</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Tactile Hardware Actions */}
-            <div className="flex items-center gap-2 w-full sm:w-auto">
-              <button
-                onClick={onOpenKeypad}
-                className="flex-1 sm:flex-initial px-5 py-3.5 rounded-2xl bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-slate-950 font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25 transition cursor-pointer"
-              >
-                <PlusCircle className="w-4 h-4 text-slate-950 stroke-[2.5]" />
-                <span>{language === 'hi' ? 'लेन-देन दर्ज करें' : '+ Record Entry'}</span>
-              </button>
-              <button
-                onClick={() => onNavigateTab('advisor')}
-                className="px-4 py-3.5 rounded-2xl bg-white/12 hover:bg-white/18 active:scale-95 text-white font-bold text-xs sm:text-sm border border-white/20 backdrop-blur-md flex items-center justify-center gap-1.5 transition cursor-pointer"
-              >
-                <Sparkles className="w-4 h-4 text-amber-300" />
-                <span>{language === 'hi' ? 'मंडी AI' : 'Mandi AI'}</span>
-              </button>
-              <button
-                onClick={() => onNavigateTab('dossier')}
-                className="px-3.5 py-3.5 rounded-2xl bg-white/8 hover:bg-white/14 active:scale-95 text-slate-300 font-semibold text-xs border border-white/12 transition cursor-pointer"
-                title="Download Official Bank Dossier"
-              >
-                <FileText className="w-4 h-4" />
-              </button>
-            </div>
+          {/* Clean Executive Tactile Action Buttons */}
+          <div className="flex flex-col sm:flex-row lg:flex-col gap-2.5 shrink-0">
+            <button
+              onClick={onOpenKeypad}
+              className="px-6 py-3.5 rounded-2xl bg-slate-950 hover:bg-slate-800 active:scale-95 text-white font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-sm hover:shadow-md transition duration-150 cursor-pointer"
+            >
+              <PlusCircle className="w-4 h-4 text-emerald-400" />
+              <span>{language === 'hi' ? 'खाते में लेनदेन दर्ज करें' : '+ Record Transaction'}</span>
+            </button>
+            <button
+              onClick={() => onNavigateTab('advisor')}
+              className="px-6 py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-800 font-bold text-xs sm:text-sm border border-slate-200 flex items-center justify-center gap-2 transition cursor-pointer"
+            >
+              <Sparkles className="w-4 h-4 text-amber-500" />
+              <span>{language === 'hi' ? 'एआई मंडी सलाहकार' : 'AI Mandi Advisor'}</span>
+            </button>
+            <button
+              onClick={() => onNavigateTab('dossier')}
+              className="px-5 py-2.5 rounded-2xl bg-slate-50 hover:bg-slate-100 active:scale-95 text-slate-600 hover:text-slate-900 font-semibold text-xs border border-slate-200 flex items-center justify-center gap-2 transition cursor-pointer"
+            >
+              <FileText className="w-3.5 h-3.5 text-slate-500" />
+              <span>{language === 'hi' ? 'आधिकारिक बैंक डॉसियर' : 'Official Bank Dossier'}</span>
+            </button>
           </div>
         </div>
 
