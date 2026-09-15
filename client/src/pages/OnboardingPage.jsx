@@ -36,6 +36,7 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
   const [vintageYears, setVintageYears] = useState(1);
   const [monthlyRevenue, setMonthlyRevenue] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [demoLoading, setDemoLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [shakeError, setShakeError] = useState(false);
 
@@ -177,14 +178,26 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
 
           <Button
             type="button"
-            onClick={onSelectDemo}
+            onClick={async () => {
+              setDemoLoading(true);
+              try {
+                await onSelectDemo?.();
+              } finally {
+                setTimeout(() => setDemoLoading(false), 2000);
+              }
+            }}
+            disabled={demoLoading || loading}
             variant="secondary"
             size="lg"
-            icon={ArrowRight}
+            icon={demoLoading ? Loader2 : ArrowRight}
             iconPosition="right"
-            className="w-full md:w-auto shrink-0 !bg-white !text-indigoRural-950 hover:!bg-paper-100 shadow-md hover:shadow-lg transition-all"
+            className={`w-full md:w-auto shrink-0 !bg-white !text-indigoRural-950 hover:!bg-paper-100 shadow-md hover:shadow-lg transition-all ${demoLoading ? 'opacity-90 cursor-wait' : ''}`}
           >
-            <span>{language === 'hi' ? 'जज डेमो मोड लोड करें' : 'Launch Judge Demo Mode'}</span>
+            <span>
+              {demoLoading 
+                ? (language === 'hi' ? 'डेमो लोड हो रहा है...' : 'Loading Demo Mode...')
+                : (language === 'hi' ? 'जज डेमो मोड लोड करें' : 'Launch Judge Demo Mode')}
+            </span>
           </Button>
         </div>
       </motion.div>

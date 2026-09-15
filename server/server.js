@@ -44,6 +44,7 @@ app.get(['/api/health', '/health'], (req, res) => {
 // Mount Routes on both /api and root paths for seamless serverless rewrite handling
 const routeMap = [
   ['/shop', shopRoutes],
+  ['/shops', shopRoutes],
   ['/transactions', transactionRoutes],
   ['/credit-score', creditRoutes],
   ['/schemes', schemeRoutes],

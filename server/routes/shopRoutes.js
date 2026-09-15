@@ -63,7 +63,7 @@ router.get('/current', async (req, res) => {
 });
 
 // Setup new real shop profile (Onboarding — is_demo = 0)
-router.post('/setup', (req, res) => {
+router.post('/setup', async (req, res) => {
   try {
     const {
       name,
@@ -153,7 +153,7 @@ router.post('/reset-demo', async (req, res) => {
 });
 
 // Update shop details
-router.put('/:id', (req, res) => {
+router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const existing = db.prepare('SELECT * FROM shops WHERE id = ?').get(id);

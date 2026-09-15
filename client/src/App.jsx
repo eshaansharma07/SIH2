@@ -30,7 +30,11 @@ export default function App() {
   const savedIsDemoStr = localStorage.getItem('vyapaar_is_demo_mode');
   const savedIsDemo = savedIsDemoStr === 'true';
 
-  const [activeTab, setActiveTab] = useState((savedShopId || initialShop) ? 'dashboard' : 'onboarding');
+  const savedTab = localStorage.getItem('vyapaar_active_tab');
+  const hasUserSession = Boolean(savedShopId || initialShop);
+  const [activeTab, setActiveTab] = useState(
+    hasUserSession ? (savedTab && savedTab !== 'onboarding' ? savedTab : 'dashboard') : 'onboarding'
+  );
   const [currentShop, setCurrentShop] = useState(initialShop);
   const [isDemoMode, setIsDemoMode] = useState(savedIsDemo);
   const [creditData, setCreditData] = useState(null);
@@ -42,6 +46,13 @@ export default function App() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [loading, setLoading] = useState(true);
   const [latestTx, setLatestTx] = useState(null);
+
+  const changeTab = (tab) => {
+    setActiveTab(tab);
+    if (tab && tab !== 'onboarding') {
+      localStorage.setItem('vyapaar_active_tab', tab);
+    }
+  };
 
   useEffect(() => {
     loadAllShopData();
@@ -78,63 +89,52 @@ export default function App() {
   const loadAllShopData = async () => {
     try {
       const activeShopId = localStorage.getItem('vyapaar_active_shop_id');
-      
-      if (!activeShopId) {
-        const cachedJson = localStorage.getItem('vyapaar_active_shop');
-        if (!cachedJson) {
-          setLoading(false);
-          setActiveTab('onboarding');
-          return;
-        }
+      const cachedJson = localStorage.getItem('vyapaar_active_shop');
+      let cachedShop = null;
+      if (cachedJson) {
+        try { cachedShop = JSON.parse(cachedJson); } catch (_) {}
       }
 
-      const idToFetch = activeShopId || initialShop?.id;
-      if (!idToFetch) {
+      // If user has neither an activeShopId nor a cached profile, show onboarding
+      if (!activeShopId && !cachedShop) {
         setLoading(false);
         setActiveTab('onboarding');
         return;
       }
 
-      const shopRes = await api.getShopCurrent(idToFetch);
-      if (shopRes?.shop) {
-        setCurrentShop(shopRes.shop);
-        localStorage.setItem('vyapaar_active_shop', JSON.stringify(shopRes.shop));
-        setIsDemoMode(shopRes.shop.is_demo === 1);
-        localStorage.setItem('vyapaar_is_demo_mode', shopRes.shop.is_demo === 1 ? 'true' : 'false');
-        await fetchFinancials(shopRes.shop.id);
-      } else {
-        // Check if we have cached local shop before clearing anything
-        const cachedJson = localStorage.getItem('vyapaar_active_shop');
-        if (cachedJson) {
-          try {
-            const cachedShop = JSON.parse(cachedJson);
-            if (cachedShop) {
-              setCurrentShop(cachedShop);
-              setIsDemoMode(cachedShop.is_demo === 1);
-              await fetchFinancials(cachedShop.id);
-              return;
-            }
-          } catch (_) {}
-        }
+      // Ensure currentShop is populated immediately from cache
+      const effectiveShop = cachedShop || (activeShopId ? { id: activeShopId } : null);
+      if (effectiveShop && !currentShop) {
+        setCurrentShop(effectiveShop);
+        setIsDemoMode(effectiveShop.is_demo === 1);
+      }
 
-        // Only redirect to onboarding if user literally has no shop profile
-        if (!currentShop && !initialShop) {
-          localStorage.removeItem('vyapaar_active_shop_id');
-          localStorage.removeItem('vyapaar_active_shop');
-          localStorage.removeItem('vyapaar_is_demo_mode');
-          setActiveTab('onboarding');
+      const idToFetch = activeShopId || cachedShop?.id;
+      if (!idToFetch) {
+        setLoading(false);
+        return;
+      }
+
+      // Refresh shop data from API without ever evicting the session on errors
+      try {
+        const shopRes = await api.getShopCurrent(idToFetch);
+        if (shopRes?.shop) {
+          setCurrentShop(shopRes.shop);
+          localStorage.setItem('vyapaar_active_shop', JSON.stringify(shopRes.shop));
+          setIsDemoMode(shopRes.shop.is_demo === 1);
+          localStorage.setItem('vyapaar_is_demo_mode', shopRes.shop.is_demo === 1 ? 'true' : 'false');
+          await fetchFinancials(shopRes.shop.id);
+        } else if (cachedShop) {
+          await fetchFinancials(cachedShop.id);
+        }
+      } catch (netErr) {
+        console.warn('Network issue during shop background sync (session preserved):', netErr.message);
+        if (cachedShop?.id) {
+          await fetchFinancials(cachedShop.id);
         }
       }
     } catch (err) {
       console.error('Error initializing shop data:', err);
-      // On network failure or cold start: do NOT log out the user!
-      const cachedJson = localStorage.getItem('vyapaar_active_shop');
-      if (cachedJson) {
-        try {
-          const cachedShop = JSON.parse(cachedJson);
-          if (cachedShop) setCurrentShop(cachedShop);
-        } catch (_) {}
-      }
     } finally {
       setLoading(false);
     }
@@ -230,25 +230,52 @@ export default function App() {
     }
   };
 
+  const demoShopDefault = {
+    id: 'ramesh-kirana',
+    name: "Ramesh's Kirana Store",
+    owner_name: 'Ramesh Kumar',
+    trade_type: 'kirana',
+    trade_name: 'Kirana & General Store',
+    village: 'Shivpur',
+    district: 'Varanasi',
+    state: 'Uttar Pradesh',
+    vintage_years: 5,
+    monthly_revenue: 125000,
+    ownership: 'owned',
+    bank_account_type: 'Gramin Bank',
+    phone: '9876543210',
+    owner_category: 'OBC',
+    is_demo: 1
+  };
+
   // === MODE SWITCHING ===
 
-  // Load Demo Mode (Ramesh Kirana)
+  // Load Demo Mode (Ramesh Kirana) - Instant response + background seed
   const handleSelectDemo = async () => {
+    // 1. Instantly update local state and localStorage so user transitions immediately (0ms UI latency)
+    localStorage.setItem('vyapaar_active_shop_id', 'ramesh-kirana');
+    localStorage.setItem('vyapaar_active_shop', JSON.stringify(demoShopDefault));
+    localStorage.setItem('vyapaar_is_demo_mode', 'true');
+    setCurrentShop(demoShopDefault);
+    setIsDemoMode(true);
+    setCreditData(null);
+    setSummaryData(null);
+    setCuesData(null);
+    changeTab('dashboard');
+
+    // 2. Concurrently reset demo shop on server and fetch real financials
     try {
-      const demoRes = await api.resetDemoShop();
-      const demoShop = demoRes?.shop || { id: 'ramesh-kirana', name: "Ramesh's Kirana Store", is_demo: 1 };
-      localStorage.setItem('vyapaar_active_shop_id', 'ramesh-kirana');
+      const demoRes = await api.resetDemoShop().catch(e => {
+        console.warn('Demo reset notice (using seeded data):', e.message);
+        return null;
+      });
+      const demoShop = demoRes?.shop || demoShopDefault;
       localStorage.setItem('vyapaar_active_shop', JSON.stringify(demoShop));
-      localStorage.setItem('vyapaar_is_demo_mode', 'true');
       setCurrentShop(demoShop);
-      setIsDemoMode(true);
-      setCreditData(null);
-      setSummaryData(null);
-      setCuesData(null);
-      setActiveTab('dashboard');
       fetchFinancials('ramesh-kirana');
     } catch (e) {
-      console.error('Demo load error:', e);
+      console.warn('Demo fetch notice:', e);
+      fetchFinancials('ramesh-kirana');
     }
   };
 
@@ -264,17 +291,18 @@ export default function App() {
     setCreditData(null);
     setSummaryData(null);
     setCuesData(null);
-    setActiveTab('dashboard');
+    changeTab('dashboard');
     if (newShop?.id) {
       fetchFinancials(newShop.id);
     }
   };
 
-  // Switch to real registration from demo mode
+  // Switch to real registration from demo mode (MANUAL LOGOUT)
   const handleSwitchToRegister = () => {
     localStorage.removeItem('vyapaar_active_shop_id');
     localStorage.removeItem('vyapaar_active_shop');
     localStorage.removeItem('vyapaar_is_demo_mode');
+    localStorage.removeItem('vyapaar_active_tab');
     setCurrentShop(null);
     setIsDemoMode(false);
     setCreditData(null);
@@ -286,14 +314,14 @@ export default function App() {
   // Reload demo (reset)
   const handleReloadDemo = async () => {
     try {
-      const demoRes = await api.resetDemoShop();
-      const demoShop = demoRes?.shop || { id: 'ramesh-kirana', name: "Ramesh's Kirana Store", is_demo: 1 };
+      const demoRes = await api.resetDemoShop().catch(() => null);
+      const demoShop = demoRes?.shop || demoShopDefault;
       localStorage.setItem('vyapaar_active_shop_id', 'ramesh-kirana');
       localStorage.setItem('vyapaar_active_shop', JSON.stringify(demoShop));
       localStorage.setItem('vyapaar_is_demo_mode', 'true');
       setCurrentShop(demoShop);
       setIsDemoMode(true);
-      setActiveTab('dashboard');
+      changeTab('dashboard');
       fetchFinancials('ramesh-kirana');
     } catch (e) {
       console.error(e);
@@ -302,7 +330,7 @@ export default function App() {
 
   const handleAskPrompt = (promptText) => {
     setInitialAdvisorPrompt(promptText);
-    setActiveTab('advisor');
+    changeTab('advisor');
   };
 
   if (loading) {
@@ -321,7 +349,7 @@ export default function App() {
       {/* Top Navbar */}
       <Navbar 
         activeTab={activeTab} 
-        setActiveTab={setActiveTab} 
+        setActiveTab={changeTab} 
         currentShop={currentShop}
         isDemoMode={isDemoMode}
         onReloadDemo={handleReloadDemo}
@@ -355,7 +383,7 @@ export default function App() {
                 summaryData={summaryData}
                 cuesData={cuesData}
                 onOpenKeypad={() => setKeypadOpen(true)}
-                onNavigateTab={(tab) => setActiveTab(tab)}
+                onNavigateTab={(tab) => changeTab(tab)}
                 onAskPrompt={handleAskPrompt}
                 onStartDemoTour={() => setDemoTourOpen(true)}
                 isDemoMode={isDemoMode}
@@ -388,7 +416,7 @@ export default function App() {
               <CreditScorePage
                 shop={currentShop}
                 creditData={creditData}
-                onNavigateTab={(tab) => setActiveTab(tab)}
+                onNavigateTab={(tab) => changeTab(tab)}
               />
             )}
 
@@ -396,14 +424,14 @@ export default function App() {
               <SchemeMatcherPage
                 shop={currentShop}
                 creditData={creditData}
-                onNavigateTab={(tab) => setActiveTab(tab)}
+                onNavigateTab={(tab) => changeTab(tab)}
               />
             )}
 
             {activeTab === 'dossier' && (
               <BankDossierPage
                 shop={currentShop}
-                onBack={() => setActiveTab('dashboard')}
+                onBack={() => changeTab('dashboard')}
               />
             )}
 
@@ -412,6 +440,7 @@ export default function App() {
                 shop={currentShop}
                 onShopUpdated={(updated) => {
                   setCurrentShop(updated);
+                  localStorage.setItem('vyapaar_active_shop', JSON.stringify(updated));
                   setRefreshKey(k => k + 1);
                 }}
                 onReloadDemo={handleReloadDemo}
@@ -434,7 +463,7 @@ export default function App() {
         isOpen={demoTourOpen}
         onClose={() => setDemoTourOpen(false)}
         activeTab={activeTab}
-        setActiveTab={setActiveTab}
+        setActiveTab={changeTab}
         setKeypadOpen={setKeypadOpen}
         setInitialAdvisorPrompt={setInitialAdvisorPrompt}
         onReloadDemo={handleReloadDemo}
@@ -443,7 +472,7 @@ export default function App() {
       {/* Mobile Thumb Action Dock */}
       <FloatingThumbDock 
         activeTab={activeTab}
-        setActiveTab={setActiveTab}
+        setActiveTab={changeTab}
         onOpenKeypad={() => setKeypadOpen(true)}
         creditScore={creditData?.totalScore || null}
       />
