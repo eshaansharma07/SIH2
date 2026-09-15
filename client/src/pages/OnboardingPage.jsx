@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   ShoppingBag, 
   Scissors, 
@@ -15,7 +15,13 @@ import {
   IndianRupee,
   AlertCircle,
   X,
-  Loader2
+  Loader2,
+  LogIn,
+  UserPlus,
+  Phone,
+  Lock,
+  Store,
+  KeyRound
 } from 'lucide-react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { WarliBorder } from '../components/WarliMotif';
@@ -27,18 +33,43 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
   const { language } = useTranslation();
   const shouldReduceMotion = useReducedMotion();
   
+  const [authMode, setAuthMode] = useState('login'); // 'login' | 'register'
+  const [loginPhone, setLoginPhone] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [savedShops, setSavedShops] = useState([]);
+
+  // Registration Form State
   const [tradeType, setTradeType] = useState('kirana');
   const [shopName, setShopName] = useState('');
   const [ownerName, setOwnerName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [password, setPassword] = useState('1234');
   const [village, setVillage] = useState('');
   const [district, setDistrict] = useState('');
   const [state, setState] = useState('');
   const [vintageYears, setVintageYears] = useState(1);
   const [monthlyRevenue, setMonthlyRevenue] = useState(0);
+
   const [loading, setLoading] = useState(false);
   const [demoLoading, setDemoLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [shakeError, setShakeError] = useState(false);
+
+  // Load previously used accounts on this device
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('vyapaar_saved_shops');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setSavedShops(parsed);
+          setAuthMode('login');
+          if (parsed[0]?.phone) setLoginPhone(parsed[0].phone);
+          if (parsed[0]?.password) setLoginPassword(parsed[0].password);
+        }
+      }
+    } catch (_) {}
+  }, []);
 
   const trades = [
     { 
@@ -98,10 +129,50 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
     setTimeout(() => setShakeError(false), 500);
   };
 
+  // Log in existing shopkeeper by Phone Number & Password
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    if (!loginPhone.trim()) {
+      triggerErrorShake(language === 'hi' ? 'कृपया अपना 10-अंकीय मोबाइल नंबर दर्ज करें' : 'Please enter your registered mobile number');
+      return;
+    }
+    if (!loginPassword.trim()) {
+      triggerErrorShake(language === 'hi' ? 'कृपया अपना 4-अंकीय पासवर्ड या पिन दर्ज करें' : 'Please enter your 4-digit PIN');
+      return;
+    }
+
+    setLoading(true);
+    setErrorMsg('');
+    try {
+      const res = await api.loginShop(loginPhone.trim(), loginPassword.trim());
+      if (res.success && res.shop) {
+        onComplete?.(res.shop);
+      } else {
+        triggerErrorShake(res.error || 'Login failed');
+      }
+    } catch (err) {
+      triggerErrorShake(err.message || 'Login failed. Please check your credentials.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Quick select from saved account card
+  const handleSelectSavedShop = (saved) => {
+    if (saved?.phone) {
+      setLoginPhone(saved.phone);
+      setLoginPassword(saved.password || '1234');
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!shopName.trim() || !ownerName.trim()) {
       triggerErrorShake(language === 'hi' ? 'कृपया दुकान और दुकानदार का नाम दर्ज करें' : 'Please provide shop name and proprietor name');
+      return;
+    }
+    if (!phone.trim()) {
+      triggerErrorShake(language === 'hi' ? 'कृपया भविष्य में लॉगिन हेतु मोबाइल नंबर दर्ज करें' : 'Please enter mobile number for logging in later');
       return;
     }
     setLoading(true);
@@ -118,6 +189,8 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
         state: state.trim() || 'State',
         vintage_years: vintageYears,
         monthly_revenue: monthlyRevenue,
+        phone: phone.trim(),
+        password: password.trim() || '1234',
         bank_account_type: 'Gramin Bank',
         ownership: 'rented'
       });
@@ -204,261 +277,460 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
 
       <WarliBorder className="w-full h-5 text-terracotta-400 opacity-60 my-2" />
 
-      {/* Pathway Divider */}
-      <motion.div variants={itemVariants} className="text-center my-4">
-        <span className="text-xs font-bold text-indigoRural-700 uppercase tracking-wider bg-paper-100 px-4 py-2 rounded-full border border-paper-300 shadow-elevation-1">
-          {language === 'hi' ? 'अथवा: वास्तविक सूक्ष्म उद्यम पंजीकरण (Day 1)' : 'Or: Register Real Micro-Enterprise (Day 1 Honest State)'}
-        </span>
+      {/* 2. Auth Mode Segmented Pill Switcher (Login vs New Registration) */}
+      <motion.div variants={itemVariants} className="flex justify-center my-4">
+        <div className="inline-flex p-1 bg-paper-200/90 rounded-2xl border border-paper-300 shadow-2xs">
+          <button
+            type="button"
+            onClick={() => { setAuthMode('login'); setErrorMsg(''); }}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold transition-all cursor-pointer ${
+              authMode === 'login'
+                ? 'bg-indigoRural-900 text-white shadow-xs'
+                : 'text-indigoRural-700 hover:text-indigoRural-950'
+            }`}
+          >
+            <LogIn className="w-4 h-4" />
+            <span>{language === 'hi' ? 'दुकानदार लॉगिन' : 'Shopkeeper Login'}</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => { setAuthMode('register'); setErrorMsg(''); }}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold transition-all cursor-pointer ${
+              authMode === 'register'
+                ? 'bg-terracotta-600 text-white shadow-xs'
+                : 'text-indigoRural-700 hover:text-indigoRural-950'
+            }`}
+          >
+            <UserPlus className="w-4 h-4" />
+            <span>{language === 'hi' ? 'नया पंजीकरण' : 'New Registration'}</span>
+          </button>
+        </div>
       </motion.div>
 
-      {/* Onboarding Form Card (Elevation 1) */}
-      <motion.div variants={itemVariants}>
-        <Card elevation={1} padding="lg" className="space-y-6">
-          
-          <div>
-            <SectionHeading>
-              {language === 'hi' ? 'दुकान एवं व्यापार की जानकारी' : 'Shop & Trade Information'}
-            </SectionHeading>
-            <HelperText>
-              {language === 'hi' ? 'आसान आइकन-आधारित चुनाव • कम से कम टाइपिंग' : 'Icon-led category selection • Minimal typing required'}
-            </HelperText>
-          </div>
+      {/* Animated Shake Error Banner */}
+      {errorMsg && (
+        <motion.div 
+          animate={shouldReduceMotion ? {} : (shakeError ? { x: [0, -8, 8, -6, 6, -3, 3, 0] } : {})}
+          transition={{ duration: 0.4 }}
+          className="bg-terracotta-50 border border-terracotta-200 text-terracotta-800 text-xs px-4 py-2.5 rounded-xl font-semibold flex items-center justify-between shadow-2xs mb-4"
+        >
+          <span className="flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 text-terracotta-600 shrink-0" />
+            <span>{errorMsg}</span>
+          </span>
+          <button 
+            type="button"
+            onClick={() => setErrorMsg('')} 
+            className="text-terracotta-600 hover:text-terracotta-900 p-1 cursor-pointer"
+            aria-label="Dismiss error"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </motion.div>
+      )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Animated Shake Error Banner */}
-            {errorMsg && (
-              <motion.div 
-                animate={shouldReduceMotion ? {} : (shakeError ? { x: [0, -8, 8, -6, 6, -3, 3, 0] } : {})}
-                transition={{ duration: 0.4 }}
-                className="bg-terracotta-50 border border-terracotta-200 text-terracotta-800 text-xs px-4 py-2.5 rounded-xl font-semibold flex items-center justify-between shadow-2xs"
-              >
-                <span className="flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 text-terracotta-600 shrink-0" />
-                  <span>{errorMsg}</span>
-                </span>
-                <button 
-                  type="button"
-                  onClick={() => setErrorMsg('')} 
-                  className="text-terracotta-600 hover:text-terracotta-900 p-1 cursor-pointer"
-                  aria-label="Dismiss error"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              </motion.div>
-            )}
+      {/* 3A. SHOPKEEPER LOGIN VIEW */}
+      {authMode === 'login' && (
+        <motion.div variants={itemVariants}>
+          <Card elevation={1} padding="lg" className="space-y-6">
             
-            {/* Trade Category Picker */}
             <div>
-              <FieldLabel required>
-                {language === 'hi' ? '1. अपने व्यापार का प्रकार चुनें' : '1. Select Trade Category'}
-              </FieldLabel>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 pt-1">
-                {trades.map(t => {
-                  const Icon = t.icon;
-                  const isSelected = tradeType === t.id;
-                  return (
-                    <motion.button
-                      key={t.id}
-                      type="button"
-                      onClick={() => setTradeType(t.id)}
-                      whileHover={shouldReduceMotion ? {} : { y: -2, transition: { duration: 0.15 } }}
-                      whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}
-                      className={`p-3 rounded-xl border text-left transition-all duration-200 flex flex-col justify-between min-h-[96px] cursor-pointer ${
-                        isSelected
-                          ? 'border-terracotta-600 bg-terracotta-50/70 shadow-elevation-1 ring-2 ring-terracotta-500/25'
-                          : 'border-paper-300 bg-white hover:bg-paper-50/80 hover:border-paper-400'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className={`p-2 rounded-lg border shadow-2xs transition-colors ${
-                          isSelected ? 'bg-terracotta-600 text-white border-terracotta-700' : t.tint
-                        }`}>
-                          <Icon className="w-4 h-4" />
-                        </span>
-                        {isSelected && (
-                          <motion.span 
-                            initial={shouldReduceMotion ? false : { scale: 0 }}
-                            animate={{ scale: 1 }}
-                            transition={{ type: 'spring', stiffness: 500, damping: 20 }}
-                            className="w-5 h-5 rounded-full bg-terracotta-600 text-white flex items-center justify-center text-xs shadow-xs"
-                          >
-                            <Check className="w-3 h-3" />
-                          </motion.span>
-                        )}
-                      </div>
-                      <div className="pt-2">
-                        <p className={`font-bold text-xs leading-snug transition-colors ${isSelected ? 'text-terracotta-900 font-extrabold' : 'text-indigoRural-800'}`}>
-                          {language === 'hi' ? t.name : t.nameEn}
-                        </p>
-                      </div>
-                    </motion.button>
-                  );
-                })}
-              </div>
+              <SectionHeading>
+                {language === 'hi' ? 'वापस अपनी दुकान में लॉगिन करें' : 'Log Back In to Your Shop'}
+              </SectionHeading>
+              <HelperText>
+                {language === 'hi' 
+                  ? 'पंजीकृत मोबाइल नंबर एवं 4-अंकीय पिन दर्ज करें • सारा बही-खाता डेटा सुरक्षित मिलेगा' 
+                  : 'Enter your registered mobile number & 4-digit PIN • All transactions & scores are restored'}
+              </HelperText>
             </div>
 
-            {/* Shop Name & Owner Name */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Saved Accounts On This Device (1-Tap Quick Fill) */}
+            {savedShops.length > 0 && (
+              <div className="bg-paper-50 p-3.5 rounded-2xl border border-paper-200 space-y-2">
+                <span className="text-[11px] font-extrabold text-indigoRural-700 uppercase tracking-wide flex items-center gap-1.5">
+                  <Store className="w-3.5 h-3.5 text-terracotta-600" />
+                  <span>{language === 'hi' ? 'इस डिवाइस पर सहेजे गए खाते' : 'Saved Accounts on this Device'}</span>
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {savedShops.slice(0, 4).map((s) => (
+                    <button
+                      key={s.id}
+                      type="button"
+                      onClick={() => handleSelectSavedShop(s)}
+                      className={`text-left p-2.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between ${
+                        loginPhone === s.phone 
+                          ? 'bg-terracotta-50 border-terracotta-300 ring-2 ring-terracotta-400/20' 
+                          : 'bg-white hover:bg-paper-100 border-paper-200'
+                      }`}
+                    >
+                      <div className="truncate pr-2">
+                        <strong className="block text-xs font-black text-indigoRural-900 truncate">
+                          {s.name}
+                        </strong>
+                        <span className="text-[10px] text-indigoRural-500 font-medium">
+                          {s.owner_name} • {s.phone || s.village || 'Registered'}
+                        </span>
+                      </div>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-paper-200 text-indigoRural-800 shrink-0">
+                        {loginPhone === s.phone ? '✓ Selected' : 'Use'}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <form onSubmit={handleLogin} className="space-y-4">
+              
+              {/* Phone Input */}
               <div>
-                <div className="flex justify-between items-center mb-1">
+                <FieldLabel required>
+                  {language === 'hi' ? 'पंजीकृत मोबाइल नंबर (Mobile Number)' : 'Registered Mobile Number'}
+                </FieldLabel>
+                <div className="relative mt-1">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-indigoRural-400">
+                    <Phone className="w-4 h-4" />
+                  </div>
+                  <input
+                    type="tel"
+                    required
+                    value={loginPhone}
+                    onChange={(e) => setLoginPhone(e.target.value)}
+                    placeholder="उदा. 9839124789 या 9876543210"
+                    className="w-full pl-10 pr-3.5 py-3 saathi-input text-xs sm:text-sm font-semibold text-indigoRural-900 tabular-nums"
+                  />
+                </div>
+              </div>
+
+              {/* Password / PIN Input */}
+              <div>
+                <FieldLabel required>
+                  {language === 'hi' ? '4-अंकीय सुरक्षा पिन या पासवर्ड (PIN / Password)' : '4-Digit PIN or Password'}
+                </FieldLabel>
+                <div className="relative mt-1">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-indigoRural-400">
+                    <Lock className="w-4 h-4" />
+                  </div>
+                  <input
+                    type="password"
+                    required
+                    value={loginPassword}
+                    onChange={(e) => setLoginPassword(e.target.value)}
+                    placeholder="उदा. 1234"
+                    className="w-full pl-10 pr-3.5 py-3 saathi-input text-xs sm:text-sm font-semibold text-indigoRural-900"
+                  />
+                </div>
+                <HelperText>
+                  {language === 'hi' ? 'डिफ़ॉल्ट पिन: 1234 (डेमो एवं नए खातों हेतु)' : 'Default PIN: 1234 (standard for demo & new accounts)'}
+                </HelperText>
+              </div>
+
+              {/* Login Button */}
+              <div className="pt-2">
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  variant="dark"
+                  size="lg"
+                  icon={loading ? Loader2 : LogIn}
+                  iconPosition="right"
+                  className="w-full shadow-elevation-1 hover:shadow-elevation-2 transition-all"
+                >
+                  <span>
+                    {loading 
+                      ? (language === 'hi' ? 'लॉगिन हो रहा है...' : 'Authenticating...') 
+                      : (language === 'hi' ? 'खाता लॉगिन करें एवं डैशबोर्ड खोलें' : 'Log In & Open Dashboard')}
+                  </span>
+                </Button>
+              </div>
+
+              <div className="text-center pt-2">
+                <button
+                  type="button"
+                  onClick={() => { setAuthMode('register'); setErrorMsg(''); }}
+                  className="text-xs font-bold text-terracotta-700 hover:text-terracotta-800 hover:underline cursor-pointer"
+                >
+                  {language === 'hi' ? 'खाता नहीं है? नया सूक्ष्म उद्यम पंजीकृत करें →' : "Don't have an account? Register new micro-enterprise →"}
+                </button>
+              </div>
+
+            </form>
+          </Card>
+        </motion.div>
+      )}
+
+      {/* 3B. NEW SHOP REGISTRATION VIEW */}
+      {authMode === 'register' && (
+        <motion.div variants={itemVariants}>
+          <Card elevation={1} padding="lg" className="space-y-6">
+            
+            <div>
+              <SectionHeading>
+                {language === 'hi' ? 'दुकान एवं व्यापार की जानकारी' : 'Shop & Trade Information'}
+              </SectionHeading>
+              <HelperText>
+                {language === 'hi' ? 'आसान आइकन-आधारित चुनाव • कम से कम टाइपिंग' : 'Icon-led category selection • Minimal typing required'}
+              </HelperText>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-6">
+              
+              {/* Trade Category Picker */}
+              <div>
+                <FieldLabel required>
+                  {language === 'hi' ? '1. अपने व्यापार का प्रकार चुनें' : '1. Select Trade Category'}
+                </FieldLabel>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 pt-1">
+                  {trades.map(t => {
+                    const Icon = t.icon;
+                    const isSelected = tradeType === t.id;
+                    return (
+                      <motion.button
+                        key={t.id}
+                        type="button"
+                        onClick={() => setTradeType(t.id)}
+                        whileHover={shouldReduceMotion ? {} : { y: -2 }}
+                        whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}
+                        className={`p-3 rounded-2xl border text-left flex flex-col justify-between h-24 transition-all relative cursor-pointer ${
+                          isSelected
+                            ? 'border-terracotta-600 bg-white ring-2 ring-terracotta-500/20 shadow-elevation-1'
+                            : 'border-paper-300 hover:border-paper-400 bg-white'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between w-full">
+                          <span className={`p-2 rounded-xl border ${t.tint}`}>
+                            <Icon className="w-4 h-4" />
+                          </span>
+                          {isSelected && (
+                            <motion.span 
+                              initial={{ scale: 0 }}
+                              animate={{ scale: 1 }}
+                              transition={{ type: 'spring', stiffness: 500, damping: 25 }}
+                              className="w-5 h-5 rounded-full bg-terracotta-600 text-white flex items-center justify-center text-[10px]"
+                            >
+                              <Check className="w-3 h-3 stroke-3" />
+                            </motion.span>
+                          )}
+                        </div>
+                        <div>
+                          <p className="text-xs font-black text-indigoRural-900 leading-tight">
+                            {language === 'hi' ? t.name : t.nameEn}
+                          </p>
+                        </div>
+                      </motion.button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Shop Name & Owner Name */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
                   <FieldLabel required>
                     {language === 'hi' ? 'दुकान का नाम' : 'Shop Name'}
                   </FieldLabel>
-                  {shopName.trim().length > 1 && (
-                    <span className="text-[10px] font-bold text-forestRural-600 flex items-center gap-1">
-                      <Check className="w-3 h-3" /> Valid
-                    </span>
-                  )}
+                  <input
+                    type="text"
+                    required
+                    value={shopName}
+                    onChange={(e) => setShopName(e.target.value)}
+                    placeholder={language === 'hi' ? 'उदा. वर्मा किराना स्टोर' : 'e.g. Verma Kirana Store'}
+                    className="w-full px-3.5 py-2.5 saathi-input text-xs sm:text-sm font-semibold text-indigoRural-900"
+                  />
                 </div>
-                <input
-                  type="text"
-                  value={shopName}
-                  onChange={(e) => setShopName(e.target.value)}
-                  placeholder="उदा. राधे कृष्णा किराना"
-                  className="w-full px-4 py-2.5 saathi-input text-xs font-medium text-indigoRural-900"
-                />
-              </div>
-              <div>
-                <div className="flex justify-between items-center mb-1">
+                <div>
                   <FieldLabel required>
-                    {language === 'hi' ? 'दुकानदार का नाम' : 'Owner Name'}
+                    {language === 'hi' ? 'दुकानदार / स्वामी का नाम' : 'Owner / Proprietor Name'}
                   </FieldLabel>
-                  {ownerName.trim().length > 1 && (
-                    <span className="text-[10px] font-bold text-forestRural-600 flex items-center gap-1">
-                      <Check className="w-3 h-3" /> Valid
+                  <input
+                    type="text"
+                    required
+                    value={ownerName}
+                    onChange={(e) => setOwnerName(e.target.value)}
+                    placeholder={language === 'hi' ? 'उदा. रामस्वरूप वर्मा' : 'e.g. Ramswaroop Verma'}
+                    className="w-full px-3.5 py-2.5 saathi-input text-xs sm:text-sm font-semibold text-indigoRural-900"
+                  />
+                </div>
+              </div>
+
+              {/* Mobile Number & Security PIN (for logging back in) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-paper-50 p-4 rounded-2xl border border-paper-200">
+                <div>
+                  <FieldLabel required>
+                    {language === 'hi' ? 'मोबाइल नंबर (लॉगिन हेतु)' : 'Mobile Number (for logging in)'}
+                  </FieldLabel>
+                  <div className="relative mt-1">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-indigoRural-400">
+                      <Phone className="w-3.5 h-3.5" />
+                    </div>
+                    <input
+                      type="tel"
+                      required
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      placeholder="उदा. 9876543210"
+                      className="w-full pl-9 pr-3 py-2 saathi-input text-xs font-semibold text-indigoRural-900"
+                    />
+                  </div>
+                  <HelperText>
+                    {language === 'hi' ? 'लॉग आउट के बाद पुनः लॉगिन के लिए आवश्यक' : 'Used to log back in after logout'}
+                  </HelperText>
+                </div>
+                <div>
+                  <FieldLabel required>
+                    {language === 'hi' ? '4-अंकीय सुरक्षा पिन सेट करें' : 'Set 4-Digit Security PIN'}
+                  </FieldLabel>
+                  <div className="relative mt-1">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-indigoRural-400">
+                      <KeyRound className="w-3.5 h-3.5" />
+                    </div>
+                    <input
+                      type="password"
+                      required
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="1234"
+                      className="w-full pl-9 pr-3 py-2 saathi-input text-xs font-semibold text-indigoRural-900"
+                    />
+                  </div>
+                  <HelperText>
+                    {language === 'hi' ? 'डिफ़ॉल्ट पिन: 1234 (या अपनी पसंद का पिन चुनें)' : 'Default: 1234 (or choose your 4-digit PIN)'}
+                  </HelperText>
+                </div>
+              </div>
+
+              {/* Village, District, State */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <FieldLabel>
+                    {language === 'hi' ? 'गाँव / कस्बा (Village)' : 'Village / Town'}
+                  </FieldLabel>
+                  <input
+                    type="text"
+                    value={village}
+                    onChange={(e) => setVillage(e.target.value)}
+                    placeholder="उदा. चिलवरिया (Chilwariya)"
+                    className="w-full px-3.5 py-2.5 saathi-input text-xs font-medium text-indigoRural-900"
+                  />
+                </div>
+                <div>
+                  <FieldLabel>
+                    {language === 'hi' ? 'जिला (District)' : 'District'}
+                  </FieldLabel>
+                  <input
+                    type="text"
+                    value={district}
+                    onChange={(e) => setDistrict(e.target.value)}
+                    placeholder="उदा. बहराइच (Bahraich)"
+                    className="w-full px-3.5 py-2.5 saathi-input text-xs font-medium text-indigoRural-900"
+                  />
+                </div>
+                <div>
+                  <FieldLabel>
+                    {language === 'hi' ? 'राज्य (State)' : 'State'}
+                  </FieldLabel>
+                  <input
+                    type="text"
+                    value={state}
+                    onChange={(e) => setState(e.target.value)}
+                    placeholder="उदा. उत्तर प्रदेश (UP)"
+                    className="w-full px-3.5 py-2.5 saathi-input text-xs font-medium text-indigoRural-900"
+                  />
+                </div>
+              </div>
+
+              {/* Vintage Slider & Revenue Estimate */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                <div className="bg-paper-50 p-4 rounded-xl border border-paper-200">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-xs font-bold text-indigoRural-800">
+                      {language === 'hi' ? 'दुकान कितने सालों से चल रही है?' : 'Years in Operation (Vintage)'}
                     </span>
-                  )}
+                    <span className="text-xs font-black text-indigoRural-900 bg-white px-2.5 py-0.5 rounded-full border border-paper-300 shadow-2xs">
+                      {vintageYears} {language === 'hi' ? 'साल' : 'Years'}
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="10"
+                    step="0.5"
+                    value={vintageYears}
+                    onChange={(e) => setVintageYears(Number(e.target.value))}
+                    className="saathi-slider"
+                    style={{
+                      background: `linear-gradient(to right, #C15324 ${(vintageYears / 10) * 100}%, #ECE4D4 ${(vintageYears / 10) * 100}%)`
+                    }}
+                  />
+                  <HelperText>
+                    {language === 'hi' ? '0 = नया व्यवसाय (Day 1) • 3+ साल पर मुद्रा प्राथमिकता' : '0 = New enterprise (Day 1) • 3+ years qualifies for MUDRA priority'}
+                  </HelperText>
                 </div>
-                <input
-                  type="text"
-                  value={ownerName}
-                  onChange={(e) => setOwnerName(e.target.value)}
-                  placeholder="उदा. रमेश कुमार"
-                  className="w-full px-4 py-2.5 saathi-input text-xs font-medium text-indigoRural-900"
-                />
-              </div>
-            </div>
 
-            {/* Village, District, State */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div>
-                <FieldLabel>
-                  {language === 'hi' ? 'गांव / कस्बा' : 'Village / Town'}
-                </FieldLabel>
-                <input
-                  type="text"
-                  value={village}
-                  onChange={(e) => setVillage(e.target.value)}
-                  placeholder="उदा. चिलवरिया (Chilwariya)"
-                  className="w-full px-3.5 py-2.5 saathi-input text-xs font-medium text-indigoRural-900"
-                />
-              </div>
-              <div>
-                <FieldLabel>
-                  {language === 'hi' ? 'जिला (District)' : 'District'}
-                </FieldLabel>
-                <input
-                  type="text"
-                  value={district}
-                  onChange={(e) => setDistrict(e.target.value)}
-                  placeholder="उदा. बहराइच (Bahraich)"
-                  className="w-full px-3.5 py-2.5 saathi-input text-xs font-medium text-indigoRural-900"
-                />
-              </div>
-              <div>
-                <FieldLabel>
-                  {language === 'hi' ? 'राज्य (State)' : 'State'}
-                </FieldLabel>
-                <input
-                  type="text"
-                  value={state}
-                  onChange={(e) => setState(e.target.value)}
-                  placeholder="उदा. उत्तर प्रदेश (UP)"
-                  className="w-full px-3.5 py-2.5 saathi-input text-xs font-medium text-indigoRural-900"
-                />
-              </div>
-            </div>
-
-            {/* Vintage Slider & Revenue Estimate */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
-              <div className="bg-paper-50 p-4 rounded-xl border border-paper-200">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-xs font-bold text-indigoRural-800">
-                    {language === 'hi' ? 'दुकान कितने सालों से चल रही है?' : 'Years in Operation (Vintage)'}
-                  </span>
-                  <span className="text-xs font-black text-indigoRural-900 bg-white px-2.5 py-0.5 rounded-full border border-paper-300 shadow-2xs">
-                    {vintageYears} {language === 'hi' ? 'साल' : 'Years'}
-                  </span>
+                <div className="bg-paper-50 p-4 rounded-xl border border-paper-200">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-xs font-bold text-indigoRural-800">
+                      {language === 'hi' ? 'अनुमानित मासिक बिक्री' : 'Estimated Monthly Revenue'}
+                    </span>
+                    <span className="text-xs font-black text-forestRural-700 bg-white px-2.5 py-0.5 rounded-full border border-paper-300 shadow-2xs tabular-nums">
+                      ₹{monthlyRevenue.toLocaleString('en-IN')}
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="150000"
+                    step="5000"
+                    value={monthlyRevenue}
+                    onChange={(e) => setMonthlyRevenue(Number(e.target.value))}
+                    className="saathi-slider"
+                    style={{
+                      background: `linear-gradient(to right, #1E523A ${(monthlyRevenue / 150000) * 100}%, #ECE4D4 ${(monthlyRevenue / 150000) * 100}%)`
+                    }}
+                  />
+                  <HelperText>
+                    {language === 'hi' ? 'दैनिक बिक्री बही-खाते से यह स्वतः अपडेट होगी' : 'Auto-updates as you log daily bahi-khata transactions'}
+                  </HelperText>
                 </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="10"
-                  step="0.5"
-                  value={vintageYears}
-                  onChange={(e) => setVintageYears(Number(e.target.value))}
-                  className="saathi-slider"
-                  style={{
-                    background: `linear-gradient(to right, #C15324 ${(vintageYears / 10) * 100}%, #ECE4D4 ${(vintageYears / 10) * 100}%)`
-                  }}
-                />
-                <HelperText>
-                  {language === 'hi' ? '0 = नया व्यवसाय (Day 1) • 3+ साल पर मुद्रा प्राथमिकता' : '0 = New enterprise (Day 1) • 3+ years qualifies for MUDRA priority'}
-                </HelperText>
               </div>
 
-              <div className="bg-paper-50 p-4 rounded-xl border border-paper-200">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-xs font-bold text-indigoRural-800">
-                    {language === 'hi' ? 'अनुमानित मासिक बिक्री' : 'Estimated Monthly Revenue'}
-                  </span>
-                  <span className="text-xs font-black text-forestRural-700 bg-white px-2.5 py-0.5 rounded-full border border-paper-300 shadow-2xs tabular-nums">
-                    ₹{monthlyRevenue.toLocaleString('en-IN')}
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="150000"
-                  step="5000"
-                  value={monthlyRevenue}
-                  onChange={(e) => setMonthlyRevenue(Number(e.target.value))}
-                  className="saathi-slider"
-                  style={{
-                    background: `linear-gradient(to right, #1E523A ${(monthlyRevenue / 150000) * 100}%, #ECE4D4 ${(monthlyRevenue / 150000) * 100}%)`
-                  }}
-                />
-                <HelperText>
-                  {language === 'hi' ? 'दैनिक बिक्री बही-खाते से यह स्वतः अपडेट होगी' : 'Auto-updates as you log daily bahi-khata transactions'}
-                </HelperText>
-              </div>
-            </div>
-
-            {/* Submit button with animated loading state */}
-            <motion.div
-              whileHover={shouldReduceMotion ? {} : { y: -1 }}
-              whileTap={shouldReduceMotion ? {} : { scale: 0.98 }}
-            >
-              <Button
-                type="submit"
-                disabled={loading}
-                variant="dark"
-                size="lg"
-                icon={loading ? Loader2 : ArrowRight}
-                iconPosition="right"
-                className="w-full shadow-elevation-1 hover:shadow-elevation-2 transition-all"
+              {/* Submit button with animated loading state */}
+              <motion.div
+                whileHover={shouldReduceMotion ? {} : { y: -1 }}
+                whileTap={shouldReduceMotion ? {} : { scale: 0.98 }}
               >
-                <span>
-                  {loading 
-                    ? (language === 'hi' ? 'प्रोफ़ाइल बना रहे हैं...' : 'Creating Shop Profile...') 
-                    : (language === 'hi' ? 'दुकान प्रोफ़ाइल बनाएं एवं डैशबोर्ड खोलें' : 'Create Shop & Launch Dashboard')}
-                </span>
-              </Button>
-            </motion.div>
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  variant="dark"
+                  size="lg"
+                  icon={loading ? Loader2 : ArrowRight}
+                  iconPosition="right"
+                  className="w-full shadow-elevation-1 hover:shadow-elevation-2 transition-all"
+                >
+                  <span>
+                    {loading 
+                      ? (language === 'hi' ? 'प्रोफ़ाइल बना रहे हैं...' : 'Creating Shop Profile...') 
+                      : (language === 'hi' ? 'दुकान प्रोफ़ाइल बनाएं एवं डैशबोर्ड खोलें' : 'Create Shop & Launch Dashboard')}
+                  </span>
+                </Button>
+              </motion.div>
 
-          </form>
-        </Card>
-      </motion.div>
+              <div className="text-center pt-1">
+                <button
+                  type="button"
+                  onClick={() => { setAuthMode('login'); setErrorMsg(''); }}
+                  className="text-xs font-bold text-indigoRural-700 hover:text-indigoRural-900 hover:underline cursor-pointer"
+                >
+                  {language === 'hi' ? 'पहले से खाता है? मोबाइल नंबर से लॉगिन करें →' : 'Already have an account? Log in with phone & PIN →'}
+                </button>
+              </div>
+
+            </form>
+          </Card>
+        </motion.div>
+      )}
 
     </motion.div>
   );

@@ -7,8 +7,8 @@ export function seedDatabase() {
   const insertShop = db.prepare(`
     INSERT OR REPLACE INTO shops (
       id, name, owner_name, trade_type, trade_name, village, district, state,
-      vintage_years, monthly_revenue, ownership, bank_account_type, phone, owner_category, is_demo
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      vintage_years, monthly_revenue, ownership, bank_account_type, phone, password, owner_category, is_demo
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
 
   insertShop.run(
@@ -25,6 +25,7 @@ export function seedDatabase() {
     'rented',
     'Gramin Bank (Aryavart Bank, Savings A/c)',
     '+91 98391 24789',
+    '1234', // default demo PIN
     'general',
     1 // is_demo explicitly 1
   );

@@ -279,15 +279,29 @@ export default function App() {
     }
   };
 
-  // Real Registration Complete
+  const rememberShop = (shop) => {
+    if (!shop || !shop.id) return;
+    try {
+      const raw = localStorage.getItem('vyapaar_saved_shops');
+      let list = raw ? JSON.parse(raw) : [];
+      if (!Array.isArray(list)) list = [];
+      list = list.filter(s => s.id !== shop.id);
+      list.unshift(shop);
+      list = list.slice(0, 6);
+      localStorage.setItem('vyapaar_saved_shops', JSON.stringify(list));
+    } catch (_) {}
+  };
+
+  // Real Registration / Login Complete
   const handleRealRegistrationComplete = (newShop) => {
     if (newShop?.id) {
       localStorage.setItem('vyapaar_active_shop_id', newShop.id);
       localStorage.setItem('vyapaar_active_shop', JSON.stringify(newShop));
-      localStorage.setItem('vyapaar_is_demo_mode', 'false');
+      localStorage.setItem('vyapaar_is_demo_mode', newShop.is_demo === 1 ? 'true' : 'false');
+      rememberShop(newShop);
     }
     setCurrentShop(newShop);
-    setIsDemoMode(false);
+    setIsDemoMode(newShop?.is_demo === 1);
     setCreditData(null);
     setSummaryData(null);
     setCuesData(null);

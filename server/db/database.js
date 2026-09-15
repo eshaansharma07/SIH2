@@ -106,4 +106,10 @@ try {
   // Column already exists
 }
 
+try {
+  db.exec("ALTER TABLE shops ADD COLUMN password TEXT DEFAULT '1234';");
+} catch (_) {
+  // Column already exists
+}
+
 export default db;

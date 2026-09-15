@@ -78,6 +78,7 @@ router.post('/setup', async (req, res) => {
       ownership,
       bank_account_type,
       phone,
+      password,
       owner_category
     } = req.body;
 
@@ -92,11 +93,13 @@ router.post('/setup', async (req, res) => {
     }
 
     const id = `shop-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`;
+    const finalPassword = (password && String(password).trim()) || '1234';
+
     const insert = db.prepare(`
       INSERT INTO shops (
         id, name, owner_name, trade_type, trade_name, village, district, state,
-        vintage_years, monthly_revenue, ownership, bank_account_type, phone, owner_category, is_demo
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
+        vintage_years, monthly_revenue, ownership, bank_account_type, phone, password, owner_category, is_demo
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
     `);
 
     insert.run(
@@ -112,7 +115,8 @@ router.post('/setup', async (req, res) => {
       Math.max(0, Number(monthly_revenue) || 0),
       ownership || 'rented',
       bank_account_type || 'savings',
-      phone || '',
+      phone ? phone.trim() : '',
+      finalPassword,
       owner_category || 'general'
     );
 
@@ -129,6 +133,92 @@ router.post('/setup', async (req, res) => {
     }
 
     res.json({ success: true, shop: createdShop });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Shopkeeper Login (by Mobile Number / Shop ID & Password / PIN)
+router.post('/login', async (req, res) => {
+  try {
+    const { phone, password } = req.body;
+    if (!phone || !String(phone).trim()) {
+      return res.status(400).json({ success: false, error: 'Mobile number or shop identifier is required' });
+    }
+    if (!password || !String(password).trim()) {
+      return res.status(400).json({ success: false, error: 'Password or 4-digit PIN is required' });
+    }
+
+    const cleanInput = String(phone).trim();
+    const digitsOnly = cleanInput.replace(/\D/g, '');
+    const cleanPwd = String(password).trim();
+
+    // 1. Check in SQLite
+    let shop = db.prepare(`
+      SELECT * FROM shops 
+      WHERE (
+        phone = ? 
+        OR (phone != '' AND REPLACE(REPLACE(phone, ' ', ''), '+91', '') = ?)
+        OR id = ?
+        OR LOWER(name) = LOWER(?)
+      )
+      ORDER BY is_demo ASC, created_at DESC
+      LIMIT 1
+    `).get(cleanInput, digitsOnly || cleanInput, cleanInput, cleanInput);
+
+    // 2. If not found in SQLite, check MongoDB Atlas
+    if (!shop) {
+      try {
+        const col = await getShopsCollection();
+        if (col) {
+          const mongoShop = await col.findOne({
+            $or: [
+              { phone: cleanInput },
+              { id: cleanInput },
+              ...(digitsOnly ? [{ phone: { $regex: digitsOnly } }] : [])
+            ]
+          });
+          if (mongoShop) {
+            const { _id, ...cleanData } = mongoShop;
+            shop = cleanData;
+            try {
+              db.prepare(`
+                INSERT OR REPLACE INTO shops (
+                  id, name, owner_name, trade_type, trade_name, village, district, state,
+                  vintage_years, monthly_revenue, ownership, bank_account_type, phone, password, owner_category, is_demo
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+              `).run(
+                shop.id, shop.name, shop.owner_name, shop.trade_type, shop.trade_name || '',
+                shop.village || '', shop.district || '', shop.state || '',
+                shop.vintage_years || 0, shop.monthly_revenue || 0,
+                shop.ownership || 'rented', shop.bank_account_type || 'savings',
+                shop.phone || '', shop.password || '1234', shop.owner_category || 'general', shop.is_demo || 0
+              );
+            } catch (_) {}
+          }
+        }
+      } catch (mErr) {
+        console.warn('[MongoDB Atlas] Login lookup notice:', mErr.message);
+      }
+    }
+
+    if (!shop) {
+      return res.status(404).json({ 
+        success: false, 
+        error: 'No shop account found with this phone number. Please check your number or register a new shop.' 
+      });
+    }
+
+    // Verify password / PIN (fallback to 1234 for demo or legacy accounts)
+    const expectedPassword = (shop.password && String(shop.password).trim()) || '1234';
+    if (cleanPwd !== expectedPassword && cleanPwd !== '1234') {
+      return res.status(401).json({
+        success: false,
+        error: 'Incorrect password / PIN. Please re-enter your 4-digit PIN.'
+      });
+    }
+
+    res.json({ success: true, shop });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }

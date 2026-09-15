@@ -58,6 +58,7 @@ export const api = {
   // Shop profile
   getShopCurrent: (shopId = '') => request(`/shop/current${shopId ? `?shopId=${shopId}` : ''}`),
   setupShop: (data) => request('/shop/setup', { method: 'POST', body: JSON.stringify(data) }),
+  loginShop: (phone, password) => request('/shop/login', { method: 'POST', body: JSON.stringify({ phone, password }) }),
   resetDemoShop: () => request('/shop/reset-demo', { method: 'POST' }),
   updateShop: (id, data) => request(`/shop/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
 
