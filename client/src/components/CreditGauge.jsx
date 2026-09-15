@@ -1,18 +1,20 @@
 import React from 'react';
+import { Badge } from './ui';
 
 /**
- * Modern Apple Health / Watch style Alternative Credit Score Dial
- * Renders an ultra-clean, ambient-glow arc (300 to 850) with high-contrast typography.
+ * Authentic Folk & Health inspired Alternative Credit Score Dial
+ * Renders a warm, high-contrast arc (300 to 850) with rural color tokens.
  */
 export function CreditGauge({ 
-  score = 755, 
+  score = null, 
   maxScore = 850, 
   minScore = 300, 
-  ratingLabel = "Prime Bankable (ऋण के लिए पात्र)", 
+  ratingLabel = "Prime Bankable", 
   compact = false 
 }) {
-  const clampedScore = Math.min(maxScore, Math.max(minScore, score));
-  const percentage = (clampedScore - minScore) / (maxScore - minScore);
+  const hasScore = score !== null && score !== undefined;
+  const clampedScore = hasScore ? Math.min(maxScore, Math.max(minScore, score)) : minScore;
+  const percentage = hasScore ? (clampedScore - minScore) / (maxScore - minScore) : 0;
   
   // Angle for 180-degree arc: -180deg (left) to 0deg (right)
   const angle = -180 + percentage * 180;
@@ -35,14 +37,14 @@ export function CreditGauge({
           className="overflow-visible"
         >
           <defs>
-            <linearGradient id="appleCreditGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#F43F5E" />    {/* Rose */}
-              <stop offset="30%" stopColor="#F59E0B" />   {/* Amber */}
-              <stop offset="65%" stopColor="#10B981" />   {/* Emerald */}
-              <stop offset="100%" stopColor="#059669" />  {/* Deep Emerald */}
+            <linearGradient id="saathiCreditGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#DE8361" />    {/* Terracotta */}
+              <stop offset="35%" stopColor="#F59E0B" />   {/* Ochre */}
+              <stop offset="70%" stopColor="#276749" />   {/* ForestRural */}
+              <stop offset="100%" stopColor="#163E2C" />  {/* Deep ForestRural */}
             </linearGradient>
             <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-              <feDropShadow dx="0" dy="0" stdDeviation="3" floodColor="#10B981" floodOpacity="0.3"/>
+              <feDropShadow dx="0" dy="0" stdDeviation="3" floodColor="#276749" floodOpacity="0.25"/>
             </filter>
           </defs>
 
@@ -50,34 +52,38 @@ export function CreditGauge({
           <path
             d={`M ${cx - radius} ${cy} A ${radius} ${radius} 0 0 1 ${cx + radius} ${cy}`}
             fill="none"
-            stroke="#F1F5F9"
+            stroke="#ECE4D4"
             strokeWidth={compact ? "10" : "14"}
             strokeLinecap="round"
           />
 
           {/* Colored Value Arc */}
-          <path
-            d={`M ${cx - radius} ${cy} A ${radius} ${radius} 0 0 1 ${cx + radius} ${cy}`}
-            fill="none"
-            stroke="url(#appleCreditGrad)"
-            strokeWidth={compact ? "10" : "14"}
-            strokeLinecap="round"
-            strokeDasharray={`${radius * Math.PI}`}
-            strokeDashoffset={`${radius * Math.PI * (1 - percentage)}`}
-            filter="url(#glow)"
-            className="transition-all duration-1000 ease-out"
-          />
+          {hasScore && (
+            <path
+              d={`M ${cx - radius} ${cy} A ${radius} ${radius} 0 0 1 ${cx + radius} ${cy}`}
+              fill="none"
+              stroke="url(#saathiCreditGrad)"
+              strokeWidth={compact ? "10" : "14"}
+              strokeLinecap="round"
+              strokeDasharray={`${radius * Math.PI}`}
+              strokeDashoffset={`${radius * Math.PI * (1 - percentage)}`}
+              filter="url(#glow)"
+              className="transition-all duration-1000 ease-out"
+            />
+          )}
 
           {/* Active Dot Marker */}
-          <circle 
-            cx={dotX} 
-            cy={dotY} 
-            r={compact ? "5" : "6"} 
-            fill="#FFFFFF" 
-            stroke="#0F172A"
-            strokeWidth="3"
-            className="transition-all duration-1000 ease-out drop-shadow-md"
-          />
+          {hasScore && (
+            <circle 
+              cx={dotX} 
+              cy={dotY} 
+              r={compact ? "5" : "6"} 
+              fill="#FFFFFF" 
+              stroke="#1A2742"
+              strokeWidth="3"
+              className="transition-all duration-1000 ease-out drop-shadow-md"
+            />
+          )}
 
           {/* Scale Labels */}
           <text x={cx - radius} y={cy + 16} fontSize="10" fontWeight="700" fill="#94A3B8" textAnchor="middle">300</text>
@@ -89,23 +95,26 @@ export function CreditGauge({
       {/* Score Number & Badge */}
       <div className="mt-0.5 flex flex-col items-center">
         <div className="flex items-baseline gap-1">
-          <span className={`${compact ? 'text-3xl' : 'text-4xl'} font-extrabold text-slate-900 tracking-tight tabular-nums`}>
-            {clampedScore}
+          <span className={`${compact ? 'text-3xl' : 'text-4xl'} font-black text-indigoRural-900 tracking-tight tabular-nums font-display`}>
+            {hasScore ? clampedScore : '—'}
           </span>
-          <span className="text-xs font-semibold text-slate-400">/ {maxScore}</span>
+          <span className="text-xs font-semibold text-indigoRural-400">/ {maxScore}</span>
         </div>
 
         <div className="mt-1">
-          <span className={`inline-flex items-center gap-1 px-3 py-0.5 rounded-full text-xs font-bold border transition ${
-            clampedScore >= 750 
-              ? 'bg-emerald-50 text-emerald-700 border-emerald-200' 
-              : clampedScore >= 650 
-              ? 'bg-amber-50 text-amber-700 border-amber-200' 
-              : 'bg-rose-50 text-rose-700 border-rose-200'
-          }`}>
-            <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
-            <span>{ratingLabel}</span>
-          </span>
+          {hasScore ? (
+            <Badge 
+              variant={clampedScore >= 750 ? 'positive' : clampedScore >= 650 ? 'attention' : 'brand'}
+              size="sm"
+              dot
+            >
+              <span>{ratingLabel}</span>
+            </Badge>
+          ) : (
+            <Badge variant="neutral" size="sm">
+              <span>Calculating alternative score...</span>
+            </Badge>
+          )}
         </div>
       </div>
     </div>

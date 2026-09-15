@@ -13,10 +13,56 @@ import {
   Banknote, 
   MessageCircle,
   Clock,
-  ArrowRight
+  ArrowRight,
+  TrendingUp,
+  BarChart3,
+  CheckCircle2,
+  FileText
 } from 'lucide-react';
+import { 
+  ResponsiveContainer, 
+  AreaChart, 
+  Area, 
+  XAxis, 
+  YAxis, 
+  Tooltip, 
+  CartesianGrid, 
+  Legend 
+} from 'recharts';
 import { api } from '../utils/api';
 import { useTranslation } from '../i18n/LanguageContext';
+import { WarliBorder } from '../components/WarliMotif';
+import { Card, Badge, SectionHeader, Button } from '../components/ui';
+
+// Custom Chart Tooltip using warm paper aesthetic
+function CustomChartTooltip({ active, payload, label }) {
+  if (active && payload && payload.length) {
+    const income = payload.find(p => p.dataKey === 'income')?.value || 0;
+    const expense = payload.find(p => p.dataKey === 'expense')?.value || 0;
+    const surplus = income - expense;
+
+    return (
+      <div className="bg-paper-50 border border-paper-300 p-3 rounded-xl shadow-card text-xs space-y-1.5 min-w-[160px]">
+        <span className="font-extrabold text-indigoRural-900 block pb-1 border-b border-paper-200">
+          {label}
+        </span>
+        <div className="flex justify-between items-center text-forestRural-700 font-semibold">
+          <span>Recorded Sales:</span>
+          <strong className="font-extrabold tabular-nums">₹{income.toLocaleString('en-IN')}</strong>
+        </div>
+        <div className="flex justify-between items-center text-terracotta-700 font-semibold">
+          <span>Expenses:</span>
+          <strong className="font-extrabold tabular-nums">₹{expense.toLocaleString('en-IN')}</strong>
+        </div>
+        <div className="flex justify-between items-center text-indigoRural-800 font-bold pt-1 border-t border-paper-200">
+          <span>Net Surplus:</span>
+          <strong className="font-extrabold tabular-nums text-forestRural-700">₹{surplus.toLocaleString('en-IN')}</strong>
+        </div>
+      </div>
+    );
+  }
+  return null;
+}
 
 export function CashFlowPage({ shop, onOpenKeypad, refreshKey, latestTx, onTransactionSaved }) {
   const { t, language } = useTranslation();
@@ -133,9 +179,16 @@ export function CashFlowPage({ shop, onOpenKeypad, refreshKey, latestTx, onTrans
   }, [shop?.id, refreshKey, filterType]);
 
   const loadData = async () => {
+    if (!shop?.id) {
+      setLoading(false);
+      setTransactions([]);
+      setUdhaarLedger([]);
+      setSummary(null);
+      return;
+    }
     setLoading(true);
     try {
-      const shopId = shop?.id || 'ramesh-kirana';
+      const shopId = shop.id;
       const [txRes, sumRes, udhRes] = await Promise.all([
         api.getTransactions(shopId, filterType, 60),
         api.getTransactionSummary(shopId),
@@ -181,9 +234,10 @@ export function CashFlowPage({ shop, onOpenKeypad, refreshKey, latestTx, onTrans
   };
 
   const handleSimulateReminder = (customer) => {
+    const shopDisplayName = shop?.name || (language === 'hi' ? 'हमारी दुकान' : 'our store');
     const msg = language === 'hi'
-      ? `नमस्ते ${customer.customerName} जी, ${shop?.name || 'रमेश किराना'} पर आपका ₹${customer.balanceOwed} का हिसाब बाकी है। सुविधा अनुसार भुगतान करें। धन्यवाद!`
-      : `Namaste ${customer.customerName}, your grocery khata balance at ${shop?.name || 'Ramesh Kirana'} is ₹${customer.balanceOwed}. Please settle when convenient. Thank you!`;
+      ? `नमस्ते ${customer.customerName} जी, ${shopDisplayName} पर आपका ₹${customer.balanceOwed} का हिसाब बाकी है। सुविधा अनुसार भुगतान करें। धन्यवाद!`
+      : `Namaste ${customer.customerName}, your grocery khata balance at ${shopDisplayName} is ₹${customer.balanceOwed}. Please settle when convenient. Thank you!`;
 
     setReminderToast({ name: customer.customerName, message: msg });
     setTimeout(() => {
@@ -191,214 +245,326 @@ export function CashFlowPage({ shop, onOpenKeypad, refreshKey, latestTx, onTrans
     }, 4000);
   };
 
+  // Dynamic calculations for seasonal trends
+  const monthlyTrend = summary?.monthlyTrend || [];
+  const avgIncome = monthlyTrend.length > 0 
+    ? monthlyTrend.reduce((sum, item) => sum + (item.income || 0), 0) / monthlyTrend.length 
+    : 0;
+  const maxIncome = monthlyTrend.length > 0 
+    ? Math.max(...monthlyTrend.map(item => item.income || 0), 1) 
+    : 1;
+
+  const totalIncomeVal = summary?.totalIncome;
+  const totalExpenseVal = summary?.totalExpense;
+  const netSurplusVal = summary?.netSurplus;
+  const pendingUdhaarVal = summary?.pendingUdhaar;
+
+  const marginPct = (totalIncomeVal && netSurplusVal !== undefined && totalIncomeVal > 0)
+    ? ((netSurplusVal / totalIncomeVal) * 100).toFixed(1)
+    : null;
+
   return (
     <div className="space-y-6 pb-12 animate-fadeIn">
       
-      {/* 1. Sovereign Header & Primary CTA */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2.5">
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 font-display">
-              {language === 'hi' ? 'डिजिटल बही-खाता' : 'Bahi-Khata Ledger'}
-            </h1>
-            <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
-              {transactions.length} Verified Entries
-            </span>
+      {/* 1. Header Banner with Warli Folk Art Border */}
+      <div className="space-y-2">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2.5">
+              <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-indigoRural-900 font-display">
+                {language === 'hi' ? 'डिजिटल बही-खाता' : 'Bahi-Khata Ledger'}
+              </h1>
+              <Badge variant="neutral" size="sm">
+                {transactions.length} Verified Entries
+              </Badge>
+            </div>
+            <p className="text-xs text-indigoRural-500 mt-1 flex items-center gap-2">
+              <span>{language === 'hi' ? 'सटीक दैनिक आय-व्यय एवं ग्राहक उधारी खाता' : 'Daily sales, inventory outlays, and customer credit ledger'}</span>
+              <span className="text-paper-400">•</span>
+              <span className="text-forestRural-700 font-semibold text-[11px]">● DPI Tamper-Evident</span>
+            </p>
           </div>
-          <p className="text-xs text-slate-500 mt-1 flex items-center gap-2">
-            <span>{language === 'hi' ? 'सटीक दैनिक आय-व्यय एवं ग्राहक उधारी खाता' : 'Daily sales, inventory outlays, and customer credit ledger'}</span>
-            <span className="text-slate-300">•</span>
-            <span className="text-emerald-700 font-semibold text-[11px]">● DPI Tamper-Evident</span>
-          </p>
+
+          <Button
+            onClick={onOpenKeypad}
+            variant="primary"
+            size="lg"
+            icon={PlusCircle}
+            className="self-start sm:self-auto"
+          >
+            <span>{language === 'hi' ? 'नया लेन-देन दर्ज करें' : '+ Record Transaction'}</span>
+          </Button>
         </div>
 
-        <button
-          onClick={onOpenKeypad}
-          className="px-6 py-3.5 rounded-2xl bg-slate-900 hover:bg-slate-800 active:scale-95 text-white font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-sm transition self-start sm:self-auto"
-        >
-          <PlusCircle className="w-4 h-4 text-emerald-400" />
-          <span>{language === 'hi' ? 'नया लेन-देन दर्ज करें' : '+ Record Transaction'}</span>
-        </button>
+        {/* Warli Folk Art Border */}
+        <WarliBorder className="w-full h-6 text-terracotta-400 opacity-60" />
       </div>
 
-      {/* 2. Top Summary KPI Cards (Clean Minimalist Apple Style) */}
+      {/* 2. Top Summary KPI Cards */}
       <div className="space-y-2">
         {justUpdated && (
-          <div className="flex items-center gap-1.5 text-xs text-emerald-600 font-extrabold px-1 animate-fadeIn">
-            <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-            <span>✓ Bahi-Khata updated instantly (+0ms)</span>
+          <div className="flex items-center gap-1.5 text-xs text-forestRural-700 font-extrabold px-1 animate-fadeIn">
+            <CheckCircle2 className="w-3.5 h-3.5 text-forestRural-600 shrink-0" />
+            <span>Bahi-Khata updated instantly (+0ms)</span>
           </div>
         )}
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bento-card p-5 rounded-3xl">
-            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest block mb-1">
+          <Card padding="md">
+            <span className="text-[10px] font-bold text-indigoRural-400 uppercase tracking-widest block mb-1">
               {language === 'hi' ? 'कुल बिक्री' : 'Recorded Sales'}
             </span>
-            <div className="text-2xl sm:text-3xl font-black text-slate-900 tabular-nums tracking-tight font-display">
-              ₹{summary?.totalIncome?.toLocaleString('en-IN') || '0'}
+            <div className="text-2xl sm:text-3xl font-black text-indigoRural-900 tabular-nums tracking-tight font-display">
+              {totalIncomeVal !== undefined && totalIncomeVal !== null ? `₹${totalIncomeVal.toLocaleString('en-IN')}` : '—'}
             </div>
-            <span className="text-[11px] font-semibold text-slate-500 mt-1 block">90 days verified</span>
-          </div>
+            <span className="text-[11px] font-semibold text-indigoRural-500 mt-1 block">
+              {summary?.activeDaysCount ? `${summary.activeDaysCount} days verified` : 'Audited ledger'}
+            </span>
+          </Card>
 
-          <div className="bento-card p-5 rounded-3xl">
-            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest block mb-1">
+          <Card padding="md">
+            <span className="text-[10px] font-bold text-indigoRural-400 uppercase tracking-widest block mb-1">
               {language === 'hi' ? 'माल खरीद + खर्च' : 'Stock & Expenses'}
             </span>
-            <div className="text-2xl sm:text-3xl font-black text-slate-900 tabular-nums tracking-tight font-display">
-              ₹{summary?.totalExpense?.toLocaleString('en-IN') || '0'}
+            <div className="text-2xl sm:text-3xl font-black text-indigoRural-900 tabular-nums tracking-tight font-display">
+              {totalExpenseVal !== undefined && totalExpenseVal !== null ? `₹${totalExpenseVal.toLocaleString('en-IN')}` : '—'}
             </div>
-            <span className="text-[11px] font-semibold text-slate-500 mt-1 block">Inventory & bills</span>
-          </div>
+            <span className="text-[11px] font-semibold text-indigoRural-500 mt-1 block">Inventory & bills</span>
+          </Card>
 
-          <div className="bento-card p-5 rounded-3xl">
-            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest block mb-1">
+          <Card padding="md">
+            <span className="text-[10px] font-bold text-indigoRural-400 uppercase tracking-widest block mb-1">
               {language === 'hi' ? 'शुद्ध बचत / लाभ' : 'Net Operating Surplus'}
             </span>
-            <div className="text-2xl sm:text-3xl font-black text-emerald-600 tabular-nums tracking-tight font-display">
-              ₹{summary?.netSurplus?.toLocaleString('en-IN') || '0'}
+            <div className="text-2xl sm:text-3xl font-black text-forestRural-700 tabular-nums tracking-tight font-display">
+              {netSurplusVal !== undefined && netSurplusVal !== null ? `₹${netSurplusVal.toLocaleString('en-IN')}` : '—'}
             </div>
-            <span className="text-[11px] font-semibold text-emerald-700 mt-1 block">+28.2% margin</span>
-          </div>
+            <span className="text-[11px] font-semibold text-forestRural-700 mt-1 block">
+              {marginPct ? `+${marginPct}% margin` : 'Audited margin'}
+            </span>
+          </Card>
 
-          <div className="bento-card p-5 rounded-3xl">
-            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest block mb-1">
+          <Card padding="md">
+            <span className="text-[10px] font-bold text-indigoRural-400 uppercase tracking-widest block mb-1">
               {language === 'hi' ? 'बकाया ग्राहक उधार' : 'Pending Udhaar Book'}
             </span>
-            <div className="text-2xl sm:text-3xl font-black text-amber-600 tabular-nums tracking-tight font-display">
-              ₹{summary?.pendingUdhaar?.toLocaleString('en-IN') || '0'}
+            <div className="text-2xl sm:text-3xl font-black text-ochre-600 tabular-nums tracking-tight font-display">
+              {pendingUdhaarVal !== undefined && pendingUdhaarVal !== null ? `₹${pendingUdhaarVal.toLocaleString('en-IN')}` : '—'}
             </div>
-            <span className="text-[11px] font-semibold text-amber-700 mt-1 block">Safe ratio (&lt;2%)</span>
-          </div>
+            <span className="text-[11px] font-semibold text-ochre-700 mt-1 block">
+              {udhaarLedger.length > 0 ? `${udhaarLedger.length} active khata` : 'Managed credit'}
+            </span>
+          </Card>
         </div>
       </div>
 
-      {/* 3. 4-Month Seasonal Cash Flow Timeline */}
-      {summary?.monthlyTrend && summary.monthlyTrend.length > 0 && (
-        <div className="bento-card rounded-4xl p-6 sm:p-7 space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-            <div>
-              <h2 className="text-base font-extrabold text-slate-900 tracking-tight">
-                {language === 'hi' ? '4 माह का मौसमी नकदी प्रवाह' : '4-Month Seasonal Cash Flow Pattern'}
-              </h2>
-              <p className="text-xs text-slate-500">
-                Baseline, July monsoon dip, and pre-festival surge cycle
-              </p>
-            </div>
-            <span className="px-3 py-1 bg-slate-100 text-slate-700 rounded-full text-xs font-bold">
-              4 Months Audited
+      {/* 3. Recharts Real Seasonal Cash Flow Chart */}
+      {monthlyTrend.length > 0 ? (
+        <Card variant="hero" padding="lg" className="space-y-5">
+          <SectionHeader
+            icon={TrendingUp}
+            iconColor="terracotta"
+            title={language === 'hi' ? 'मौसमी नकदी प्रवाह रुझान (Seasonal Trend)' : 'Seasonal Cash Flow Trend'}
+            subtitle={language === 'hi' ? 'वास्तविक समय-श्रृंखला ग्राफ: मासिक बिक्री एवं लागत' : 'Audited time-series: gross sales vs operating stock outlays over time'}
+            action={
+              <Badge variant="positive" size="sm" dot>
+                {monthlyTrend.length} Months Computed
+              </Badge>
+            }
+          />
+
+          {/* Recharts Area Chart Container */}
+          <div className="h-64 sm:h-72 w-full pt-2">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={monthlyTrend} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <defs>
+                  {/* ForestRural Gradient for Recorded Sales */}
+                  <linearGradient id="incomeGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#1E523A" stopOpacity={0.28} />
+                    <stop offset="95%" stopColor="#1E523A" stopOpacity={0.0} />
+                  </linearGradient>
+                  {/* Terracotta Gradient for Expenses */}
+                  <linearGradient id="expenseGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#C15324" stopOpacity={0.22} />
+                    <stop offset="95%" stopColor="#C15324" stopOpacity={0.0} />
+                  </linearGradient>
+                </defs>
+
+                <CartesianGrid strokeDasharray="3 3" stroke="#ECE4D4" vertical={false} />
+                <XAxis 
+                  dataKey="label" 
+                  tick={{ fontSize: 11, fill: '#64748B', fontWeight: 600 }}
+                  axisLine={{ stroke: '#DFD3BE' }}
+                  tickLine={false}
+                />
+                <YAxis 
+                  tick={{ fontSize: 10, fill: '#64748B', fontWeight: 600 }}
+                  axisLine={false}
+                  tickLine={false}
+                  tickFormatter={(val) => `₹${(val / 1000).toFixed(0)}k`}
+                />
+                <Tooltip content={<CustomChartTooltip />} />
+                <Legend 
+                  verticalAlign="top" 
+                  align="right"
+                  wrapperStyle={{ paddingBottom: '12px', fontSize: '11px', fontWeight: 700 }}
+                  formatter={(val) => <span className="text-indigoRural-800 font-bold">{val}</span>}
+                />
+
+                <Area 
+                  type="monotone" 
+                  dataKey="income" 
+                  name={language === 'hi' ? 'बिक्री (Sales)' : 'Recorded Sales'} 
+                  stroke="#1E523A" 
+                  strokeWidth={2.5}
+                  fillOpacity={1} 
+                  fill="url(#incomeGrad)" 
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="expense" 
+                  name={language === 'hi' ? 'खर्च (Expenses)' : 'Stock & Expenses'} 
+                  stroke="#C15324" 
+                  strokeWidth={2}
+                  fillOpacity={1} 
+                  fill="url(#expenseGrad)" 
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Supplementary Per-Month Detail Cards */}
+          <div className="space-y-2 pt-4 border-t border-paper-200">
+            <span className="text-[11px] font-bold text-indigoRural-400 uppercase tracking-wider block">
+              {language === 'hi' ? 'मासिक विश्लेषण विवरण' : 'Monthly Performance Breakdown'}
             </span>
-          </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              {monthlyTrend.map((m) => {
+                const isDip = avgIncome > 0 && m.income < avgIncome * 0.85;
+                const isSpike = avgIncome > 0 && m.income > avgIncome * 1.15;
+                const dynamicPct = Math.min(100, Math.round(((m.income || 0) / maxIncome) * 100));
+                
+                return (
+                  <div 
+                    key={m.month}
+                    className={`p-3.5 rounded-xl border transition-colors ${
+                      isDip 
+                        ? 'bg-paper-100 border-indigoRural-200' 
+                        : isSpike 
+                        ? 'bg-ochre-50/70 border-ochre-300/80' 
+                        : 'bg-white border-paper-300/80'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-bold text-indigoRural-900">{m.label || m.month}</span>
+                      <Badge 
+                        variant={isDip ? 'neutral' : isSpike ? 'attention' : 'positive'} 
+                        size="sm"
+                      >
+                        {isDip ? 'Monsoon Dip' : isSpike ? 'Pre-Festival Surge' : 'Baseline'}
+                      </Badge>
+                    </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-            {summary.monthlyTrend.map((m) => {
-              const isDip = m.month === '2026-06' || m.month === '2026-07';
-              const isSpike = m.month === '2026-08' || m.month === '2026-09';
-              
-              return (
-                <div 
-                  key={m.month}
-                  className={`p-4 rounded-2xl border transition ${
-                    isDip 
-                      ? 'bg-slate-50 border-indigo-200' 
-                      : isSpike 
-                      ? 'bg-amber-50/60 border-amber-200' 
-                      : 'bg-white border-slate-200/80'
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-bold text-slate-900">{m.label || m.month}</span>
-                    <span className={`text-[9px] font-extrabold px-1.5 py-0.5 rounded-full ${
-                      isDip ? 'bg-indigo-100 text-indigo-800' :
-                      isSpike ? 'bg-amber-100 text-amber-900' :
-                      'bg-slate-100 text-slate-600'
-                    }`}>
-                      {m.patternTag?.split(' ')[1] || 'Baseline'}
-                    </span>
-                  </div>
-
-                  <div className="space-y-1.5 text-xs">
-                    <div className="flex justify-between items-baseline">
-                      <span className="text-slate-400 text-[10px] font-bold uppercase">Sales</span>
-                      <strong className="text-slate-900 font-extrabold tabular-nums">₹{m.income?.toLocaleString('en-IN')}</strong>
-                    </div>
-                    <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
-                      <div 
-                        className={`h-full rounded-full ${
-                          isDip ? 'bg-indigo-500' : isSpike ? 'bg-amber-500' : 'bg-emerald-500'
-                        }`}
-                        style={{ width: `${Math.min(100, (m.income / 85000) * 100)}%` }}
-                      />
-                    </div>
-                    <div className="flex justify-between items-baseline text-[10px] text-slate-500 pt-1">
-                      <span>Surplus</span>
-                      <span className="font-bold text-emerald-600 tabular-nums">₹{m.profit?.toLocaleString('en-IN')}</span>
+                    <div className="space-y-1.5 text-xs">
+                      <div className="flex justify-between items-baseline">
+                        <span className="text-indigoRural-400 text-[10px] font-bold uppercase">Sales</span>
+                        <strong className="text-indigoRural-900 font-extrabold tabular-nums">₹{m.income?.toLocaleString('en-IN')}</strong>
+                      </div>
+                      <div className="w-full bg-paper-200 h-1.5 rounded-full overflow-hidden">
+                        <div 
+                          className={`h-full rounded-full ${
+                            isDip ? 'bg-indigoRural-500' : isSpike ? 'bg-ochre-500' : 'bg-forestRural-600'
+                          }`}
+                          style={{ width: `${dynamicPct}%` }}
+                        />
+                      </div>
+                      <div className="flex justify-between items-baseline text-[10px] text-indigoRural-500 pt-0.5">
+                        <span>Surplus</span>
+                        <span className="font-bold text-forestRural-700 tabular-nums">₹{m.profit?.toLocaleString('en-IN')}</span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
-        </div>
+        </Card>
+      ) : (
+        <Card padding="lg" className="text-center py-8 space-y-2">
+          <TrendingUp className="w-8 h-8 text-indigoRural-300 mx-auto" />
+          <h3 className="font-bold text-sm text-indigoRural-800">
+            {language === 'hi' ? 'मौसमी नकदी प्रवाह चार्ट (माह-वार)' : 'Seasonal Cash Flow Trend Chart'}
+          </h3>
+          <p className="text-xs text-indigoRural-500 max-w-md mx-auto">
+            {language === 'hi' 
+              ? 'जैसे-जैसे आप दैनिक लेन-देन दर्ज करेंगे, आपका मासिक बिक्री और लागत का समय-श्रृंखला ग्राफ यहाँ स्वतः तैयार होगा।' 
+              : 'As you record transactions over multiple weeks, your monthly gross revenue and inventory replenishment trends will graph here automatically.'}
+          </p>
+        </Card>
       )}
 
       {/* WhatsApp Simulated Toast */}
       {reminderToast && (
-        <div className="bg-emerald-50 border border-emerald-300 p-4 rounded-2xl shadow-lg flex items-start gap-3 animate-fadeIn">
-          <MessageCircle className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+        <div className="bg-forestRural-50 border border-forestRural-300 p-4 rounded-2xl shadow-card flex items-start gap-3 animate-fadeIn">
+          <MessageCircle className="w-5 h-5 text-forestRural-700 shrink-0 mt-0.5" />
           <div className="space-y-1 text-xs">
-            <span className="font-bold text-emerald-900">
-              📲 WhatsApp Payment Reminder Sent to {reminderToast.name}:
+            <span className="font-bold text-forestRural-900 flex items-center gap-1.5">
+              <Share2 className="w-3.5 h-3.5 text-forestRural-700" />
+              <span>WhatsApp Payment Reminder Sent to {reminderToast.name}:</span>
             </span>
-            <p className="text-emerald-800 bg-white p-2 rounded-xl border border-emerald-200 font-mono">
+            <p className="text-forestRural-800 bg-white p-2.5 rounded-xl border border-forestRural-200 font-mono">
               "{reminderToast.message}"
             </p>
           </div>
         </div>
       )}
 
-      {/* 4. Revolut / Apple Wallet Style Transaction Stream */}
-      <div className="bg-white rounded-3xl border border-slate-200/80 shadow-card overflow-hidden">
+      {/* 4. Transaction Stream & Customer Udhaar Book */}
+      <Card padding="none" className="overflow-hidden">
         
         {/* Segment Tabs */}
-        <div className="flex items-center justify-between p-4 border-b border-slate-100 bg-slate-50/50">
-          <div className="flex gap-1 p-1 bg-slate-100 rounded-2xl">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border-b border-paper-200 bg-paper-50/70 gap-3">
+          <div className="flex gap-1 p-1 bg-paper-200/80 rounded-xl">
             <button
               onClick={() => setActiveTab('all')}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition ${
+              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
                 activeTab === 'all' 
-                  ? 'bg-white text-slate-900 shadow-xs' 
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-white text-indigoRural-900 shadow-2xs' 
+                  : 'text-indigoRural-600 hover:text-indigoRural-900'
               }`}
             >
-              📋 All Transactions ({transactions.length})
+              <FileText className="w-3.5 h-3.5" />
+              <span>All Transactions ({transactions.length})</span>
             </button>
             <button
               onClick={() => setActiveTab('udhaar')}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
                 activeTab === 'udhaar' 
-                  ? 'bg-white text-slate-900 shadow-xs' 
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-white text-indigoRural-900 shadow-2xs' 
+                  : 'text-indigoRural-600 hover:text-indigoRural-900'
               }`}
             >
-              <span>📖 Customer Udhaar Book</span>
-              <span className="text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.2 rounded-full font-bold">
-                ₹{summary?.pendingUdhaar || '1,050'}
-              </span>
+              <BookOpen className="w-3.5 h-3.5" />
+              <span>Customer Udhaar Book</span>
+              {pendingUdhaarVal !== undefined && pendingUdhaarVal !== null && (
+                <Badge variant="attention" size="sm">
+                  ₹{pendingUdhaarVal.toLocaleString('en-IN')}
+                </Badge>
+              )}
             </button>
           </div>
 
           {/* Quick Filter Pills for Tab 1 */}
           {activeTab === 'all' && (
-            <div className="hidden sm:flex items-center gap-1.5 text-xs">
+            <div className="flex items-center gap-1.5 text-xs flex-wrap">
               {['', 'income', 'expense', 'udhaar_given'].map(t => (
                 <button
                   key={t}
                   onClick={() => setFilterType(t)}
-                  className={`px-3 py-1 rounded-xl font-bold text-xs transition ${
+                  className={`px-3 py-1 rounded-lg font-bold text-xs transition cursor-pointer ${
                     filterType === t 
-                      ? 'bg-slate-900 text-white' 
-                      : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'
+                      ? 'bg-indigoRural-900 text-white' 
+                      : 'bg-white text-indigoRural-600 border border-paper-300 hover:bg-paper-100'
                   }`}
                 >
                   {t === '' ? 'All' : t === 'income' ? 'Sales' : t === 'expense' ? 'Costs' : 'Udhaar'}
@@ -410,10 +576,25 @@ export function CashFlowPage({ shop, onOpenKeypad, refreshKey, latestTx, onTrans
 
         {/* Tab 1: All Transactions Feed */}
         {activeTab === 'all' && (
-          <div className="divide-y divide-slate-100 max-h-[500px] overflow-y-auto">
+          <div className="divide-y divide-paper-200 max-h-[500px] overflow-y-auto">
             {transactions.length === 0 ? (
-              <div className="p-12 text-center text-slate-400 text-sm">
-                No transactions recorded yet.
+              <div className="p-12 text-center space-y-3">
+                <div className="w-12 h-12 mx-auto rounded-2xl bg-paper-100 flex items-center justify-center text-indigoRural-400">
+                  <BookOpen className="w-6 h-6" />
+                </div>
+                <h4 className="font-bold text-sm text-indigoRural-800">
+                  {language === 'hi' ? 'अभी कोई लेनदेन दर्ज नहीं है' : 'No Transactions Recorded Yet'}
+                </h4>
+                <p className="text-xs text-indigoRural-500 max-w-sm mx-auto">
+                  {language === 'hi' 
+                    ? 'अपनी दुकान की पहली दैनिक बिक्री या खर्च दर्ज करने के लिए नीचे बटन दबाएं।' 
+                    : 'Tap the button below to record your first daily counter sale, stock purchase, or customer credit.'}
+                </p>
+                <div className="pt-2">
+                  <Button onClick={onOpenKeypad} variant="dark" size="sm" icon={PlusCircle}>
+                    <span>{language === 'hi' ? 'पहला लेनदेन दर्ज करें' : '+ Record First Transaction'}</span>
+                  </Button>
+                </div>
               </div>
             ) : (
               transactions.map(tx => {
@@ -422,26 +603,26 @@ export function CashFlowPage({ shop, onOpenKeypad, refreshKey, latestTx, onTrans
                 const isUdhaarGiven = tx.type === 'udhaar_given';
 
                 return (
-                  <div key={tx.id} className="p-4 hover:bg-slate-50/80 transition flex items-center justify-between gap-4">
+                  <div key={tx.id} className="p-4 hover:bg-paper-50 transition flex items-center justify-between gap-4">
                     
                     <div className="flex items-center gap-3.5">
-                      <div className={`w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-sm shrink-0 ${
-                        isIncome ? 'bg-emerald-50 text-emerald-600 border border-emerald-200/60' :
-                        isExpense ? 'bg-rose-50 text-rose-600 border border-rose-200/60' :
-                        isUdhaarGiven ? 'bg-amber-50 text-amber-600 border border-amber-200/60' :
-                        'bg-indigo-50 text-indigo-600 border border-indigo-200/60'
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm shrink-0 ${
+                        isIncome ? 'bg-forestRural-50 text-forestRural-700 border border-forestRural-200' :
+                        isExpense ? 'bg-terracotta-50 text-terracotta-700 border border-terracotta-200' :
+                        isUdhaarGiven ? 'bg-ochre-50 text-ochre-700 border border-ochre-200' :
+                        'bg-paper-100 text-indigoRural-700 border border-paper-300'
                       }`}>
                         {isIncome ? '↓' : isExpense ? '↑' : '⏱'}
                       </div>
 
                       <div className="space-y-0.5">
                         <div className="flex items-center gap-2">
-                          <span className="font-extrabold text-sm text-slate-900">{tx.category}</span>
-                          <span className="text-[10px] font-extrabold px-1.5 py-0.2 rounded-md bg-slate-100 text-slate-600 uppercase">
+                          <span className="font-extrabold text-sm text-indigoRural-900">{tx.category}</span>
+                          <span className="text-[10px] font-extrabold px-1.5 py-0.2 rounded-md bg-paper-200 text-indigoRural-700 uppercase">
                             {tx.payment_mode}
                           </span>
                         </div>
-                        <p className="text-xs text-slate-400 font-medium">
+                        <p className="text-xs text-indigoRural-500 font-medium">
                           {tx.customer_vendor_name ? `${tx.customer_vendor_name} • ` : ''}
                           {tx.date}
                         </p>
@@ -450,11 +631,11 @@ export function CashFlowPage({ shop, onOpenKeypad, refreshKey, latestTx, onTrans
 
                     <div className="text-right">
                       <div className={`text-base font-black tabular-nums ${
-                        isIncome || tx.type === 'udhaar_repaid' ? 'text-emerald-600' : 'text-slate-900'
+                        isIncome || tx.type === 'udhaar_repaid' ? 'text-forestRural-700' : 'text-indigoRural-900'
                       }`}>
                         {isIncome || tx.type === 'udhaar_repaid' ? '+' : '-'}₹{tx.amount.toLocaleString('en-IN')}
                       </div>
-                      <span className="text-[10px] text-slate-400 capitalize font-medium">
+                      <span className="text-[10px] text-indigoRural-400 capitalize font-medium">
                         {tx.type.replace('_', ' ')}
                       </span>
                     </div>
@@ -468,39 +649,40 @@ export function CashFlowPage({ shop, onOpenKeypad, refreshKey, latestTx, onTrans
 
         {/* Tab 2: Customer Udhaar Khata */}
         {activeTab === 'udhaar' && (
-          <div className="divide-y divide-slate-100 max-h-[500px] overflow-y-auto">
+          <div className="divide-y divide-paper-200 max-h-[500px] overflow-y-auto">
             {udhaarLedger.length === 0 ? (
-              <div className="p-12 text-center text-slate-400 text-sm">
+              <div className="p-12 text-center text-indigoRural-400 text-sm">
                 No active udhaar accounts.
               </div>
             ) : (
               udhaarLedger.map((cust, idx) => (
-                <div key={idx} className="p-4 hover:bg-slate-50/80 transition flex items-center justify-between gap-4">
+                <div key={idx} className="p-4 hover:bg-paper-50 transition flex items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-2xl bg-amber-50 text-amber-700 border border-amber-200/60 flex items-center justify-center font-bold text-sm">
+                    <div className="w-10 h-10 rounded-xl bg-ochre-50 text-ochre-700 border border-ochre-200 flex items-center justify-center font-bold text-sm">
                       {cust.customerName.charAt(0)}
                     </div>
                     <div>
-                      <div className="font-extrabold text-sm text-slate-900">{cust.customerName}</div>
-                      <div className="text-xs text-slate-400 font-medium">Last active: {cust.lastDate}</div>
+                      <div className="font-extrabold text-sm text-indigoRural-900">{cust.customerName}</div>
+                      <div className="text-xs text-indigoRural-500 font-medium">Last active: {cust.lastDate}</div>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-4">
                     <div className="text-right">
-                      <div className="text-base font-black text-amber-600 tabular-nums">
+                      <div className="text-base font-black text-ochre-700 tabular-nums">
                         ₹{cust.balanceOwed.toLocaleString('en-IN')}
                       </div>
-                      <span className="text-[10px] text-slate-400">Balance Owed</span>
+                      <span className="text-[10px] text-indigoRural-400">Balance Owed</span>
                     </div>
 
-                    <button
+                    <Button
                       onClick={() => handleSimulateReminder(cust)}
-                      className="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-xs rounded-xl border border-emerald-200 transition active:scale-95 flex items-center gap-1.5"
+                      variant="forest"
+                      size="sm"
+                      icon={MessageCircle}
                     >
-                      <MessageCircle className="w-3.5 h-3.5" />
                       <span>WhatsApp</span>
-                    </button>
+                    </Button>
                   </div>
                 </div>
               ))
@@ -508,7 +690,7 @@ export function CashFlowPage({ shop, onOpenKeypad, refreshKey, latestTx, onTrans
           </div>
         )}
 
-      </div>
+      </Card>
 
     </div>
   );

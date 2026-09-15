@@ -259,14 +259,13 @@ export function InteractiveDemoTour({
         <div className="relative z-10 flex items-center justify-between gap-3 pb-2.5 border-b border-white/10">
           <div className="flex items-center gap-2.5">
             <span className="flex h-2.5 w-2.5 relative">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-indigo-500"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-indigo-400"></span>
             </span>
             <span className="text-[11px] font-bold tracking-tight text-indigo-300 bg-indigo-500/20 px-2.5 py-0.5 rounded-full border border-indigo-500/30">
               {currentStepData.badge}
             </span>
             <span className="hidden sm:inline text-xs text-slate-400 font-medium">
-              | Digital India Sovereign Stack • MoMSME & RBI PSL Protocol
+              | Digital Public Infrastructure • MSME Credit Readiness & RBI PSL Protocol
             </span>
           </div>
 
@@ -314,7 +313,7 @@ export function InteractiveDemoTour({
               </p>
               <div className="pt-1">
                 <span className="inline-block text-[11px] font-semibold text-indigo-300 bg-indigo-500/20 px-2.5 py-0.5 rounded-full border border-indigo-500/30">
-                  ⚡ {language === 'hi' ? currentStepData.highlightTextHi : currentStepData.highlightTextEn}
+                  {language === 'hi' ? currentStepData.highlightTextHi : currentStepData.highlightTextEn}
                 </span>
               </div>
             </div>

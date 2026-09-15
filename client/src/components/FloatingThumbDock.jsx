@@ -13,7 +13,7 @@ export function FloatingThumbDock({
   activeTab, 
   setActiveTab, 
   onOpenKeypad,
-  creditScore = 755
+  creditScore = null
 }) {
   const { language } = useTranslation();
 
@@ -40,7 +40,7 @@ export function FloatingThumbDock({
     { 
       id: 'credit', 
       labelHi: 'क्रेडिट', 
-      labelEn: `${creditScore}`, 
+      labelEn: creditScore ? `${creditScore}` : 'Score', 
       icon: ShieldCheck 
     },
     { 
@@ -54,17 +54,17 @@ export function FloatingThumbDock({
   return (
     <div className="lg:hidden fixed bottom-4 inset-x-0 mx-auto w-fit z-40 px-3 select-none print:hidden animate-fadeIn">
       <nav 
-        aria-label="Samsung OneUI Mobile Thumb Navigation Dock"
-        className="flex items-center gap-1.5 p-2 rounded-full bg-slate-950/92 backdrop-blur-2xl border border-white/18 shadow-2xl text-white transition-all duration-300 ring-1 ring-black/40"
+        aria-label="Mobile Thumb Navigation Dock"
+        className="flex items-center gap-1.5 p-2 rounded-full bg-indigoRural-900/95 backdrop-blur-2xl border border-paper-300/20 shadow-2xl text-white transition-all duration-300 ring-1 ring-black/40"
       >
         {/* Rapid Thumb Add Action Button */}
         <button
           onClick={onOpenKeypad}
           aria-label="Record transaction"
-          className="flex items-center gap-2 pl-3 pr-4 py-2.5 rounded-full bg-gradient-to-r from-emerald-500 to-teal-400 text-slate-950 font-black text-xs shadow-lg shadow-emerald-500/30 hover:brightness-110 active:scale-95 transition-all cursor-pointer shrink-0"
+          className="flex items-center gap-2 pl-3 pr-4 py-2.5 rounded-full bg-terracotta-600 hover:bg-terracotta-700 text-white font-black text-xs shadow-lg shadow-terracotta-600/30 active:scale-95 transition-all cursor-pointer shrink-0"
         >
-          <span className="w-5 h-5 rounded-full bg-slate-950/20 flex items-center justify-center">
-            <Plus className="w-3.5 h-3.5 text-slate-950 stroke-[3]" />
+          <span className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center">
+            <Plus className="w-3.5 h-3.5 text-white stroke-[3]" />
           </span>
           <span className="tracking-wide">
             {language === 'hi' ? 'दर्ज करें' : '+ Record'}
@@ -86,22 +86,18 @@ export function FloatingThumbDock({
                 onClick={() => setActiveTab(item.id)}
                 className={`relative px-3 sm:px-3.5 py-2 rounded-full text-xs font-extrabold flex items-center gap-1.5 transition-all duration-200 cursor-pointer ${
                   isActive
-                    ? 'bg-white text-slate-950 shadow-md scale-[1.02]'
-                    : 'text-slate-300 hover:text-white hover:bg-white/10 active:scale-95'
+                    ? 'bg-white text-indigoRural-900 shadow-md scale-[1.02]'
+                    : 'text-paper-200 hover:text-white hover:bg-white/10 active:scale-95'
                 }`}
               >
                 <Icon className={`w-3.5 h-3.5 ${
                   isActive 
-                    ? 'text-slate-950 stroke-[2.5]' 
+                    ? 'text-terracotta-600 stroke-[2.5]' 
                     : item.highlight 
-                    ? 'text-amber-300 stroke-[2]' 
-                    : 'text-slate-400 stroke-[2]'
+                    ? 'text-ochre-300 stroke-[2]' 
+                    : 'text-paper-300 stroke-[2]'
                 }`} />
                 <span className="text-[11px] tracking-tight">{label}</span>
-
-                {item.id === 'credit' && !isActive && (
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
-                )}
               </button>
             );
           })}

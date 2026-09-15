@@ -4,16 +4,25 @@ import { seedDatabase } from '../db/seed.js';
 
 const router = express.Router();
 
-// Get current active shop profile
+// Get current active shop profile by explicit shopId
 router.get('/current', (req, res) => {
   try {
-    const shopId = req.query.shopId || 'ramesh-kirana';
+    const shopId = req.query.shopId;
+    if (!shopId) {
+      // No shopId supplied: honest null state (prompts user to Register or view Demo)
+      return res.json({ success: true, shop: null });
+    }
+
     let shop = db.prepare('SELECT * FROM shops WHERE id = ?').get(shopId);
 
-    if (!shop) {
-      // If db was empty, re-seed demo
+    // If requesting ramesh-kirana specifically and database is unseeded, seed it
+    if (!shop && shopId === 'ramesh-kirana') {
       seedDatabase();
       shop = db.prepare('SELECT * FROM shops WHERE id = ?').get('ramesh-kirana');
+    }
+
+    if (!shop) {
+      return res.json({ success: true, shop: null });
     }
 
     res.json({ success: true, shop });
@@ -22,7 +31,7 @@ router.get('/current', (req, res) => {
   }
 });
 
-// Setup new shop profile (Onboarding)
+// Setup new real shop profile (Onboarding — is_demo = 0)
 router.post('/setup', (req, res) => {
   try {
     const {
@@ -41,25 +50,35 @@ router.post('/setup', (req, res) => {
       owner_category
     } = req.body;
 
-    const id = `shop-${Date.now()}`;
+    if (!name || !name.trim()) {
+      return res.status(400).json({ success: false, error: 'Shop name is required' });
+    }
+    if (!owner_name || !owner_name.trim()) {
+      return res.status(400).json({ success: false, error: 'Owner name is required' });
+    }
+    if (!trade_type) {
+      return res.status(400).json({ success: false, error: 'Trade category is required' });
+    }
+
+    const id = `shop-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`;
     const insert = db.prepare(`
       INSERT INTO shops (
         id, name, owner_name, trade_type, trade_name, village, district, state,
-        vintage_years, monthly_revenue, ownership, bank_account_type, phone, owner_category
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        vintage_years, monthly_revenue, ownership, bank_account_type, phone, owner_category, is_demo
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
     `);
 
     insert.run(
       id,
-      name || 'My Village Store',
-      owner_name || 'Shopkeeper',
-      trade_type || 'kirana',
-      trade_name || 'Kirana & General Store',
+      name.trim(),
+      owner_name.trim(),
+      trade_type,
+      trade_name || 'Micro-Enterprise',
       village || 'Gram Panchayat',
       district || 'Balrampur',
       state || 'Uttar Pradesh',
-      Number(vintage_years) || 1,
-      Number(monthly_revenue) || 35000,
+      Math.max(0, Number(vintage_years) || 0),
+      Math.max(0, Number(monthly_revenue) || 0),
       ownership || 'rented',
       bank_account_type || 'savings',
       phone || '',
@@ -73,7 +92,7 @@ router.post('/setup', (req, res) => {
   }
 });
 
-// Reset / reload Ramesh's Kirana Demo Shop
+// Reset / reload Ramesh's Kirana Demo Shop (is_demo = 1)
 router.post('/reset-demo', async (req, res) => {
   try {
     seedDatabase();
@@ -85,7 +104,7 @@ router.post('/reset-demo', async (req, res) => {
       syncToMongoDB().catch(e => console.warn('[MongoDB Atlas] Background sync on reset-demo error:', e.message));
     } catch (_) {}
 
-    res.json({ success: true, message: 'Demo shop reloaded with 90 days of transactions', shop });
+    res.json({ success: true, message: 'Demo shop reloaded with 120 days of verified transactions', shop });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
@@ -95,6 +114,11 @@ router.post('/reset-demo', async (req, res) => {
 router.put('/:id', (req, res) => {
   try {
     const { id } = req.params;
+    const existing = db.prepare('SELECT * FROM shops WHERE id = ?').get(id);
+    if (!existing) {
+      return res.status(404).json({ success: false, error: 'Shop not found' });
+    }
+
     const {
       name,
       owner_name,
@@ -127,8 +151,8 @@ router.put('/:id', (req, res) => {
 
     update.run(
       name, owner_name, trade_name, trade_type, village, district, state,
-      vintage_years ? Number(vintage_years) : null,
-      monthly_revenue ? Number(monthly_revenue) : null,
+      vintage_years !== undefined ? Number(vintage_years) : null,
+      monthly_revenue !== undefined ? Number(monthly_revenue) : null,
       bank_account_type, phone,
       id
     );

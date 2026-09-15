@@ -56,24 +56,24 @@ async function request(endpoint, options = {}) {
 
 export const api = {
   // Shop profile
-  getShopCurrent: (shopId = 'ramesh-kirana') => request(`/shop/current?shopId=${shopId}`),
+  getShopCurrent: (shopId = '') => request(`/shop/current${shopId ? `?shopId=${shopId}` : ''}`),
   setupShop: (data) => request('/shop/setup', { method: 'POST', body: JSON.stringify(data) }),
   resetDemoShop: () => request('/shop/reset-demo', { method: 'POST' }),
   updateShop: (id, data) => request(`/shop/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
 
   // Transactions & Bahi-Khata
-  getTransactions: (shopId = 'ramesh-kirana', type = '', limit = 50) => 
+  getTransactions: (shopId, type = '', limit = 50) => 
     request(`/transactions?shopId=${shopId}${type ? `&type=${type}` : ''}&limit=${limit}`),
   createTransaction: (data) => request('/transactions', { method: 'POST', body: JSON.stringify(data) }),
-  getTransactionSummary: (shopId = 'ramesh-kirana') => request(`/transactions/summary?shopId=${shopId}`),
-  getUdhaarLedger: (shopId = 'ramesh-kirana') => request(`/transactions/udhaar-ledger?shopId=${shopId}`),
+  getTransactionSummary: (shopId) => request(`/transactions/summary?shopId=${shopId}`),
+  getUdhaarLedger: (shopId) => request(`/transactions/udhaar-ledger?shopId=${shopId}`),
 
   // Credit Scoring
-  getCreditScore: (shopId = 'ramesh-kirana') => request(`/credit-score?shopId=${shopId}`),
+  getCreditScore: (shopId) => request(`/credit-score?shopId=${shopId}`),
   simulateCreditScore: (payload) => request('/credit-score/simulate', { method: 'POST', body: JSON.stringify(payload) }),
 
   // Schemes
-  getMatchedSchemes: (shopId = 'ramesh-kirana') => request(`/schemes/match?shopId=${shopId}`),
+  getMatchedSchemes: (shopId) => request(`/schemes/match?shopId=${shopId}`),
   getAllSchemes: (category = '', maxAmount = '') => {
     let q = '';
     if (category) q += `?category=${encodeURIComponent(category)}`;
@@ -83,11 +83,11 @@ export const api = {
   getSchemeDetail: (id) => request(`/schemes/${id}`),
 
   // Advisory
-  chatAdvisor: (shopId = 'ramesh-kirana', question) => 
+  chatAdvisor: (shopId, question) => 
     request('/advisor/chat', { method: 'POST', body: JSON.stringify({ shopId, question }) }),
-  getAdvisorHistory: (shopId = 'ramesh-kirana') => request(`/advisor/history?shopId=${shopId}`),
-  getSeasonalCues: (shopId = 'ramesh-kirana') => request(`/advisor/cues?shopId=${shopId}`),
+  getAdvisorHistory: (shopId) => request(`/advisor/history?shopId=${shopId}`),
+  getSeasonalCues: (shopId) => request(`/advisor/cues?shopId=${shopId}`),
 
   // Bank Dossier
-  generateDossier: (shopId = 'ramesh-kirana') => request(`/dossier/generate?shopId=${shopId}`),
+  generateDossier: (shopId) => request(`/dossier/generate?shopId=${shopId}`),
 };

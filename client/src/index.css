@@ -4,8 +4,8 @@
 
 @layer base {
   body {
-    background-color: #FBFBFD;
-    color: #0F172A;
+    background-color: #FAF7F2;
+    color: #0C1322;
     font-family: 'Plus Jakarta Sans', 'Outfit', system-ui, -apple-system, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -22,7 +22,7 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* Custom Sleek Apple-style Scrollbars */
+/* Custom Sleek Terracotta Scrollbars */
 ::-webkit-scrollbar {
   width: 5px;
   height: 5px;
@@ -33,12 +33,12 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #CBD5E1;
+  background: #DFD3BE;
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94A3B8;
+  background: #C8B79B;
 }
 
 /* Print Optimization for Bankable Dossier */
@@ -74,41 +74,53 @@
   animation: fadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* Apple Pearl Studio Canvas with Specular Ambient Lighting */
-.pearl-canvas {
-  background-color: #F8F9FA;
+/* Warm Paper Canvas with Natural Rural Micro Ambient Tones */
+.paper-canvas {
+  background-color: #FAF7F2;
   background-image: 
-    radial-gradient(circle at 15% 5%, rgba(14, 165, 233, 0.04) 0%, transparent 40%),
-    radial-gradient(circle at 85% 5%, rgba(249, 115, 22, 0.035) 0%, transparent 40%),
-    radial-gradient(circle at 50% 95%, rgba(16, 185, 129, 0.035) 0%, transparent 45%);
+    radial-gradient(circle at 12% 8%, rgba(193, 83, 36, 0.035) 0%, transparent 40%),
+    radial-gradient(circle at 88% 12%, rgba(217, 119, 6, 0.03) 0%, transparent 40%),
+    radial-gradient(circle at 50% 95%, rgba(39, 103, 73, 0.028) 0%, transparent 45%);
 }
 
-/* Master Human-Crafted Sovereign Bento Card */
-.sovereign-card {
+/* Vyapaar Saathi Canonical Card */
+.saathi-card {
   background: #FFFFFF;
-  border: 1px solid rgba(15, 23, 42, 0.07);
-  border-radius: 28px;
+  border: 1px solid rgba(223, 211, 190, 0.75);
+  border-radius: 1.25rem; /* rounded-2xl */
   box-shadow: 
-    0 1px 2px 0 rgba(15, 23, 42, 0.02),
-    0 10px 25px -5px rgba(15, 23, 42, 0.03),
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.9);
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    0 1px 3px 0 rgba(44, 25, 18, 0.03),
+    0 8px 24px -4px rgba(44, 25, 18, 0.03),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.95);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.sovereign-card:hover {
-  border-color: rgba(15, 23, 42, 0.12);
+.saathi-card:hover {
+  border-color: rgba(193, 83, 36, 0.3);
   box-shadow: 
-    0 2px 4px 0 rgba(15, 23, 42, 0.02),
-    0 16px 36px -6px rgba(15, 23, 42, 0.06),
+    0 2px 6px 0 rgba(44, 25, 18, 0.04),
+    0 14px 30px -4px rgba(44, 25, 18, 0.06),
     inset 0 1px 0 0 rgba(255, 255, 255, 1);
 }
 
-/* Physical Sovereign Smart Pass (Apple Card / Titanium Smart Credential) */
-.sovereign-pass {
-  background: radial-gradient(120% 120% at 85% 15%, rgba(30, 41, 59, 0.95) 0%, #090D16 100%);
-  border: 1px solid rgba(255, 255, 255, 0.14);
+/* Saathi Hero Card */
+.saathi-hero-card {
+  background: #FFFFFF;
+  border: 1px solid rgba(223, 211, 190, 0.9);
+  border-radius: 1.75rem; /* rounded-3xl */
   box-shadow: 
-    0 25px 50px -12px rgba(9, 13, 22, 0.45),
+    0 2px 4px 0 rgba(44, 25, 18, 0.03),
+    0 16px 36px -6px rgba(44, 25, 18, 0.05),
+    inset 0 1px 0 0 rgba(255, 255, 255, 1);
+}
+
+/* Physical Saathi Pass (National MSME Smart Credential) */
+.saathi-pass {
+  background: radial-gradient(120% 120% at 85% 15%, rgba(26, 39, 66, 0.96) 0%, #0C1322 100%);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 1.75rem;
+  box-shadow: 
+    0 25px 50px -12px rgba(12, 19, 34, 0.45),
     inset 0 1px 0 0 rgba(255, 255, 255, 0.2),
     inset 0 -1px 0 0 rgba(0, 0, 0, 0.4);
 }
@@ -117,13 +129,4 @@
 .guilloche-pattern {
   background-image: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
   background-size: 16px 16px;
-}
-
-/* Backward compatibility for bento-card & titanium-pass */
-.bento-card {
-  @apply sovereign-card;
-}
-
-.titanium-pass {
-  @apply sovereign-pass;
 }

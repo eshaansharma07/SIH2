@@ -53,6 +53,106 @@ export function calculateCreditScore(shopId, transactionsOverride = null) {
   const udhaarToIncomePct = totalIncome > 0 ? (totalUdhaarGiven / totalIncome) * 100 : 0;
   const udhaarRecoveryRate = totalUdhaarGiven > 0 ? Math.min(100, (totalUdhaarRepaid / totalUdhaarGiven) * 100) : 100;
 
+  // Check for insufficient data: real registered shop with zero or low transaction history
+  if (!transactions || transactions.length < 5 || loggedDaysCount < 3) {
+    return {
+      status: 'insufficient_data',
+      isUnrated: true,
+      shopId: shop.id,
+      shopName: shop.name,
+      totalScore: null,
+      score: null,
+      ratingBand: 'unrated',
+      ratingLabel: 'अमूल्यांकित (Unrated — New Registration)',
+      ratingBadge: 'Unrated',
+      ratingColor: 'text-indigoRural-600 bg-paper-100 border-paper-300',
+      minTransactionsRequired: 5,
+      minDaysRequired: 3,
+      currentTransactions: transactions ? transactions.length : 0,
+      currentDays: loggedDaysCount,
+      message: 'Unrated — log your first week of sales to unlock your Credit Score',
+      messageHindi: 'अमूल्यांकित — अपना क्रेडिट स्कोर देखने के लिए पहले सप्ताह की बिक्री दर्ज करें',
+      factors: [
+        {
+          id: 'consistency',
+          name: 'Cash Flow & Logging Regularity',
+          nameHindi: 'दैनिक बही-खाता नियमितता',
+          weight: '30%',
+          score: null,
+          maxScore: 255,
+          percentage: 0,
+          status: 'pending',
+          explanation: 'Requires minimum 3 active logged days.',
+          explanationHindi: 'कम से कम 3 दिन बही-खाता प्रविष्टि आवश्यक है।',
+          tip: 'Start recording counter sales daily.'
+        },
+        {
+          id: 'growth',
+          name: 'Revenue Stability & Turnover',
+          nameHindi: 'बिक्री स्थिरता एवं मासिक आय',
+          weight: '25%',
+          score: null,
+          maxScore: 212,
+          percentage: 0,
+          status: 'pending',
+          explanation: 'Computed over your first 30 days of sales history.',
+          explanationHindi: 'पहले 30 दिनों के बिक्री इतिहास पर गणना होगी।',
+          tip: 'Record all wholesale purchases and customer sales.'
+        },
+        {
+          id: 'discipline',
+          name: 'Udhaar Discipline & Working Capital',
+          nameHindi: 'उधार नियंत्रण एवं अनुशासन',
+          weight: '25%',
+          score: null,
+          maxScore: 213,
+          percentage: 0,
+          status: 'pending',
+          explanation: 'Computed as customers borrow and repay udhaar.',
+          explanationHindi: 'ग्राहकों द्वारा उधार लेने और चुकाने पर गणना होगी।',
+          tip: 'Maintain clear records in the Udhaar Khata.'
+        },
+        {
+          id: 'vintage',
+          name: 'Business Vintage & Digital Adoption',
+          nameHindi: 'व्यापार का अनुभव एवं डिजिटल प्रमाण',
+          weight: '20%',
+          score: null,
+          maxScore: 170,
+          percentage: 0,
+          status: 'pending',
+          explanation: 'Builds as your enterprise records continuous operations.',
+          explanationHindi: 'निरंतर दुकान संचालन और यूपीआई अपनाने से स्कोर बढ़ेगा।',
+          tip: 'Encourage UPI payments via QR code.'
+        }
+      ],
+      metrics: {
+        totalIncome: Math.round(totalIncome),
+        totalExpense: Math.round(totalExpense),
+        netSurplus: Math.round(netSurplus),
+        totalUdhaarPending: Math.max(0, totalUdhaarGiven - totalUdhaarRepaid),
+        udhaarRecoveryRate: Math.round(udhaarRecoveryRate),
+        digitalSharePct: Math.round(digitalSharePct),
+        loggedDays: loggedDaysCount,
+        vintageYears: Number(shop.vintage_years) || 0
+      },
+      topActions: [
+        {
+          title: 'Record First Daily Sale',
+          titleHindi: 'पहली दैनिक बिक्री दर्ज करें',
+          impact: 'Unlocks Consistency factor',
+          action: 'Record sale in Bahi-Khata'
+        },
+        {
+          title: 'Log 7 Days of Transactions',
+          titleHindi: '7 दिनों की बिक्री प्रविष्टि करें',
+          impact: 'Generates first Credit Score estimate',
+          action: 'Build consistency'
+        }
+      ]
+    };
+  }
+
   // 2. Factor 1: Cash Flow Consistency (Weight 30% -> 165 points base + scaling)
   // Max factor score: 255 points
   let consistencyScore = 0;

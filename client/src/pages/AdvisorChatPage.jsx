@@ -10,13 +10,14 @@ import {
   Info, 
   Lightbulb, 
   RotateCcw,
-  Zap,
   Bot
 } from 'lucide-react';
 import { api } from '../utils/api';
 import { useTranslation } from '../i18n/LanguageContext';
+import { WarliBorder } from '../components/WarliMotif';
+import { Card, Badge, SectionHeader, Button } from '../components/ui';
 
-export function AdvisorChatPage({ shop, initialPrompt = '', onPromptUsed }) {
+export function AdvisorChatPage({ shop, creditData, summaryData, initialPrompt = '', onPromptUsed }) {
   const { t, language } = useTranslation();
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState(initialPrompt || '');
@@ -44,8 +45,9 @@ export function AdvisorChatPage({ shop, initialPrompt = '', onPromptUsed }) {
   };
 
   const loadChatHistory = async () => {
+    if (!shop?.id) return;
     try {
-      const res = await api.getAdvisorHistory(shop?.id || 'ramesh-kirana');
+      const res = await api.getAdvisorHistory(shop.id);
       if (res.history && res.history.length > 0) {
         setMessages(res.history.map(m => ({
           role: m.role,
@@ -57,8 +59,8 @@ export function AdvisorChatPage({ shop, initialPrompt = '', onPromptUsed }) {
           {
             role: 'assistant',
             content: language === 'hi' 
-              ? `राम राम ${shop?.owner_name || 'रमेश'} जी! 🙏\n\nमैं आपका साथी AI सलाहकार हूँ। मैंने आपकी दुकान के 4 महीने के बही-खाते और बलरामपुर के आगामी त्योहारी कैलेंडर का विश्लेषण कर लिया है।\n\nमुझसे कुछ भी पूछें — जैसे कि त्योहार पर कितना तेल-चीनी स्टॉक करना है, ग्राहकों का उधार कैसे समेटना है, या नया डीप-फ्रीज़र लेने के लिए कौन सा मुद्रा लोन उपयुक्त है!`
-              : `Namaste ${shop?.owner_name || 'Ramesh'}! 🙏\n\nI am your Saathi AI Advisor. I have synchronized with your 4-month audited transactions and the upcoming Google Calendar festival demand.\n\nAsk me anything about seasonal inventory planning, managing udhaar recovery, or applying for a MUDRA loan!`
+              ? `राम राम ${shop?.owner_name || 'दुकानदार'} जी! 🙏\n\nमैं आपका साथी AI सलाहकार हूँ। मैंने आपकी दुकान (${shop?.name || 'दुकान'}) के बही-खाते और ${shop?.district || 'क्षेत्र'} के आगामी त्योहारी कैलेंडर का विश्लेषण कर लिया है।\n\nमुझसे कुछ भी पूछें — जैसे कि त्योहार पर कितना माल स्टॉक करना है, ग्राहकों का उधार कैसे समेटना है, या नया उपकरण लेने के लिए कौन सा मुद्रा लोन उपयुक्त है!`
+              : `Namaste ${shop?.owner_name || 'Partner'}! 🙏\n\nI am your Saathi AI Advisor. I have synchronized with your store (${shop?.name || 'Your Store'}) and the upcoming seasonal demand in ${shop?.district || 'your area'}.\n\nAsk me anything about seasonal inventory planning, managing udhaar recovery, or applying for a statutory MSME loan!`
           }
         ]);
       }
@@ -69,7 +71,7 @@ export function AdvisorChatPage({ shop, initialPrompt = '', onPromptUsed }) {
 
   const handleSendMessage = async (textToSend) => {
     const text = (textToSend || inputText).trim();
-    if (!text || loading) return;
+    if (!text || loading || !shop?.id) return;
 
     const userMsg = {
       role: 'user',
@@ -82,7 +84,7 @@ export function AdvisorChatPage({ shop, initialPrompt = '', onPromptUsed }) {
     setLoading(true);
 
     try {
-      const res = await api.chatAdvisor(shop?.id || 'ramesh-kirana', text);
+      const res = await api.chatAdvisor(shop.id, text);
       if (res.success && res.response) {
         setMessages(prev => [
           ...prev, 
@@ -116,68 +118,84 @@ export function AdvisorChatPage({ shop, initialPrompt = '', onPromptUsed }) {
     { textHi: "क्रेडिट स्कोर 750+ कैसे करें?", textEn: "How to raise credit score above 750?" },
   ];
 
+  const totalIncome = summaryData?.totalIncome || creditData?.metrics?.totalIncome;
+  const netSurplus = summaryData?.netSurplus || creditData?.metrics?.netSurplus;
+  const creditScore = creditData?.totalScore;
+
   return (
     <div className="max-w-4xl mx-auto space-y-4 pb-12 animate-fadeIn">
       
-      {/* 1. Header Banner & Grounding Controls */}
-      <div className="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-card space-y-3">
+      {/* 1. Header Banner & Grounding Controls with Warli Border */}
+      <Card padding="md" className="space-y-3">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-600 via-purple-600 to-pink-500 flex items-center justify-center text-white shadow-md shadow-indigo-500/20">
-              <Sparkles className="w-5 h-5 text-amber-200" />
+            <div className="w-10 h-10 rounded-xl bg-terracotta-600 flex items-center justify-center text-white shadow-2xs">
+              <Sparkles className="w-5 h-5 text-ochre-200" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-base font-extrabold text-slate-900 tracking-tight">
+                <h1 className="text-base font-black text-indigoRural-900 tracking-tight font-display">
                   {language === 'hi' ? 'साथी AI' : 'Saathi AI'}
                 </h1>
-                <span className="text-[10px] font-extrabold bg-indigo-50 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded-full">
+                <Badge variant="brand" size="sm">
                   Gemini Grounded
-                </span>
+                </Badge>
               </div>
-              <p className="text-xs text-slate-500">
-                {language === 'hi' ? 'बलरामपुर मंडी एवं आपकी दुकान के वास्तविक आंकड़ों पर आधारित' : 'Hyper-local business intelligence grounded in your verified shop ledger'}
+              <p className="text-xs text-indigoRural-500">
+                {language === 'hi' ? `${shop?.district || 'बलरामपुर'} मंडी एवं आपकी दुकान के वास्तविक आंकड़ों पर आधारित` : 'Hyper-local business intelligence grounded in your verified shop ledger'}
               </p>
             </div>
           </div>
 
-          <button
+          <Button
             onClick={() => setShowContext(!showContext)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-xs font-bold text-slate-700 transition self-start sm:self-auto"
+            variant="secondary"
+            size="sm"
+            icon={Database}
+            className="self-start sm:self-auto"
           >
-            <Database className="w-3.5 h-3.5 text-indigo-600" />
             <span>{showContext ? 'Hide Context' : 'Live Data Context'}</span>
-            {showContext ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-          </button>
+            {showContext ? <ChevronUp className="w-3 h-3 ml-1" /> : <ChevronDown className="w-3 h-3 ml-1" />}
+          </Button>
         </div>
 
         {/* Collapsible Grounding Data Panel */}
         {showContext && (
-          <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200 text-xs space-y-2 animate-fadeIn">
-            <div className="flex items-center justify-between font-bold text-slate-800 border-b border-slate-200 pb-1.5">
-              <span>Live Database Context Fed to System Prompt:</span>
-              <span className="text-[10px] text-emerald-600 font-extrabold">✓ Zero Hallucination Grounding</span>
+          <div className="bg-paper-100 rounded-xl p-4 border border-paper-300 text-xs space-y-2 animate-fadeIn">
+            <div className="flex items-center justify-between font-bold text-indigoRural-800 border-b border-paper-200 pb-1.5">
+              <span>Live Grounding Context Fed to Model:</span>
+              <span className="text-[10px] text-forestRural-700 font-extrabold flex items-center gap-1">
+                <ShieldCheck className="w-3.5 h-3.5 text-forestRural-600" />
+                <span>Zero Hallucination Guardrails</span>
+              </span>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-[11px]">
-              <div className="p-2.5 bg-white rounded-xl border border-slate-200">
-                <span className="text-slate-400 block text-[10px] uppercase font-bold">Enterprise</span>
-                <strong className="text-slate-900">{shop?.name || 'Ramesh Kirana'} ({shop?.village || 'Utraula'})</strong>
+              <div className="p-2.5 bg-white rounded-lg border border-paper-200">
+                <span className="text-indigoRural-400 block text-[10px] uppercase font-bold">Enterprise</span>
+                <strong className="text-indigoRural-900">{shop?.name || (language === 'hi' ? 'मेरी दुकान' : 'Registered Store')}{shop?.village ? ` (${shop.village})` : ''}</strong>
               </div>
-              <div className="p-2.5 bg-white rounded-xl border border-slate-200">
-                <span className="text-slate-400 block text-[10px] uppercase font-bold">Audited Volume</span>
-                <strong className="text-slate-900">₹2,25,857 (₹63k Surplus)</strong>
+              <div className="p-2.5 bg-white rounded-lg border border-paper-200">
+                <span className="text-indigoRural-400 block text-[10px] uppercase font-bold">Audited Volume</span>
+                <strong className="text-indigoRural-900">
+                  {totalIncome ? `₹${totalIncome.toLocaleString('en-IN')}` : 'Audited Ledger'} 
+                  {netSurplus ? ` (₹${netSurplus.toLocaleString('en-IN')} Surplus)` : ''}
+                </strong>
               </div>
-              <div className="p-2.5 bg-white rounded-xl border border-slate-200">
-                <span className="text-slate-400 block text-[10px] uppercase font-bold">Credit Tier</span>
-                <strong className="text-indigo-600">755 / 850 Prime Bankable</strong>
+              <div className="p-2.5 bg-white rounded-lg border border-paper-200">
+                <span className="text-indigoRural-400 block text-[10px] uppercase font-bold">Credit Tier</span>
+                <strong className="text-forestRural-700">
+                  {creditScore ? `${creditScore} / 850 Prime` : 'Prime Bankable Assessment'}
+                </strong>
               </div>
             </div>
           </div>
         )}
-      </div>
 
-      {/* 2. Chat Conversation Feed (Apple iMessage / Galaxy AI Style) */}
-      <div className="bg-white rounded-3xl border border-slate-200/80 shadow-card flex flex-col h-[520px] overflow-hidden">
+        <WarliBorder className="w-full h-5 text-terracotta-400 opacity-50 pt-1" />
+      </Card>
+
+      {/* 2. Chat Conversation Feed */}
+      <Card padding="none" className="flex flex-col h-[520px] overflow-hidden">
         
         {/* Messages Stream */}
         <div className="flex-1 p-5 overflow-y-auto space-y-4">
@@ -189,16 +207,16 @@ export function AdvisorChatPage({ shop, initialPrompt = '', onPromptUsed }) {
                 className={`flex gap-2.5 ${isUser ? 'justify-end' : 'justify-start'}`}
               >
                 {!isUser && (
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center text-white shrink-0 shadow-xs mt-1">
-                    <Sparkles className="w-4 h-4 text-amber-200" />
+                  <div className="w-8 h-8 rounded-full bg-terracotta-600 flex items-center justify-center text-white shrink-0 shadow-2xs mt-1">
+                    <Sparkles className="w-4 h-4 text-ochre-200" />
                   </div>
                 )}
 
                 <div
-                  className={`max-w-[85%] sm:max-w-[75%] rounded-3xl p-4 text-xs sm:text-sm leading-relaxed shadow-xs ${
+                  className={`max-w-[85%] sm:max-w-[75%] rounded-2xl p-4 text-xs sm:text-sm leading-relaxed shadow-2xs ${
                     isUser
-                      ? 'bg-indigo-600 text-white rounded-br-sm'
-                      : 'bg-slate-50 text-slate-800 border border-slate-200/80 rounded-bl-sm'
+                      ? 'bg-terracotta-600 text-white rounded-br-xs'
+                      : 'bg-paper-50 text-indigoRural-900 border border-paper-200 rounded-bl-xs'
                   }`}
                 >
                   <div className="whitespace-pre-wrap font-sans">
@@ -211,13 +229,13 @@ export function AdvisorChatPage({ shop, initialPrompt = '', onPromptUsed }) {
 
           {loading && (
             <div className="flex gap-2.5 justify-start animate-fadeIn">
-              <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white shrink-0 mt-1">
-                <Sparkles className="w-4 h-4 animate-spin text-amber-200" />
+              <div className="w-8 h-8 rounded-full bg-terracotta-600 flex items-center justify-center text-white shrink-0 mt-1">
+                <Sparkles className="w-4 h-4 text-ochre-200" />
               </div>
-              <div className="bg-slate-50 border border-slate-200/80 rounded-3xl rounded-bl-sm p-4 text-xs text-slate-500 flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-indigo-500 animate-bounce" />
-                <span className="w-2 h-2 rounded-full bg-indigo-500 animate-bounce [animation-delay:0.2s]" />
-                <span className="w-2 h-2 rounded-full bg-indigo-500 animate-bounce [animation-delay:0.4s]" />
+              <div className="bg-paper-50 border border-paper-200 rounded-2xl rounded-bl-xs p-4 text-xs text-indigoRural-500 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-terracotta-500 animate-bounce" />
+                <span className="w-2 h-2 rounded-full bg-terracotta-500 animate-bounce [animation-delay:0.2s]" />
+                <span className="w-2 h-2 rounded-full bg-terracotta-500 animate-bounce [animation-delay:0.4s]" />
                 <span className="ml-1 font-semibold">{language === 'hi' ? 'विश्लेषण हो रहा है...' : 'Analyzing Mandi & Shop Ledger...'}</span>
               </div>
             </div>
@@ -227,20 +245,20 @@ export function AdvisorChatPage({ shop, initialPrompt = '', onPromptUsed }) {
         </div>
 
         {/* Suggested Quick Question Chips */}
-        <div className="px-4 py-2 bg-slate-50/70 border-t border-slate-100 flex items-center gap-1.5 overflow-x-auto">
+        <div className="px-4 py-2 bg-paper-50/70 border-t border-paper-200 flex items-center gap-1.5 overflow-x-auto">
           {sampleQuestions.map((q, i) => (
             <button
               key={i}
               onClick={() => handleSendMessage(language === 'hi' ? q.textHi : q.textEn)}
-              className="px-3 py-1 bg-white hover:bg-slate-100 text-slate-700 text-xs font-semibold rounded-full border border-slate-200 shrink-0 transition active:scale-95 shadow-2xs"
+              className="px-3 py-1 bg-white hover:bg-paper-100 text-indigoRural-700 text-xs font-semibold rounded-full border border-paper-300 shrink-0 transition active:scale-95 shadow-2xs cursor-pointer"
             >
               {language === 'hi' ? q.textHi : q.textEn}
             </button>
           ))}
         </div>
 
-        {/* Modern Apple-style Input Bar */}
-        <div className="p-3 bg-white border-t border-slate-100">
+        {/* Input Bar */}
+        <div className="p-3 bg-white border-t border-paper-200">
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -253,19 +271,19 @@ export function AdvisorChatPage({ shop, initialPrompt = '', onPromptUsed }) {
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               placeholder={language === 'hi' ? 'यहाँ अपना प्रश्न लिखें या पूछें...' : 'Ask about festival stock, loan schemes, or khata...'}
-              className="flex-1 px-4 py-3 bg-slate-100 focus:bg-white border border-slate-200 rounded-full text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
+              className="flex-1 px-4 py-3 bg-paper-100 focus:bg-white border border-paper-300 rounded-full text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-terracotta-500 transition text-indigoRural-900 placeholder:text-indigoRural-400"
             />
             <button
               type="submit"
               disabled={loading || !inputText.trim()}
-              className="w-11 h-11 rounded-full bg-indigo-600 hover:bg-indigo-700 active:scale-90 disabled:opacity-40 disabled:cursor-not-allowed text-white flex items-center justify-center shadow-md shadow-indigo-600/30 transition shrink-0"
+              className="w-11 h-11 rounded-full bg-terracotta-600 hover:bg-terracotta-700 active:scale-90 disabled:opacity-40 disabled:cursor-not-allowed text-white flex items-center justify-center shadow-xs transition shrink-0 cursor-pointer"
             >
               <Send className="w-4 h-4" />
             </button>
           </form>
         </div>
 
-      </div>
+      </Card>
 
     </div>
   );

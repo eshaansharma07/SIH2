@@ -5,10 +5,13 @@ import { matchSchemesForShop } from '../services/schemeMatcherService.js';
 
 const router = express.Router();
 
-// Generate Bankable Financial Dossier
+// Generate Formal Bankable Financial Dossier aligned with RBI PSL Guidelines
 router.get('/generate', (req, res) => {
   try {
-    const shopId = req.query.shopId || 'ramesh-kirana';
+    const shopId = req.query.shopId;
+    if (!shopId) {
+      return res.status(400).json({ success: false, error: 'shopId is required' });
+    }
     const shop = db.prepare('SELECT * FROM shops WHERE id = ?').get(shopId);
     if (!shop) {
       return res.status(404).json({ success: false, error: 'Shop not found' });
@@ -40,7 +43,7 @@ router.get('/generate', (req, res) => {
       m.netSurplus = m.grossSales - m.stockPurchases;
     });
 
-    const dossierNumber = `VS-${shop.district.substring(0, 3).toUpperCase()}-${Date.now().toString().slice(-6)}`;
+    const dossierNumber = `VS-DOC-${shop.district.substring(0, 3).toUpperCase()}-${Date.now().toString().slice(-6)}`;
     const issueDate = new Date().toLocaleDateString('en-IN', {
       day: 'numeric',
       month: 'long',
@@ -54,7 +57,8 @@ router.get('/generate', (req, res) => {
         issueDate,
         validity: 'Valid for 90 days from date of issue',
         issuingPlatform: 'Vyapaar Saathi — Alternative Credit & Financial Structuring Platform',
-        endorsedFor: 'Priority Sector Lending (PSL) & Micro-Enterprise Credit Appraisal',
+        pslClassification: 'Micro-Enterprise (Trading / Services) — Eligible for RBI PSL 7.5% Sub-target (FIDD.CO.Plan.BC.5/04.09.01/2020-21)',
+        endorsedFor: 'Priority Sector Lending (PSL) Micro-Enterprise Credit Appraisal (Nayak Committee Cash-Flow Method)',
         shop: {
           id: shop.id,
           name: shop.name,

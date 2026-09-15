@@ -7,7 +7,20 @@ const router = express.Router();
 // Get current alternative credit score & factor breakdown
 router.get('/', async (req, res) => {
   try {
-    const shopId = req.query.shopId || 'ramesh-kirana';
+    const shopId = req.query.shopId;
+    if (!shopId) {
+      return res.json({
+        success: true,
+        status: 'insufficient_data',
+        isUnrated: true,
+        totalScore: null,
+        score: null,
+        ratingBand: 'unrated',
+        ratingLabel: 'अमूल्यांकित (Unrated — New Registration)',
+        ratingBadge: 'Unrated',
+        message: 'Unrated — log your first week of sales to unlock your Credit Score'
+      });
+    }
 
     let txs = null;
     try {
@@ -29,7 +42,10 @@ router.get('/', async (req, res) => {
 // Interactive score simulation (e.g. "What if I recover ₹5,000 udhaar and log 30 days?")
 router.post('/simulate', (req, res) => {
   try {
-    const shopId = req.body.shopId || 'ramesh-kirana';
+    const shopId = req.body.shopId;
+    if (!shopId) {
+      return res.status(400).json({ success: false, error: 'shopId is required' });
+    }
     const {
       additionalLoggingDays = 0,
       udhaarRecoveryAmount = 0,
@@ -55,11 +71,13 @@ router.post('/simulate', (req, res) => {
       projectedDelta += Math.min(25, Math.round(upiDiff * 0.6));
     }
 
-    const projectedScore = Math.min(850, baseData.totalScore + projectedDelta);
+    const currentScore = baseData.totalScore;
+    const projectedScore = currentScore === null ? null : Math.min(850, currentScore + projectedDelta);
 
     res.json({
       success: true,
-      currentScore: baseData.totalScore,
+      isUnrated: baseData.isUnrated || false,
+      currentScore,
       projectedScore,
       delta: projectedDelta,
       simulationImpacts: [

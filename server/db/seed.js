@@ -7,8 +7,8 @@ export function seedDatabase() {
   const insertShop = db.prepare(`
     INSERT OR REPLACE INTO shops (
       id, name, owner_name, trade_type, trade_name, village, district, state,
-      vintage_years, monthly_revenue, ownership, bank_account_type, phone, owner_category
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      vintage_years, monthly_revenue, ownership, bank_account_type, phone, owner_category, is_demo
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
 
   insertShop.run(
@@ -25,7 +25,8 @@ export function seedDatabase() {
     'rented',
     'Gramin Bank (Aryavart Bank, Savings A/c)',
     '+91 98391 24789',
-    'general'
+    'general',
+    1 // is_demo explicitly 1
   );
 
   // 2. Clear old records for clean demo
@@ -38,7 +39,7 @@ export function seedDatabase() {
   // Month 3 (Days 60 - 31): Post-Monsoon Recovery (₹1,700 - ₹1,950/day -> ~₹53,500/mo)
   // Month 4 (Days 30 - 0): Pre-Diwali & Festival Spike (₹2,300 - ₹2,850/day -> ~₹71,000/mo)
   const insertTx = db.prepare(`
-    INSERT INTO transactions (id, shop_id, date, type, amount, category, payment_mode, customer_vendor_name, notes)
+    INSERT OR REPLACE INTO transactions (id, shop_id, date, type, amount, category, payment_mode, customer_vendor_name, notes)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
 
@@ -229,7 +230,7 @@ export function seedDatabase() {
   // 4. Seed Peer Benchmarks (District Balrampur & nearby Eastern UP)
   db.prepare(`DELETE FROM peer_benchmarks`).run();
   const insertBenchmark = db.prepare(`
-    INSERT INTO peer_benchmarks (
+    INSERT OR REPLACE INTO peer_benchmarks (
       id, district, trade_type, avg_monthly_revenue_min, avg_monthly_revenue_max,
       avg_daily_footfall, avg_inventory_turnover_days, avg_digital_share_percent, top_festival_cues
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -284,7 +285,7 @@ export function seedDatabase() {
   // 5. Seed Welcome Chat Message from Saathi reflecting this realistic 4-month story
   db.prepare(`DELETE FROM advisory_chat_history WHERE shop_id = 'ramesh-kirana'`).run();
   const insertChat = db.prepare(`
-    INSERT INTO advisory_chat_history (id, shop_id, role, content)
+    INSERT OR REPLACE INTO advisory_chat_history (id, shop_id, role, content)
     VALUES (?, ?, ?, ?)
   `);
 

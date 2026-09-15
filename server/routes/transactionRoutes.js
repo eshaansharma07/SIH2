@@ -7,7 +7,10 @@ const router = express.Router();
 // Get transactions for a shop
 router.get('/', async (req, res) => {
   try {
-    const shopId = req.query.shopId || 'ramesh-kirana';
+    const shopId = req.query.shopId;
+    if (!shopId) {
+      return res.json({ success: true, count: 0, transactions: [] });
+    }
     const limit = Number(req.query.limit) || 100;
     const type = req.query.type; // optional filter: income, expense, udhaar_given, udhaar_repaid
 
@@ -52,7 +55,7 @@ router.get('/', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     const {
-      shopId = 'ramesh-kirana',
+      shopId,
       date = new Date().toISOString().split('T')[0],
       type, // 'income', 'expense', 'udhaar_given', 'udhaar_repaid'
       amount,
@@ -62,17 +65,40 @@ router.post('/', async (req, res) => {
       notes = ''
     } = req.body;
 
-    if (!amount || Number(amount) <= 0) {
-      return res.status(400).json({ success: false, error: 'Valid transaction amount is required' });
+    if (!shopId) {
+      return res.status(400).json({ success: false, error: 'shopId is required' });
     }
 
-    if (!type) {
-      return res.status(400).json({ success: false, error: 'Transaction type is required' });
+    const validTypes = ['income', 'expense', 'udhaar_given', 'udhaar_repaid'];
+    if (!type || !validTypes.includes(type)) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Valid transaction type is required (income, expense, udhaar_given, udhaar_repaid)' 
+      });
     }
 
+    const numAmount = Number(amount);
+    if (!amount || isNaN(numAmount) || numAmount <= 0 || numAmount > 10000000) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Valid transaction amount between ₹1 and ₹1,00,00,000 is required' 
+      });
+    }
+
+    const validModes = ['cash', 'upi', 'khata'];
+    if (payment_mode && !validModes.includes(payment_mode)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Valid payment mode is required (cash, upi, khata)'
+      });
+    }
+
+    const validDate = (date && /^\d{4}-\d{2}-\d{2}$/.test(date)) ? date : new Date().toISOString().split('T')[0];
     const id = `tx-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`;
-    const assignedCategory = category || (type === 'income' ? 'Daily Counter Sales' : type === 'expense' ? 'Shop Supplies' : 'Customer Khata');
-    const assignedPaymentMode = type.startsWith('udhaar') ? 'khata' : payment_mode;
+    const assignedCategory = (category && String(category).trim().slice(0, 100)) || (type === 'income' ? 'Daily Counter Sales' : type === 'expense' ? 'Shop Supplies' : 'Customer Khata');
+    const assignedPaymentMode = type.startsWith('udhaar') ? 'khata' : (payment_mode || 'cash');
+    const safeCustomerName = customer_vendor_name ? String(customer_vendor_name).trim().slice(0, 100) : '';
+    const safeNotes = notes ? String(notes).trim().slice(0, 250) : '';
 
     // 1. Insert into SQLite
     const insert = db.prepare(`
@@ -124,7 +150,26 @@ router.post('/', async (req, res) => {
 // Financial summary (Overall, 30 days, Cash vs UPI, Charts data)
 router.get('/summary', async (req, res) => {
   try {
-    const shopId = req.query.shopId || 'ramesh-kirana';
+    const shopId = req.query.shopId;
+    if (!shopId) {
+      return res.json({
+        success: true,
+        summary: {
+          totalIncome: 0,
+          totalExpense: 0,
+          netSurplus: 0,
+          pendingUdhaar: 0,
+          totalUdhaarGiven: 0,
+          totalUdhaarRepaid: 0,
+          cashIncome: 0,
+          upiIncome: 0,
+          digitalSharePct: 0,
+          totalTransactions: 0,
+          activeDays: 0,
+          monthlyTrend: []
+        }
+      });
+    }
 
     let txs = [];
     // 1. Try reading from MongoDB Atlas
@@ -152,10 +197,12 @@ router.get('/summary', async (req, res) => {
     let totalUdhaarRepaid = 0;
     let totalCashIncome = 0;
     let totalUpiIncome = 0;
+    const activeDaysSet = new Set();
 
     const monthlyMap = {}; // { 'Month Name': { income, expense, profit } }
 
     txs.forEach(t => {
+      activeDaysSet.add(t.date);
       const monthKey = t.date.substring(0, 7);
       if (!monthlyMap[monthKey]) {
         monthlyMap[monthKey] = { month: monthKey, income: 0, expense: 0, profit: 0 };
@@ -177,11 +224,11 @@ router.get('/summary', async (req, res) => {
     });
 
     const monthNames = {
-      '2026-05': { label: 'May 2026', tag: '☀️ Summer Baseline', desc: 'Steady rural grocery demand' },
-      '2026-06': { label: 'Jun 2026', tag: '☀️ Summer Baseline', desc: 'Consistent baseline sales' },
-      '2026-07': { label: 'Jul 2026', tag: '🌧️ Monsoon Dip (-32%)', desc: 'Heavy rains & muddy village lanes' },
-      '2026-08': { label: 'Aug 2026', tag: '🌤️ Post-Monsoon Recovery', desc: 'Weather clears & Rakhi/Janmashtami prep' },
-      '2026-09': { label: 'Sep 2026', tag: '🪔 Pre-Diwali Spike (+88%)', desc: 'Pre-Diwali advance oil & sugar rush' }
+      '2026-05': { label: 'May 2026', tag: 'Summer Baseline', desc: 'Steady rural grocery demand' },
+      '2026-06': { label: 'Jun 2026', tag: 'Summer Baseline', desc: 'Consistent baseline sales' },
+      '2026-07': { label: 'Jul 2026', tag: 'Monsoon Seasonal Dip', desc: 'Heavy rains & muddy village lanes' },
+      '2026-08': { label: 'Aug 2026', tag: 'Post-Monsoon Recovery', desc: 'Weather clears & Rakhi/Janmashtami prep' },
+      '2026-09': { label: 'Sep 2026', tag: 'Pre-Diwali Festival Surge', desc: 'Pre-Diwali advance oil & sugar rush' }
     };
 
     Object.values(monthlyMap).forEach(m => {
@@ -207,6 +254,8 @@ router.get('/summary', async (req, res) => {
         cashIncome: Math.round(totalCashIncome),
         upiIncome: Math.round(totalUpiIncome),
         digitalSharePct: totalIncome > 0 ? Math.round((totalUpiIncome / totalIncome) * 100) : 0,
+        totalTransactions: txs.length,
+        activeDays: activeDaysSet.size,
         monthlyTrend: Object.values(monthlyMap).sort((a, b) => a.month.localeCompare(b.month))
       }
     });
@@ -218,7 +267,10 @@ router.get('/summary', async (req, res) => {
 // Udhaar Ledger (Customer balances & repayment tracking)
 router.get('/udhaar-ledger', async (req, res) => {
   try {
-    const shopId = req.query.shopId || 'ramesh-kirana';
+    const shopId = req.query.shopId;
+    if (!shopId) {
+      return res.json({ success: true, count: 0, ledger: [] });
+    }
 
     let txs = [];
     // 1. Try reading from MongoDB Atlas

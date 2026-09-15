@@ -47,6 +47,7 @@ db.exec(`
     bank_account_type TEXT DEFAULT 'savings',
     phone TEXT,
     owner_category TEXT DEFAULT 'general',
+    is_demo INTEGER DEFAULT 0,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
 
@@ -97,5 +98,12 @@ db.exec(`
     FOREIGN KEY(shop_id) REFERENCES shops(id)
   );
 `);
+
+// Safe migration for existing sqlite db instances
+try {
+  db.exec('ALTER TABLE shops ADD COLUMN is_demo INTEGER DEFAULT 0;');
+} catch (_) {
+  // Column already exists
+}
 
 export default db;

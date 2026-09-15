@@ -7,43 +7,6 @@ export default {
   theme: {
     extend: {
       colors: {
-        sovereign: {
-          50: '#F0F5FF',
-          100: '#E0EBFF',
-          200: '#C7D9FE',
-          300: '#A4C0FD',
-          400: '#759CFA',
-          500: '#436FF5',
-          600: '#234CEB',
-          700: '#1736D7',
-          800: '#172DB0',
-          900: '#0B1528', // National Sovereign Deep Navy
-          950: '#050B17', // Onyx Sovereign Base
-        },
-        saffron: {
-          50: '#FFF7ED',
-          100: '#FFEDD5',
-          200: '#FED7AA',
-          300: '#FDBA74',
-          400: '#FB923C',
-          500: '#F97316', // India Kesariya
-          600: '#EA580C',
-          700: '#C2410C',
-          800: '#9A3412',
-          900: '#7C2D12',
-        },
-        chakra: {
-          50: '#F0FDF4',
-          100: '#DCFCE7',
-          200: '#BBF7D0',
-          300: '#86EFAC',
-          400: '#4ADE80',
-          500: '#10B981', // India Emerald
-          600: '#059669',
-          700: '#047857',
-          800: '#065F46',
-          900: '#064E3B',
-        },
         paper: {
           50: '#FDFBF7',
           100: '#FAF7F2',
@@ -101,17 +64,17 @@ export default {
         }
       },
       fontFamily: {
-        sans: ['"Plus Jakarta Sans"', '"Outfit"', 'system-ui', '-apple-system', 'sans-serif'],
-        display: ['"Outfit"', '"Plus Jakarta Sans"', 'system-ui', '-apple-system', 'sans-serif'],
+        sans: ['"Inter"', '"Noto Sans Devanagari"', 'system-ui', '-apple-system', 'sans-serif'],
+        display: ['"Inter"', '"Noto Sans Devanagari"', 'system-ui', '-apple-system', 'sans-serif'],
+        hindi: ['"Noto Sans Devanagari"', '"Inter"', 'system-ui', '-apple-system', 'sans-serif'],
       },
       boxShadow: {
-        'card': '0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05)',
-        'card-hover': '0 12px 24px -4px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04)',
-        'glass': '0 8px 32px 0 rgba(15, 23, 42, 0.06)',
-        'sovereign': '0 20px 40px -15px rgba(11, 21, 40, 0.3)',
-        'glow-emerald': '0 0 24px rgba(5, 150, 105, 0.22)',
-        'glow-saffron': '0 0 24px rgba(234, 88, 12, 0.22)',
-        'glow-indigo': '0 0 24px rgba(37, 99, 235, 0.22)',
+        'card': '0 1px 3px 0 rgba(44, 25, 18, 0.05), 0 1px 2px -1px rgba(44, 25, 18, 0.05)',
+        'card-hover': '0 12px 24px -4px rgba(44, 25, 18, 0.08), 0 4px 6px -2px rgba(44, 25, 18, 0.04)',
+        'glass': '0 8px 32px 0 rgba(44, 25, 18, 0.06)',
+        'saathi': '0 20px 40px -15px rgba(35, 51, 84, 0.2)',
+        'glow-forest': '0 0 24px rgba(30, 82, 58, 0.2)',
+        'glow-terracotta': '0 0 24px rgba(167, 66, 24, 0.2)',
       },
       borderRadius: {
         'xl': '1rem',

@@ -18,7 +18,10 @@ router.get('/', (req, res) => {
 // Match schemes against shop profile and credit readiness
 router.get('/match', (req, res) => {
   try {
-    const shopId = req.query.shopId || 'ramesh-kirana';
+    const shopId = req.query.shopId;
+    if (!shopId) {
+      return res.json({ success: true, shopId: null, eligibleCount: 0, schemes: [] });
+    }
     const matchResults = matchSchemesForShop(shopId);
     res.json({ success: true, ...matchResults });
   } catch (err) {

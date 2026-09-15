@@ -14,10 +14,24 @@ export function matchSchemesForShop(shopId) {
   }
 
   const creditResult = calculateCreditScore(shopId);
+  const normalizedShop = {
+    ...shop,
+    vintageYears: shop.vintage_years !== undefined ? Number(shop.vintage_years) : (shop.vintageYears || 0),
+    vintage_years: shop.vintage_years !== undefined ? Number(shop.vintage_years) : (shop.vintageYears || 0),
+    monthlyRevenue: shop.monthly_revenue !== undefined ? Number(shop.monthly_revenue) : (shop.monthlyRevenue || 0),
+    monthly_revenue: shop.monthly_revenue !== undefined ? Number(shop.monthly_revenue) : (shop.monthlyRevenue || 0),
+    tradeType: shop.trade_type || shop.tradeType || '',
+    trade_type: shop.trade_type || shop.tradeType || '',
+    tradeName: shop.trade_name || shop.tradeName || '',
+    trade_name: shop.trade_name || shop.tradeName || '',
+    ownerCategory: shop.owner_category || shop.ownerCategory || 'general',
+    owner_category: shop.owner_category || shop.ownerCategory || 'general'
+  };
+
   const creditScore = creditResult.totalScore;
 
   const matchedSchemes = SCHEMES.map(scheme => {
-    const qualification = scheme.whyYouQualifyLogic(shop, creditScore);
+    const qualification = scheme.whyYouQualifyLogic(normalizedShop, creditScore);
 
     return {
       id: scheme.id,

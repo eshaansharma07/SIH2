@@ -17,8 +17,15 @@ import { useTranslation } from './i18n/LanguageContext';
 
 export default function App() {
   const { language } = useTranslation();
-  const [activeTab, setActiveTab] = useState('dashboard');
+
+  // Read persisted state from localStorage
+  const savedShopId = localStorage.getItem('vyapaar_active_shop_id') || null;
+  const savedIsDemoStr = localStorage.getItem('vyapaar_is_demo_mode');
+  const savedIsDemo = savedIsDemoStr === 'true';
+
+  const [activeTab, setActiveTab] = useState(savedShopId ? 'dashboard' : 'onboarding');
   const [currentShop, setCurrentShop] = useState(null);
+  const [isDemoMode, setIsDemoMode] = useState(savedIsDemo);
   const [creditData, setCreditData] = useState(null);
   const [summaryData, setSummaryData] = useState(null);
   const [cuesData, setCuesData] = useState(null);
@@ -35,9 +42,20 @@ export default function App() {
 
   const loadAllShopData = async () => {
     try {
-      const shopRes = await api.getShopCurrent('ramesh-kirana');
+      const activeShopId = localStorage.getItem('vyapaar_active_shop_id');
+      
+      if (!activeShopId) {
+        // No active shop — show onboarding
+        setLoading(false);
+        setActiveTab('onboarding');
+        return;
+      }
+
+      const shopRes = await api.getShopCurrent(activeShopId);
       if (shopRes.shop) {
         setCurrentShop(shopRes.shop);
+        setIsDemoMode(shopRes.shop.is_demo === 1);
+        localStorage.setItem('vyapaar_is_demo_mode', shopRes.shop.is_demo === 1 ? 'true' : 'false');
         
         // Fetch financial data in parallel
         const [credRes, sumRes, cuesRes] = await Promise.all([
@@ -60,6 +78,11 @@ export default function App() {
           });
         }
         if (cuesRes.success) setCuesData(cuesRes.data);
+      } else {
+        // Shop not found in DB
+        localStorage.removeItem('vyapaar_active_shop_id');
+        localStorage.removeItem('vyapaar_is_demo_mode');
+        setActiveTab('onboarding');
       }
     } catch (err) {
       console.error('Error initializing shop data:', err);
@@ -112,7 +135,8 @@ export default function App() {
           totalUdhaarRepaid: Math.round(newUdhaarRepaid),
           cashIncome: Math.round(newCash),
           upiIncome: Math.round(newUpi),
-          digitalSharePct: newDigitalShare
+          digitalSharePct: newDigitalShare,
+          totalTransactions: (prev.totalTransactions || 0) + 1
         };
       });
 
@@ -152,9 +176,59 @@ export default function App() {
     setRefreshKey(prev => prev + 1);
   };
 
+  // === MODE SWITCHING ===
+
+  // Load Demo Mode (Ramesh Kirana)
+  const handleSelectDemo = async () => {
+    try {
+      await api.resetDemoShop();
+      localStorage.setItem('vyapaar_active_shop_id', 'ramesh-kirana');
+      localStorage.setItem('vyapaar_is_demo_mode', 'true');
+      setIsDemoMode(true);
+      setCreditData(null);
+      setSummaryData(null);
+      setCuesData(null);
+      setRefreshKey(prev => prev + 1);
+      setActiveTab('dashboard');
+    } catch (e) {
+      console.error('Demo load error:', e);
+    }
+  };
+
+  // Real Registration Complete
+  const handleRealRegistrationComplete = (newShop) => {
+    if (newShop?.id) {
+      localStorage.setItem('vyapaar_active_shop_id', newShop.id);
+      localStorage.setItem('vyapaar_is_demo_mode', 'false');
+    }
+    setCurrentShop(newShop);
+    setIsDemoMode(false);
+    setCreditData(null);
+    setSummaryData(null);
+    setCuesData(null);
+    setRefreshKey(k => k + 1);
+    setActiveTab('dashboard');
+  };
+
+  // Switch to real registration from demo mode
+  const handleSwitchToRegister = () => {
+    localStorage.removeItem('vyapaar_active_shop_id');
+    localStorage.removeItem('vyapaar_is_demo_mode');
+    setCurrentShop(null);
+    setIsDemoMode(false);
+    setCreditData(null);
+    setSummaryData(null);
+    setCuesData(null);
+    setActiveTab('onboarding');
+  };
+
+  // Reload demo (reset)
   const handleReloadDemo = async () => {
     try {
       await api.resetDemoShop();
+      localStorage.setItem('vyapaar_active_shop_id', 'ramesh-kirana');
+      localStorage.setItem('vyapaar_is_demo_mode', 'true');
+      setIsDemoMode(true);
       setRefreshKey(prev => prev + 1);
       setActiveTab('dashboard');
     } catch (e) {
@@ -178,15 +252,18 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen sovereign-mesh flex flex-col font-sans text-slate-900 selection:bg-indigo-100 selection:text-indigo-900 antialiased">
+    <div className="min-h-screen paper-canvas flex flex-col font-sans text-indigoRural-950 selection:bg-terracotta-100 selection:text-terracotta-900 antialiased">
       
       {/* Top Navbar */}
       <Navbar 
         activeTab={activeTab} 
         setActiveTab={setActiveTab} 
         currentShop={currentShop}
+        isDemoMode={isDemoMode}
         onReloadDemo={handleReloadDemo}
         onStartDemoTour={() => setDemoTourOpen(true)}
+        onSwitchToDemo={handleSelectDemo}
+        onSwitchToRegister={handleSwitchToRegister}
       />
 
       {/* Main Page Container */}
@@ -194,12 +271,8 @@ export default function App() {
         
         {activeTab === 'onboarding' && (
           <OnboardingPage 
-            onComplete={(shop) => {
-              setCurrentShop(shop);
-              setRefreshKey(k => k + 1);
-              setActiveTab('dashboard');
-            }}
-            onSelectDemo={handleReloadDemo}
+            onComplete={handleRealRegistrationComplete}
+            onSelectDemo={handleSelectDemo}
           />
         )}
 
@@ -213,12 +286,17 @@ export default function App() {
             onNavigateTab={(tab) => setActiveTab(tab)}
             onAskPrompt={handleAskPrompt}
             onStartDemoTour={() => setDemoTourOpen(true)}
+            isDemoMode={isDemoMode}
+            onSwitchToDemo={handleSelectDemo}
+            onSwitchToRegister={handleSwitchToRegister}
           />
         )}
 
         {activeTab === 'advisor' && (
           <AdvisorChatPage
             shop={currentShop}
+            creditData={creditData}
+            summaryData={summaryData}
             initialPrompt={initialAdvisorPrompt}
             onPromptUsed={() => setInitialAdvisorPrompt('')}
           />
@@ -245,6 +323,7 @@ export default function App() {
         {activeTab === 'schemes' && (
           <SchemeMatcherPage
             shop={currentShop}
+            creditData={creditData}
             onNavigateTab={(tab) => setActiveTab(tab)}
           />
         )}
@@ -274,7 +353,7 @@ export default function App() {
         isOpen={keypadOpen}
         onClose={() => setKeypadOpen(false)}
         onTransactionSaved={handleTransactionSaved}
-        shopId={currentShop?.id || 'ramesh-kirana'}
+        shopId={currentShop?.id}
       />
 
       {/* Interactive Animated Guided Demo Tour for SIH Judges */}
@@ -288,36 +367,36 @@ export default function App() {
         onReloadDemo={handleReloadDemo}
       />
 
-      {/* Samsung OneUI Thumb-Zone Floating Action Dock */}
+      {/* Mobile Thumb Action Dock */}
       <FloatingThumbDock 
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         onOpenKeypad={() => setKeypadOpen(true)}
-        creditScore={creditData?.totalScore || 755}
+        creditScore={creditData?.totalScore || null}
       />
 
-      {/* Sovereign DPI Footer */}
-      <footer className="print:hidden border-t border-slate-200/80 bg-white/70 backdrop-blur-md py-7 px-4 text-center text-xs text-slate-500 pb-28 sm:pb-24">
+      {/* Sovereign DPI Rural Footer */}
+      <footer className="print:hidden border-t border-paper-300 bg-white/80 backdrop-blur-md py-7 px-4 text-center text-xs text-indigoRural-600 pb-28 sm:pb-24">
         <div className="max-w-4xl mx-auto space-y-2">
           <div className="flex items-center justify-center gap-2 flex-wrap">
-            <span className="font-black text-slate-900 font-display text-sm">भारत सरकार • व्यापार साथी (Vyapaar Saathi)</span>
-            <span className="text-slate-300">•</span>
-            <span className="text-[10px] bg-slate-900 text-white font-bold px-2.5 py-0.5 rounded-full">
+            <span className="font-black text-indigoRural-950 font-display text-sm">भारत सरकार • व्यापार साथी (Vyapaar Saathi)</span>
+            <span className="text-paper-400">•</span>
+            <span className="text-[10px] bg-indigoRural-900 text-white font-bold px-2.5 py-0.5 rounded-full">
               DPI INDIA STACK
             </span>
-            <span className="text-slate-300">•</span>
-            <span className="text-[10px] bg-emerald-50 text-emerald-700 font-bold px-2 py-0.5 rounded-full border border-emerald-200">
+            <span className="text-paper-400">•</span>
+            <span className="text-[10px] bg-forestRural-50 text-forestRural-800 font-bold px-2 py-0.5 rounded-full border border-forestRural-200">
               RBI PSL Compliant
             </span>
           </div>
-          <p className="text-[11px] text-slate-500 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-[11px] text-indigoRural-500 max-w-2xl mx-auto leading-relaxed">
             National Micro-Enterprise Credit & Seasonal Advisory Engine. Designed under the Ministry of MSME and Reserve Bank of India Priority Sector Lending (PSL) Framework.
           </p>
           <div className="flex items-center justify-center gap-1.5 pt-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-saffron-500" />
-            <span className="w-1.5 h-1.5 rounded-full bg-slate-300" />
-            <span className="w-1.5 h-1.5 rounded-full bg-chakra-500" />
-            <span className="text-[10px] text-slate-400 font-semibold ml-1">Built for 65M+ Indian Micro-Entrepreneurs</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-terracotta-500" />
+            <span className="w-1.5 h-1.5 rounded-full bg-paper-400" />
+            <span className="w-1.5 h-1.5 rounded-full bg-forestRural-600" />
+            <span className="text-[10px] text-indigoRural-400 font-semibold ml-1">Built for 65M+ Indian Micro-Entrepreneurs</span>
           </div>
         </div>
       </footer>

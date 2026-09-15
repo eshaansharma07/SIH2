@@ -7,13 +7,14 @@ import {
   ArrowRight, 
   FileText, 
   Sparkles, 
-  Zap,
   Award,
   CreditCard
 } from 'lucide-react';
 import { CreditGauge } from '../components/CreditGauge';
 import { api } from '../utils/api';
 import { useTranslation } from '../i18n/LanguageContext';
+import { WarliBorder } from '../components/WarliMotif';
+import { Card, Badge, SectionHeader, Button } from '../components/ui';
 
 export function CreditScorePage({ shop, creditData, onNavigateTab }) {
   const { t, language } = useTranslation();
@@ -25,17 +26,20 @@ export function CreditScorePage({ shop, creditData, onNavigateTab }) {
   const [simulatedData, setSimulatedData] = useState(null);
   const [simulating, setSimulating] = useState(false);
 
-  const baseScore = creditData?.totalScore || 755;
+  const baseScore = creditData?.totalScore ?? null;
 
   useEffect(() => {
-    runSimulation();
-  }, [extraDays, recoverUdhaar, targetUpi, baseScore]);
+    if (baseScore !== null && shop?.id) {
+      runSimulation();
+    }
+  }, [extraDays, recoverUdhaar, targetUpi, baseScore, shop?.id]);
 
   const runSimulation = async () => {
+    if (!shop?.id || baseScore === null) return;
     setSimulating(true);
     try {
       const res = await api.simulateCreditScore({
-        shopId: shop?.id || 'ramesh-kirana',
+        shopId: shop.id,
         additionalLoggingDays: extraDays,
         udhaarRecoveryAmount: recoverUdhaar,
         targetUpiSharePct: targetUpi
@@ -44,285 +48,271 @@ export function CreditScorePage({ shop, creditData, onNavigateTab }) {
         setSimulatedData(res);
       }
     } catch (e) {
-      console.error(e);
+      console.error('Simulation error:', e);
     } finally {
       setSimulating(false);
     }
   };
 
-  const factors = creditData?.factors || [
-    {
-      id: 'consistency',
-      name: 'Cash Flow & Logging Regularity',
-      nameHindi: 'दैनिक बही-खाता नियमितता',
-      weight: '30%',
-      score: 245,
-      maxScore: 255,
-      percentage: 96,
-      explanation: '84 active logging days with positive operating surplus.',
-      explanationHindi: '84 दिन का नियमित बही-खाता और सकारात्मक नकदी प्रवाह।'
-    },
-    {
-      id: 'growth',
-      name: 'Revenue Stability & Turnover',
-      nameHindi: 'बिक्री स्थिरता एवं मासिक आय',
-      weight: '25%',
-      score: 195,
-      maxScore: 212,
-      percentage: 92,
-      explanation: 'Stable ₹52,000 monthly turnover providing 3.2x EMI coverage.',
-      explanationHindi: 'स्थिर मासिक बिक्री जिससे 3.2x ईएमआई सुरक्षा मिलती है।'
-    },
-    {
-      id: 'discipline',
-      name: 'Working Capital & Khata Discipline',
-      nameHindi: 'उधार वसूली और कार्यशील पूंजी',
-      weight: '25%',
-      score: 188,
-      maxScore: 213,
-      percentage: 88,
-      explanation: 'Customer credit held at 18% of monthly sales with 82% recovery rate.',
-      explanationHindi: 'उधार बिक्री का केवल 18% हिस्सा और 82% वसूली दर।'
-    },
-    {
-      id: 'vintage',
-      name: 'Vintage & Digital Footprint',
-      nameHindi: 'व्यापार अनुभव एवं डिजिटल लेन-देन',
-      weight: '20%',
-      score: 145,
-      maxScore: 170,
-      percentage: 85,
-      explanation: '4 years of uninterrupted trade & 37% verified UPI QR receipts.',
-      explanationHindi: '4 वर्ष का स्थापित व्यापार और 37% यूपीआई डिजिटल रसीदें।'
-    }
-  ];
+  const factors = creditData?.factors || [];
+  const udyamNumber = shop?.udyam_number || (shop?.id ? `UDYAM-${(shop.state || 'IN').substring(0, 2).toUpperCase()}-0092478` : 'UDYAM-DEMO');
 
   return (
-    <div className="space-y-6 animate-fadeIn pb-12">
+    <div className="space-y-6 pb-12 animate-fadeIn">
       
-      {/* 1. Sovereign Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2.5">
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 font-display">
-              {language === 'hi' ? 'वैकल्पिक क्रेडिट स्कोर' : 'Alternative Credit Score'}
-            </h1>
-            <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold border border-emerald-200 flex items-center gap-1">
-              <ShieldCheck className="w-3.5 h-3.5" />
-              <span>RBI PSL Tier-A Prime</span>
-            </span>
+      {/* 1. Header Banner with Warli Border */}
+      <div className="space-y-2">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2.5">
+              <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-indigoRural-900 font-display">
+                {language === 'hi' ? 'वैकल्पिक क्रेडिट स्वास्थ्य' : 'Alternative Credit Health'}
+              </h1>
+              <Badge variant="positive" size="sm" dot>
+                4-Pillar Non-CIBIL
+              </Badge>
+            </div>
+            <p className="text-xs text-indigoRural-500 mt-1">
+              {language === 'hi' ? 'बिना सिबिल स्कोर के बैंक ऋण पात्रता की पारदर्शी जांच' : 'Explainable, non-CIBIL alternative underwriting engine for Priority Sector Lending'}
+            </p>
           </div>
-          <p className="text-xs text-slate-500 mt-1">
-            {language === 'hi' ? 'बिना सिबिल स्कोर के बैंक ऋण पात्रता की पारदर्शी जांच' : 'Explainable, non-CIBIL alternative financial underwriting engine for Priority Sector Lending'}
-          </p>
+
+          <Button
+            onClick={() => onNavigateTab('dossier')}
+            variant="dark"
+            size="lg"
+            icon={FileText}
+            className="self-start sm:self-auto"
+          >
+            <span>{language === 'hi' ? 'बैंक फाइल डाउनलोड करें' : 'Generate Bank Dossier'}</span>
+          </Button>
         </div>
 
-        <button
-          onClick={() => onNavigateTab('dossier')}
-          className="px-6 py-3.5 rounded-2xl bg-slate-900 hover:bg-slate-800 active:scale-95 text-white font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-sm transition self-start sm:self-auto"
-        >
-          <FileText className="w-4 h-4" />
-          <span>{language === 'hi' ? 'बैंक फाइल डाउनलोड करें' : 'Generate Bank Dossier'}</span>
-        </button>
+        <WarliBorder className="w-full h-6 text-terracotta-400 opacity-60" />
       </div>
 
-      {/* 2. Top Row: Sovereign Micro-Credit Pass + Health Dial */}
+      {/* 2. Top Row: Merchant Micro-Credit Pass + Health Dial */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
-        {/* Apple Card Titanium Sovereign Pass (7 Cols) */}
-        <div className="lg:col-span-7 relative overflow-hidden rounded-4xl bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-white p-7 sm:p-8 shadow-sovereign border border-slate-700/60 flex flex-col justify-between min-h-[240px]">
+        {/* Physical Saathi Micro-Credit Pass (7 Cols) */}
+        <div className="lg:col-span-7 saathi-pass text-white p-7 sm:p-8 flex flex-col justify-between min-h-[240px]">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              {/* Sovereign Vector Micro Chip */}
-              <div className="w-7 h-5 rounded-md bg-gradient-to-tr from-amber-300 to-amber-500 border border-amber-200/60 shadow-xs flex items-center justify-center">
-                <div className="w-4 h-3 border border-amber-800/40 rounded-xs" />
+              {/* Vector Micro Chip */}
+              <div className="w-7 h-5 rounded-md bg-gradient-to-tr from-ochre-300 to-ochre-500 border border-ochre-200/60 shadow-xs flex items-center justify-center">
+                <div className="w-4 h-3 border border-ochre-900/40 rounded-xs" />
               </div>
-              <span className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
+              <span className="text-[11px] font-bold uppercase tracking-widest text-paper-300">
                 National MSME Sovereign Credit ID
               </span>
             </div>
-            <span className="text-[10px] font-mono text-emerald-400 font-bold bg-emerald-950/80 px-2 py-0.5 rounded-md border border-emerald-500/30">
-              UDYAM-UP-18-0092478
+            <span className="text-[10px] font-mono text-forestRural-300 font-bold bg-forestRural-900/80 px-2.5 py-0.5 rounded-full border border-forestRural-500/40">
+              {udyamNumber}
             </span>
           </div>
 
           <div className="space-y-1 py-5">
-            <div className="text-[11px] text-saffron-400 font-bold uppercase tracking-wider">Verified Enterprise</div>
+            <div className="text-[11px] text-terracotta-300 font-bold uppercase tracking-wider">Verified Enterprise</div>
             <div className="text-2xl sm:text-3xl font-black text-white tracking-tight font-display">
-              {shop?.name || "Ramesh Kirana & General Store"}
+              {shop?.name || (language === 'hi' ? 'मेरी दुकान' : 'My Store')}
             </div>
-            <div className="text-xs text-slate-300 font-medium">
-              {shop?.owner_name || "Ramesh Kumar"} (Proprietor) • {shop?.village || "Utraula Dehat"}, {shop?.district || "Balrampur"}
+            <div className="text-xs text-paper-200 font-medium">
+              {shop?.owner_name || (language === 'hi' ? 'दुकानदार' : 'Proprietor')} (Proprietor) • {shop?.village || '—'}, {shop?.district || '—'}
             </div>
           </div>
 
-          <div className="flex items-center justify-between pt-4 border-t border-white/10 text-xs">
+          <div className="flex items-center justify-between pt-4 border-t border-white/15 text-xs">
             <div>
-              <span className="text-slate-400 block text-[10px] uppercase font-bold">Alternative Score</span>
-              <span className="text-2xl font-black text-white tabular-nums font-display">{baseScore} <span className="text-xs text-slate-400 font-normal">/ 850</span></span>
+              <span className="text-paper-400 block text-[10px] uppercase font-bold">Alternative Score</span>
+              <span className="text-2xl font-black text-white tabular-nums font-display">
+                {baseScore !== null ? baseScore : '—'} <span className="text-xs text-paper-300 font-normal">/ 850</span>
+              </span>
             </div>
             <div className="text-right">
-              <span className="text-slate-400 block text-[10px] uppercase font-bold">Recommended Facility</span>
-              <span className="text-sm font-extrabold text-emerald-400">PM MUDRA Shishu / Kishore (₹50k – ₹5L)</span>
+              <span className="text-paper-400 block text-[10px] uppercase font-bold">Recommended Facility</span>
+              <span className="text-sm font-extrabold text-forestRural-300">PM MUDRA Shishu / Kishore (₹50k – ₹5L)</span>
             </div>
           </div>
         </div>
 
         {/* Dial Card (5 Cols) */}
-        <div className="lg:col-span-5 bg-white rounded-3xl p-6 border border-slate-200/80 shadow-card flex flex-col items-center justify-center">
-          <CreditGauge score={baseScore} />
-        </div>
+        <Card padding="lg" className="lg:col-span-5 flex flex-col items-center justify-center">
+          {creditData?.isUnrated || baseScore === null ? (
+            <div className="text-center p-4 space-y-3">
+              <div className="w-12 h-12 mx-auto rounded-2xl bg-ochre-100 border border-ochre-300 flex items-center justify-center text-ochre-700">
+                <ShieldCheck className="w-6 h-6" />
+              </div>
+              <h3 className="font-display font-black text-base text-indigoRural-900">
+                {language === 'hi' ? 'क्रेडिट स्कोर अभी अवर्गीकृत है' : 'Credit Score Unrated'}
+              </h3>
+              <p className="text-xs text-indigoRural-600 max-w-xs mx-auto leading-relaxed">
+                {creditData?.message || (language === 'hi' 
+                  ? 'व्यापार साथी पर अपना पहला हफ्ता पूरा करें (न्यूनतम 5 बिक्री और 3 दिन) ताकि बैंक-मान्य 4-पिलर स्कोर जनरेट हो सके।'
+                  : 'Log your first week of transactions (minimum 5 sales across 3 days) to unlock your explainable RBI-aligned credit score.')}
+              </p>
+              <div className="pt-2">
+                <Button onClick={() => onNavigateTab('cashflow')} variant="dark" size="sm">
+                  <span>{language === 'hi' ? 'बही-खाता में बिक्री दर्ज करें' : 'Record First Sale'}</span>
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <CreditGauge score={baseScore} />
+          )}
+        </Card>
 
       </div>
 
       {/* 3. 4 Transparent Factor Pillars */}
       <div>
-        <h2 className="text-base font-extrabold text-slate-900 tracking-tight mb-3">
+        <h2 className="text-base font-black text-indigoRural-900 tracking-tight mb-3 font-display">
           {language === 'hi' ? '4 पारदर्शी आधार (Explainable Pillars)' : '4 Transparent Evaluation Pillars'}
         </h2>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {factors.map((factor) => (
-            <div key={factor.id} className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-card space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-extrabold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
-                  Weight {factor.weight}
-                </span>
-                <span className="text-sm font-black text-slate-900 tabular-nums">
-                  {factor.percentage}%
-                </span>
-              </div>
+          {factors.length > 0 ? (
+            factors.map((factor) => {
+              const isPositive = factor.status === 'positive' || factor.percentage >= 70;
 
-              <div>
-                <h3 className="text-sm font-extrabold text-slate-900 leading-tight">
-                  {language === 'hi' ? factor.nameHindi : factor.name}
-                </h3>
-                <p className="text-xs text-slate-500 mt-1">
-                  {language === 'hi' ? factor.explanationHindi : factor.explanation}
-                </p>
-              </div>
+              return (
+                <Card key={factor.id} padding="md" className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Badge variant="neutral" size="sm">
+                      Weight {factor.weight}
+                    </Badge>
+                    <span className="text-sm font-black text-indigoRural-900 tabular-nums">
+                      {factor.percentage}%
+                    </span>
+                  </div>
 
-              <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                <div 
-                  className="h-full rounded-full bg-indigo-600 transition-all duration-700" 
-                  style={{ width: `${factor.percentage}%` }}
-                />
-              </div>
+                  <div>
+                    <h3 className="text-sm font-extrabold text-indigoRural-900 leading-tight">
+                      {language === 'hi' ? factor.nameHindi : factor.name}
+                    </h3>
+                    <p className="text-xs text-indigoRural-500 mt-1">
+                      {language === 'hi' ? factor.explanationHindi : factor.explanation}
+                    </p>
+                  </div>
 
-              <div className="flex justify-between text-[11px] text-slate-400 font-bold pt-1">
-                <span>Score</span>
-                <span className="text-slate-900 tabular-nums">{factor.score} / {factor.maxScore}</span>
-              </div>
+                  <div className="w-full bg-paper-200 h-2 rounded-full overflow-hidden">
+                    <div 
+                      className={`h-full rounded-full transition-all duration-700 ${isPositive ? 'bg-forestRural-600' : 'bg-ochre-500'}`} 
+                      style={{ width: `${factor.percentage}%` }}
+                    />
+                  </div>
+
+                  <div className="flex justify-between text-[11px] text-indigoRural-400 font-bold pt-1">
+                    <span>Score</span>
+                    <span className="text-indigoRural-900 tabular-nums">{factor.score} / {factor.maxScore}</span>
+                  </div>
+                </Card>
+              );
+            })
+          ) : (
+            <div className="col-span-4 p-8 text-center text-indigoRural-400 text-xs">
+              Loading explainable scoring factors...
             </div>
-          ))}
+          )}
         </div>
       </div>
 
-      {/* 4. Interactive Score What-If Simulator (Apple Slider Controls) */}
-      <div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-card space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-4">
+      {/* 4. Interactive Score What-If Simulator */}
+      <Card padding="lg" className="space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-paper-200 pb-4">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-200/60">
+            <div className="p-2 rounded-xl bg-terracotta-50 text-terracotta-700 border border-terracotta-200/80">
               <Sliders className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base font-extrabold text-slate-900 tracking-tight">
+              <h2 className="text-base font-black text-indigoRural-900 tracking-tight font-display">
                 {language === 'hi' ? 'स्कोर सिमुलेटर (What-If Simulator)' : 'Interactive Score Simulator'}
               </h2>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-indigoRural-500">
                 Adjust actions to project score enhancement and loan eligibility
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 bg-slate-50 px-3.5 py-1.5 rounded-2xl border border-slate-200">
-            <span className="text-xs text-slate-500 font-medium">Projected Score:</span>
-            <strong className="text-lg font-black text-indigo-600 tabular-nums">
-              {simulatedData?.projectedScore || baseScore}
+          <div className="flex items-center gap-2 bg-paper-100 px-3.5 py-1.5 rounded-xl border border-paper-300">
+            <span className="text-xs text-indigoRural-500 font-medium">Projected Score:</span>
+            <strong className="text-lg font-black text-terracotta-700 tabular-nums font-display">
+              {simulatedData?.projectedScore || baseScore || '—'}
             </strong>
-            <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+            <Badge variant="positive" size="sm">
               +{simulatedData?.delta || 0} pts
-            </span>
+            </Badge>
           </div>
         </div>
 
+        {/* 3 Interactive Sliders */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           
-          {/* Slider 1: Additional Logging Days */}
-          <div className="space-y-2">
+          {/* Slider 1: Consistent Logging Days */}
+          <div className="space-y-2 p-4 rounded-xl bg-paper-50 border border-paper-200">
             <div className="flex justify-between items-center text-xs font-bold">
-              <span className="text-slate-700">{language === 'hi' ? 'दैनिक बही-खाता प्रविष्टि' : 'Additional Logging Days'}</span>
-              <span className="text-indigo-600 tabular-nums">{extraDays} days</span>
+              <span className="text-indigoRural-700">Daily Bahi-Khata Logging</span>
+              <span className="text-terracotta-700 font-extrabold tabular-nums">+{extraDays} Days</span>
             </div>
             <input 
-              type="range"
-              min="0"
-              max="60"
+              type="range" 
+              min="0" 
+              max="60" 
               step="5"
               value={extraDays}
               onChange={(e) => setExtraDays(Number(e.target.value))}
-              className="w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+              className="w-full accent-terracotta-600 cursor-pointer"
             />
-            <span className="text-[11px] text-slate-400 block">+0.8 pts per regular logging day</span>
+            <p className="text-[10px] text-indigoRural-400">Regular evening logging builds credit discipline verification.</p>
           </div>
 
           {/* Slider 2: Udhaar Recovery */}
-          <div className="space-y-2">
+          <div className="space-y-2 p-4 rounded-xl bg-paper-50 border border-paper-200">
             <div className="flex justify-between items-center text-xs font-bold">
-              <span className="text-slate-700">{language === 'hi' ? 'ग्राहक उधार वसूली' : 'Khata Udhaar Recovery'}</span>
-              <span className="text-indigo-600 tabular-nums">₹{recoverUdhaar.toLocaleString('en-IN')}</span>
+              <span className="text-indigoRural-700">Udhaar Recovery Target</span>
+              <span className="text-forestRural-700 font-extrabold tabular-nums">₹{recoverUdhaar.toLocaleString('en-IN')}</span>
             </div>
             <input 
-              type="range"
-              min="0"
-              max="8000"
+              type="range" 
+              min="0" 
+              max="10000" 
               step="500"
               value={recoverUdhaar}
               onChange={(e) => setRecoverUdhaar(Number(e.target.value))}
-              className="w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+              className="w-full accent-forestRural-600 cursor-pointer"
             />
-            <span className="text-[11px] text-slate-400 block">Reduces working capital risk</span>
+            <p className="text-[10px] text-indigoRural-400">Recovering pending khata accelerates capital turnover.</p>
           </div>
 
-          {/* Slider 3: Target UPI Share */}
-          <div className="space-y-2">
+          {/* Slider 3: Digital Payments Adoption */}
+          <div className="space-y-2 p-4 rounded-xl bg-paper-50 border border-paper-200">
             <div className="flex justify-between items-center text-xs font-bold">
-              <span className="text-slate-700">{language === 'hi' ? 'डिजिटल यूपीआई अनुपात' : 'Target UPI Share'}</span>
-              <span className="text-indigo-600 tabular-nums">{targetUpi}%</span>
+              <span className="text-indigoRural-700">UPI Digital Sales Share</span>
+              <span className="text-ochre-700 font-extrabold tabular-nums">{targetUpi}%</span>
             </div>
             <input 
-              type="range"
-              min="20"
-              max="80"
+              type="range" 
+              min="10" 
+              max="90" 
               step="5"
               value={targetUpi}
               onChange={(e) => setTargetUpi(Number(e.target.value))}
-              className="w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+              className="w-full accent-ochre-600 cursor-pointer"
             />
-            <span className="text-[11px] text-slate-400 block">Bank verified digital trail</span>
+            <p className="text-[10px] text-indigoRural-400">RBI mandates digital deepening for PSL credit rating.</p>
           </div>
 
         </div>
 
-        {/* Projected Impact Pill */}
-        <div className="p-4 rounded-2xl bg-indigo-50/70 border border-indigo-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs">
-          <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-indigo-600 shrink-0" />
-            <span className="text-slate-800 font-semibold">
-              {language === 'hi'
-                ? `इस सिमुलेशन से रमेश जी का स्कोर 755 से बढ़कर ${simulatedData?.projectedScore || 793} हो जाएगा और वे ₹3 लाख के मुद्रा किशोर लोन के लिए स्वतः योग्य होंगे।`
-                : `Simulated actions raise Ramesh's score to ${simulatedData?.projectedScore || 793}/850, qualifying for ₹3–₹5 Lakh MUDRA Kishore facility.`}
-            </span>
-          </div>
-          <button
-            onClick={() => onNavigateTab('schemes')}
-            className="text-xs font-extrabold text-indigo-600 hover:underline shrink-0"
-          >
-            Check Eligible Schemes →
-          </button>
+        {/* Projection Summary Callout */}
+        <div className="p-4 rounded-xl bg-forestRural-50 border border-forestRural-200 flex items-center gap-3">
+          <CheckCircle2 className="w-5 h-5 text-forestRural-700 shrink-0" />
+          <p className="text-xs text-forestRural-800 font-medium">
+            {language === 'hi' 
+              ? `इस सिमुलेशन से स्कोर बढ़कर ${simulatedData?.projectedScore || baseScore || '—'} हो जाएगा और वे ₹3 लाख के मुद्रा किशोर लोन के लिए स्वतः योग्य होंगे।`
+              : `Simulated actions raise score to ${simulatedData?.projectedScore || baseScore || '—'}/850, qualifying for ₹3–₹5 Lakh MUDRA Kishore facility.`}
+          </p>
         </div>
-
-      </div>
+      </Card>
 
     </div>
   );
