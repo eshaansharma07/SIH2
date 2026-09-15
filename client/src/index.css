@@ -76,31 +76,54 @@
 
 /* Apple Pearl Studio Canvas with Specular Ambient Lighting */
 .pearl-canvas {
-  background-color: #FBFBFD;
+  background-color: #F8F9FA;
   background-image: 
-    radial-gradient(at 10% 0%, rgba(37, 99, 235, 0.035) 0px, transparent 50%),
-    radial-gradient(at 90% 10%, rgba(234, 88, 12, 0.03) 0px, transparent 50%),
-    radial-gradient(at 50% 90%, rgba(5, 150, 105, 0.03) 0px, transparent 50%);
+    radial-gradient(circle at 15% 5%, rgba(14, 165, 233, 0.04) 0%, transparent 40%),
+    radial-gradient(circle at 85% 5%, rgba(249, 115, 22, 0.035) 0%, transparent 40%),
+    radial-gradient(circle at 50% 95%, rgba(16, 185, 129, 0.035) 0%, transparent 45%);
 }
 
-/* Apple Bento Glass Card */
-.bento-card {
-  background: rgba(255, 255, 255, 0.88);
-  backdrop-filter: blur(28px);
-  -webkit-backdrop-filter: blur(28px);
-  border: 1px solid rgba(226, 232, 240, 0.85);
-  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.03), 0 1px 3px 0 rgba(15, 23, 42, 0.02);
+/* Master Human-Crafted Sovereign Bento Card */
+.sovereign-card {
+  background: #FFFFFF;
+  border: 1px solid rgba(15, 23, 42, 0.07);
+  border-radius: 28px;
+  box-shadow: 
+    0 1px 2px 0 rgba(15, 23, 42, 0.02),
+    0 10px 25px -5px rgba(15, 23, 42, 0.03),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.9);
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.bento-card:hover {
-  border-color: rgba(203, 213, 225, 0.9);
-  box-shadow: 0 12px 30px -4px rgba(15, 23, 42, 0.06), 0 4px 8px -2px rgba(15, 23, 42, 0.03);
+.sovereign-card:hover {
+  border-color: rgba(15, 23, 42, 0.12);
+  box-shadow: 
+    0 2px 4px 0 rgba(15, 23, 42, 0.02),
+    0 16px 36px -6px rgba(15, 23, 42, 0.06),
+    inset 0 1px 0 0 rgba(255, 255, 255, 1);
 }
 
-/* Titanium Pass Glass */
+/* Physical Sovereign Smart Pass (Apple Card / Titanium Smart Credential) */
+.sovereign-pass {
+  background: radial-gradient(120% 120% at 85% 15%, rgba(30, 41, 59, 0.95) 0%, #090D16 100%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 
+    0 25px 50px -12px rgba(9, 13, 22, 0.45),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.2),
+    inset 0 -1px 0 0 rgba(0, 0, 0, 0.4);
+}
+
+/* Holographic Micro-Guilloche Security Watermark */
+.guilloche-pattern {
+  background-image: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 16px 16px;
+}
+
+/* Backward compatibility for bento-card & titanium-pass */
+.bento-card {
+  @apply sovereign-card;
+}
+
 .titanium-pass {
-  background: linear-gradient(145deg, #0D131F 0%, #080C14 100%);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 24px 48px -12px rgba(8, 12, 20, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.15);
+  @apply sovereign-pass;
 }

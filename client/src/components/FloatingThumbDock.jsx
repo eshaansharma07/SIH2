@@ -52,9 +52,9 @@ export function FloatingThumbDock({
   ];
 
   return (
-    <div className="fixed bottom-4 sm:bottom-6 inset-x-0 mx-auto w-fit z-40 px-3 select-none print:hidden">
+    <div className="lg:hidden fixed bottom-4 inset-x-0 mx-auto w-fit z-40 px-3 select-none print:hidden animate-fadeIn">
       <nav 
-        aria-label="Samsung OneUI Thumb Navigation Dock"
+        aria-label="Samsung OneUI Mobile Thumb Navigation Dock"
         className="flex items-center gap-1.5 p-2 rounded-full bg-slate-950/92 backdrop-blur-2xl border border-white/18 shadow-2xl text-white transition-all duration-300 ring-1 ring-black/40"
       >
         {/* Rapid Thumb Add Action Button */}
