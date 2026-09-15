@@ -1,6 +1,6 @@
 import express from 'express';
 import db from '../db/database.js';
-import { getTransactionsCollection } from '../db/mongoClient.js';
+import { getTransactionsCollection, getShopsCollection } from '../db/mongoClient.js';
 
 const router = express.Router();
 
@@ -100,6 +100,42 @@ router.post('/', async (req, res) => {
     const safeCustomerName = customer_vendor_name ? String(customer_vendor_name).trim().slice(0, 100) : '';
     const safeNotes = notes ? String(notes).trim().slice(0, 250) : '';
 
+    // Ensure shop exists in local SQLite to satisfy foreign key constraint across serverless containers
+    const existingShop = db.prepare('SELECT id FROM shops WHERE id = ?').get(shopId);
+    if (!existingShop) {
+      let pulledShop = null;
+      try {
+        const shopsCol = await getShopsCollection();
+        if (shopsCol) {
+          pulledShop = await shopsCol.findOne({ id: shopId });
+        }
+      } catch (_) {}
+
+      if (pulledShop) {
+        try {
+          db.prepare(`
+            INSERT OR REPLACE INTO shops (
+              id, name, owner_name, trade_type, trade_name, village, district, state,
+              vintage_years, monthly_revenue, ownership, bank_account_type, phone, owner_category, is_demo
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `).run(
+            pulledShop.id, pulledShop.name, pulledShop.owner_name, pulledShop.trade_type, pulledShop.trade_name || '',
+            pulledShop.village || '', pulledShop.district || '', pulledShop.state || '',
+            pulledShop.vintage_years || 0, pulledShop.monthly_revenue || 0,
+            pulledShop.ownership || 'rented', pulledShop.bank_account_type || 'savings',
+            pulledShop.phone || '', pulledShop.owner_category || 'general', pulledShop.is_demo || 0
+          );
+        } catch (_) {}
+      } else {
+        try {
+          db.prepare(`
+            INSERT OR IGNORE INTO shops (id, name, owner_name, trade_type, trade_name, village, district, state, vintage_years, monthly_revenue, is_demo)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `).run(shopId, 'Registered Shop', 'Enterprise Owner', 'kirana', 'Micro-Enterprise', 'Gram Panchayat', 'District', 'State', 1, 0, 0);
+        } catch (_) {}
+      }
+    }
+
     // 1. Insert into SQLite
     const insert = db.prepare(`
       INSERT INTO transactions (id, shop_id, date, type, amount, category, payment_mode, customer_vendor_name, notes)
@@ -142,6 +178,47 @@ router.post('/', async (req, res) => {
     }
 
     res.json({ success: true, transaction: newTx });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Delete a transaction (in case added mistakenly)
+router.delete('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const shopId = req.query.shopId;
+
+    if (!id) {
+      return res.status(400).json({ success: false, error: 'Transaction id is required' });
+    }
+
+    // 1. Delete from SQLite
+    try {
+      let query = 'DELETE FROM transactions WHERE id = ?';
+      const params = [id];
+      if (shopId) {
+        query += ' AND shop_id = ?';
+        params.push(shopId);
+      }
+      db.prepare(query).run(...params);
+    } catch (sqlErr) {
+      console.warn('[SQLite] Delete warning:', sqlErr.message);
+    }
+
+    // 2. Delete from MongoDB Atlas
+    try {
+      const col = await getTransactionsCollection();
+      if (col) {
+        const filter = { id };
+        if (shopId) filter.shop_id = shopId;
+        await col.deleteOne(filter);
+      }
+    } catch (mErr) {
+      console.warn('[MongoDB Atlas] Delete warning:', mErr.message);
+    }
+
+    res.json({ success: true, message: 'Transaction deleted successfully', deletedId: id });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }

@@ -356,6 +356,7 @@ export default function App() {
         onStartDemoTour={() => setDemoTourOpen(true)}
         onSwitchToDemo={handleSelectDemo}
         onSwitchToRegister={handleSwitchToRegister}
+        onLogout={handleSwitchToRegister}
       />
 
       {/* Main Page Container */}

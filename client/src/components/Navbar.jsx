@@ -13,13 +13,14 @@ import {
   ShieldCheck, 
   Zap,
   MapPin,
-  ArrowRightLeft
+  ArrowRightLeft,
+  LogOut
 } from 'lucide-react';
 import { useTranslation } from '../i18n/LanguageContext';
 import { api } from '../utils/api';
 import { Badge, Button } from './ui';
 
-export function Navbar({ activeTab, setActiveTab, currentShop, isDemoMode, onReloadDemo, onStartDemoTour, onSwitchToDemo, onSwitchToRegister }) {
+export function Navbar({ activeTab, setActiveTab, currentShop, isDemoMode, onReloadDemo, onStartDemoTour, onSwitchToDemo, onSwitchToRegister, onLogout }) {
   const { t, language, toggleLanguage } = useTranslation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [resetting, setResetting] = useState(false);
@@ -192,6 +193,20 @@ export function Navbar({ activeTab, setActiveTab, currentShop, isDemoMode, onRel
               <span>{language === 'hi' ? 'HI' : 'EN'}</span>
             </Button>
 
+            {/* Sovereign Log Out Button */}
+            {currentShop && (
+              <Button
+                onClick={onLogout}
+                variant="outline"
+                size="sm"
+                icon={LogOut}
+                className="hidden sm:inline-flex !text-terracotta-700 hover:!text-terracotta-900 !border-terracotta-200 hover:!bg-terracotta-50 shadow-2xs font-extrabold"
+                title={language === 'hi' ? 'दुकान से लॉग आउट करें' : 'Log out from active session'}
+              >
+                <span>{language === 'hi' ? 'लॉग आउट' : 'Log Out'}</span>
+              </Button>
+            )}
+
             {/* Mobile Menu Toggle */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -233,32 +248,47 @@ export function Navbar({ activeTab, setActiveTab, currentShop, isDemoMode, onRel
             })}
           </div>
 
-          <div className="flex items-center justify-between pt-2 text-xs">
+          <div className="flex items-center justify-between pt-2 text-xs border-t border-paper-100">
             <span className="text-indigoRural-500 font-medium flex items-center gap-1">
               <MapPin className="w-3 h-3 text-indigoRural-400 shrink-0" />
               <span>{currentShop?.village || '—'}, {currentShop?.district || '—'}</span>
             </span>
-            {isDemoMode ? (
-              <button
-                onClick={() => {
-                  onSwitchToRegister?.();
-                  setMobileMenuOpen(false);
-                }}
-                className="text-xs font-bold text-terracotta-700 hover:underline cursor-pointer"
-              >
-                {language === 'hi' ? 'असली पंजीकरण करें' : 'Real Registration'}
-              </button>
-            ) : (
-              <button
-                onClick={() => {
-                  onSwitchToDemo?.();
-                  setMobileMenuOpen(false);
-                }}
-                className="text-xs font-bold text-terracotta-700 hover:underline cursor-pointer"
-              >
-                {language === 'hi' ? 'जज डेमो देखें' : 'View Judge Demo'}
-              </button>
-            )}
+            <div className="flex items-center gap-3">
+              {isDemoMode ? (
+                <button
+                  onClick={() => {
+                    onSwitchToRegister?.();
+                    setMobileMenuOpen(false);
+                  }}
+                  className="text-xs font-bold text-terracotta-700 hover:underline cursor-pointer"
+                >
+                  {language === 'hi' ? 'असली पंजीकरण' : 'Real Registration'}
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    onSwitchToDemo?.();
+                    setMobileMenuOpen(false);
+                  }}
+                  className="text-xs font-bold text-terracotta-700 hover:underline cursor-pointer"
+                >
+                  {language === 'hi' ? 'जज डेमो' : 'Judge Demo'}
+                </button>
+              )}
+
+              {currentShop && (
+                <button
+                  onClick={() => {
+                    onLogout?.();
+                    setMobileMenuOpen(false);
+                  }}
+                  className="flex items-center gap-1 text-xs font-black text-terracotta-700 hover:text-terracotta-900 bg-terracotta-50 px-2 py-1 rounded-md border border-terracotta-200 cursor-pointer"
+                >
+                  <LogOut className="w-3 h-3" />
+                  <span>{language === 'hi' ? 'लॉग आउट' : 'Log Out'}</span>
+                </button>
+              )}
+            </div>
           </div>
         </div>
       )}

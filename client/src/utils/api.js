@@ -65,6 +65,8 @@ export const api = {
   getTransactions: (shopId, type = '', limit = 50) => 
     request(`/transactions?shopId=${shopId}${type ? `&type=${type}` : ''}&limit=${limit}`),
   createTransaction: (data) => request('/transactions', { method: 'POST', body: JSON.stringify(data) }),
+  deleteTransaction: (id, shopId = '') => 
+    request(`/transactions/${id}${shopId ? `?shopId=${shopId}` : ''}`, { method: 'DELETE' }),
   getTransactionSummary: (shopId) => request(`/transactions/summary?shopId=${shopId}`),
   getUdhaarLedger: (shopId) => request(`/transactions/udhaar-ledger?shopId=${shopId}`),
 

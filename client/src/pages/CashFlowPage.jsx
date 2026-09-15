@@ -17,7 +17,8 @@ import {
   TrendingUp,
   BarChart3,
   CheckCircle2,
-  FileText
+  FileText,
+  Trash2
 } from 'lucide-react';
 import { 
   ResponsiveContainer, 
@@ -74,6 +75,55 @@ export function CashFlowPage({ shop, onOpenKeypad, refreshKey, latestTx, onTrans
   const [loading, setLoading] = useState(true);
   const [reminderToast, setReminderToast] = useState(null);
   const [justUpdated, setJustUpdated] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
+
+  const handleDeleteTransaction = async (txId) => {
+    const confirmMsg = language === 'hi'
+      ? 'क्या आप इस लेन-देन को हटाना चाहते हैं?'
+      : 'Are you sure you want to delete this transaction?';
+    if (!window.confirm(confirmMsg)) return;
+
+    setDeletingId(txId);
+    const txToDelete = transactions.find(t => t.id === txId);
+
+    // Optimistically remove from state immediately
+    setTransactions(prev => prev.filter(t => t.id !== txId));
+
+    if (txToDelete) {
+      setSummary(prev => {
+        if (!prev) return prev;
+        const amt = Number(txToDelete.amount) || 0;
+        let newIncome = prev.totalIncome || 0;
+        let newExpense = prev.totalExpense || 0;
+        let newUdhaarGiven = prev.totalUdhaarGiven || 0;
+        let newUdhaarRepaid = prev.totalUdhaarRepaid || 0;
+
+        if (txToDelete.type === 'income') newIncome = Math.max(0, newIncome - amt);
+        else if (txToDelete.type === 'expense') newExpense = Math.max(0, newExpense - amt);
+        else if (txToDelete.type === 'udhaar_given') newUdhaarGiven = Math.max(0, newUdhaarGiven - amt);
+        else if (txToDelete.type === 'udhaar_repaid') newUdhaarRepaid = Math.max(0, newUdhaarRepaid - amt);
+
+        return {
+          ...prev,
+          totalIncome: Math.round(newIncome),
+          totalExpense: Math.round(newExpense),
+          netSurplus: Math.round(newIncome - newExpense),
+          totalUdhaarGiven: Math.round(newUdhaarGiven),
+          totalUdhaarRepaid: Math.round(newUdhaarRepaid),
+          pendingUdhaar: Math.max(0, Math.round(newUdhaarGiven - newUdhaarRepaid)),
+          totalTransactions: Math.max(0, (prev.totalTransactions || 1) - 1)
+        };
+      });
+    }
+
+    try {
+      await api.deleteTransaction(txId, shop?.id);
+    } catch (err) {
+      console.warn('Delete transaction API warning:', err.message);
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   // 1. Instant 0ms Optimistic Update when a new transaction is logged
   useEffect(() => {
@@ -641,15 +691,27 @@ export function CashFlowPage({ shop, onOpenKeypad, refreshKey, latestTx, onTrans
                       </div>
                     </div>
 
-                    <div className="text-right">
-                      <div className={`text-base font-black tabular-nums ${
-                        isIncome || tx.type === 'udhaar_repaid' ? 'text-forestRural-700' : 'text-indigoRural-900'
-                      }`}>
-                        {isIncome || tx.type === 'udhaar_repaid' ? '+' : '-'}₹{tx.amount.toLocaleString('en-IN')}
+                    <div className="flex items-center gap-2.5">
+                      <div className="text-right">
+                        <div className={`text-base font-black tabular-nums ${
+                          isIncome || tx.type === 'udhaar_repaid' ? 'text-forestRural-700' : 'text-indigoRural-900'
+                        }`}>
+                          {isIncome || tx.type === 'udhaar_repaid' ? '+' : '-'}₹{Number(tx.amount || 0).toLocaleString('en-IN')}
+                        </div>
+                        <span className="text-[10px] text-indigoRural-400 capitalize font-medium">
+                          {tx.type.replace('_', ' ')}
+                        </span>
                       </div>
-                      <span className="text-[10px] text-indigoRural-400 capitalize font-medium">
-                        {tx.type.replace('_', ' ')}
-                      </span>
+
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteTransaction(tx.id)}
+                        disabled={deletingId === tx.id}
+                        title={language === 'hi' ? 'लेन-देन हटाएं' : 'Delete transaction'}
+                        className="p-1.5 sm:p-2 rounded-xl text-paper-400 hover:text-terracotta-600 hover:bg-terracotta-50 border border-transparent hover:border-terracotta-200 transition active:scale-95 cursor-pointer disabled:opacity-40 shrink-0"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
 
                   </div>
