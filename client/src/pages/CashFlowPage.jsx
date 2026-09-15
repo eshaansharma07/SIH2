@@ -230,52 +230,52 @@ export function CashFlowPage({ shop, onOpenKeypad, refreshKey, latestTx, onTrans
           </div>
         )}
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
-          <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-card">
-            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="bento-card p-5 rounded-3xl">
+            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest block mb-1">
               {language === 'hi' ? 'कुल बिक्री' : 'Recorded Sales'}
             </span>
-            <div className="text-2xl sm:text-3xl font-black text-slate-900 tabular-nums tracking-tight">
+            <div className="text-2xl sm:text-3xl font-black text-slate-900 tabular-nums tracking-tight font-display">
               ₹{summary?.totalIncome?.toLocaleString('en-IN') || '0'}
             </div>
-            <span className="text-[11px] font-semibold text-slate-400 mt-1 block">90 days total</span>
+            <span className="text-[11px] font-semibold text-slate-500 mt-1 block">90 days verified</span>
           </div>
 
-          <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-card">
-            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+          <div className="bento-card p-5 rounded-3xl">
+            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest block mb-1">
               {language === 'hi' ? 'माल खरीद + खर्च' : 'Stock & Expenses'}
             </span>
-            <div className="text-2xl sm:text-3xl font-black text-slate-900 tabular-nums tracking-tight">
+            <div className="text-2xl sm:text-3xl font-black text-slate-900 tabular-nums tracking-tight font-display">
               ₹{summary?.totalExpense?.toLocaleString('en-IN') || '0'}
             </div>
-            <span className="text-[11px] font-semibold text-slate-400 mt-1 block">Inventory & bills</span>
+            <span className="text-[11px] font-semibold text-slate-500 mt-1 block">Inventory & bills</span>
           </div>
 
-          <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-card">
-            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
-              {language === 'hi' ? 'शुद्ध बचत / लाभ' : 'Net Surplus'}
+          <div className="bento-card p-5 rounded-3xl">
+            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest block mb-1">
+              {language === 'hi' ? 'शुद्ध बचत / लाभ' : 'Net Operating Surplus'}
             </span>
-            <div className="text-2xl sm:text-3xl font-black text-emerald-600 tabular-nums tracking-tight">
+            <div className="text-2xl sm:text-3xl font-black text-emerald-600 tabular-nums tracking-tight font-display">
               ₹{summary?.netSurplus?.toLocaleString('en-IN') || '0'}
             </div>
-            <span className="text-[11px] font-semibold text-emerald-600 mt-1 block">+28.8% margin</span>
+            <span className="text-[11px] font-semibold text-emerald-700 mt-1 block">+28.2% margin</span>
           </div>
 
-          <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-card">
-            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+          <div className="bento-card p-5 rounded-3xl">
+            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest block mb-1">
               {language === 'hi' ? 'बकाया ग्राहक उधार' : 'Pending Udhaar Book'}
             </span>
-            <div className="text-2xl sm:text-3xl font-black text-amber-600 tabular-nums tracking-tight">
+            <div className="text-2xl sm:text-3xl font-black text-amber-600 tabular-nums tracking-tight font-display">
               ₹{summary?.pendingUdhaar?.toLocaleString('en-IN') || '0'}
             </div>
-            <span className="text-[11px] font-semibold text-amber-600 mt-1 block">Within safe ratio</span>
+            <span className="text-[11px] font-semibold text-amber-700 mt-1 block">Safe ratio (&lt;2%)</span>
           </div>
         </div>
       </div>
 
       {/* 3. 4-Month Seasonal Cash Flow Timeline */}
       {summary?.monthlyTrend && summary.monthlyTrend.length > 0 && (
-        <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-card space-y-4">
+        <div className="bento-card rounded-4xl p-6 sm:p-7 space-y-4">
           <div className="flex items-center justify-between border-b border-slate-100 pb-3">
             <div>
               <h2 className="text-base font-extrabold text-slate-900 tracking-tight">

@@ -10,6 +10,7 @@ import { ShopProfilePage } from './pages/ShopProfilePage';
 import { OnboardingPage } from './pages/OnboardingPage';
 import { NumericKeypadModal } from './components/NumericKeypadModal';
 import { InteractiveDemoTour } from './components/InteractiveDemoTour';
+import { FloatingThumbDock } from './components/FloatingThumbDock';
 import { WarliBorder } from './components/WarliMotif';
 import { api } from './utils/api';
 import { useTranslation } from './i18n/LanguageContext';
@@ -287,8 +288,16 @@ export default function App() {
         onReloadDemo={handleReloadDemo}
       />
 
+      {/* Samsung OneUI Thumb-Zone Floating Action Dock */}
+      <FloatingThumbDock 
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        onOpenKeypad={() => setKeypadOpen(true)}
+        creditScore={creditData?.totalScore || 755}
+      />
+
       {/* Sovereign DPI Footer */}
-      <footer className="print:hidden border-t border-slate-200/80 bg-white/70 backdrop-blur-md py-7 px-4 text-center text-xs text-slate-500">
+      <footer className="print:hidden border-t border-slate-200/80 bg-white/70 backdrop-blur-md py-7 px-4 text-center text-xs text-slate-500 pb-28 sm:pb-24">
         <div className="max-w-4xl mx-auto space-y-2">
           <div className="flex items-center justify-center gap-2 flex-wrap">
             <span className="font-black text-slate-900 font-display text-sm">भारत सरकार • व्यापार साथी (Vyapaar Saathi)</span>
