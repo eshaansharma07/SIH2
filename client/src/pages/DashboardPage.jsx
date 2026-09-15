@@ -100,74 +100,103 @@ export function DashboardPage({
   return (
     <div className="space-y-6 animate-fadeIn pb-12">
       
-      {/* 1. Apple Card Style Financial Hero Card */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950 text-white p-6 sm:p-8 shadow-xl border border-slate-700/50">
+      {/* 1. Sovereign Vyapaar Bharat Pass (Apple Card Titanium x National DPI) */}
+      <div className="relative overflow-hidden rounded-4xl bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-white p-7 sm:p-9 shadow-sovereign border border-slate-700/60 transition-all duration-300">
         
-        {/* Subtle Ambient Mesh Glow */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-1/3 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+        {/* Subtle Sovereign Mesh & Holographic Light Glow */}
+        <div className="absolute top-0 right-0 w-[480px] h-[480px] bg-gradient-to-bl from-indigo-500/15 via-saffron-500/10 to-transparent rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-12 -left-12 w-80 h-80 bg-chakra-500/10 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-          <div className="space-y-3 max-w-xl">
-            <div className="flex items-center gap-2">
-              <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/10 text-slate-200 text-xs font-semibold backdrop-blur-md border border-white/10">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                <span>{shop?.village || 'Utraula Dehat'}, {shop?.district || 'Balrampur'}</span>
-              </span>
-              <span className="px-2.5 py-1 rounded-full bg-indigo-500/20 text-indigo-300 text-xs font-bold border border-indigo-500/30">
-                {shop?.trade_name || 'Kirana & General'}
+        {/* National Pass Top Watermark Strip */}
+        <div className="relative z-10 flex flex-wrap items-center justify-between gap-3 pb-6 border-b border-white/10 text-xs">
+          <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 text-slate-200 backdrop-blur-md border border-white/15">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="font-bold text-[11px] tracking-wide uppercase text-slate-200">
+                {language === 'hi' ? 'सत्यापित सूक्ष्म उद्यम (Udyam Verified)' : 'Udyam Verified MSME'}
               </span>
             </div>
+            <span className="text-slate-500 hidden sm:inline">•</span>
+            <span className="font-mono text-[11px] text-slate-400 font-semibold tracking-wider">
+              UDYAM-UP-18-0092478
+            </span>
+          </div>
 
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-black tracking-tight font-sans text-white">
-                {language === 'hi' 
-                  ? `राम राम, ${shop?.owner_name || 'रमेश'} जी` 
-                  : `Good afternoon, ${shop?.owner_name || 'Ramesh Kumar'}`}
+          <div className="flex items-center gap-2">
+            <span className="px-3 py-1 rounded-full bg-chakra-500/20 text-emerald-300 font-extrabold text-[11px] border border-chakra-500/30 flex items-center gap-1.5">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+              <span>RBI PSL Tier-A Prime</span>
+            </span>
+            <span className="text-slate-400 text-xs font-semibold hidden md:inline">
+              Vintage: 48 Months
+            </span>
+          </div>
+        </div>
+
+        {/* Core Pass Body */}
+        <div className="relative z-10 pt-6 flex flex-col lg:flex-row lg:items-center justify-between gap-8">
+          <div className="space-y-4 max-w-xl">
+            <div className="space-y-1">
+              <span className="text-xs font-bold text-saffron-400 tracking-wider uppercase">
+                {language === 'hi' ? 'राष्ट्रीय सूक्ष्म-उद्यम पास' : 'National Micro-Enterprise Pass'}
+              </span>
+              <h1 className="text-3xl sm:text-4xl font-black tracking-tight font-display text-white">
+                {shop?.name || 'Ramesh Kirana & General Store'}
               </h1>
-              <p className="text-slate-300 text-xs sm:text-sm mt-1">
-                {language === 'hi'
-                  ? 'आपकी दुकान का 4 माह का हिसाब पूर्ण है और बैंक ऋण पात्रता सक्रिय है।'
-                  : '4-month cash flow audited • Prime Bankable status active for micro-loans.'}
+              <p className="text-slate-300 text-xs sm:text-sm font-normal flex items-center gap-2 pt-0.5">
+                <span>{shop?.owner_name || 'Ramesh Kumar'} (Proprietor)</span>
+                <span className="text-slate-500">•</span>
+                <span className="text-slate-400">{shop?.village || 'Utraula Dehat'}, {shop?.district || 'Balrampur'} (UP)</span>
               </p>
             </div>
 
-            <div className="flex items-baseline gap-3 pt-1">
-              <div className="text-3xl sm:text-4xl font-black tracking-tight tabular-nums text-white">
-                ₹{metrics.totalIncome.toLocaleString('en-IN')}
+            {/* Turnover & Surplus Highlights */}
+            <div className="flex flex-wrap items-baseline gap-4 pt-2">
+              <div>
+                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">
+                  {language === 'hi' ? '90-दिवसीय सत्यापित कारोबार' : '90-Day Audited Turnover'}
+                </span>
+                <div className="text-3xl sm:text-4xl font-black tracking-tight tabular-nums font-display text-white">
+                  ₹{metrics.totalIncome.toLocaleString('en-IN')}
+                </div>
               </div>
-              <span className="text-xs font-extrabold text-emerald-400 bg-emerald-950/60 border border-emerald-500/30 px-2.5 py-1 rounded-full">
-                +28.8% Net Surplus (₹{metrics.netSurplus.toLocaleString('en-IN')})
-              </span>
+              <div className="border-l border-white/10 pl-4">
+                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">
+                  {language === 'hi' ? 'शुद्ध परिचालन अधिशेष' : 'Net Operating Surplus'}
+                </span>
+                <div className="text-2xl sm:text-3xl font-black tracking-tight tabular-nums font-display text-emerald-400">
+                  ₹{metrics.netSurplus.toLocaleString('en-IN')}
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Quick Action Buttons */}
-          <div className="flex flex-col sm:flex-row items-stretch gap-2.5 w-full md:w-auto shrink-0">
+          {/* Quick Action Sovereign Buttons (Samsung Thumb Zone Ergonomics) */}
+          <div className="flex flex-col sm:flex-row lg:flex-col gap-3 shrink-0">
             <button
               onClick={onOpenKeypad}
-              className="px-5 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-900/30 transition"
+              className="px-6 py-3.5 rounded-2xl bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-slate-950 font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25 transition duration-150"
             >
-              <PlusCircle className="w-4 h-4" />
-              <span>{language === 'hi' ? 'बिक्री दर्ज करें' : 'Log Transaction'}</span>
+              <PlusCircle className="w-4 h-4 text-slate-950" />
+              <span>{language === 'hi' ? 'खाते में लेनदेन दर्ज करें' : '+ Log Ledger Entry'}</span>
             </button>
             <button
               onClick={() => onNavigateTab('advisor')}
-              className="px-5 py-3 rounded-2xl bg-white/15 hover:bg-white/20 active:scale-95 text-white font-bold text-xs sm:text-sm border border-white/20 backdrop-blur-md flex items-center justify-center gap-2 transition"
+              className="px-6 py-3.5 rounded-2xl bg-white/15 hover:bg-white/20 active:scale-95 text-white font-bold text-xs sm:text-sm border border-white/20 backdrop-blur-md flex items-center justify-center gap-2 transition"
             >
-              <Sparkles className="w-4 h-4 text-indigo-300" />
-              <span>{language === 'hi' ? 'एआई सलाहकार' : 'Ask AI'}</span>
+              <Sparkles className="w-4 h-4 text-amber-300" />
+              <span>{language === 'hi' ? 'एआई मंडी सलाहकार' : 'AI Mandi Advisor'}</span>
             </button>
             <button
               onClick={() => onNavigateTab('dossier')}
-              className="px-4 py-3 rounded-2xl bg-white/10 hover:bg-white/15 active:scale-95 text-slate-200 font-semibold text-xs sm:text-sm border border-white/10 flex items-center justify-center gap-1.5 transition"
-              title="Official Bank Loan Dossier"
+              className="px-5 py-3 rounded-2xl bg-white/10 hover:bg-white/15 active:scale-95 text-slate-200 font-semibold text-xs sm:text-sm border border-white/10 flex items-center justify-center gap-2 transition"
             >
               <FileText className="w-4 h-4" />
-              <span>{language === 'hi' ? 'बैंक फाइल' : 'Dossier'}</span>
+              <span>{language === 'hi' ? 'बैंक डॉसियर डाउनलोड' : 'Official Bank Dossier'}</span>
             </button>
           </div>
         </div>
+
       </div>
 
       {/* 2. Top Minimalist Financial Metric Cards (Apple Wallet / Stripe Style) */}

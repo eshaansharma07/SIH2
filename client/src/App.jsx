@@ -177,7 +177,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-900 selection:bg-indigo-100 selection:text-indigo-900 antialiased">
+    <div className="min-h-screen sovereign-mesh flex flex-col font-sans text-slate-900 selection:bg-indigo-100 selection:text-indigo-900 antialiased">
       
       {/* Top Navbar */}
       <Navbar 
@@ -287,19 +287,29 @@ export default function App() {
         onReloadDemo={handleReloadDemo}
       />
 
-      {/* Footer */}
-      <footer className="print:hidden border-t border-slate-200/80 bg-white/60 backdrop-blur-md py-6 px-4 text-center text-xs text-slate-500">
-        <div className="max-w-4xl mx-auto space-y-1.5">
-          <div className="flex items-center justify-center gap-2">
-            <span className="font-black text-slate-900 font-display">व्यापार साथी (Vyapaar Saathi)</span>
+      {/* Sovereign DPI Footer */}
+      <footer className="print:hidden border-t border-slate-200/80 bg-white/70 backdrop-blur-md py-7 px-4 text-center text-xs text-slate-500">
+        <div className="max-w-4xl mx-auto space-y-2">
+          <div className="flex items-center justify-center gap-2 flex-wrap">
+            <span className="font-black text-slate-900 font-display text-sm">भारत सरकार • व्यापार साथी (Vyapaar Saathi)</span>
             <span className="text-slate-300">•</span>
-            <span className="text-[10px] bg-indigo-50 text-indigo-700 font-bold px-2 py-0.5 rounded-full border border-indigo-200">
-              SIH Problem Statement 26091
+            <span className="text-[10px] bg-slate-900 text-white font-bold px-2.5 py-0.5 rounded-full">
+              DPI INDIA STACK
+            </span>
+            <span className="text-slate-300">•</span>
+            <span className="text-[10px] bg-emerald-50 text-emerald-700 font-bold px-2 py-0.5 rounded-full border border-emerald-200">
+              RBI PSL Compliant
             </span>
           </div>
-          <p className="text-[11px] text-slate-400">
-            Hyper-Local Business Intelligence & Alternative Credit Structuring for Rural Micro-Enterprises.
+          <p className="text-[11px] text-slate-500 max-w-2xl mx-auto leading-relaxed">
+            National Micro-Enterprise Credit & Seasonal Advisory Engine. Designed under the Ministry of MSME and Reserve Bank of India Priority Sector Lending (PSL) Framework.
           </p>
+          <div className="flex items-center justify-center gap-1.5 pt-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-saffron-500" />
+            <span className="w-1.5 h-1.5 rounded-full bg-slate-300" />
+            <span className="w-1.5 h-1.5 rounded-full bg-chakra-500" />
+            <span className="text-[10px] text-slate-400 font-semibold ml-1">Built for 65M+ Indian Micro-Entrepreneurs</span>
+          </div>
         </div>
       </footer>
 

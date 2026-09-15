@@ -7,6 +7,43 @@ export default {
   theme: {
     extend: {
       colors: {
+        sovereign: {
+          50: '#F0F5FF',
+          100: '#E0EBFF',
+          200: '#C7D9FE',
+          300: '#A4C0FD',
+          400: '#759CFA',
+          500: '#436FF5',
+          600: '#234CEB',
+          700: '#1736D7',
+          800: '#172DB0',
+          900: '#0B1528', // National Sovereign Deep Navy
+          950: '#050B17', // Onyx Sovereign Base
+        },
+        saffron: {
+          50: '#FFF7ED',
+          100: '#FFEDD5',
+          200: '#FED7AA',
+          300: '#FDBA74',
+          400: '#FB923C',
+          500: '#F97316', // India Kesariya
+          600: '#EA580C',
+          700: '#C2410C',
+          800: '#9A3412',
+          900: '#7C2D12',
+        },
+        chakra: {
+          50: '#F0FDF4',
+          100: '#DCFCE7',
+          200: '#BBF7D0',
+          300: '#86EFAC',
+          400: '#4ADE80',
+          500: '#10B981', // India Emerald
+          600: '#059669',
+          700: '#047857',
+          800: '#065F46',
+          900: '#064E3B',
+        },
         paper: {
           50: '#FDFBF7',
           100: '#FAF7F2',
@@ -21,7 +58,7 @@ export default {
           200: '#F3CEBD',
           300: '#EAAD93',
           400: '#DE8361',
-          500: '#C15324', // Primary Indian village terracotta
+          500: '#C15324',
           600: '#A74218',
           700: '#8A3412',
           800: '#6F2B12',
@@ -33,7 +70,7 @@ export default {
           200: '#FDE68A',
           300: '#FCD34D',
           400: '#F59E0B',
-          500: '#D97706', // Warm turmeric / marigold
+          500: '#D97706',
           600: '#B45309',
           700: '#92400E',
           800: '#78350F',
@@ -49,7 +86,7 @@ export default {
           600: '#233354',
           700: '#1A2742',
           800: '#141E33',
-          900: '#0C1322', // Deep handloom indigo
+          900: '#0C1322',
         },
         forestRural: {
           50: '#F0FDF4',
@@ -57,7 +94,7 @@ export default {
           200: '#BBF7D0',
           300: '#86EFAC',
           400: '#4ADE80',
-          500: '#276749', // Muted forest harvest green
+          500: '#276749',
           600: '#1E523A',
           700: '#163E2C',
           800: '#102F21',
@@ -68,17 +105,19 @@ export default {
         display: ['"Outfit"', '"Plus Jakarta Sans"', 'system-ui', '-apple-system', 'sans-serif'],
       },
       boxShadow: {
-        'paper': '0 2px 10px -2px rgba(0, 0, 0, 0.04), 0 1px 4px -1px rgba(0, 0, 0, 0.02)',
-        'paper-lg': '0 10px 25px -4px rgba(0, 0, 0, 0.06), 0 4px 10px -2px rgba(0, 0, 0, 0.02)',
-        'paper-hover': '0 14px 28px -5px rgba(0, 0, 0, 0.1), 0 6px 12px -3px rgba(0, 0, 0, 0.04)',
-        'glass': '0 8px 30px 0 rgba(0, 0, 0, 0.04)',
-        'glow-emerald': '0 0 24px rgba(16, 185, 129, 0.25)',
-        'glow-indigo': '0 0 24px rgba(99, 102, 241, 0.25)',
+        'card': '0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05)',
+        'card-hover': '0 12px 24px -4px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04)',
+        'glass': '0 8px 32px 0 rgba(15, 23, 42, 0.06)',
+        'sovereign': '0 20px 40px -15px rgba(11, 21, 40, 0.3)',
+        'glow-emerald': '0 0 24px rgba(5, 150, 105, 0.22)',
+        'glow-saffron': '0 0 24px rgba(234, 88, 12, 0.22)',
+        'glow-indigo': '0 0 24px rgba(37, 99, 235, 0.22)',
       },
       borderRadius: {
         'xl': '1rem',
         '2xl': '1.25rem',
         '3xl': '1.75rem',
+        '4xl': '2.25rem',
       }
     },
   },

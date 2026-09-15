@@ -266,7 +266,7 @@ export function InteractiveDemoTour({
               {currentStepData.badge}
             </span>
             <span className="hidden sm:inline text-xs text-slate-400 font-medium">
-              | SIH Prototype Evaluation Round 2
+              | Digital India Sovereign Stack • MoMSME & RBI PSL Protocol
             </span>
           </div>
 

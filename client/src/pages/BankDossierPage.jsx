@@ -80,23 +80,23 @@ export function BankDossierPage({ shop, onBack }) {
       <div className="bg-white rounded-3xl sm:p-10 p-6 border border-slate-200/90 shadow-card space-y-6 text-slate-800 print:border-0 print:shadow-none print:p-0 print:m-0 font-sans">
         
         {/* Dossier Letterhead */}
-        <div className="border-b border-slate-200 pb-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div className="flex items-center gap-3">
+        <div className="border-b-2 border-slate-900 pb-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="flex items-center gap-3.5">
             <SaathiAvatar size="lg" />
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight font-display">
                   व्यापार साथी (Vyapaar Saathi)
                 </h1>
-                <span className="text-[10px] font-bold bg-slate-100 text-slate-700 px-2.5 py-0.5 rounded-full border border-slate-200">
-                  SIH 26091
+                <span className="text-[10px] font-black bg-slate-900 text-white px-2.5 py-0.5 rounded-full">
+                  DPI INDIA STACK
                 </span>
               </div>
-              <p className="text-xs font-bold text-slate-600 mt-0.5">
-                Alternative Credit & Rural Financial Structuring Platform
+              <p className="text-xs font-bold text-slate-700 mt-0.5">
+                भारत सरकार • Ministry of MSME & Finance • Priority Sector Lending (PSL) Framework
               </p>
-              <p className="text-[10px] text-slate-400">
-                Endorsed for Priority Sector Lending (PSL) & Micro-Enterprise Assessment
+              <p className="text-[10px] text-slate-500">
+                Official Credit Readiness Certificate for Branch Manager / Credit Officer Loan File
               </p>
             </div>
           </div>

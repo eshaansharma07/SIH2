@@ -280,25 +280,25 @@ export function NumericKeypadModal({ isOpen, onClose, onTransactionSaved, shopId
             </button>
           </div>
 
-          {/* 6. Primary Action Save Button */}
+          {/* 6. Primary Action Save Button (Apple Wallet / Samsung Pay Style) */}
           <button
             type="button"
             onClick={handleSubmit}
             disabled={loading || !amountStr || Number(amountStr) <= 0}
-            className={`w-full py-3.5 rounded-2xl font-extrabold text-sm flex items-center justify-center gap-2 shadow-lg transition active:scale-[0.98] ${
+            className={`w-full py-3.5 rounded-2xl font-black text-sm flex items-center justify-center gap-2 shadow-sm transition active:scale-[0.98] ${
               successToast
                 ? 'bg-emerald-600 text-white'
-                : 'bg-indigo-600 hover:bg-indigo-700 text-white disabled:opacity-50 disabled:cursor-not-allowed'
+                : 'bg-slate-900 hover:bg-slate-800 text-white disabled:opacity-40 disabled:cursor-not-allowed'
             }`}
           >
             {successToast ? (
               <>
                 <Check className="w-5 h-5 animate-bounce" />
-                <span>{language === 'hi' ? 'सफलतापूर्वक दर्ज हुआ!' : 'Saved Instantly!'}</span>
+                <span>{language === 'hi' ? 'सफलतापूर्वक दर्ज हुआ!' : 'Saved Instantly (0ms)'}</span>
               </>
             ) : (
               <span>
-                {language === 'hi' ? 'दर्ज करें (Save)' : 'Save Transaction'}
+                {language === 'hi' ? 'बही-खाता में दर्ज करें' : 'Record in Bahi-Khata'}
               </span>
             )}
           </button>

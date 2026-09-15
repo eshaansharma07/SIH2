@@ -45,29 +45,71 @@ export function Navbar({ activeTab, setActiveTab, currentShop, onReloadDemo, onS
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full backdrop-blur-2xl bg-white/80 border-b border-slate-200/70 shadow-[0_2px_16px_rgba(0,0,0,0.02)] transition-all">
+    <header className="sticky top-0 z-50 w-full backdrop-blur-2xl bg-white/85 border-b border-slate-200/80 shadow-[0_4px_20px_rgba(11,21,40,0.03)] transition-all">
+      {/* Top Sovereign Micro-Bar */}
+      <div className="bg-slate-900 text-slate-300 text-[10px] font-semibold py-1 px-4 sm:px-6 flex items-center justify-between border-b border-slate-800 tracking-wide">
+        <div className="max-w-7xl mx-auto w-full flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1 text-slate-200">
+              <span className="w-1.5 h-1.5 rounded-full bg-saffron-500 animate-pulse" />
+              <span className="font-bold text-white uppercase tracking-wider">भारत सरकार • Government of India</span>
+            </span>
+            <span className="text-slate-600 hidden md:inline">|</span>
+            <span className="hidden md:inline text-slate-400">
+              Ministry of MSME & Finance • Priority Sector Lending (PSL) Protocol
+            </span>
+          </div>
+          <div className="flex items-center gap-3 text-slate-400">
+            <span className="hidden sm:inline font-mono text-[10px] text-emerald-400 font-bold">
+              ● DPI India Stack Live
+            </span>
+            <span>Udyam: UDYAM-UP-18-0092478</span>
+          </div>
+        </div>
+      </div>
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="flex items-center justify-between h-16 gap-4">
           
-          {/* Brand Logo: Clean Apple / Linear Aesthetic */}
+          {/* Sovereign Brand Mark: Apple x National DPI */}
           <div 
             onClick={() => setActiveTab('dashboard')}
-            className="flex items-center gap-2.5 cursor-pointer select-none group shrink-0"
+            className="flex items-center gap-3 cursor-pointer select-none group shrink-0"
           >
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-violet-500 flex items-center justify-center text-white shadow-sm shadow-indigo-500/20 group-hover:scale-105 transition-transform">
-              <Zap className="w-5 h-5 fill-white" />
+            {/* Ashoka Chakra & Digital India inspired SVG Icon */}
+            <div className="relative w-10 h-10 rounded-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950 flex items-center justify-center text-white shadow-md shadow-slate-900/10 group-hover:scale-105 transition-all border border-slate-700/50">
+              {/* Micro Tri-color Corner Accent */}
+              <div className="absolute top-1.5 right-1.5 flex gap-0.5">
+                <span className="w-1 h-1 rounded-full bg-saffron-500" />
+                <span className="w-1 h-1 rounded-full bg-white" />
+                <span className="w-1 h-1 rounded-full bg-chakra-500" />
+              </div>
+              <svg className="w-5 h-5 text-indigo-300 group-hover:rotate-45 transition-transform duration-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="9" />
+                <path d="M12 3v18" />
+                <path d="M3 12h18" />
+                <path d="m5.6 5.6 12.8 12.8" />
+                <path d="m18.4 5.6-12.8 12.8" />
+                <circle cx="12" cy="12" r="3" fill="currentColor" className="text-white" />
+              </svg>
             </div>
+
             <div className="flex flex-col">
               <div className="flex items-center gap-1.5 leading-none">
-                <span className="font-extrabold text-base tracking-tight text-slate-900 font-sans">
-                  Vyapaar<span className="text-indigo-600">Saathi</span>
+                <span className="font-black text-base sm:text-lg tracking-tight text-slate-900 font-display">
+                  व्यापार साथी
                 </span>
-                <span className="text-[10px] uppercase font-extrabold px-1.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200/60">
-                  AI 2.0
+                <span className="text-[11px] font-bold text-slate-400 font-sans hidden sm:inline">
+                  Vyapaar Saathi
+                </span>
+                <span className="text-[9px] uppercase font-black px-1.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
+                  DPI 2.0
                 </span>
               </div>
-              <span className="text-[10px] font-semibold text-slate-600 mt-0.5 tracking-wide">
-                {currentShop?.village || 'Balrampur'} • {currentShop?.trade_name || 'Kirana'}
+              <span className="text-[10px] font-semibold text-slate-500 mt-1 flex items-center gap-1.5">
+                <span className="font-bold text-slate-800">{currentShop?.name || 'Ramesh Kirana'}</span>
+                <span className="text-slate-300">•</span>
+                <span>{currentShop?.village || 'Utraula Dehat'}, {currentShop?.district || 'Balrampur'}</span>
               </span>
             </div>
           </div>
@@ -101,17 +143,17 @@ export function Navbar({ activeTab, setActiveTab, currentShop, onReloadDemo, onS
             })}
           </nav>
 
-          {/* Right Action Controls: Ultra-clean Pills */}
+          {/* Right Action Controls: Ultra-clean Sovereign Pills */}
           <div className="flex items-center gap-2 shrink-0">
             
             {/* Live Guided Demo Button */}
             <button
               onClick={onStartDemoTour}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 active:scale-95 text-white text-xs font-bold shadow-xs transition"
-              title="Interactive Live Tour for Hackathon Judges"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-900 hover:bg-slate-800 active:scale-95 text-white text-xs font-bold shadow-xs transition"
+              title="Interactive Live Tour for Evaluators"
             >
               <Sparkles className="w-3.5 h-3.5 text-amber-300 animate-spin" />
-              <span className="hidden sm:inline">{language === 'hi' ? 'लाइव डेमो' : 'Live Tour'}</span>
+              <span className="hidden sm:inline">{language === 'hi' ? 'लाइव टूर' : 'Live Tour'}</span>
             </button>
 
             {/* Quick Demo Reset Pill */}

@@ -194,28 +194,30 @@ export function CashFlowPage({ shop, onOpenKeypad, refreshKey, latestTx, onTrans
   return (
     <div className="space-y-6 pb-12 animate-fadeIn">
       
-      {/* 1. Header & Primary CTA */}
+      {/* 1. Sovereign Header & Primary CTA */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-black tracking-tight text-slate-900 font-sans">
-              {language === 'hi' ? 'दैनिक बही-खाता' : 'Bahi-Khata Ledger'}
+          <div className="flex items-center gap-2.5">
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 font-display">
+              {language === 'hi' ? 'डिजिटल बही-खाता' : 'Bahi-Khata Ledger'}
             </h1>
-            <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700">
-              {transactions.length} entries
+            <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
+              {transactions.length} Verified Entries
             </span>
           </div>
-          <p className="text-xs text-slate-500 mt-0.5">
-            {language === 'hi' ? 'सटीक दैनिक आय-व्यय एवं ग्राहक उधारी खाता' : 'Daily sales, wholesale purchases, and customer credit ledger'}
+          <p className="text-xs text-slate-500 mt-1 flex items-center gap-2">
+            <span>{language === 'hi' ? 'सटीक दैनिक आय-व्यय एवं ग्राहक उधारी खाता' : 'Daily sales, inventory outlays, and customer credit ledger'}</span>
+            <span className="text-slate-300">•</span>
+            <span className="text-emerald-700 font-semibold text-[11px]">● DPI Tamper-Evident</span>
           </p>
         </div>
 
         <button
           onClick={onOpenKeypad}
-          className="px-5 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20 transition self-start sm:self-auto"
+          className="px-6 py-3.5 rounded-2xl bg-slate-900 hover:bg-slate-800 active:scale-95 text-white font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-sm transition self-start sm:self-auto"
         >
-          <PlusCircle className="w-4 h-4" />
-          <span>{language === 'hi' ? 'नया लेन-देन दर्ज करें' : 'Log Transaction'}</span>
+          <PlusCircle className="w-4 h-4 text-emerald-400" />
+          <span>{language === 'hi' ? 'नया लेन-देन दर्ज करें' : '+ Record Transaction'}</span>
         </button>
       </div>
 

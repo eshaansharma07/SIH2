@@ -79,7 +79,7 @@ export function SchemeMatcherPage({ shop, onNavigateTab }) {
 
         <button
           onClick={() => onNavigateTab('dossier')}
-          className="px-5 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20 transition shrink-0 self-start sm:self-auto"
+          className="px-6 py-3.5 rounded-2xl bg-slate-900 hover:bg-slate-800 active:scale-95 text-white font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-sm transition shrink-0 self-start sm:self-auto"
         >
           <FileText className="w-4 h-4" />
           <span>{language === 'hi' ? 'बैंक फाइल तैयार करें' : 'Generate Bank Dossier'}</span>
@@ -215,7 +215,7 @@ export function SchemeMatcherPage({ shop, onNavigateTab }) {
                       <div className="flex justify-end pt-1">
                         <button
                           onClick={() => onNavigateTab('dossier')}
-                          className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-xs flex items-center gap-1.5 transition active:scale-95 shadow-xs"
+                          className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold text-xs flex items-center gap-1.5 transition active:scale-95 shadow-xs"
                         >
                           <span>Include in Bank Loan Dossier</span>
                           <ArrowRight className="w-3.5 h-3.5" />

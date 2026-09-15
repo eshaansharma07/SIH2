@@ -100,62 +100,70 @@ export function CreditScorePage({ shop, creditData, onNavigateTab }) {
   return (
     <div className="space-y-6 animate-fadeIn pb-12">
       
-      {/* 1. Header */}
+      {/* 1. Sovereign Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-black tracking-tight text-slate-900 font-sans">
+          <div className="flex items-center gap-2.5">
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 font-display">
               {language === 'hi' ? 'वैकल्पिक क्रेडिट स्कोर' : 'Alternative Credit Score'}
             </h1>
-            <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold border border-emerald-200">
-              Prime Bankable
+            <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold border border-emerald-200 flex items-center gap-1">
+              <ShieldCheck className="w-3.5 h-3.5" />
+              <span>RBI PSL Tier-A Prime</span>
             </span>
           </div>
-          <p className="text-xs text-slate-500 mt-0.5">
-            {language === 'hi' ? 'बिना सिबिल स्कोर के बैंक ऋण पात्रता की पारदर्शी जांच' : 'Explainable, non-CIBIL alternative financial underwriting engine'}
+          <p className="text-xs text-slate-500 mt-1">
+            {language === 'hi' ? 'बिना सिबिल स्कोर के बैंक ऋण पात्रता की पारदर्शी जांच' : 'Explainable, non-CIBIL alternative financial underwriting engine for Priority Sector Lending'}
           </p>
         </div>
 
         <button
           onClick={() => onNavigateTab('dossier')}
-          className="px-5 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20 transition self-start sm:self-auto"
+          className="px-6 py-3.5 rounded-2xl bg-slate-900 hover:bg-slate-800 active:scale-95 text-white font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-sm transition self-start sm:self-auto"
         >
           <FileText className="w-4 h-4" />
           <span>{language === 'hi' ? 'बैंक फाइल डाउनलोड करें' : 'Generate Bank Dossier'}</span>
         </button>
       </div>
 
-      {/* 2. Top Row: Apple Card Style Virtual Credit Card + Dial */}
+      {/* 2. Top Row: Sovereign Micro-Credit Pass + Health Dial */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
-        {/* Apple Card Virtual Card Representation (7 Cols) */}
-        <div className="lg:col-span-7 relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950 text-white p-7 shadow-xl border border-slate-700/50 flex flex-col justify-between min-h-[220px]">
+        {/* Apple Card Titanium Sovereign Pass (7 Cols) */}
+        <div className="lg:col-span-7 relative overflow-hidden rounded-4xl bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-white p-7 sm:p-8 shadow-sovereign border border-slate-700/60 flex flex-col justify-between min-h-[240px]">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <CreditCard className="w-5 h-5 text-indigo-400" />
-              <span className="text-xs font-bold uppercase tracking-widest text-slate-400">Vyapaar Saathi Micro-Credit ID</span>
+            <div className="flex items-center gap-2.5">
+              {/* Sovereign Vector Micro Chip */}
+              <div className="w-7 h-5 rounded-md bg-gradient-to-tr from-amber-300 to-amber-500 border border-amber-200/60 shadow-xs flex items-center justify-center">
+                <div className="w-4 h-3 border border-amber-800/40 rounded-xs" />
+              </div>
+              <span className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
+                National MSME Sovereign Credit ID
+              </span>
             </div>
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="text-[10px] font-mono text-emerald-400 font-bold bg-emerald-950/80 px-2 py-0.5 rounded-md border border-emerald-500/30">
+              UDYAM-UP-18-0092478
+            </span>
           </div>
 
-          <div className="space-y-1 py-4">
-            <div className="text-xs text-indigo-300 font-semibold uppercase tracking-wider">Enterprise Name</div>
-            <div className="text-xl sm:text-2xl font-black text-white tracking-tight">
+          <div className="space-y-1 py-5">
+            <div className="text-[11px] text-saffron-400 font-bold uppercase tracking-wider">Verified Enterprise</div>
+            <div className="text-2xl sm:text-3xl font-black text-white tracking-tight font-display">
               {shop?.name || "Ramesh Kirana & General Store"}
             </div>
-            <div className="text-xs text-slate-400 font-medium">
-              {shop?.owner_name || "Ramesh Kumar"} • {shop?.village || "Utraula Dehat"}, {shop?.district || "Balrampur"}
+            <div className="text-xs text-slate-300 font-medium">
+              {shop?.owner_name || "Ramesh Kumar"} (Proprietor) • {shop?.village || "Utraula Dehat"}, {shop?.district || "Balrampur"}
             </div>
           </div>
 
-          <div className="flex items-center justify-between pt-3 border-t border-white/10 text-xs">
+          <div className="flex items-center justify-between pt-4 border-t border-white/10 text-xs">
             <div>
               <span className="text-slate-400 block text-[10px] uppercase font-bold">Alternative Score</span>
-              <span className="text-xl font-black text-white tabular-nums">{baseScore} / 850</span>
+              <span className="text-2xl font-black text-white tabular-nums font-display">{baseScore} <span className="text-xs text-slate-400 font-normal">/ 850</span></span>
             </div>
             <div className="text-right">
               <span className="text-slate-400 block text-[10px] uppercase font-bold">Recommended Facility</span>
-              <span className="text-sm font-extrabold text-emerald-400">MUDRA Shishu / Kishore (Up to ₹5L)</span>
+              <span className="text-sm font-extrabold text-emerald-400">PM MUDRA Shishu / Kishore (₹50k – ₹5L)</span>
             </div>
           </div>
         </div>
