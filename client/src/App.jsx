@@ -20,11 +20,17 @@ export default function App() {
 
   // Read persisted state from localStorage
   const savedShopId = localStorage.getItem('vyapaar_active_shop_id') || null;
+  const savedShopJson = localStorage.getItem('vyapaar_active_shop');
+  let initialShop = null;
+  try {
+    if (savedShopJson) initialShop = JSON.parse(savedShopJson);
+  } catch (_) {}
+
   const savedIsDemoStr = localStorage.getItem('vyapaar_is_demo_mode');
   const savedIsDemo = savedIsDemoStr === 'true';
 
-  const [activeTab, setActiveTab] = useState(savedShopId ? 'dashboard' : 'onboarding');
-  const [currentShop, setCurrentShop] = useState(null);
+  const [activeTab, setActiveTab] = useState((savedShopId || initialShop) ? 'dashboard' : 'onboarding');
+  const [currentShop, setCurrentShop] = useState(initialShop);
   const [isDemoMode, setIsDemoMode] = useState(savedIsDemo);
   const [creditData, setCreditData] = useState(null);
   const [summaryData, setSummaryData] = useState(null);
@@ -38,54 +44,96 @@ export default function App() {
 
   useEffect(() => {
     loadAllShopData();
-  }, [refreshKey]);
+  }, []);
+
+  const fetchFinancials = async (shopId) => {
+    if (!shopId) return;
+    try {
+      const [credRes, sumRes, cuesRes] = await Promise.all([
+        api.getCreditScore(shopId),
+        api.getTransactionSummary(shopId),
+        api.getSeasonalCues(shopId)
+      ]);
+
+      if (credRes?.success) setCreditData(credRes);
+      if (sumRes?.success) {
+        setSummaryData(prev => {
+          if (!prev) return sumRes.summary;
+          return {
+            ...sumRes.summary,
+            totalIncome: Math.max(prev.totalIncome || 0, sumRes.summary.totalIncome || 0),
+            totalExpense: Math.max(prev.totalExpense || 0, sumRes.summary.totalExpense || 0),
+            netSurplus: (Math.max(prev.totalIncome || 0, sumRes.summary.totalIncome || 0)) - (Math.max(prev.totalExpense || 0, sumRes.summary.totalExpense || 0)),
+            pendingUdhaar: sumRes.summary.pendingUdhaar !== undefined ? sumRes.summary.pendingUdhaar : prev.pendingUdhaar
+          };
+        });
+      }
+      if (cuesRes?.success) setCuesData(cuesRes.data);
+    } catch (err) {
+      console.warn('Background financial fetch warning:', err);
+    }
+  };
 
   const loadAllShopData = async () => {
     try {
       const activeShopId = localStorage.getItem('vyapaar_active_shop_id');
       
       if (!activeShopId) {
-        // No active shop — show onboarding
+        const cachedJson = localStorage.getItem('vyapaar_active_shop');
+        if (!cachedJson) {
+          setLoading(false);
+          setActiveTab('onboarding');
+          return;
+        }
+      }
+
+      const idToFetch = activeShopId || initialShop?.id;
+      if (!idToFetch) {
         setLoading(false);
         setActiveTab('onboarding');
         return;
       }
 
-      const shopRes = await api.getShopCurrent(activeShopId);
-      if (shopRes.shop) {
+      const shopRes = await api.getShopCurrent(idToFetch);
+      if (shopRes?.shop) {
         setCurrentShop(shopRes.shop);
+        localStorage.setItem('vyapaar_active_shop', JSON.stringify(shopRes.shop));
         setIsDemoMode(shopRes.shop.is_demo === 1);
         localStorage.setItem('vyapaar_is_demo_mode', shopRes.shop.is_demo === 1 ? 'true' : 'false');
-        
-        // Fetch financial data in parallel
-        const [credRes, sumRes, cuesRes] = await Promise.all([
-          api.getCreditScore(shopRes.shop.id),
-          api.getTransactionSummary(shopRes.shop.id),
-          api.getSeasonalCues(shopRes.shop.id)
-        ]);
-
-        if (credRes.success) setCreditData(credRes);
-        if (sumRes.success) {
-          setSummaryData(prev => {
-            if (!prev) return sumRes.summary;
-            return {
-              ...sumRes.summary,
-              totalIncome: Math.max(prev.totalIncome || 0, sumRes.summary.totalIncome || 0),
-              totalExpense: Math.max(prev.totalExpense || 0, sumRes.summary.totalExpense || 0),
-              netSurplus: (Math.max(prev.totalIncome || 0, sumRes.summary.totalIncome || 0)) - (Math.max(prev.totalExpense || 0, sumRes.summary.totalExpense || 0)),
-              pendingUdhaar: sumRes.summary.pendingUdhaar !== undefined ? sumRes.summary.pendingUdhaar : prev.pendingUdhaar
-            };
-          });
-        }
-        if (cuesRes.success) setCuesData(cuesRes.data);
+        await fetchFinancials(shopRes.shop.id);
       } else {
-        // Shop not found in DB
-        localStorage.removeItem('vyapaar_active_shop_id');
-        localStorage.removeItem('vyapaar_is_demo_mode');
-        setActiveTab('onboarding');
+        // Check if we have cached local shop before clearing anything
+        const cachedJson = localStorage.getItem('vyapaar_active_shop');
+        if (cachedJson) {
+          try {
+            const cachedShop = JSON.parse(cachedJson);
+            if (cachedShop) {
+              setCurrentShop(cachedShop);
+              setIsDemoMode(cachedShop.is_demo === 1);
+              await fetchFinancials(cachedShop.id);
+              return;
+            }
+          } catch (_) {}
+        }
+
+        // Only redirect to onboarding if user literally has no shop profile
+        if (!currentShop && !initialShop) {
+          localStorage.removeItem('vyapaar_active_shop_id');
+          localStorage.removeItem('vyapaar_active_shop');
+          localStorage.removeItem('vyapaar_is_demo_mode');
+          setActiveTab('onboarding');
+        }
       }
     } catch (err) {
       console.error('Error initializing shop data:', err);
+      // On network failure or cold start: do NOT log out the user!
+      const cachedJson = localStorage.getItem('vyapaar_active_shop');
+      if (cachedJson) {
+        try {
+          const cachedShop = JSON.parse(cachedJson);
+          if (cachedShop) setCurrentShop(cachedShop);
+        } catch (_) {}
+      }
     } finally {
       setLoading(false);
     }
@@ -171,9 +219,14 @@ export default function App() {
           }
         };
       });
-    }
+      setRefreshKey(k => k + 1);
 
-    setRefreshKey(prev => prev + 1);
+      // Background financial sync without risk of session logout
+      const activeId = currentShop?.id || localStorage.getItem('vyapaar_active_shop_id');
+      if (activeId) {
+        fetchFinancials(activeId);
+      }
+    }
   };
 
   // === MODE SWITCHING ===
@@ -181,15 +234,18 @@ export default function App() {
   // Load Demo Mode (Ramesh Kirana)
   const handleSelectDemo = async () => {
     try {
-      await api.resetDemoShop();
+      const demoRes = await api.resetDemoShop();
+      const demoShop = demoRes?.shop || { id: 'ramesh-kirana', name: "Ramesh's Kirana Store", is_demo: 1 };
       localStorage.setItem('vyapaar_active_shop_id', 'ramesh-kirana');
+      localStorage.setItem('vyapaar_active_shop', JSON.stringify(demoShop));
       localStorage.setItem('vyapaar_is_demo_mode', 'true');
+      setCurrentShop(demoShop);
       setIsDemoMode(true);
       setCreditData(null);
       setSummaryData(null);
       setCuesData(null);
-      setRefreshKey(prev => prev + 1);
       setActiveTab('dashboard');
+      fetchFinancials('ramesh-kirana');
     } catch (e) {
       console.error('Demo load error:', e);
     }
@@ -199,6 +255,7 @@ export default function App() {
   const handleRealRegistrationComplete = (newShop) => {
     if (newShop?.id) {
       localStorage.setItem('vyapaar_active_shop_id', newShop.id);
+      localStorage.setItem('vyapaar_active_shop', JSON.stringify(newShop));
       localStorage.setItem('vyapaar_is_demo_mode', 'false');
     }
     setCurrentShop(newShop);
@@ -206,13 +263,16 @@ export default function App() {
     setCreditData(null);
     setSummaryData(null);
     setCuesData(null);
-    setRefreshKey(k => k + 1);
     setActiveTab('dashboard');
+    if (newShop?.id) {
+      fetchFinancials(newShop.id);
+    }
   };
 
   // Switch to real registration from demo mode
   const handleSwitchToRegister = () => {
     localStorage.removeItem('vyapaar_active_shop_id');
+    localStorage.removeItem('vyapaar_active_shop');
     localStorage.removeItem('vyapaar_is_demo_mode');
     setCurrentShop(null);
     setIsDemoMode(false);
@@ -225,12 +285,15 @@ export default function App() {
   // Reload demo (reset)
   const handleReloadDemo = async () => {
     try {
-      await api.resetDemoShop();
+      const demoRes = await api.resetDemoShop();
+      const demoShop = demoRes?.shop || { id: 'ramesh-kirana', name: "Ramesh's Kirana Store", is_demo: 1 };
       localStorage.setItem('vyapaar_active_shop_id', 'ramesh-kirana');
+      localStorage.setItem('vyapaar_active_shop', JSON.stringify(demoShop));
       localStorage.setItem('vyapaar_is_demo_mode', 'true');
+      setCurrentShop(demoShop);
       setIsDemoMode(true);
-      setRefreshKey(prev => prev + 1);
       setActiveTab('dashboard');
+      fetchFinancials('ramesh-kirana');
     } catch (e) {
       console.error(e);
     }
