@@ -57,8 +57,8 @@ export function AdvisorChatPage({ shop, initialPrompt = '', onPromptUsed }) {
           {
             role: 'assistant',
             content: language === 'hi' 
-              ? `राम राम ${shop?.owner_name || 'रमेश'} जी! 🙏\n\nमैं आपका व्यापार साथी एआई सलाहकार हूँ। मैंने आपकी दुकान के 4 महीने के बही-खाते और बलरामपुर के आगामी त्योहारी कैलेंडर का विश्लेषण कर लिया है।\n\nमुझसे कुछ भी पूछें — जैसे कि त्योहार पर कितना तेल-चीनी स्टॉक करना है, ग्राहकों का उधार कैसे समेटना है, या नया डीप-फ्रीज़र लेने के लिए कौन सा मुद्रा लोन उपयुक्त है!`
-              : `Namaste ${shop?.owner_name || 'Ramesh'}! 🙏\n\nI am your AI Business Advisor. I have synchronized with your 4-month audited transactions and the upcoming Google Calendar festival demand.\n\nAsk me anything about seasonal inventory planning, managing udhaar recovery, or applying for a MUDRA loan!`
+              ? `राम राम ${shop?.owner_name || 'रमेश'} जी! 🙏\n\nमैं आपका साथी AI सलाहकार हूँ। मैंने आपकी दुकान के 4 महीने के बही-खाते और बलरामपुर के आगामी त्योहारी कैलेंडर का विश्लेषण कर लिया है।\n\nमुझसे कुछ भी पूछें — जैसे कि त्योहार पर कितना तेल-चीनी स्टॉक करना है, ग्राहकों का उधार कैसे समेटना है, या नया डीप-फ्रीज़र लेने के लिए कौन सा मुद्रा लोन उपयुक्त है!`
+              : `Namaste ${shop?.owner_name || 'Ramesh'}! 🙏\n\nI am your Saathi AI Advisor. I have synchronized with your 4-month audited transactions and the upcoming Google Calendar festival demand.\n\nAsk me anything about seasonal inventory planning, managing udhaar recovery, or applying for a MUDRA loan!`
           }
         ]);
       }
@@ -129,7 +129,7 @@ export function AdvisorChatPage({ shop, initialPrompt = '', onPromptUsed }) {
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-base font-extrabold text-slate-900 tracking-tight">
-                  {language === 'hi' ? 'साथी एआई व्यापार सलाहकार' : 'Saathi AI Advisor'}
+                  {language === 'hi' ? 'साथी AI' : 'Saathi AI'}
                 </h1>
                 <span className="text-[10px] font-extrabold bg-indigo-50 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded-full">
                   Gemini Grounded

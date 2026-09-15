@@ -4,7 +4,7 @@
   "hindiAppName": "व्यापार साथी",
   "nav": {
     "dashboard": "Dashboard",
-    "advisor": "Advisor Saathi",
+    "advisor": "Saathi AI",
     "cashflow": "Bahi-Khata",
     "credit": "Credit Score",
     "schemes": "Govt Schemes",
@@ -27,14 +27,14 @@
     "digitalShare": "Digital (UPI) Share",
     "peerBenchTitle": "Balrampur District Peer Reality Check",
     "peerBenchSub": "Anonymized comparison with similar rural kirana stores",
-    "quickAskTitle": "Ask Your Advisor Saathi",
+    "quickAskTitle": "Ask Saathi AI",
     "logSaleBtn": "Log Today's Sale"
   },
   "advisor": {
-    "title": "Hyper-Local Business Advisor",
+    "title": "Saathi AI",
     "subtitle": "Grounded in your shop's actual cash flow, village location, and festival calendar.",
     "placeholder": "Ask in plain language (e.g., Should I buy extra mustard oil for Diwali?)...",
-    "send": "Ask Saathi",
+    "send": "Ask Saathi AI",
     "groundedBadge": "Grounded in Your Real Shop Data",
     "samplePromptsTitle": "Suggested Rural Inquiries",
     "dataContext": "Inspect Data Fed to AI",

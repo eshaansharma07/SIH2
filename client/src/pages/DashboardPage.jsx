@@ -194,7 +194,7 @@ export function DashboardPage({
               className="px-6 py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-800 font-bold text-xs sm:text-sm border border-slate-200 flex items-center justify-center gap-2 transition cursor-pointer"
             >
               <Sparkles className="w-4 h-4 text-amber-500" />
-              <span>{language === 'hi' ? 'एआई मंडी सलाहकार' : 'AI Mandi Advisor'}</span>
+              <span>{language === 'hi' ? 'साथी AI' : 'Saathi AI'}</span>
             </button>
             <button
               onClick={() => onNavigateTab('dossier')}
@@ -494,14 +494,14 @@ export function DashboardPage({
               <Sparkles className="w-3.5 h-3.5 text-amber-200" />
             </div>
             <span className="text-xs font-black text-slate-900 uppercase tracking-wider font-display">
-              {language === 'hi' ? 'साथी एआई से तुरंत पूछें' : 'Saathi AI Intelligence Prompts'}
+              {language === 'hi' ? 'साथी AI से तुरंत पूछें' : 'Saathi AI Intelligence Prompts'}
             </span>
           </div>
           <button
             onClick={() => onNavigateTab('advisor')}
             className="text-xs font-black text-indigo-600 hover:text-indigo-800 flex items-center gap-1 cursor-pointer"
           >
-            <span>{language === 'hi' ? 'पूरी चैट खोलें' : 'Launch Full Advisor'}</span>
+            <span>{language === 'hi' ? 'साथी AI चैट खोलें' : 'Open Saathi AI'}</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>

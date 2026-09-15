@@ -28,7 +28,7 @@ export function Navbar({ activeTab, setActiveTab, currentShop, onReloadDemo, onS
     { id: 'cashflow', label: language === 'hi' ? 'बही-खाता' : 'Bahi-Khata', icon: BookOpen },
     { id: 'credit', label: language === 'hi' ? 'क्रेडिट स्कोर' : 'Credit Score', icon: TrendingUp },
     { id: 'schemes', label: language === 'hi' ? 'सरकारी योजनाएं' : 'Schemes', icon: Landmark },
-    { id: 'advisor', label: language === 'hi' ? 'एआई सलाहकार' : 'AI Advisor', icon: Sparkles, isAi: true },
+    { id: 'advisor', label: language === 'hi' ? 'साथी AI' : 'Saathi AI', icon: Sparkles, isAi: true },
     { id: 'dossier', label: language === 'hi' ? 'बैंक फाइल' : 'Bank Dossier', icon: FileText }
   ];
 

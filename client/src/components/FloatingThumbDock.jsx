@@ -32,8 +32,8 @@ export function FloatingThumbDock({
     },
     { 
       id: 'advisor', 
-      labelHi: 'मंडी AI', 
-      labelEn: 'Mandi AI', 
+      labelHi: 'साथी AI', 
+      labelEn: 'Saathi AI', 
       icon: Sparkles,
       highlight: true
     },
