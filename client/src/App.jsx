@@ -272,6 +272,7 @@ export default function App() {
     localStorage.setItem('vyapaar_is_demo_mode', 'true');
     setCurrentShop(demoShopDefault);
     setIsDemoMode(true);
+    setRefreshKey(k => k + 1);
     setCreditData(null);
     setSummaryData(null);
     setCuesData(null);
@@ -286,6 +287,7 @@ export default function App() {
       const demoShop = demoRes?.shop || demoShopDefault;
       localStorage.setItem('vyapaar_active_shop', JSON.stringify(demoShop));
       setCurrentShop(demoShop);
+      setRefreshKey(k => k + 1);
       fetchFinancials('ramesh-kirana');
     } catch (e) {
       console.warn('Demo fetch notice:', e);
@@ -349,6 +351,7 @@ export default function App() {
       localStorage.setItem('vyapaar_is_demo_mode', 'true');
       setCurrentShop(demoShop);
       setIsDemoMode(true);
+      setRefreshKey(k => k + 1);
       changeTab('dashboard');
       fetchFinancials('ramesh-kirana');
     } catch (e) {
@@ -435,6 +438,8 @@ export default function App() {
             {activeTab === 'cashflow' && (
               <CashFlowPage
                 shop={currentShop}
+                isDemoMode={isDemoMode}
+                summaryData={summaryData}
                 onOpenKeypad={() => setKeypadOpen(true)}
                 onOpenWholesale={() => setWholesaleModalOpen(true)}
                 refreshKey={refreshKey}

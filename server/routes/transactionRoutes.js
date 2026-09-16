@@ -1,5 +1,6 @@
 import express from 'express';
 import dataStore from '../db/dataStore.js';
+import { seedDatabase } from '../db/seed.js';
 
 const router = express.Router();
 
@@ -13,7 +14,18 @@ router.get('/', async (req, res) => {
     const limit = Number(req.query.limit) || 100;
     const type = req.query.type; // optional filter: income, expense, udhaar_given, udhaar_repaid
 
-    const transactions = await dataStore.getTransactions(shopId, { type, limit });
+    let transactions = await dataStore.getTransactions(shopId, { type, limit });
+    
+    // Auto-seed safety net if demo shop transactions were not yet initialized in Lambda environment
+    if ((!transactions || transactions.length === 0) && (shopId === 'ramesh-kirana' || String(shopId).includes('demo'))) {
+      try {
+        seedDatabase();
+        transactions = await dataStore.getTransactions(shopId, { type, limit });
+      } catch (e) {
+        console.warn('Auto-seed on empty transactions notice:', e.message);
+      }
+    }
+
     res.json({ success: true, count: transactions.length, transactions });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
@@ -143,7 +155,15 @@ router.get('/summary', async (req, res) => {
       });
     }
 
-    const summary = await dataStore.getTransactionSummary(shopId);
+    let summary = await dataStore.getTransactionSummary(shopId);
+    if ((!summary || summary.totalTransactions === 0) && (shopId === 'ramesh-kirana' || String(shopId).includes('demo'))) {
+      try {
+        seedDatabase();
+        summary = await dataStore.getTransactionSummary(shopId);
+      } catch (e) {
+        console.warn('Auto-seed on empty summary notice:', e.message);
+      }
+    }
     res.json({ success: true, summary });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
@@ -158,10 +178,22 @@ router.get('/udhaar-ledger', async (req, res) => {
       return res.json({ success: true, count: 0, ledger: [] });
     }
 
-    const [allTxs, registeredCustomers] = await Promise.all([
+    let [allTxs, registeredCustomers] = await Promise.all([
       dataStore.getTransactions(shopId, { limit: 1000 }),
       dataStore.getCustomers(shopId)
     ]);
+
+    if ((!allTxs || allTxs.length === 0) && (shopId === 'ramesh-kirana' || String(shopId).includes('demo'))) {
+      try {
+        seedDatabase();
+        [allTxs, registeredCustomers] = await Promise.all([
+          dataStore.getTransactions(shopId, { limit: 1000 }),
+          dataStore.getCustomers(shopId)
+        ]);
+      } catch (e) {
+        console.warn('Auto-seed on empty udhaar ledger notice:', e.message);
+      }
+    }
 
     const txs = allTxs.filter(t => t.type === 'udhaar_given' || t.type === 'udhaar_repaid');
 

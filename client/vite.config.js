@@ -53,7 +53,7 @@ export default defineConfig({
             method: 'GET',
             options: {
               cacheName: 'api-cache',
-              networkTimeoutSeconds: 3,
+              networkTimeoutSeconds: 10,
               expiration: {
                 maxEntries: 50,
                 maxAgeSeconds: 60 * 60 * 24, // 1 day

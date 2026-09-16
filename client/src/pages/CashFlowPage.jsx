@@ -46,6 +46,7 @@ import { RegisterCustomerModal } from '../components/RegisterCustomerModal';
 import { WhatsAppReminderModal } from '../components/WhatsAppReminderModal';
 import { VoiceInputDialog } from '../components/VoiceInputDialog';
 import { AudioReadAloudButton } from '../components/AudioReadAloudButton';
+import { DEMO_TRANSACTIONS, DEMO_SUMMARY, DEMO_UDHAAR_LEDGER } from '../data/demoData';
 
 // Custom Chart Tooltip using warm paper aesthetic
 function CustomChartTooltip({ active, payload, label }) {
@@ -77,14 +78,25 @@ function CustomChartTooltip({ active, payload, label }) {
   return null;
 }
 
-export function CashFlowPage({ shop, onOpenKeypad, onOpenWholesale, refreshKey, latestTx, onTransactionSaved }) {
+export function CashFlowPage({ 
+  shop, 
+  isDemoMode,
+  summaryData,
+  onOpenKeypad, 
+  onOpenWholesale, 
+  refreshKey, 
+  latestTx, 
+  onTransactionSaved 
+}) {
   const { t, language } = useTranslation();
+  const isDemo = Boolean(isDemoMode || shop?.is_demo === 1 || shop?.id === 'ramesh-kirana');
+
   const [activeTab, setActiveTab] = useState('all'); // 'all' or 'udhaar'
-  const [transactions, setTransactions] = useState([]);
-  const [udhaarLedger, setUdhaarLedger] = useState([]);
-  const [summary, setSummary] = useState(null);
+  const [transactions, setTransactions] = useState(() => (isDemo ? DEMO_TRANSACTIONS : []));
+  const [udhaarLedger, setUdhaarLedger] = useState(() => (isDemo ? DEMO_UDHAAR_LEDGER : []));
+  const [summary, setSummary] = useState(() => (isDemo ? (summaryData || DEMO_SUMMARY) : (summaryData || null)));
   const [filterType, setFilterType] = useState('');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [reminderToast, setReminderToast] = useState(null);
   const [justUpdated, setJustUpdated] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
@@ -242,30 +254,44 @@ export function CashFlowPage({ shop, onOpenKeypad, onOpenWholesale, refreshKey, 
   }, [latestTx]);
 
   useEffect(() => {
+    if (isDemo && transactions.length === 0) {
+      setTransactions(DEMO_TRANSACTIONS);
+      setSummary(prev => prev || summaryData || DEMO_SUMMARY);
+      setUdhaarLedger(prev => prev.length > 0 ? prev : DEMO_UDHAAR_LEDGER);
+    }
     loadData();
-  }, [shop?.id, refreshKey, filterType]);
+  }, [shop?.id, isDemo, refreshKey, filterType]);
 
   const loadData = async () => {
-    if (!shop?.id) {
-      setLoading(false);
-      setTransactions([]);
-      setUdhaarLedger([]);
-      setSummary(null);
+    const targetShopId = shop?.id || (isDemo ? 'ramesh-kirana' : null);
+    if (!targetShopId) {
+      if (!isDemo) {
+        setLoading(false);
+        setTransactions([]);
+        setUdhaarLedger([]);
+        setSummary(null);
+      }
       return;
     }
-    setLoading(true);
+
+    // Only show full loading spinner if we don't have any transactions to display yet
+    if (transactions.length === 0) {
+      setLoading(true);
+    }
+
     try {
-      const shopId = shop.id;
-      const [txRes, sumRes, udhRes] = await Promise.all([
-        api.getTransactions(shopId, filterType, 60),
-        api.getTransactionSummary(shopId),
-        api.getUdhaarLedger(shopId)
+      const [txResult, sumResult, udhResult] = await Promise.allSettled([
+        api.getTransactions(targetShopId, filterType, 120),
+        api.getTransactionSummary(targetShopId),
+        api.getUdhaarLedger(targetShopId)
       ]);
 
-      if (txRes.transactions) {
+      // 1. Transactions
+      if (txResult.status === 'fulfilled' && txResult.value?.transactions?.length > 0) {
+        const serverTxs = txResult.value.transactions;
         setTransactions(prev => {
-          const serverMap = new Map(txRes.transactions.map(t => [t.id, t]));
-          const merged = [...txRes.transactions];
+          const serverMap = new Map(serverTxs.map(t => [t.id, t]));
+          const merged = [...serverTxs];
           for (const localTx of prev) {
             if (!serverMap.has(localTx.id)) {
               merged.unshift(localTx);
@@ -273,28 +299,44 @@ export function CashFlowPage({ shop, onOpenKeypad, onOpenWholesale, refreshKey, 
           }
           return merged;
         });
+      } else if (isDemo && transactions.length === 0) {
+        setTransactions(DEMO_TRANSACTIONS);
       }
 
-      if (sumRes.summary) {
+      // 2. Summary
+      if (sumResult.status === 'fulfilled' && sumResult.value?.summary) {
+        const s = sumResult.value.summary;
         setSummary(prev => {
-          if (!prev) return sumRes.summary;
-          const higherIncome = Math.max(prev.totalIncome || 0, sumRes.summary.totalIncome || 0);
-          const higherExpense = Math.max(prev.totalExpense || 0, sumRes.summary.totalExpense || 0);
+          if (!prev) return s;
+          const higherIncome = Math.max(prev.totalIncome || 0, s.totalIncome || 0);
+          const higherExpense = Math.max(prev.totalExpense || 0, s.totalExpense || 0);
           return {
-            ...sumRes.summary,
+            ...s,
             totalIncome: higherIncome,
             totalExpense: higherExpense,
             netSurplus: higherIncome - higherExpense,
-            pendingUdhaar: sumRes.summary.pendingUdhaar !== undefined ? sumRes.summary.pendingUdhaar : prev.pendingUdhaar,
-            totalUdhaarGiven: Math.max(prev.totalUdhaarGiven || 0, sumRes.summary.totalUdhaarGiven || 0),
-            totalUdhaarRepaid: Math.max(prev.totalUdhaarRepaid || 0, sumRes.summary.totalUdhaarRepaid || 0)
+            pendingUdhaar: s.pendingUdhaar !== undefined ? s.pendingUdhaar : prev.pendingUdhaar,
+            totalUdhaarGiven: Math.max(prev.totalUdhaarGiven || 0, s.totalUdhaarGiven || 0),
+            totalUdhaarRepaid: Math.max(prev.totalUdhaarRepaid || 0, s.totalUdhaarRepaid || 0)
           };
         });
+      } else if (isDemo && !summary) {
+        setSummary(summaryData || DEMO_SUMMARY);
       }
 
-      if (udhRes.ledger) setUdhaarLedger(udhRes.ledger);
+      // 3. Udhaar Ledger
+      if (udhResult.status === 'fulfilled' && udhResult.value?.ledger?.length > 0) {
+        setUdhaarLedger(udhResult.value.ledger);
+      } else if (isDemo && udhaarLedger.length === 0) {
+        setUdhaarLedger(DEMO_UDHAAR_LEDGER);
+      }
     } catch (err) {
       console.error('Error loading cash flow data:', err);
+      if (isDemo) {
+        setTransactions(prev => prev.length > 0 ? prev : DEMO_TRANSACTIONS);
+        setSummary(prev => prev || summaryData || DEMO_SUMMARY);
+        setUdhaarLedger(prev => prev.length > 0 ? prev : DEMO_UDHAAR_LEDGER);
+      }
     } finally {
       setLoading(false);
     }
