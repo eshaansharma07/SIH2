@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ShieldCheck, 
   TrendingUp, 
@@ -17,6 +18,72 @@ import { WarliBorder } from '../components/WarliMotif';
 import { Card, Badge, SectionHeader, Button } from '../components/ui';
 import { AudioReadAloudButton } from '../components/AudioReadAloudButton';
 
+export function getSchemeTier(score) {
+  if (score === null || score === undefined) {
+    return {
+      tierName: 'Unrated (New Enterprise)',
+      tierNameHi: 'अमूल्यांकित (नया उद्यम)',
+      scheme: 'PM SVANidhi Starter',
+      schemeHi: 'पीएम स्वनिधि स्टार्टर',
+      facility: 'Up to ₹10,000 – ₹50,000',
+      facilityHi: '₹10,000 से ₹50,000 तक',
+      interestRate: 'Subsidized 7% p.a.',
+      collateral: '0% Collateral',
+      badgeVariant: 'neutral'
+    };
+  }
+  if (score >= 750) {
+    return {
+      tierName: 'Prime PSL Tier-1 (Super Prime)',
+      tierNameHi: 'प्राइम पीएसएल टियर-1 (अति-उत्कृष्ट)',
+      scheme: 'PM MUDRA Tarun & CGTMSE Guarantee',
+      schemeHi: 'पीएम मुद्रा तरुण एवं CGTMSE गारंटी',
+      facility: '₹5 Lakh to ₹20 Lakh (Union Budget 2024 Revised)',
+      facilityHi: '₹5 लाख से ₹20 लाख (बजट 2024 संशोधित)',
+      interestRate: '8.4% – 9.2% (Lowest Risk Spread)',
+      collateral: '100% Collateral-Free (CGTMSE Covered)',
+      badgeVariant: 'positive'
+    };
+  }
+  if (score >= 650) {
+    return {
+      tierName: 'Good Quality Micro-Enterprise',
+      tierNameHi: 'उत्कृष्ट सूक्ष्म उद्यम (गुड क्वालिटी)',
+      scheme: 'PM MUDRA Kishor',
+      schemeHi: 'पीएम मुद्रा किशोर',
+      facility: '₹50,000 to ₹5,00,000',
+      facilityHi: '₹50,000 से ₹5,00,000 तक',
+      interestRate: '9.5% – 10.5% p.a.',
+      collateral: '0% Collateral (Stock Hypothecation)',
+      badgeVariant: 'brand'
+    };
+  }
+  if (score >= 550) {
+    return {
+      tierName: 'Moderate Credit Standing',
+      tierNameHi: 'मध्यम क्रेडिट श्रेणी',
+      scheme: 'PM MUDRA Shishu / PM SVANidhi',
+      schemeHi: 'पीएम मुद्रा शिशु / पीएम स्वनिधि',
+      facility: 'Up to ₹50,000 Working Capital',
+      facilityHi: '₹50,000 तक कार्यशील पूंजी',
+      interestRate: '10.5% – 11.5% p.a.',
+      collateral: '0% Collateral',
+      badgeVariant: 'attention'
+    };
+  }
+  return {
+    tierName: 'Emerging Credit File',
+    tierNameHi: 'उभरती हुई क्रेडिट फ़ाइल',
+    scheme: 'PM SVANidhi & Micro-Credit Starter',
+    schemeHi: 'पीएम स्वनिधि एवं सूक्ष्म ऋण स्टार्टर',
+    facility: '₹10,000 – ₹20,000 Micro-Advance',
+    facilityHi: '₹10,000 से ₹20,000 सूक्ष्म अग्रिम',
+    interestRate: '7.0% Subsidized',
+    collateral: '0% Collateral',
+    badgeVariant: 'neutral'
+  };
+}
+
 export function CreditScorePage({ shop, creditData, onNavigateTab }) {
   const { t, language } = useTranslation();
   
@@ -29,10 +96,28 @@ export function CreditScorePage({ shop, creditData, onNavigateTab }) {
 
   const baseScore = creditData?.totalScore ?? null;
 
+  // Instant local calculation so gauge dial moves immediately (60fps) upon slider drag
+  const computeLocalProjection = (days, udhaar, upi) => {
+    if (baseScore === null) return { projectedScore: null, delta: 0 };
+    const loggingGain = Math.min(35, Math.round(days * 0.8));
+    const udhaarGain = udhaar > 0 ? Math.min(28, Math.round((udhaar / 5000) * 15)) : 0;
+    const digitalGain = Math.min(25, Math.round(Math.max(0, upi - (creditData?.metrics?.digitalSharePct || 20)) * 0.6));
+    const delta = loggingGain + udhaarGain + digitalGain;
+    return {
+      projectedScore: Math.min(850, baseScore + delta),
+      delta
+    };
+  };
+
+  const localProjection = computeLocalProjection(extraDays, recoverUdhaar, targetUpi);
+
+  // Debounce API simulation call by 200ms to avoid flooding backend during rapid slider drag
   useEffect(() => {
-    if (baseScore !== null && shop?.id) {
+    if (baseScore === null || !shop?.id) return;
+    const timer = setTimeout(() => {
       runSimulation();
-    }
+    }, 200);
+    return () => clearTimeout(timer);
   }, [extraDays, recoverUdhaar, targetUpi, baseScore, shop?.id]);
 
   const runSimulation = async () => {
@@ -45,8 +130,13 @@ export function CreditScorePage({ shop, creditData, onNavigateTab }) {
         udhaarRecoveryAmount: recoverUdhaar,
         targetUpiSharePct: targetUpi
       });
-      if (res.success) {
-        setSimulatedData(res);
+      if (res && res.success) {
+        setSimulatedData({
+          projectedScore: res.projectedScore,
+          delta: res.projectedDelta ?? res.delta ?? 0,
+          simulationBreakdown: res.simulationBreakdown,
+          advice: res.advice
+        });
       }
     } catch (e) {
       console.error('Simulation error:', e);
@@ -54,6 +144,12 @@ export function CreditScorePage({ shop, creditData, onNavigateTab }) {
       setSimulating(false);
     }
   };
+
+  const activeProjectedScore = simulatedData?.projectedScore ?? localProjection.projectedScore ?? baseScore;
+  const activeDelta = simulatedData?.delta ?? localProjection.delta ?? 0;
+  const currentTier = getSchemeTier(baseScore);
+  const projectedTier = getSchemeTier(activeProjectedScore);
+  const tierUpgraded = baseScore !== null && projectedTier.scheme !== currentTier.scheme && activeProjectedScore > (baseScore || 0);
 
   const factors = creditData?.factors || [];
   const udyamNumber = shop?.udyam_number || (shop?.id ? `UDYAM-${(shop.state || 'IN').substring(0, 2).toUpperCase()}-0092478` : 'UDYAM-DEMO');
@@ -141,7 +237,9 @@ export function CreditScorePage({ shop, creditData, onNavigateTab }) {
             </div>
             <div className="text-right">
               <span className="text-paper-400 block text-[10px] uppercase font-bold">Recommended Facility</span>
-              <span className="text-sm font-extrabold text-forestRural-300">PM MUDRA Shishu / Kishore (₹50k – ₹5L)</span>
+              <span className="text-sm font-extrabold text-forestRural-300">
+                {language === 'hi' ? currentTier.schemeHi : currentTier.scheme}
+              </span>
             </div>
           </div>
         </div>
@@ -168,7 +266,10 @@ export function CreditScorePage({ shop, creditData, onNavigateTab }) {
               </div>
             </div>
           ) : (
-            <CreditGauge score={simulatedData?.projectedScore ?? baseScore} />
+            <CreditGauge 
+              score={activeProjectedScore} 
+              ratingLabel={language === 'hi' ? projectedTier.tierNameHi : projectedTier.tierName} 
+            />
           )}
         </Card>
 
@@ -257,16 +358,22 @@ export function CreditScorePage({ shop, creditData, onNavigateTab }) {
 
           <div className="flex items-center gap-2 bg-paper-100 px-3.5 py-1.5 rounded-xl border border-paper-300">
             <span className="text-xs text-indigoRural-500 font-medium">Projected Score:</span>
-            <strong className="text-lg font-black text-terracotta-700 tabular-nums font-display">
-              {simulatedData?.projectedScore || baseScore || '—'}
-            </strong>
-            <Badge variant="positive" size="sm">
-              +{simulatedData?.delta || 0} pts
+            <motion.strong 
+              key={activeProjectedScore}
+              initial={{ scale: 0.9, opacity: 0.7 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.15 }}
+              className="text-lg font-black text-terracotta-700 tabular-nums font-display"
+            >
+              {activeProjectedScore || '—'}
+            </motion.strong>
+            <Badge variant={activeDelta > 0 ? 'positive' : 'neutral'} size="sm">
+              +{activeDelta} pts
             </Badge>
           </div>
         </div>
 
-        {/* 3 Interactive Sliders */}
+        {/* 3 Interactive Sliders with touch-friendly targets */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           
           {/* Slider 1: Consistent Logging Days */}
@@ -275,15 +382,17 @@ export function CreditScorePage({ shop, creditData, onNavigateTab }) {
               <span className="text-indigoRural-700">Daily Bahi-Khata Logging</span>
               <span className="text-terracotta-700 font-extrabold tabular-nums">+{extraDays} Days</span>
             </div>
-            <input 
-              type="range" 
-              min="0" 
-              max="60" 
-              step="5"
-              value={extraDays}
-              onChange={(e) => setExtraDays(Number(e.target.value))}
-              className="w-full accent-terracotta-600 cursor-pointer"
-            />
+            <div className="min-h-[44px] flex items-center">
+              <input 
+                type="range" 
+                min="0" 
+                max="60" 
+                step="5"
+                value={extraDays}
+                onChange={(e) => setExtraDays(Number(e.target.value))}
+                className="w-full h-8 py-2 accent-terracotta-600 cursor-pointer touch-none"
+              />
+            </div>
             <p className="text-[10px] text-indigoRural-400">Regular evening logging builds credit discipline verification.</p>
           </div>
 
@@ -293,15 +402,17 @@ export function CreditScorePage({ shop, creditData, onNavigateTab }) {
               <span className="text-indigoRural-700">Udhaar Recovery Target</span>
               <span className="text-forestRural-700 font-extrabold tabular-nums">₹{recoverUdhaar.toLocaleString('en-IN')}</span>
             </div>
-            <input 
-              type="range" 
-              min="0" 
-              max="10000" 
-              step="500"
-              value={recoverUdhaar}
-              onChange={(e) => setRecoverUdhaar(Number(e.target.value))}
-              className="w-full accent-forestRural-600 cursor-pointer"
-            />
+            <div className="min-h-[44px] flex items-center">
+              <input 
+                type="range" 
+                min="0" 
+                max="10000" 
+                step="500"
+                value={recoverUdhaar}
+                onChange={(e) => setRecoverUdhaar(Number(e.target.value))}
+                className="w-full h-8 py-2 accent-forestRural-600 cursor-pointer touch-none"
+              />
+            </div>
             <p className="text-[10px] text-indigoRural-400">Recovering pending khata accelerates capital turnover.</p>
           </div>
 
@@ -311,29 +422,71 @@ export function CreditScorePage({ shop, creditData, onNavigateTab }) {
               <span className="text-indigoRural-700">UPI Digital Sales Share</span>
               <span className="text-ochre-700 font-extrabold tabular-nums">{targetUpi}%</span>
             </div>
-            <input 
-              type="range" 
-              min="10" 
-              max="90" 
-              step="5"
-              value={targetUpi}
-              onChange={(e) => setTargetUpi(Number(e.target.value))}
-              className="w-full accent-ochre-600 cursor-pointer"
-            />
+            <div className="min-h-[44px] flex items-center">
+              <input 
+                type="range" 
+                min="10" 
+                max="90" 
+                step="5"
+                value={targetUpi}
+                onChange={(e) => setTargetUpi(Number(e.target.value))}
+                className="w-full h-8 py-2 accent-ochre-600 cursor-pointer touch-none"
+              />
+            </div>
             <p className="text-[10px] text-indigoRural-400">RBI mandates digital deepening for PSL credit rating.</p>
           </div>
 
         </div>
 
-        {/* Projection Summary Callout */}
-        <div className="p-4 rounded-xl bg-forestRural-50 border border-forestRural-200 flex items-center gap-3">
-          <CheckCircle2 className="w-5 h-5 text-forestRural-700 shrink-0" />
-          <p className="text-xs text-forestRural-800 font-medium">
-            {language === 'hi' 
-              ? `इस सिमुलेशन से स्कोर बढ़कर ${simulatedData?.projectedScore || baseScore || '—'} हो जाएगा और वे ₹3 लाख के मुद्रा किशोर लोन के लिए स्वतः योग्य होंगे।`
-              : `Simulated actions raise score to ${simulatedData?.projectedScore || baseScore || '—'}/850, qualifying for ₹3–₹5 Lakh MUDRA Kishore facility.`}
-          </p>
-        </div>
+        {/* Dynamic Projection Summary Callout */}
+        <motion.div 
+          key={`${activeProjectedScore}-${tierUpgraded}`}
+          initial={{ opacity: 0, y: 3 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.2 }}
+          className={`p-4 sm:p-5 rounded-2xl border flex flex-col md:flex-row md:items-center justify-between gap-4 ${
+            tierUpgraded 
+              ? 'bg-forestRural-50/80 border-forestRural-300 shadow-xs' 
+              : 'bg-paper-100/70 border-paper-300'
+          }`}
+        >
+          <div className="flex items-start gap-3.5">
+            <div className={`p-2.5 rounded-xl shrink-0 ${tierUpgraded ? 'bg-forestRural-600 text-white shadow-xs' : 'bg-paper-200 text-indigoRural-700'}`}>
+              {tierUpgraded ? <Sparkles className="w-5 h-5" /> : <CheckCircle2 className="w-5 h-5" />}
+            </div>
+            <div className="space-y-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-xs font-black text-indigoRural-900 uppercase tracking-wide">
+                  {tierUpgraded 
+                    ? (language === 'hi' ? '🎉 नया ऋण स्तर खुला!' : '🎉 Higher Loan Tier Unlocked!') 
+                    : (language === 'hi' ? 'ऋण फ़ाइल सुदृढ़ीकरण' : 'Credit File Deepening')}
+                </span>
+                <Badge variant={projectedTier.badgeVariant} size="sm">
+                  {language === 'hi' ? projectedTier.schemeHi : projectedTier.scheme}
+                </Badge>
+              </div>
+              <p className="text-xs text-indigoRural-700 font-medium leading-relaxed">
+                {language === 'hi'
+                  ? tierUpgraded
+                    ? `इस सिमुलेशन से स्कोर बढ़कर ${activeProjectedScore}/850 हो जाएगा (+${activeDelta} अंक), जिससे आपकी दुकान '${projectedTier.schemeHi}' (${projectedTier.facilityHi}) के लिए बिना किसी बंधक (0% Collateral) के सीधे बैंक शाखा स्वीकृति के योग्य बन जाती है।`
+                    : `स्कोर ${activeProjectedScore}/850 पर पहुंचने से बैंक आपकी फ़ाइल को '${projectedTier.schemeHi}' के तहत न्यूनतम जोखिम स्प्रेड दर (${projectedTier.interestRate}) पर ऋण स्वीकृत करने की अनुशंसा करता है।`
+                  : tierUpgraded
+                    ? `Simulated actions raise score to ${activeProjectedScore}/850 (+${activeDelta} pts), advancing you into ${projectedTier.scheme} (${projectedTier.facility}) with 100% collateral-free terms.`
+                    : `Score reaches ${activeProjectedScore}/850 (+${activeDelta} pts), solidifying your Prime standing for ${projectedTier.scheme} and qualifying for bank risk-spread rate discounts (${projectedTier.interestRate}).`
+                }
+              </p>
+            </div>
+          </div>
+
+          <div className="md:text-right shrink-0 border-t md:border-t-0 pt-3 md:pt-0 border-paper-200/80">
+            <div className="text-[10px] font-bold text-indigoRural-400 uppercase tracking-wider">
+              {language === 'hi' ? 'अनुमानित अधिकतम सीमा' : 'Sanctioned Ceiling'}
+            </div>
+            <div className="text-sm font-black text-forestRural-700 font-display">
+              {language === 'hi' ? projectedTier.facilityHi : projectedTier.facility}
+            </div>
+          </div>
+        </motion.div>
       </Card>
 
     </div>

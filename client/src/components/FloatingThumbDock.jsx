@@ -65,7 +65,7 @@ export function FloatingThumbDock({
         <button
           onClick={onOpenKeypad}
           aria-label="Record transaction"
-          className="flex items-center gap-2 pl-3 pr-4 py-2.5 rounded-full bg-terracotta-600 hover:bg-terracotta-700 text-white font-black text-xs shadow-lg shadow-terracotta-600/30 active:scale-95 transition-all cursor-pointer shrink-0"
+          className="flex items-center gap-2 pl-3 pr-4 py-2 min-h-[44px] rounded-full bg-terracotta-600 hover:bg-terracotta-700 text-white font-black text-xs shadow-lg shadow-terracotta-600/30 active:scale-95 transition-all cursor-pointer shrink-0"
         >
           <span className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center">
             <Plus className="w-3.5 h-3.5 text-white stroke-[3]" />
@@ -88,7 +88,7 @@ export function FloatingThumbDock({
               <button
                 key={item.id}
                 onClick={() => setActiveTab(item.id)}
-                className={`relative px-3 sm:px-3.5 py-2 rounded-full text-xs font-extrabold flex items-center gap-1.5 transition-all duration-200 cursor-pointer ${
+                className={`relative px-3 sm:px-3.5 py-2 min-h-[44px] rounded-full text-xs font-extrabold flex items-center gap-1.5 transition-all duration-200 cursor-pointer ${
                   isActive
                     ? 'bg-white text-indigoRural-900 shadow-md scale-[1.02]'
                     : 'text-paper-200 hover:text-white hover:bg-white/10 active:scale-95'

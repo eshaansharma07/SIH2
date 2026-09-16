@@ -32,9 +32,9 @@ export function Button({
   };
 
   const sizeStyles = {
-    sm: 'px-3 py-1.5 text-xs rounded-xl gap-1.5',
-    md: 'px-4 py-2.5 text-xs sm:text-sm rounded-xl gap-2',
-    lg: 'px-6 py-3.5 text-xs sm:text-sm rounded-2xl gap-2'
+    sm: 'px-3 py-2 min-h-[40px] sm:min-h-[36px] text-xs rounded-xl gap-1.5',
+    md: 'px-4 py-2.5 min-h-[44px] text-xs sm:text-sm rounded-xl gap-2',
+    lg: 'px-6 py-3.5 min-h-[48px] text-xs sm:text-sm rounded-2xl gap-2'
   };
 
   const disabledStyles = 'opacity-50 cursor-not-allowed pointer-events-none';

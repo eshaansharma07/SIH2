@@ -47,6 +47,75 @@ export function BankDossierPage({ shop, onBack }) {
   };
 
   const [downloadingCam, setDownloadingCam] = useState(false);
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
+
+  const handleDownloadPDF = async () => {
+    if (!shop?.id) return;
+    setDownloadingPdf(true);
+    try {
+      // Dynamic imports for code-splitting heavy PDF renderer
+      const [
+        camRes,
+        scoreRes,
+        QRCodeModule,
+        { pdf },
+        { BankDossierDocument }
+      ] = await Promise.all([
+        api.getCAM(shop.id).catch(() => null),
+        api.getCreditScore(shop.id).catch(() => null),
+        import('qrcode'),
+        import('@react-pdf/renderer'),
+        import('../pdf/BankDossierDocument')
+      ]);
+
+      const QRCode = QRCodeModule.default || QRCodeModule;
+      const cam = camRes?.cam || camRes || dossierData?.cam || {};
+      const scoreData = scoreRes || dossierData?.creditEvaluation || {};
+
+      // Generate dynamic verification QR Code linking to live CAM verification endpoint
+      const baseUrl = typeof window !== 'undefined' && window.location.origin.includes('localhost')
+        ? 'https://vyapaar-saathi-nine.vercel.app'
+        : (typeof window !== 'undefined' ? window.location.origin : 'https://vyapaar-saathi-nine.vercel.app');
+      const verificationUrl = `${baseUrl}/api/credit-score/${shop.id}/cam`;
+      
+      const qrCodeDataUrl = await QRCode.toDataURL(verificationUrl, {
+        margin: 1,
+        width: 220,
+        color: {
+          dark: '#0C1322',
+          light: '#FFFFFF'
+        }
+      });
+
+      const docElement = (
+        <BankDossierDocument
+          data={{
+            shop: { ...shop, ...(dossierData?.shop || {}) },
+            cam,
+            scoreData,
+            qrCodeDataUrl,
+            generatedAt: new Date().toISOString(),
+            documentId: dossierData?.dossierNumber || `VS-CAM-${(shop.state || 'IN').substring(0, 2).toUpperCase()}-${Date.now().toString().slice(-6)}`
+          }}
+        />
+      );
+
+      const blob = await pdf(docElement).toBlob();
+      const url = URL.createObjectURL(blob);
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.href = url;
+      downloadAnchor.download = `Vyapaar_Saathi_Bank_Dossier_${shop.id}_${new Date().toISOString().slice(0, 10)}.pdf`;
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Failed to generate PDF Dossier:', err);
+      alert('Error generating PDF Dossier: ' + (err.message || 'Please try again'));
+    } finally {
+      setDownloadingPdf(false);
+    }
+  };
 
   const handleDownloadCAM = async () => {
     if (!shop?.id) return;
@@ -109,15 +178,28 @@ export function BankDossierPage({ shop, onBack }) {
               size="md"
               icon={Download}
             >
-              <span>{downloadingCam ? (language === 'hi' ? 'डाउनलोड हो रहा है...' : 'Downloading CAM...') : (language === 'hi' ? 'CAM (JSON)' : 'Download CAM (JSON)')}</span>
+              <span>{downloadingCam ? (language === 'hi' ? 'डाउनलोड हो रहा है...' : 'Downloading CAM...') : (language === 'hi' ? 'CAM (JSON)' : 'CAM (JSON)')}</span>
             </Button>
             <Button
               onClick={handlePrint}
-              variant="dark"
+              variant="outline"
               size="md"
               icon={Printer}
             >
-              <span>{language === 'hi' ? 'प्रिंट / पीडीएफ सेव करें' : 'Print / Save PDF Dossier'}</span>
+              <span>{language === 'hi' ? 'प्रिंट व्यू' : 'Print View'}</span>
+            </Button>
+            <Button
+              onClick={handleDownloadPDF}
+              disabled={downloadingPdf}
+              variant="primary"
+              size="md"
+              icon={Download}
+            >
+              <span>
+                {downloadingPdf 
+                  ? (language === 'hi' ? 'पीडीएफ बन रहा है...' : 'Generating PDF...') 
+                  : (language === 'hi' ? 'आधिकारिक बैंक डॉसियर (PDF)' : 'Download Bank Dossier (PDF)')}
+              </span>
             </Button>
           </div>
         </Card>

@@ -9,7 +9,7 @@ export function CreditGauge({
   score = null, 
   maxScore = 850, 
   minScore = 300, 
-  ratingLabel = "Prime Bankable", 
+  ratingLabel = null, 
   compact = false 
 }) {
   const hasScore = score !== null && score !== undefined;
@@ -26,6 +26,13 @@ export function CreditGauge({
   const needleRad = (angle * Math.PI) / 180;
   const dotX = cx + radius * Math.cos(needleRad);
   const dotY = cy + radius * Math.sin(needleRad);
+
+  const displayRating = ratingLabel || (
+    clampedScore >= 750 ? "Prime PSL Tier-1" :
+    clampedScore >= 650 ? "Good Bankable (Kishor)" :
+    clampedScore >= 550 ? "Moderate (Shishu)" :
+    "Emerging Credit"
+  );
 
   return (
     <div className="flex flex-col items-center justify-center select-none py-1">
@@ -68,7 +75,7 @@ export function CreditGauge({
               strokeDasharray={`${radius * Math.PI}`}
               strokeDashoffset={`${radius * Math.PI * (1 - percentage)}`}
               filter="url(#glow)"
-              className="transition-all duration-1000 ease-out"
+              className="transition-all duration-300 ease-out will-change-transform"
             />
           )}
 
@@ -81,7 +88,7 @@ export function CreditGauge({
               fill="#FFFFFF" 
               stroke="#1A2742"
               strokeWidth="3"
-              className="transition-all duration-1000 ease-out drop-shadow-md"
+              className="transition-all duration-300 ease-out drop-shadow-md will-change-transform"
             />
           )}
 
@@ -104,11 +111,11 @@ export function CreditGauge({
         <div className="mt-1">
           {hasScore ? (
             <Badge 
-              variant={clampedScore >= 750 ? 'positive' : clampedScore >= 650 ? 'attention' : 'brand'}
+              variant={clampedScore >= 750 ? 'positive' : clampedScore >= 650 ? 'brand' : clampedScore >= 550 ? 'attention' : 'neutral'}
               size="sm"
               dot
             >
-              <span>{ratingLabel}</span>
+              <span>{displayRating}</span>
             </Badge>
           ) : (
             <Badge variant="neutral" size="sm">
