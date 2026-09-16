@@ -328,7 +328,7 @@ export function BankDossierDocument({ data }) {
             <Text style={styles.subBrand}>Hyper-Local Business Advisory & Underwriting Stack for Rural Micro-Enterprises</Text>
             <Text style={styles.documentTitle}>CREDIT APPRAISAL MEMO & VERIFIED FINANCIAL DOSSIER</Text>
             <Text style={styles.complianceBadge}>
-              FORMATTED PER RBI PRIORITY SECTOR LENDING & NAYAK COMMITTEE NORMS
+              FORMATTED PER RBI PSL & NAYAK COMMITTEE GUIDELINES • SIH 2026 PROTOTYPE
             </Text>
           </View>
           <View style={styles.metaBlock}>
@@ -480,7 +480,7 @@ export function BankDossierDocument({ data }) {
               </View>
               <View style={styles.kvRow}>
                 <Text style={styles.kLabel}>Digital Adoption (UPI Share):</Text>
-                <Text style={styles.vValue}>{cashflow?.digitalSharePct || '42'}% (RBI PSL Aligned)</Text>
+                <Text style={styles.vValue}>{cashflow?.digitalSharePct || '42'}% (PSL Benchmark Format)</Text>
               </View>
             </View>
           </View>
@@ -514,7 +514,7 @@ export function BankDossierDocument({ data }) {
 
         {/* Footer */}
         <View style={styles.footer}>
-          <Text style={styles.footerText}>Vyapaar Saathi Platform • Generated in compliance with RBI PSL & MSME Credit Guidelines</Text>
+          <Text style={styles.footerText}>Vyapaar Saathi • Prototype for Smart India Hackathon 2026 • Formatted per RBI PSL guidelines • Not an official government filing</Text>
           <Text style={styles.footerText}>Page 1 of 1 • System Generated Dossier</Text>
         </View>
 

@@ -14,12 +14,12 @@ const DPI_DISCLOSURES = {
   },
   udyam: {
     isMock: true,
-    protocol: 'Ministry of MSME Udyam Aadhaar Verification Gateway',
+    protocol: 'Ministry of MSME Udyam Aadhaar Specification (Format Simulator)',
     reason: 'Live Udyam API access requires direct NIC/GSTN integration restricted to scheduled commercial banks. Format validation adheres to official UDYAM-XX-00-0000000 specification.'
   },
   digiLocker: {
     isMock: true,
-    protocol: 'MeitY DigiLocker Requester API v2.0',
+    protocol: 'MeitY DigiLocker Requester API v2.0 (Simulated)',
     reason: 'Simulates Aadhaar, PAN, and Trade License cryptographic authenticity verification from national identity lockers for rural MSME underwriting.'
   }
 };
@@ -45,7 +45,7 @@ router.post('/account-aggregator/consent', (req, res) => {
         customerVpa: customerVpa || 'merchant@upi',
         fiTypes,
         purpose,
-        dataConsumer: 'Vyapaar Saathi Underwriting Engine (RBI PSL Compliant)',
+        dataConsumer: 'Vyapaar Saathi Underwriting Engine (PSL-Format Aligned Demo)',
         frequency: { unit: 'MONTH', value: 1 }
       },
       mockDataDisclosure: DPI_DISCLOSURES.accountAggregator

@@ -169,7 +169,7 @@ export function BankDossierPage({ shop, onBack }) {
           <div className="flex flex-wrap items-center gap-2.5">
             <span className="text-xs text-indigoRural-500 font-semibold hidden lg:inline-flex items-center gap-1.5">
               <FileCheck className="w-3.5 h-3.5 text-forestRural-600" />
-              <span>Nayak Working Capital & RBI PSL Ready</span>
+              <span>Working Capital Summary — PSL-Format Ready</span>
             </span>
             <Button
               onClick={handleDownloadCAM}
@@ -178,7 +178,7 @@ export function BankDossierPage({ shop, onBack }) {
               size="md"
               icon={Download}
             >
-              <span>{downloadingCam ? (language === 'hi' ? 'डाउनलोड हो रहा है...' : 'Downloading CAM...') : (language === 'hi' ? 'CAM (JSON)' : 'CAM (JSON)')}</span>
+              <span>{downloadingCam ? (language === 'hi' ? 'डाउनलोड हो रहा है...' : 'Downloading CAM...') : (language === 'hi' ? 'CAM (JSON)' : 'Download CAM (JSON)')}</span>
             </Button>
             <Button
               onClick={handlePrint}
@@ -218,14 +218,14 @@ export function BankDossierPage({ shop, onBack }) {
                   व्यापार साथी (Vyapaar Saathi)
                 </h1>
                 <Badge variant="brand" size="sm">
-                  DPI INDIA STACK
+                  DPI-Inspired Architecture (Prototype)
                 </Badge>
               </div>
               <p className="text-xs font-bold text-indigoRural-700 mt-0.5">
-                भारत सरकार • Ministry of MSME & Finance • Priority Sector Lending (PSL) Framework
+                Formatted per RBI Priority Sector Lending (PSL) documentation guidelines • Prototype, not an official filing
               </p>
               <p className="text-[10px] text-indigoRural-500">
-                Official Credit Readiness Certificate for Branch Manager / Credit Officer Loan File
+                Credit Readiness Appraisal Memo • Prototype for Bank Loan File Evaluation
               </p>
             </div>
           </div>
@@ -408,6 +408,13 @@ export function BankDossierPage({ shop, onBack }) {
               <p className="text-[10px] text-indigoRural-400">Proprietor Signature / अंगूठा निशान</p>
             </div>
           </div>
+        </div>
+
+        {/* SIH Prototype Disclaimer */}
+        <div className="pt-3 border-t border-paper-200 text-center">
+          <p className="text-[10px] text-indigoRural-400 font-medium">
+            Smart India Hackathon 2026 Prototype • Formatted per RBI Priority Sector Lending (PSL) documentation guidelines • Not an official government filing or certificate.
+          </p>
         </div>
 
       </div>

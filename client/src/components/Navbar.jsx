@@ -51,7 +51,7 @@ export function Navbar({ activeTab, setActiveTab, currentShop, isDemoMode, onRel
 
   return (
     <header className="sticky top-0 z-50 w-full backdrop-blur-2xl bg-white/95 border-b border-paper-300/90 shadow-2xs transition-all">
-      {/* Top Sovereign Tri-Color Micro-Rule */}
+      {/* Tri-Color Micro-Rule */}
       <div className="h-[3px] w-full bg-gradient-to-r from-terracotta-500 via-paper-200 to-forestRural-600" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
@@ -196,7 +196,7 @@ export function Navbar({ activeTab, setActiveTab, currentShop, isDemoMode, onRel
               <span>{language === 'hi' ? 'HI' : 'EN'}</span>
             </Button>
 
-            {/* Sovereign Log Out Button */}
+            {/* Log Out Button */}
             {currentShop && (
               <Button
                 onClick={onLogout}

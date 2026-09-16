@@ -523,22 +523,22 @@ export default function App() {
         creditScore={creditData?.totalScore || null}
       />
 
-      {/* Sovereign DPI Rural Footer */}
+      {/* Rural Footer (SIH 2026 Prototype) */}
       <footer className="print:hidden border-t border-paper-300 bg-white/80 backdrop-blur-md py-7 px-4 text-center text-xs text-indigoRural-600 pb-28 sm:pb-24">
         <div className="max-w-4xl mx-auto space-y-2">
           <div className="flex items-center justify-center gap-2 flex-wrap">
-            <span className="font-black text-indigoRural-950 font-display text-sm">भारत सरकार • व्यापार साथी (Vyapaar Saathi)</span>
+            <span className="font-black text-indigoRural-950 font-display text-sm">व्यापार साथी (Vyapaar Saathi) — Prototype</span>
             <span className="text-paper-400">•</span>
             <span className="text-[10px] bg-indigoRural-900 text-white font-bold px-2.5 py-0.5 rounded-full">
-              DPI INDIA STACK
+              DPI-Inspired Architecture (Prototype)
             </span>
             <span className="text-paper-400">•</span>
             <span className="text-[10px] bg-forestRural-50 text-forestRural-800 font-bold px-2 py-0.5 rounded-full border border-forestRural-200">
-              RBI PSL Compliant
+              PSL-Format Aligned (Demo)
             </span>
           </div>
           <p className="text-[11px] text-indigoRural-500 max-w-2xl mx-auto leading-relaxed">
-            National Micro-Enterprise Credit & Seasonal Advisory Engine. Designed under the Ministry of MSME and Reserve Bank of India Priority Sector Lending (PSL) Framework.
+            National Micro-Enterprise Credit & Seasonal Advisory Engine. A prototype built for Smart India Hackathon 2026, referencing RBI's Priority Sector Lending (PSL) documentation format. Not an official government service.
           </p>
           <div className="flex items-center justify-center gap-1.5 pt-1">
             <span className="w-1.5 h-1.5 rounded-full bg-terracotta-500" />

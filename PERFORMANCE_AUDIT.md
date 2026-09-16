@@ -83,11 +83,11 @@ Village shopkeepers frequently use one-handed thumb interaction with soiled hand
 1. **True Vector PDF Export**:
    - Replaced browser `window.print()` with `@react-pdf/renderer` vector primitives (`Document`, `Page`, `View`, `Text`, `Image`).
    - Produces institutional A4 PDF containing:
-     - Sovereign Udyam reference number
+     - Udyam reference number (format validation)
      - 4-Pillar Non-CIBIL factor scoring table
      - Nayak Committee Working Capital norm assessment (25% WC requirement, 5% margin, 20% MPBF limit)
      - Dynamic verification QR code pointing to `/api/credit-score/:shopId/cam`
      - Ruled signatures for Branch Credit Officer and Borrower.
 2. **Defensible Compliance**:
-   - Strictly does **NOT** use unauthorized Ashoka Chakra emblems or make fraudulent claims of "RBI endorsement."
-   - Prominently states: *"FORMATTED PER RBI PRIORITY SECTOR LENDING & NAYAK COMMITTEE NORMS — Official Credit Readiness Certificate for Branch Manager / Credit Officer Loan File"*.
+   - Strictly does **NOT** use unauthorized Ashoka Chakra emblems or make fraudulent claims of government or RBI endorsement.
+   - Prominently states: *"FORMATTED PER RBI PSL & NAYAK COMMITTEE GUIDELINES • SIH 2026 PROTOTYPE — Credit Readiness Appraisal Memo Prototype for Branch Manager / Credit Officer Loan File Evaluation"*.

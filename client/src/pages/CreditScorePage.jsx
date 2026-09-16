@@ -200,7 +200,7 @@ export function CreditScorePage({ shop, creditData, onNavigateTab }) {
                 <div className="w-4 h-3 border border-ochre-900/40 rounded-xs" />
               </div>
               <span className="text-[11px] font-bold uppercase tracking-widest text-paper-300">
-                National MSME Sovereign Credit ID
+                Digital MSME Enterprise Pass (Demo)
               </span>
             </div>
             <span className="text-[10px] font-mono text-forestRural-300 font-bold bg-forestRural-900/80 px-2.5 py-0.5 rounded-full border border-forestRural-500/40">
@@ -256,8 +256,8 @@ export function CreditScorePage({ shop, creditData, onNavigateTab }) {
               </h3>
               <p className="text-xs text-indigoRural-600 max-w-xs mx-auto leading-relaxed">
                 {creditData?.message || (language === 'hi' 
-                  ? 'व्यापार साथी पर अपना पहला हफ्ता पूरा करें (न्यूनतम 5 बिक्री और 3 दिन) ताकि बैंक-मान्य 4-पिलर स्कोर जनरेट हो सके।'
-                  : 'Log your first week of transactions (minimum 5 sales across 3 days) to unlock your explainable RBI-aligned credit score.')}
+                  ? 'व्यापार साथी पर अपना पहला हफ्ता पूरा करें (न्यूनतम 5 बिक्री और 3 दिन) ताकि 4-पिलर स्कोर जनरेट हो सके।'
+                  : 'Log your first week of transactions (minimum 5 sales across 3 days) to unlock your explainable PSL-aligned alternative credit score.')}
               </p>
               <div className="pt-2">
                 <Button onClick={() => onNavigateTab('cashflow')} variant="dark" size="sm">
@@ -433,7 +433,7 @@ export function CreditScorePage({ shop, creditData, onNavigateTab }) {
                 className="w-full h-8 py-2 accent-ochre-600 cursor-pointer touch-none"
               />
             </div>
-            <p className="text-[10px] text-indigoRural-400">RBI mandates digital deepening for PSL credit rating.</p>
+            <p className="text-[10px] text-indigoRural-400">Digital deepening is a key factor in PSL-format credit evaluation.</p>
           </div>
 
         </div>

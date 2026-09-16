@@ -195,10 +195,10 @@ export function DashboardPage({
   // Dynamic pillars from creditData
   const factors = creditData?.factors || [];
 
-  const udyamLabel = shop?.is_udyam_verified ? 'UDYAM VERIFIED MSME' : 'UDYAM ALIGNED MSME (DEMO)';
+  const udyamLabel = shop?.is_udyam_verified ? 'UDYAM VERIFIED (Mock Gateway)' : 'UDYAM ALIGNED MSME (DEMO)';
   const udyamNumber = shop?.udyam_number || (shop?.id ? `UDYAM-${(shop.state || 'IN').substring(0, 2).toUpperCase()}-0092478` : 'UDYAM-DEMO');
   const vintageLabel = shop?.vintage_years ? `Vintage: ${Math.round(shop.vintage_years * 12)} Months (${shop.vintage_years}y)` : 'Vintage: —';
-  const pslLabel = creditData?.totalScore && creditData.totalScore >= 750 ? 'Eligible: RBI PSL Tier-A' : 'Demo PSL-Format Assessment';
+  const pslLabel = creditData?.totalScore && creditData.totalScore >= 750 ? 'Internal PSL-Format Tier: A (Self-Assessed)' : 'Demo PSL-Format Assessment';
 
   return (
     <div className="space-y-6 sm:space-y-8 animate-fadeIn pb-24 lg:pb-12">
@@ -289,13 +289,13 @@ export function DashboardPage({
         </Card>
       )}
       
-      {/* 1. Sovereign Merchant Executive Card (Warli + Terracotta DPI Identity) */}
+      {/* 1. Merchant Executive Card (Warli + Terracotta Identity) */}
       <Card variant="hero" padding="lg" className="space-y-6">
         
-        {/* Subtle Sovereign Tri-color Accent Bar */}
+        {/* Tri-color Accent Bar */}
         <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-terracotta-500 via-paper-300 to-forestRural-600" />
 
-        {/* Top Sovereign Verification Credentials Strip */}
+        {/* Verification Credentials Strip */}
         <div className="flex flex-wrap items-center justify-between gap-3 pb-5 border-b border-paper-200 text-xs">
           <div className="flex items-center gap-2.5 flex-wrap">
             <Badge variant={shop?.is_udyam_verified ? 'positive' : 'neutral'} size="sm" dot>
@@ -317,7 +317,7 @@ export function DashboardPage({
               <span>{pslLabel}</span>
             </Badge>
             <Badge variant="neutral" size="sm">
-              DPI INDIA STACK (PILOT)
+              DPI-Inspired Design (Prototype)
             </Badge>
           </div>
         </div>
@@ -327,7 +327,7 @@ export function DashboardPage({
           <div className="space-y-3 max-w-2xl">
             <div className="space-y-1">
               <span className="text-[11px] font-black uppercase tracking-wider text-terracotta-600 block">
-                {language === 'hi' ? 'राष्ट्रीय सूक्ष्म उद्यम प्रोफ़ाइल' : 'National Micro-Enterprise Sovereign Profile'}
+                {language === 'hi' ? 'सूक्ष्म उद्यम प्रोफ़ाइल' : 'Micro-Enterprise Profile (Self-Assessed)'}
               </span>
               <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-indigoRural-900 font-display">
                 {shop?.name || (language === 'hi' ? 'मेरी दुकान' : 'My Store')}
@@ -498,7 +498,7 @@ export function DashboardPage({
                 {language === 'hi' ? 'भुगतान माध्यम वितरण (Cash vs. UPI)' : 'Payment Channel Distribution'}
               </span>
               <span className="text-terracotta-600 font-extrabold text-[11px]">
-                RBI Digital Deepening Compliant
+                {language === 'hi' ? 'डिजिटल लेनदेन अनुपात (PSL बेंचमार्क)' : 'Digital Deepening (PSL Benchmark)'}
               </span>
             </div>
 

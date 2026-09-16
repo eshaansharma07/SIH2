@@ -320,15 +320,15 @@ export function ShopProfilePage({ shop, onShopUpdated, onReloadDemo }) {
             </div>
             <div>
               <h2 className="text-sm font-black text-indigoRural-900 font-display">
-                {language === 'hi' ? 'DPI इंडिया स्टैक — उद्यम एमएसएमई सत्यापन' : 'DPI India Stack — Udyam MSME Verification'}
+                {language === 'hi' ? 'उद्यम एमएसएमई नंबर सत्यापन (सिमुलेटेड)' : 'Udyam MSME Verification (Simulated Check)'}
               </h2>
               <p className="text-xs text-indigoRural-500">
-                {language === 'hi' ? 'सूक्ष्म, लघु एवं मध्यम उद्यम मंत्रालय के साथ डिजिटल पहचान' : 'Ministry of MSME official sovereign registration gateway (Mock)'}
+                {language === 'hi' ? 'उद्यम नंबर प्रारूप सत्यापन (सिमुलेटेड — किसी सरकारी प्रणाली से जुड़ा नहीं)' : 'Udyam Number Format Check (Simulated — not connected to any government system)'}
               </p>
             </div>
           </div>
           <Badge variant={isUdyamVerified ? 'positive' : 'attention'} size="md">
-            {isUdyamVerified ? '● UDYAM VERIFIED' : 'UNVERIFIED (OPTIONAL)'}
+            {isUdyamVerified ? '● UDYAM VERIFIED (Mock Gateway)' : 'UNVERIFIED (OPTIONAL)'}
           </Badge>
         </div>
 
@@ -366,7 +366,7 @@ export function ShopProfilePage({ shop, onShopUpdated, onReloadDemo }) {
               size="md"
               icon={ShieldCheck}
             >
-              <span>{udyamLoading ? (language === 'hi' ? 'सत्यापित किया जा रहा है...' : 'Verifying with DPI...') : (language === 'hi' ? 'सत्यापित करें' : 'Verify Udyam')}</span>
+              <span>{udyamLoading ? (language === 'hi' ? 'सत्यापित किया जा रहा है...' : 'Checking format...') : (language === 'hi' ? 'सत्यापित करें' : 'Verify Udyam')}</span>
             </Button>
           </div>
           <p className="text-[11px] text-indigoRural-400">
@@ -378,7 +378,7 @@ export function ShopProfilePage({ shop, onShopUpdated, onReloadDemo }) {
           <div className="bg-paper-50 rounded-xl p-3.5 border border-paper-200 text-xs space-y-2">
             <div className="flex justify-between items-center font-semibold text-indigoRural-600">
               <span>Enterprise Classification:</span>
-              <strong className="text-forestRural-700 font-bold">Micro Enterprise (RBI PSL Tier-A)</strong>
+              <strong className="text-forestRural-700 font-bold">Micro Enterprise (Internal PSL-Format Tier: A)</strong>
             </div>
             <div className="flex justify-between items-center font-semibold text-indigoRural-600">
               <span>Primary Business Activity:</span>

@@ -265,7 +265,7 @@ export function InteractiveDemoTour({
               {currentStepData.badge}
             </span>
             <span className="hidden sm:inline text-xs text-slate-400 font-medium">
-              | Digital Public Infrastructure • MSME Credit Readiness & RBI PSL Protocol
+              | Smart India Hackathon 2026 Prototype • PSL Documentation Format
             </span>
           </div>
 
