@@ -45,6 +45,10 @@ export const dataStore = {
     return db.prepare('SELECT * FROM shops WHERE id = ?').get(id) || null;
   },
 
+  async findShopById(id) {
+    return this.getShopById(id);
+  },
+
   async getDemoShop() {
     const isMongo = await this.isPrimaryMongo();
     if (isMongo) {
@@ -181,6 +185,11 @@ export const dataStore = {
     params.push(Number(limit) || 100);
 
     return db.prepare(query).all(...params);
+  },
+
+  async findTransactions(query = {}) {
+    const shopId = query.shop_id || query.shopId;
+    return this.getTransactions(shopId, { type: query.type, limit: query.limit || 200 });
   },
 
   async createTransaction(txData) {

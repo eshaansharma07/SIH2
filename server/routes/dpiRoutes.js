@@ -63,7 +63,7 @@ router.post('/account-aggregator/fetch', async (req, res) => {
   try {
     const { consentHandle, shopId = 'ramesh-kirana' } = req.body || {};
 
-    const shop = (await dataStore.findShopById(shopId)) || (await dataStore.findShopById('ramesh-kirana')) || {
+    const shop = (await dataStore.getShopById(shopId)) || (await dataStore.getShopById('ramesh-kirana')) || {
       id: shopId,
       name: "Ramesh's Kirana Store",
       bank_account_type: 'Aryavart Gramin Bank',
@@ -72,10 +72,10 @@ router.post('/account-aggregator/fetch', async (req, res) => {
     };
 
     // Query real bahi-khata transactions from dataStore
-    let txs = await dataStore.findTransactions({ shop_id: shop.id });
+    let txs = await dataStore.getTransactions(shop.id, { limit: 200 });
     if (!txs || txs.length === 0) {
       // Fall back to ramesh-kirana if active shop has no transactions yet
-      txs = await dataStore.findTransactions({ shop_id: 'ramesh-kirana' });
+      txs = await dataStore.getTransactions('ramesh-kirana', { limit: 200 });
     }
 
     // Group transactions by month (up to 6 months)
@@ -188,7 +188,7 @@ router.post('/udyam-verify', async (req, res) => {
 
     let shop = null;
     if (shopId) {
-      shop = await dataStore.findShopById(shopId);
+      shop = await dataStore.getShopById(shopId);
       if (shop) {
         await dataStore.updateShop(shop.id, {
           is_udyam_verified: 1,
@@ -228,7 +228,7 @@ router.post('/digilocker-verify', async (req, res) => {
     if (documentType.toUpperCase() === 'AADHAAR') issuer = 'UIDAI (Unique Identification Authority of India)';
     if (documentType.toUpperCase() === 'TRADE_LICENSE') issuer = 'Municipal Corporation / Zilla Parishad';
 
-    const shop = shopId ? await dataStore.findShopById(shopId) : null;
+    const shop = shopId ? await dataStore.getShopById(shopId) : null;
 
     res.json({
       success: true,
