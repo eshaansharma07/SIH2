@@ -426,7 +426,7 @@ export function CashFlowPage({
             <Button
               onClick={() => setIsVoiceOpen(true)}
               variant="secondary"
-              size="md"
+              size="sm"
               icon={Mic}
               className="!border-terracotta-300 hover:!bg-terracotta-50 !text-terracotta-800 font-extrabold shadow-2xs"
               title={language === 'hi' ? 'बोलकर बही-खाता दर्ज करें (हिन्दी/English)' : 'Voice Bahi-Khata Input (Hindi/English)'}
@@ -436,7 +436,7 @@ export function CashFlowPage({
             <Button
               onClick={onOpenWholesale}
               variant="forest"
-              size="md"
+              size="sm"
               icon={ShoppingBag}
             >
               <span>{language === 'hi' ? 'ONDC थोक भाव' : 'ONDC Wholesale'}</span>
@@ -444,8 +444,9 @@ export function CashFlowPage({
             <Button
               onClick={onOpenKeypad}
               variant="primary"
-              size="lg"
+              size="sm"
               icon={PlusCircle}
+              className="sm:!text-sm sm:!px-4 sm:!py-2.5 shadow-sm"
             >
               <span>{language === 'hi' ? 'नया लेन-देन दर्ज करें' : '+ Record Transaction'}</span>
             </Button>
@@ -453,7 +454,7 @@ export function CashFlowPage({
         </div>
 
         {/* Warli Folk Art Border */}
-        <WarliBorder className="w-full h-6 text-terracotta-400 opacity-60" />
+        <WarliBorder className="w-full h-5 sm:h-6 text-terracotta-400 opacity-60" />
       </div>
 
       {/* 2. Top Summary KPI Cards */}
@@ -465,49 +466,49 @@ export function CashFlowPage({
           </div>
         )}
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card padding="md">
-            <span className="text-[10px] font-bold text-indigoRural-400 uppercase tracking-widest block mb-1">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
+          <Card padding="sm" className="sm:p-5">
+            <span className="text-[9px] sm:text-[10px] font-bold text-indigoRural-400 uppercase tracking-widest block mb-1">
               {language === 'hi' ? 'कुल बिक्री' : 'Recorded Sales'}
             </span>
-            <div className="text-2xl sm:text-3xl font-black text-indigoRural-900 tabular-nums tracking-tight font-display">
+            <div className="text-xl sm:text-3xl font-black text-indigoRural-900 tabular-nums tracking-tight font-display truncate">
               {totalIncomeVal !== undefined && totalIncomeVal !== null ? `₹${totalIncomeVal.toLocaleString('en-IN')}` : '—'}
             </div>
-            <span className="text-[11px] font-semibold text-indigoRural-500 mt-1 block">
+            <span className="text-[10px] sm:text-[11px] font-semibold text-indigoRural-500 mt-1 block truncate">
               {summary?.activeDaysCount ? `${summary.activeDaysCount} days verified` : 'Audited ledger'}
             </span>
           </Card>
 
-          <Card padding="md">
-            <span className="text-[10px] font-bold text-indigoRural-400 uppercase tracking-widest block mb-1">
+          <Card padding="sm" className="sm:p-5">
+            <span className="text-[9px] sm:text-[10px] font-bold text-indigoRural-400 uppercase tracking-widest block mb-1">
               {language === 'hi' ? 'माल खरीद + खर्च' : 'Stock & Expenses'}
             </span>
-            <div className="text-2xl sm:text-3xl font-black text-indigoRural-900 tabular-nums tracking-tight font-display">
+            <div className="text-xl sm:text-3xl font-black text-indigoRural-900 tabular-nums tracking-tight font-display truncate">
               {totalExpenseVal !== undefined && totalExpenseVal !== null ? `₹${totalExpenseVal.toLocaleString('en-IN')}` : '—'}
             </div>
-            <span className="text-[11px] font-semibold text-indigoRural-500 mt-1 block">Inventory & bills</span>
+            <span className="text-[10px] sm:text-[11px] font-semibold text-indigoRural-500 mt-1 block truncate">Inventory & bills</span>
           </Card>
 
-          <Card padding="md">
-            <span className="text-[10px] font-bold text-indigoRural-400 uppercase tracking-widest block mb-1">
+          <Card padding="sm" className="sm:p-5">
+            <span className="text-[9px] sm:text-[10px] font-bold text-indigoRural-400 uppercase tracking-widest block mb-1">
               {language === 'hi' ? 'शुद्ध बचत / लाभ' : 'Net Operating Surplus'}
             </span>
-            <div className="text-2xl sm:text-3xl font-black text-forestRural-700 tabular-nums tracking-tight font-display">
+            <div className="text-xl sm:text-3xl font-black text-forestRural-700 tabular-nums tracking-tight font-display truncate">
               {netSurplusVal !== undefined && netSurplusVal !== null ? `₹${netSurplusVal.toLocaleString('en-IN')}` : '—'}
             </div>
-            <span className="text-[11px] font-semibold text-forestRural-700 mt-1 block">
+            <span className="text-[10px] sm:text-[11px] font-semibold text-forestRural-700 mt-1 block truncate">
               {marginPct ? `+${marginPct}% margin` : 'Audited margin'}
             </span>
           </Card>
 
-          <Card padding="md">
-            <span className="text-[10px] font-bold text-indigoRural-400 uppercase tracking-widest block mb-1">
+          <Card padding="sm" className="sm:p-5">
+            <span className="text-[9px] sm:text-[10px] font-bold text-indigoRural-400 uppercase tracking-widest block mb-1">
               {language === 'hi' ? 'बकाया ग्राहक उधार' : 'Pending Udhaar Book'}
             </span>
-            <div className="text-2xl sm:text-3xl font-black text-ochre-600 tabular-nums tracking-tight font-display">
+            <div className="text-xl sm:text-3xl font-black text-ochre-600 tabular-nums tracking-tight font-display truncate">
               {pendingUdhaarVal !== undefined && pendingUdhaarVal !== null ? `₹${pendingUdhaarVal.toLocaleString('en-IN')}` : '—'}
             </div>
-            <span className="text-[11px] font-semibold text-ochre-700 mt-1 block">
+            <span className="text-[10px] sm:text-[11px] font-semibold text-ochre-700 mt-1 block truncate">
               {udhaarLedger.length > 0 ? `${udhaarLedger.length} active khata` : 'Managed credit'}
             </span>
           </Card>
@@ -686,31 +687,31 @@ export function CashFlowPage({
       <Card padding="none" className="overflow-hidden">
         
         {/* Segment Tabs */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border-b border-paper-200 bg-paper-50/70 gap-3">
-          <div className="flex gap-1 p-1 bg-paper-200/80 rounded-xl">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 border-b border-paper-200 bg-paper-50/70 gap-3">
+          <div className="grid grid-cols-2 sm:flex gap-1 p-1 bg-paper-200/80 rounded-xl w-full sm:w-auto">
             <button
               onClick={() => setActiveTab('all')}
-              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+              className={`px-2.5 sm:px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                 activeTab === 'all' 
                   ? 'bg-white text-indigoRural-900 shadow-2xs' 
                   : 'text-indigoRural-600 hover:text-indigoRural-900'
               }`}
             >
-              <FileText className="w-3.5 h-3.5" />
-              <span>All Transactions ({transactions.length})</span>
+              <FileText className="w-3.5 h-3.5 shrink-0" />
+              <span className="truncate">All ({transactions.length})</span>
             </button>
             <button
               onClick={() => setActiveTab('udhaar')}
-              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+              className={`px-2.5 sm:px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                 activeTab === 'udhaar' 
                   ? 'bg-white text-indigoRural-900 shadow-2xs' 
                   : 'text-indigoRural-600 hover:text-indigoRural-900'
               }`}
             >
-              <BookOpen className="w-3.5 h-3.5" />
-              <span>Customer Udhaar Book</span>
+              <BookOpen className="w-3.5 h-3.5 shrink-0" />
+              <span className="truncate">Udhaar Book</span>
               {pendingUdhaarVal !== undefined && pendingUdhaarVal !== null && (
-                <Badge variant="attention" size="sm">
+                <Badge variant="attention" size="sm" className="hidden xs:inline-flex text-[10px] py-0 px-1 shrink-0">
                   ₹{pendingUdhaarVal.toLocaleString('en-IN')}
                 </Badge>
               )}

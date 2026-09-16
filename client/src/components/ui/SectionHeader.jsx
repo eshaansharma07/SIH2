@@ -21,26 +21,26 @@ export function SectionHeader({
   };
 
   return (
-    <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-paper-200/90 pb-4 ${className}`}>
-      <div className="flex items-center gap-3">
+    <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 border-b border-paper-200/90 pb-3 sm:pb-4 min-w-0 ${className}`}>
+      <div className="flex items-start sm:items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
         {Icon && (
-          <div className={`p-2.5 rounded-xl border shadow-2xs shrink-0 ${iconThemes[iconColor] || iconThemes.terracotta}`}>
-            <Icon className="w-5 h-5" />
+          <div className={`p-2 sm:p-2.5 rounded-xl border shadow-2xs shrink-0 ${iconThemes[iconColor] || iconThemes.terracotta}`}>
+            <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
         )}
-        <div>
-          <h2 className="text-base sm:text-lg font-black text-indigoRural-900 tracking-tight font-display">
+        <div className="min-w-0 flex-1">
+          <h2 className="text-sm sm:text-lg font-black text-indigoRural-900 tracking-tight font-display break-words">
             {title}
           </h2>
           {subtitle && (
-            <p className="text-xs text-indigoRural-600 font-medium mt-0.5">
+            <p className="text-[11px] sm:text-xs text-indigoRural-600 font-medium mt-0.5 break-words">
               {subtitle}
             </p>
           )}
         </div>
       </div>
       {action && (
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 flex-wrap self-start sm:self-auto">
           {action}
         </div>
       )}

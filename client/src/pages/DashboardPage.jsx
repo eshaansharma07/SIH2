@@ -205,13 +205,13 @@ export function DashboardPage({
 
       {/* Persistent Demo Data Badge */}
       {isDemoMode && (
-        <div className="flex items-center justify-between bg-ochre-50 border border-ochre-300 rounded-xl px-3.5 py-1.5 text-xs">
-          <div className="flex items-center gap-2 font-bold text-ochre-800">
-            <Sparkles className="w-4 h-4 text-ochre-600" />
-            <span>DEMO DATA • Ramesh Kirana (SIH Evaluator Mode)</span>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 sm:gap-3 bg-ochre-50 border border-ochre-300 rounded-xl px-3.5 py-2 text-xs">
+          <div className="flex items-center gap-2 font-bold text-ochre-800 text-[11px] sm:text-xs min-w-0">
+            <Sparkles className="w-4 h-4 text-ochre-600 shrink-0" />
+            <span className="truncate">DEMO DATA • Ramesh Kirana <span className="hidden xs:inline text-ochre-700 font-medium">(SIH Evaluator Mode)</span></span>
           </div>
           {onSwitchToRegister && (
-            <button onClick={onSwitchToRegister} className="text-ochre-700 hover:text-ochre-900 font-bold underline underline-offset-2 cursor-pointer">
+            <button onClick={onSwitchToRegister} className="text-ochre-700 hover:text-ochre-900 font-bold underline underline-offset-2 cursor-pointer text-[11px] sm:text-xs shrink-0 self-end sm:self-auto">
               {language === 'hi' ? 'असली पंजीकरण करें' : 'Test Real Registration'}
             </button>
           )}
@@ -296,27 +296,27 @@ export function DashboardPage({
         <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-terracotta-500 via-paper-300 to-forestRural-600" />
 
         {/* Verification Credentials Strip */}
-        <div className="flex flex-wrap items-center justify-between gap-2.5 pb-2.5 sm:pb-3 border-b border-paper-200 text-xs">
-          <div className="flex items-center gap-2 flex-wrap">
-            <Badge variant={shop?.is_udyam_verified ? 'positive' : 'neutral'} size="sm" dot>
+        <div className="flex flex-wrap items-center justify-between gap-2 pb-2.5 sm:pb-3 border-b border-paper-200 text-xs">
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap min-w-0">
+            <Badge variant={shop?.is_udyam_verified ? 'positive' : 'neutral'} size="sm" dot className="text-[10px] sm:text-xs">
               <span>{udyamLabel}</span>
             </Badge>
             <span className="text-paper-400 hidden sm:inline">•</span>
-            <span className="font-mono text-[11px] text-indigoRural-600 font-bold tracking-wider">
+            <span className="font-mono text-[10px] sm:text-[11px] text-indigoRural-600 font-bold tracking-wider">
               {udyamNumber}
             </span>
             <span className="text-paper-400 hidden sm:inline">•</span>
-            <span className="text-indigoRural-600 text-[11px] font-semibold">
+            <span className="text-indigoRural-600 text-[10px] sm:text-[11px] font-semibold">
               {vintageLabel}
             </span>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Badge variant="brand" size="sm">
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+            <Badge variant="brand" size="sm" className="text-[10px] sm:text-xs">
               <ShieldCheck className="w-3.5 h-3.5 text-terracotta-600 mr-1" />
               <span>{pslLabel}</span>
             </Badge>
-            <Badge variant="neutral" size="sm">
+            <Badge variant="neutral" size="sm" className="text-[10px] sm:text-xs">
               DPI-Inspired Design (Prototype)
             </Badge>
           </div>
@@ -324,15 +324,15 @@ export function DashboardPage({
 
         {/* Core Hero Body */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 lg:gap-6">
-          <div className="space-y-2 max-w-2xl">
+          <div className="space-y-2 max-w-2xl min-w-0">
             <div className="space-y-0.5">
               <span className="text-[10px] font-black uppercase tracking-wider text-terracotta-600 block">
                 {language === 'hi' ? 'सूक्ष्म उद्यम प्रोफ़ाइल' : 'Micro-Enterprise Profile (Self-Assessed)'}
               </span>
-              <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-indigoRural-900 font-display">
+              <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-indigoRural-900 font-display truncate">
                 {shop?.name || (language === 'hi' ? 'मेरी दुकान' : 'My Store')}
               </h1>
-              <p className="text-indigoRural-600 text-xs font-medium flex items-center gap-2 pt-0.5">
+              <p className="text-indigoRural-600 text-xs font-medium flex flex-wrap items-center gap-x-2 gap-y-0.5 pt-0.5">
                 <span className="font-bold text-indigoRural-900">{shop?.owner_name || (language === 'hi' ? 'दुकानदार' : 'Proprietor')} (Proprietor)</span>
                 <span className="text-paper-400">•</span>
                 <span>{shop?.village || '—'}, {shop?.district || '—'} ({shop?.state || '—'})</span>
@@ -340,16 +340,16 @@ export function DashboardPage({
             </div>
 
             {/* Turnover & Surplus Highlights */}
-            <div className="flex flex-wrap items-baseline gap-4 sm:gap-6 pt-1">
+            <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-baseline gap-3 sm:gap-6 pt-1">
               <div>
                 <span className="text-[10px] font-bold text-indigoRural-400 uppercase tracking-wider block mb-0.5">
                   {language === 'hi' ? 'सत्यापित कारोबार (Turnover)' : 'Audited Turnover'}
                 </span>
-                <div className="text-2xl sm:text-3xl font-black tracking-tight tabular-nums text-indigoRural-900 font-display">
+                <div className="text-xl sm:text-3xl font-black tracking-tight tabular-nums text-indigoRural-900 font-display">
                   {hasFinancialData ? `₹${metrics.totalIncome.toLocaleString('en-IN')}` : '—'}
                 </div>
               </div>
-              <div className="border-l border-paper-300 pl-4 sm:pl-6">
+              <div className="border-l border-paper-300 pl-3 sm:pl-6">
                 <div className="flex items-center gap-1.5 mb-0.5">
                   <span className="text-[10px] font-bold text-indigoRural-400 uppercase tracking-wider block">
                     {language === 'hi' ? 'शुद्ध परिचालन अधिशेष' : 'Net Operating Surplus'}
@@ -421,7 +421,7 @@ export function DashboardPage({
       </Card>
 
       {/* 2. Asymmetric Financial Pulse Bento */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5">
         
         {/* Primary Engine (8 Cols): Audited Financial Pulse & Cash Flow Breakdown */}
         <Card padding="md" className="lg:col-span-8 space-y-3.5 sm:space-y-4">
@@ -431,12 +431,12 @@ export function DashboardPage({
             title={language === 'hi' ? 'बही-खाता वित्तीय स्थिति' : 'Audited Financial Performance'}
             subtitle={language === 'hi' ? 'दैनिक बिक्री, माल खरीद एवं शुद्ध परिचालन अधिशेष' : 'Daily gross revenue, inventory replenishment outlays, and net retained margins'}
             action={
-              <div className="flex items-center gap-2">
-                <Badge variant="positive" size="sm" dot>
+              <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                <Badge variant="positive" size="sm" dot className="text-[10px] sm:text-xs">
                   {metrics.loggedDaysCount ? `● ${metrics.loggedDaysCount} Days Audited` : '● Live Sync'}
                 </Badge>
                 {operatingMargin && (
-                  <Badge variant="neutral" size="sm" className="hidden sm:inline-flex">
+                  <Badge variant="neutral" size="sm" className="hidden sm:inline-flex text-[10px] sm:text-xs">
                     <span>Margin: </span>
                     <strong className="text-forestRural-700 font-extrabold ml-1">+{operatingMargin}%</strong>
                   </Badge>
@@ -446,38 +446,38 @@ export function DashboardPage({
           />
 
           {/* 3 Structured Metrics with Deep Context */}
-          <div className="grid grid-cols-3 gap-3 sm:gap-4">
+          <div className="grid grid-cols-3 gap-1.5 sm:gap-4">
             <div className="space-y-0.5">
-              <span className="text-[10px] font-bold text-indigoRural-400 uppercase tracking-wider block">
+              <span className="text-[9px] sm:text-[10px] font-bold text-indigoRural-400 uppercase tracking-wider block">
                 {language === 'hi' ? 'सत्यापित कुल बिक्री' : 'Gross Turnover'}
               </span>
-              <div className="text-xl sm:text-2xl font-black text-indigoRural-900 tabular-nums tracking-tight font-display">
+              <div className="text-base xs:text-lg sm:text-2xl font-black text-indigoRural-900 tabular-nums tracking-tight font-display">
                 {hasFinancialData ? `₹${metrics.totalIncome.toLocaleString('en-IN')}` : '—'}
               </div>
-              <span className="text-[10px] font-semibold text-forestRural-700 flex items-center gap-1">
+              <span className="text-[9px] sm:text-[10px] font-semibold text-forestRural-700 flex items-center gap-0.5 sm:gap-1">
                 <span>↑</span> 100% audited
               </span>
             </div>
 
-            <div className="space-y-0.5 border-l border-paper-200 pl-3 sm:pl-4">
-              <span className="text-[10px] font-bold text-indigoRural-400 uppercase tracking-wider block">
+            <div className="space-y-0.5 border-l border-paper-200 pl-2 sm:pl-4">
+              <span className="text-[9px] sm:text-[10px] font-bold text-indigoRural-400 uppercase tracking-wider block">
                 {language === 'hi' ? 'माल व दुकान खर्च' : 'Operating Outlay'}
               </span>
-              <div className="text-xl sm:text-2xl font-black text-indigoRural-900 tabular-nums tracking-tight font-display">
+              <div className="text-base xs:text-lg sm:text-2xl font-black text-indigoRural-900 tabular-nums tracking-tight font-display">
                 {metrics.totalExpense !== null ? `₹${metrics.totalExpense.toLocaleString('en-IN')}` : '—'}
               </div>
               <button
                 type="button"
                 onClick={onOpenWholesale}
-                className="text-[10px] font-semibold text-forestRural-700 hover:text-forestRural-900 flex items-center gap-1 cursor-pointer transition-colors underline underline-offset-2"
+                className="text-[9px] sm:text-[10px] font-semibold text-forestRural-700 hover:text-forestRural-900 flex items-center gap-0.5 sm:gap-1 cursor-pointer transition-colors underline underline-offset-2"
               >
                 <span>ONDC (-12%)</span>
               </button>
             </div>
 
-            <div className="space-y-0.5 border-l border-paper-200 pl-3 sm:pl-4">
+            <div className="space-y-0.5 border-l border-paper-200 pl-2 sm:pl-4">
               <div className="flex items-center gap-1">
-                <span className="text-[10px] font-bold text-indigoRural-400 uppercase tracking-wider block">
+                <span className="text-[9px] sm:text-[10px] font-bold text-indigoRural-400 uppercase tracking-wider block">
                   {language === 'hi' ? 'शुद्ध बचत' : 'Retained Surplus'}
                 </span>
                 <AudioReadAloudButton
@@ -486,10 +486,10 @@ export function DashboardPage({
                   textEn={`Retained surplus: ₹${metrics.netSurplus !== null ? Number(metrics.netSurplus).toLocaleString('en-IN') : 0}.`}
                 />
               </div>
-              <div className="text-xl sm:text-2xl font-black text-forestRural-700 tabular-nums tracking-tight font-display">
+              <div className="text-base xs:text-lg sm:text-2xl font-black text-forestRural-700 tabular-nums tracking-tight font-display">
                 {metrics.netSurplus !== null ? `₹${metrics.netSurplus.toLocaleString('en-IN')}` : '—'}
               </div>
-              <span className="text-[10px] font-semibold text-forestRural-700">
+              <span className="text-[9px] sm:text-[10px] font-semibold text-forestRural-700">
                 Prime capacity
               </span>
             </div>

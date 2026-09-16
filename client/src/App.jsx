@@ -405,7 +405,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen paper-canvas flex flex-col font-sans text-indigoRural-950 selection:bg-terracotta-100 selection:text-terracotta-900 antialiased">
+    <div className="min-h-screen w-full max-w-full overflow-x-hidden relative paper-canvas flex flex-col font-sans text-indigoRural-950 selection:bg-terracotta-100 selection:text-terracotta-900 antialiased">
       
       {/* Top Navbar */}
       <Navbar 
@@ -421,7 +421,7 @@ export default function App() {
       />
 
       {/* Main Page Container */}
-      <main className="flex-1 max-w-7xl xl:max-w-[1440px] w-full mx-auto px-4 sm:px-6 pt-3 sm:pt-4 pb-20 lg:pb-10">
+      <main className="flex-1 max-w-7xl xl:max-w-[1440px] w-full min-w-0 mx-auto px-3 sm:px-6 pt-3 sm:pt-4 pb-28 sm:pb-32 lg:pb-10">
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}
@@ -429,7 +429,7 @@ export default function App() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-            className="w-full"
+            className="w-full min-w-0"
           >
             <Suspense fallback={<PageSkeleton />}>
               {activeTab === 'onboarding' && (

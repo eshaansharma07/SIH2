@@ -227,7 +227,7 @@ export function BankDossierPage({ shop, isDemoMode, onBack }) {
             <span>{language === 'hi' ? 'डैशबोर्ड पर वापस जाएं' : 'Back to Dashboard'}</span>
           </Button>
 
-          <div className="flex flex-wrap items-center gap-2.5">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
             <span className="text-xs text-indigoRural-500 font-semibold hidden lg:inline-flex items-center gap-1.5">
               <FileCheck className="w-3.5 h-3.5 text-forestRural-600" />
               <span>Working Capital Summary — PSL-Format Ready</span>
@@ -236,30 +236,33 @@ export function BankDossierPage({ shop, isDemoMode, onBack }) {
               onClick={handleDownloadCAM}
               disabled={downloadingCam}
               variant="secondary"
-              size="md"
+              size="sm"
               icon={Download}
+              className="sm:!px-3 sm:!py-2"
             >
-              <span>{downloadingCam ? (language === 'hi' ? 'डाउनलोड हो रहा है...' : 'Downloading CAM...') : (language === 'hi' ? 'CAM (JSON)' : 'Download CAM (JSON)')}</span>
+              <span>{downloadingCam ? (language === 'hi' ? 'डाउनलोड...' : 'Downloading...') : (language === 'hi' ? 'CAM (JSON)' : 'Download CAM (JSON)')}</span>
             </Button>
             <Button
               onClick={handlePrint}
               variant="outline"
-              size="md"
+              size="sm"
               icon={Printer}
+              className="sm:!px-3 sm:!py-2"
             >
-              <span>{language === 'hi' ? 'प्रिंट व्यू' : 'Print View'}</span>
+              <span>{language === 'hi' ? 'प्रिंट' : 'Print View'}</span>
             </Button>
             <Button
               onClick={handleDownloadPDF}
               disabled={downloadingPdf}
               variant="primary"
-              size="md"
+              size="sm"
               icon={Download}
+              className="sm:!px-4 sm:!py-2 font-black"
             >
               <span>
                 {downloadingPdf 
                   ? (language === 'hi' ? 'पीडीएफ बन रहा है...' : 'Generating PDF...') 
-                  : (language === 'hi' ? 'आधिकारिक बैंक डॉसियर (PDF)' : 'Download Bank Dossier (PDF)')}
+                  : (language === 'hi' ? 'बैंक डॉसियर (PDF)' : 'Download Bank Dossier (PDF)')}
               </span>
             </Button>
           </div>
@@ -267,7 +270,7 @@ export function BankDossierPage({ shop, isDemoMode, onBack }) {
       </div>
 
       {/* Official Printable Bank Dossier Sheet */}
-      <div className="bg-white rounded-2xl sm:p-10 p-6 border border-paper-300 shadow-sm space-y-6 text-indigoRural-900 print:border-0 print:shadow-none print:p-0 print:m-0 font-sans">
+      <div className="bg-white rounded-2xl p-3.5 sm:p-10 border border-paper-300 shadow-sm space-y-5 sm:space-y-6 text-indigoRural-900 print:border-0 print:shadow-none print:p-0 print:m-0 font-sans">
         
         {/* Dossier Letterhead */}
         <div className="border-b-2 border-indigoRural-900 pb-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -326,10 +329,10 @@ export function BankDossierPage({ shop, isDemoMode, onBack }) {
           <h3 className="text-xs font-black text-indigoRural-900 uppercase tracking-wider border-b border-paper-200 pb-1">
             1. Enterprise Identification (उद्यम पहचान विवरण)
           </h3>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs bg-paper-50 p-4 rounded-xl border border-paper-200">
-            <div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3 text-xs bg-paper-50 p-3 sm:p-4 rounded-xl border border-paper-200">
+            <div className="min-w-0">
               <span className="text-indigoRural-400 block text-[10px] font-semibold">Enterprise Name:</span>
-              <strong className="text-indigoRural-900">{shopName}</strong>
+              <strong className="text-indigoRural-900 truncate block">{shopName}</strong>
             </div>
             <div>
               <span className="text-indigoRural-400 block text-[10px] font-semibold">Proprietor:</span>
@@ -402,28 +405,28 @@ export function BankDossierPage({ shop, isDemoMode, onBack }) {
           <h3 className="text-xs font-black text-indigoRural-900 uppercase tracking-wider border-b border-paper-200 pb-1">
             3. Verified Cash Flow & Turnover Audit (90-Day Operating History)
           </h3>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-            <div className="p-3.5 bg-paper-50 rounded-xl border border-paper-200">
-              <span className="text-indigoRural-400 text-[10px] font-semibold block">Gross 90-Day Sales:</span>
-              <strong className="text-base text-indigoRural-900 font-black tabular-nums">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 text-xs">
+            <div className="p-2.5 sm:p-3.5 bg-paper-50 rounded-xl border border-paper-200 min-w-0">
+              <span className="text-indigoRural-400 text-[9px] sm:text-[10px] font-semibold block truncate">Gross 90-Day Sales:</span>
+              <strong className="text-sm sm:text-base text-indigoRural-900 font-black tabular-nums block truncate">
                 {grossSales !== null ? `₹${Number(grossSales).toLocaleString('en-IN')}` : '—'}
               </strong>
             </div>
-            <div className="p-3.5 bg-paper-50 rounded-xl border border-paper-200">
-              <span className="text-indigoRural-400 text-[10px] font-semibold block">Cost of Goods & Rent:</span>
-              <strong className="text-base text-indigoRural-900 font-black tabular-nums">
+            <div className="p-2.5 sm:p-3.5 bg-paper-50 rounded-xl border border-paper-200 min-w-0">
+              <span className="text-indigoRural-400 text-[9px] sm:text-[10px] font-semibold block truncate">Cost of Goods & Rent:</span>
+              <strong className="text-sm sm:text-base text-indigoRural-900 font-black tabular-nums block truncate">
                 {totalExpenses !== null ? `₹${Number(totalExpenses).toLocaleString('en-IN')}` : '—'}
               </strong>
             </div>
-            <div className="p-3.5 bg-paper-50 rounded-xl border border-paper-200">
-              <span className="text-indigoRural-400 text-[10px] font-semibold block">Net Operating Surplus:</span>
-              <strong className="text-base text-forestRural-700 font-black tabular-nums">
+            <div className="p-2.5 sm:p-3.5 bg-paper-50 rounded-xl border border-paper-200 min-w-0">
+              <span className="text-indigoRural-400 text-[9px] sm:text-[10px] font-semibold block truncate">Net Operating Surplus:</span>
+              <strong className="text-sm sm:text-base text-forestRural-700 font-black tabular-nums block truncate">
                 {operatingSurplus !== null ? `₹${Number(operatingSurplus).toLocaleString('en-IN')}` : '—'}
               </strong>
             </div>
-            <div className="p-3.5 bg-paper-50 rounded-xl border border-paper-200">
-              <span className="text-indigoRural-400 text-[10px] font-semibold block">Monthly Debt Headroom:</span>
-              <strong className="text-base text-terracotta-700 font-black tabular-nums">
+            <div className="p-2.5 sm:p-3.5 bg-paper-50 rounded-xl border border-paper-200 min-w-0">
+              <span className="text-indigoRural-400 text-[9px] sm:text-[10px] font-semibold block truncate">Monthly Debt Headroom:</span>
+              <strong className="text-sm sm:text-base text-terracotta-700 font-black tabular-nums block truncate">
                 {debtHeadroom > 0 ? `₹${debtHeadroom.toLocaleString('en-IN')} / mo` : (isDemo ? '₹9,154 / mo' : '—')}
               </strong>
             </div>

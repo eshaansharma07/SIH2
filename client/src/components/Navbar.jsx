@@ -54,22 +54,22 @@ export function Navbar({ activeTab, setActiveTab, currentShop, isDemoMode, onRel
       {/* Tri-Color Micro-Rule */}
       <div className="h-[3px] w-full bg-gradient-to-r from-terracotta-500 via-paper-200 to-forestRural-600" />
 
-      <div className="max-w-7xl xl:max-w-[1440px] mx-auto px-4 sm:px-6">
-        <div className="flex items-center justify-between h-16 gap-4">
+      <div className="max-w-7xl xl:max-w-[1440px] mx-auto px-3 sm:px-6">
+        <div className="flex items-center justify-between h-16 gap-2 sm:gap-4">
           
           {/* Brand Mark: Rural Micro-Enterprise Ledger */}
           <div 
             onClick={() => setActiveTab('dashboard')}
-            className="flex items-center gap-3 cursor-pointer select-none group shrink-0"
+            className="flex items-center gap-2 sm:gap-3 cursor-pointer select-none group min-w-0 flex-1 sm:flex-initial"
           >
             {/* Folk / Bahi-Khata Geometric Mark */}
-            <div className="relative w-10 h-10 rounded-xl bg-terracotta-600 flex items-center justify-center text-white shadow-2xs group-hover:bg-terracotta-700 transition-all">
-              <BookOpen className="w-5 h-5 text-paper-100 transition-transform duration-200 group-hover:scale-105" />
+            <div className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-terracotta-600 flex items-center justify-center text-white shadow-2xs group-hover:bg-terracotta-700 transition-all shrink-0">
+              <BookOpen className="w-4 h-4 sm:w-5 sm:h-5 text-paper-100 transition-transform duration-200 group-hover:scale-105" />
             </div>
 
-            <div className="flex flex-col">
-              <div className="flex items-center gap-2 leading-tight">
-                <span className="font-black text-base sm:text-lg tracking-tight text-indigoRural-900 font-display">
+            <div className="flex flex-col min-w-0">
+              <div className="flex items-center gap-1.5 sm:gap-2 leading-tight">
+                <span className="font-black text-sm sm:text-lg tracking-tight text-indigoRural-900 font-display truncate">
                   व्यापार साथी
                 </span>
                 <span className="text-xs font-bold text-indigoRural-500 hidden sm:inline">
@@ -77,25 +77,29 @@ export function Navbar({ activeTab, setActiveTab, currentShop, isDemoMode, onRel
                 </span>
                 {/* Mode Badge */}
                 {isDemoMode ? (
-                  <Badge variant="attention" size="sm">
+                  <Badge variant="attention" size="sm" className="px-1.5 py-0 text-[10px] shrink-0">
                     DEMO DATA
                   </Badge>
                 ) : currentShop ? (
-                  <Badge variant="positive" size="sm">
+                  <Badge variant="positive" size="sm" className="px-1.5 py-0 text-[10px] shrink-0">
                     LIVE
                   </Badge>
                 ) : (
-                  <Badge variant="brand" size="sm">
+                  <Badge variant="brand" size="sm" className="px-1.5 py-0 text-[10px] shrink-0">
                     DPI Stack
                   </Badge>
                 )}
               </div>
-              <div className="text-[10px] font-semibold text-indigoRural-500 flex items-center gap-1.5 mt-0.5">
-                <span className="font-bold text-indigoRural-800">{currentShop?.name || (language === 'hi' ? 'दुकान' : 'Store')}</span>
+              <div className="text-[10px] font-semibold text-indigoRural-500 flex items-center gap-1.5 mt-0.5 min-w-0">
+                <span className="font-bold text-indigoRural-800 truncate max-w-[110px] xs:max-w-[150px] sm:max-w-none">
+                  {currentShop?.name || (language === 'hi' ? 'दुकान' : 'Store')}
+                </span>
                 {udyamNumber && (
                   <>
-                    <span className="text-paper-400">•</span>
-                    <span className="text-indigoRural-600 font-mono">{udyamNumber}</span>
+                    <span className="text-paper-400 shrink-0">•</span>
+                    <span className="text-indigoRural-600 font-mono truncate text-[9px] sm:text-[10px] max-w-[90px] sm:max-w-none">
+                      {udyamNumber}
+                    </span>
                   </>
                 )}
               </div>
@@ -132,7 +136,7 @@ export function Navbar({ activeTab, setActiveTab, currentShop, isDemoMode, onRel
           </nav>
 
           {/* Right Action Controls */}
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
             {/* Real-time DPI / PWA Sync & Connectivity Badge */}
             <SyncStatusBadge />
             
@@ -143,7 +147,7 @@ export function Navbar({ activeTab, setActiveTab, currentShop, isDemoMode, onRel
                 variant="primary"
                 size="sm"
                 icon={Sparkles}
-                className="shadow-2xs"
+                className="shadow-2xs !p-1.5 sm:!px-3 sm:!py-1.5"
               >
                 <span className="hidden sm:inline">{language === 'hi' ? 'लाइव टूर' : 'Live Tour'}</span>
               </Button>
@@ -192,6 +196,7 @@ export function Navbar({ activeTab, setActiveTab, currentShop, isDemoMode, onRel
               variant="outline"
               size="sm"
               icon={Globe}
+              className="!px-2 sm:!px-3"
             >
               <span>{language === 'hi' ? 'HI' : 'EN'}</span>
             </Button>
@@ -213,7 +218,7 @@ export function Navbar({ activeTab, setActiveTab, currentShop, isDemoMode, onRel
             {/* Mobile Menu Toggle */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden p-2 rounded-xl text-indigoRural-700 hover:bg-paper-200 transition cursor-pointer"
+              className="lg:hidden p-1.5 sm:p-2 rounded-xl text-indigoRural-700 hover:bg-paper-200 transition cursor-pointer"
               aria-label="Toggle navigation menu"
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
