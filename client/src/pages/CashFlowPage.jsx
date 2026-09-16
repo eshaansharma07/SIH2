@@ -1099,23 +1099,6 @@ export function CashFlowPage({
         onReminderSent={() => loadData()}
       />
 
-      {/* Floating Voice Mic Action Button for Rural Voice Ledger Logging */}
-      <div className="fixed bottom-20 sm:bottom-8 right-5 sm:right-8 z-40 print:hidden animate-fadeIn">
-        <button
-          type="button"
-          onClick={() => setIsVoiceOpen(true)}
-          className="flex items-center gap-2.5 px-4 py-3 rounded-full bg-terracotta-600 hover:bg-terracotta-700 text-white font-extrabold text-xs shadow-2xl shadow-terracotta-600/40 active:scale-95 transition-all cursor-pointer border border-white/25 group ring-2 ring-terracotta-400/30"
-          title={language === 'hi' ? 'बोलकर बही-खाता दर्ज करें (हिन्दी / English)' : 'Voice Bahi-Khata Input (Hindi / English)'}
-        >
-          <span className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center group-hover:scale-110 transition-transform">
-            <Mic className="w-3.5 h-3.5 text-white" />
-          </span>
-          <span className="font-extrabold tracking-wide">
-            {language === 'hi' ? 'बोलकर लिखें' : 'Voice Entry'}
-          </span>
-        </button>
-      </div>
-
       {/* Voice Bahi-Khata Input Dialog */}
       <VoiceInputDialog
         isOpen={isVoiceOpen}

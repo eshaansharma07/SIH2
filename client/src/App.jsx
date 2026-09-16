@@ -1,25 +1,46 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { Navbar } from './components/Navbar';
-import { DashboardPage } from './pages/DashboardPage';
-import { AdvisorChatPage } from './pages/AdvisorChatPage';
-import { CashFlowPage } from './pages/CashFlowPage';
-import { CreditScorePage } from './pages/CreditScorePage';
-import { SchemeMatcherPage } from './pages/SchemeMatcherPage';
-import { BankDossierPage } from './pages/BankDossierPage';
-import { ShopProfilePage } from './pages/ShopProfilePage';
-import { OnboardingPage } from './pages/OnboardingPage';
 import { NumericKeypadModal } from './components/NumericKeypadModal';
-import { VoiceInputDialog } from './components/VoiceInputDialog';
-import { InteractiveDemoTour } from './components/InteractiveDemoTour';
-import { WholesaleDiscoveryModal } from './components/WholesaleDiscoveryModal';
 import { FloatingThumbDock } from './components/FloatingThumbDock';
 import { WarliBorder } from './components/WarliMotif';
 import { api } from './utils/api';
 import { useTranslation } from './i18n/LanguageContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
+// Lazy-loaded pages for reduced initial bundle and sub-second reloads
+const DashboardPage = lazy(() => import('./pages/DashboardPage').then(m => ({ default: m.DashboardPage })));
+const AdvisorChatPage = lazy(() => import('./pages/AdvisorChatPage').then(m => ({ default: m.AdvisorChatPage })));
+const CashFlowPage = lazy(() => import('./pages/CashFlowPage').then(m => ({ default: m.CashFlowPage })));
+const CreditScorePage = lazy(() => import('./pages/CreditScorePage').then(m => ({ default: m.CreditScorePage })));
+const SchemeMatcherPage = lazy(() => import('./pages/SchemeMatcherPage').then(m => ({ default: m.SchemeMatcherPage })));
+const BankDossierPage = lazy(() => import('./pages/BankDossierPage').then(m => ({ default: m.BankDossierPage })));
+const ShopProfilePage = lazy(() => import('./pages/ShopProfilePage').then(m => ({ default: m.ShopProfilePage })));
+const OnboardingPage = lazy(() => import('./pages/OnboardingPage').then(m => ({ default: m.OnboardingPage })));
+const PublicPayPage = lazy(() => import('./pages/PublicPayPage').then(m => ({ default: m.PublicPayPage })));
+const VoiceInputDialog = lazy(() => import('./components/VoiceInputDialog').then(m => ({ default: m.VoiceInputDialog })));
+const InteractiveDemoTour = lazy(() => import('./components/InteractiveDemoTour').then(m => ({ default: m.InteractiveDemoTour })));
+const WholesaleDiscoveryModal = lazy(() => import('./components/WholesaleDiscoveryModal').then(m => ({ default: m.WholesaleDiscoveryModal })));
+
+function PageSkeleton() {
+  return (
+    <div className="w-full py-8 px-4 space-y-6 animate-pulse max-w-7xl mx-auto">
+      <div className="h-8 bg-paper-200/80 rounded-xl w-1/3" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="h-28 bg-paper-200/60 rounded-2xl" />
+        <div className="h-28 bg-paper-200/60 rounded-2xl" />
+        <div className="h-28 bg-paper-200/60 rounded-2xl" />
+        <div className="h-28 bg-paper-200/60 rounded-2xl" />
+      </div>
+      <div className="h-64 bg-paper-200/50 rounded-2xl w-full" />
+    </div>
+  );
+}
+
 export default function App() {
   const { language } = useTranslation();
+
+  // Route check: Standalone /pay/:shopId customer UPI payment portal
+  const isPayRoute = typeof window !== 'undefined' && window.location.pathname.startsWith('/pay');
 
   // Read persisted state from localStorage
   const savedShopId = localStorage.getItem('vyapaar_active_shop_id') || null;
@@ -364,6 +385,15 @@ export default function App() {
     changeTab('advisor');
   };
 
+  // If standalone public payment portal, render directly without merchant auth/state
+  if (isPayRoute) {
+    return (
+      <Suspense fallback={<PageSkeleton />}>
+        <PublicPayPage />
+      </Suspense>
+    );
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 text-slate-700 font-sans">
@@ -401,88 +431,90 @@ export default function App() {
             transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
             className="w-full"
           >
-            {activeTab === 'onboarding' && (
-              <OnboardingPage 
-                onComplete={handleRealRegistrationComplete}
-                onSelectDemo={handleSelectDemo}
-              />
-            )}
+            <Suspense fallback={<PageSkeleton />}>
+              {activeTab === 'onboarding' && (
+                <OnboardingPage 
+                  onComplete={handleRealRegistrationComplete}
+                  onSelectDemo={handleSelectDemo}
+                />
+              )}
 
-            {activeTab === 'dashboard' && (
-              <DashboardPage
-                shop={currentShop}
-                creditData={creditData}
-                summaryData={summaryData}
-                cuesData={cuesData}
-                onOpenKeypad={() => setKeypadOpen(true)}
-                onOpenWholesale={() => setWholesaleModalOpen(true)}
-                onNavigateTab={(tab) => changeTab(tab)}
-                onAskPrompt={handleAskPrompt}
-                onStartDemoTour={() => setDemoTourOpen(true)}
-                isDemoMode={isDemoMode}
-                onSwitchToDemo={handleSelectDemo}
-                onSwitchToRegister={handleSwitchToRegister}
-              />
-            )}
+              {activeTab === 'dashboard' && (
+                <DashboardPage
+                  shop={currentShop}
+                  creditData={creditData}
+                  summaryData={summaryData}
+                  cuesData={cuesData}
+                  onOpenKeypad={() => setKeypadOpen(true)}
+                  onOpenWholesale={() => setWholesaleModalOpen(true)}
+                  onNavigateTab={(tab) => changeTab(tab)}
+                  onAskPrompt={handleAskPrompt}
+                  onStartDemoTour={() => setDemoTourOpen(true)}
+                  isDemoMode={isDemoMode}
+                  onSwitchToDemo={handleSelectDemo}
+                  onSwitchToRegister={handleSwitchToRegister}
+                />
+              )}
 
-            {activeTab === 'advisor' && (
-              <AdvisorChatPage
-                shop={currentShop}
-                creditData={creditData}
-                summaryData={summaryData}
-                initialPrompt={initialAdvisorPrompt}
-                onPromptUsed={() => setInitialAdvisorPrompt('')}
-              />
-            )}
+              {activeTab === 'advisor' && (
+                <AdvisorChatPage
+                  shop={currentShop}
+                  creditData={creditData}
+                  summaryData={summaryData}
+                  initialPrompt={initialAdvisorPrompt}
+                  onPromptUsed={() => setInitialAdvisorPrompt('')}
+                />
+              )}
 
-            {activeTab === 'cashflow' && (
-              <CashFlowPage
-                shop={currentShop}
-                isDemoMode={isDemoMode}
-                summaryData={summaryData}
-                onOpenKeypad={() => setKeypadOpen(true)}
-                onOpenWholesale={() => setWholesaleModalOpen(true)}
-                refreshKey={refreshKey}
-                latestTx={latestTx}
-                onTransactionSaved={handleTransactionSaved}
-              />
-            )}
+              {activeTab === 'cashflow' && (
+                <CashFlowPage
+                  shop={currentShop}
+                  isDemoMode={isDemoMode}
+                  summaryData={summaryData}
+                  onOpenKeypad={() => setKeypadOpen(true)}
+                  onOpenWholesale={() => setWholesaleModalOpen(true)}
+                  refreshKey={refreshKey}
+                  latestTx={latestTx}
+                  onTransactionSaved={handleTransactionSaved}
+                />
+              )}
 
-            {activeTab === 'credit' && (
-              <CreditScorePage
-                shop={currentShop}
-                creditData={creditData}
-                onNavigateTab={(tab) => changeTab(tab)}
-              />
-            )}
+              {activeTab === 'credit' && (
+                <CreditScorePage
+                  shop={currentShop}
+                  creditData={creditData}
+                  onNavigateTab={(tab) => changeTab(tab)}
+                />
+              )}
 
-            {activeTab === 'schemes' && (
-              <SchemeMatcherPage
-                shop={currentShop}
-                creditData={creditData}
-                onNavigateTab={(tab) => changeTab(tab)}
-              />
-            )}
+              {activeTab === 'schemes' && (
+                <SchemeMatcherPage
+                  shop={currentShop}
+                  creditData={creditData}
+                  onNavigateTab={(tab) => changeTab(tab)}
+                />
+              )}
 
-            {activeTab === 'dossier' && (
-              <BankDossierPage
-                shop={currentShop}
-                isDemoMode={isDemoMode}
-                onBack={() => changeTab('dashboard')}
-              />
-            )}
+              {activeTab === 'dossier' && (
+                <BankDossierPage
+                  shop={currentShop}
+                  isDemoMode={isDemoMode}
+                  onBack={() => changeTab('dashboard')}
+                />
+              )}
 
-            {activeTab === 'profile' && (
-              <ShopProfilePage
-                shop={currentShop}
-                onShopUpdated={(updated) => {
-                  setCurrentShop(updated);
-                  localStorage.setItem('vyapaar_active_shop', JSON.stringify(updated));
-                  setRefreshKey(k => k + 1);
-                }}
-                onReloadDemo={handleReloadDemo}
-              />
-            )}
+              {activeTab === 'profile' && (
+                <ShopProfilePage
+                  shop={currentShop}
+                  onShopUpdated={(updated) => {
+                    setCurrentShop(updated);
+                    localStorage.setItem('vyapaar_active_shop', JSON.stringify(updated));
+                    setRefreshKey(k => k + 1);
+                  }}
+                  onReloadDemo={handleReloadDemo}
+                />
+              )}
+            </Suspense>
           </motion.div>
         </AnimatePresence>
       </main>
@@ -497,29 +529,41 @@ export default function App() {
       />
 
       {/* Global Voice Bahi-Khata Input Dialog */}
-      <VoiceInputDialog
-        isOpen={voiceModalOpen}
-        onClose={() => setVoiceModalOpen(false)}
-        shopId={currentShop?.id}
-        onTransactionSaved={handleTransactionSaved}
-      />
+      {voiceModalOpen && (
+        <Suspense fallback={null}>
+          <VoiceInputDialog
+            isOpen={voiceModalOpen}
+            onClose={() => setVoiceModalOpen(false)}
+            shopId={currentShop?.id}
+            onTransactionSaved={handleTransactionSaved}
+          />
+        </Suspense>
+      )}
 
       {/* ONDC B2B Wholesale Price Discovery Modal */}
-      <WholesaleDiscoveryModal
-        isOpen={wholesaleModalOpen}
-        onClose={() => setWholesaleModalOpen(false)}
-      />
+      {wholesaleModalOpen && (
+        <Suspense fallback={null}>
+          <WholesaleDiscoveryModal
+            isOpen={wholesaleModalOpen}
+            onClose={() => setWholesaleModalOpen(false)}
+          />
+        </Suspense>
+      )}
 
       {/* Interactive Animated Guided Demo Tour for SIH Judges */}
-      <InteractiveDemoTour
-        isOpen={demoTourOpen}
-        onClose={() => setDemoTourOpen(false)}
-        activeTab={activeTab}
-        setActiveTab={changeTab}
-        setKeypadOpen={setKeypadOpen}
-        setInitialAdvisorPrompt={setInitialAdvisorPrompt}
-        onReloadDemo={handleReloadDemo}
-      />
+      {demoTourOpen && (
+        <Suspense fallback={null}>
+          <InteractiveDemoTour
+            isOpen={demoTourOpen}
+            onClose={() => setDemoTourOpen(false)}
+            activeTab={activeTab}
+            setActiveTab={changeTab}
+            setKeypadOpen={setKeypadOpen}
+            setInitialAdvisorPrompt={setInitialAdvisorPrompt}
+            onReloadDemo={handleReloadDemo}
+          />
+        </Suspense>
+      )}
 
       {/* Mobile Thumb Action Dock */}
       <FloatingThumbDock 

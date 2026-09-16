@@ -9,6 +9,8 @@ export const SCHEMES = [
     shortName: "MUDRA Shishu",
     ministry: "Ministry of Finance / SIDBI",
     category: "Retail, Artisans & Small Services",
+    scope: "central",
+    applicableStates: [],
     maxLoanAmount: 50000,
     loanRangeText: "Up to ₹50,000",
     interestRate: "8.5% – 10.0% p.a.",
@@ -57,6 +59,8 @@ export const SCHEMES = [
     shortName: "MUDRA Kishor",
     ministry: "Ministry of Finance / SIDBI",
     category: "Shop Expansion & Equipment",
+    scope: "central",
+    applicableStates: [],
     maxLoanAmount: 500000,
     loanRangeText: "₹50,000 to ₹5,00,000",
     interestRate: "9.0% – 11.5% p.a.",
@@ -106,8 +110,10 @@ export const SCHEMES = [
     shortName: "PM SVANidhi",
     ministry: "Ministry of Housing and Urban Affairs",
     category: "Micro Retailers, Hawkers & Small Vendors",
+    scope: "central",
+    applicableStates: [],
     maxLoanAmount: 50000,
-    loanRangeText: "₹10,000 (1st Tranche) → ₹20,000 → ₹50,000",
+    loanRangeText: "₹10,00,000 (1st Tranche) → ₹20,000 → ₹50,000",
     interestRate: "Effective ~3% – 4% (after 7% central interest subsidy)",
     subsidyText: "7% annual interest subsidy credited directly to bank account + ₹1,200/year cashback on UPI transactions",
     collateralRequired: false,
@@ -149,6 +155,8 @@ export const SCHEMES = [
     shortName: "PM Vishwakarma",
     ministry: "Ministry of Micro, Small and Medium Enterprises (MSME)",
     category: "Artisans, Tailors, Carpenters & Craftsmen",
+    scope: "central",
+    applicableStates: [],
     maxLoanAmount: 300000,
     loanRangeText: "₹1,00,000 (Tranche 1) + ₹2,00,000 (Tranche 2)",
     interestRate: "Concessional 5.0% fixed interest (8% interest subvention by Govt)",
@@ -203,6 +211,8 @@ export const SCHEMES = [
     shortName: "PMEGP Subsidy Scheme",
     ministry: "Ministry of MSME / KVIC",
     category: "New Units & Major Expansion",
+    scope: "central",
+    applicableStates: [],
     maxLoanAmount: 2000000,
     loanRangeText: "₹5,00,000 to ₹20,00,000 (Service) / ₹50,00,000 (Mfg)",
     interestRate: "Standard bank commercial lending rate (linked to EBLR / MCLR)",
@@ -247,6 +257,8 @@ export const SCHEMES = [
     shortName: "Stand-Up India",
     ministry: "Department of Financial Services / SIDBI",
     category: "Women & SC/ST Entrepreneurs",
+    scope: "central",
+    applicableStates: [],
     maxLoanAmount: 10000000,
     loanRangeText: "₹10,00,000 to ₹1,00,00,000",
     interestRate: "Lowest applicable rate (MCLR + 3% + Tenor Premium)",
@@ -299,6 +311,8 @@ export const SCHEMES = [
     shortName: "NRLM SHG-Bank Linkage",
     ministry: "Ministry of Rural Development",
     category: "Rural Women Groups & Micro-Enterprises",
+    scope: "central",
+    applicableStates: [],
     maxLoanAmount: 2000000,
     loanRangeText: "₹2,00,000 to ₹20,00,000 (Collateral-free group revolving credit)",
     interestRate: "Effective 7.0% p.a. (subvented to 4.0% in focus districts for prompt repayers)",
@@ -339,6 +353,8 @@ export const SCHEMES = [
     shortName: "UP ODOP Scheme",
     ministry: "Department of MSME & Export Promotion, Govt of Uttar Pradesh",
     category: "State Artisan & District Specialty Products",
+    scope: "state",
+    applicableStates: ["Uttar Pradesh"],
     maxLoanAmount: 2500000,
     loanRangeText: "Projects up to ₹25 Lakhs (Subsidy up to ₹6.25 Lakhs)",
     interestRate: "Commercial bank rate with UP State interest subvention",
@@ -365,7 +381,7 @@ export const SCHEMES = [
       }
       return {
         eligible: false,
-        matchScore: 30,
+        matchScore: 20,
         reasons: ["State-specific program for enterprises registered and operating within Uttar Pradesh"]
       };
     },
@@ -388,6 +404,8 @@ export const SCHEMES = [
     shortName: "NABARD Rural Retail",
     ministry: "NABARD & Regional Rural Banks (Gramin Banks)",
     category: "Kirana, Seeds, Fertilizers & Rural FMCG",
+    scope: "central",
+    applicableStates: [],
     maxLoanAmount: 1500000,
     loanRangeText: "₹1,00,000 to ₹15,00,000",
     interestRate: "8.0% – 9.5% p.a. (via Regional Rural Banks)",
@@ -430,6 +448,8 @@ export const SCHEMES = [
     shortName: "MUDRA Tarun",
     ministry: "Ministry of Finance / SIDBI",
     category: "Established Micro & Small Enterprises",
+    scope: "central",
+    applicableStates: [],
     maxLoanAmount: 2000000,
     loanRangeText: "₹5,00,000 to ₹10,00,000 (and up to ₹20,00,000 under Tarun Plus)",
     interestRate: "9.5% – 12.0% p.a.",
@@ -467,5 +487,222 @@ export const SCHEMES = [
       "Bank inspection and loan sanction within 14–21 business days"
     ],
     officialPortal: "https://www.mudra.org.in"
+  },
+  {
+    id: "mh-cmegp",
+    name: "Maharashtra Chief Minister Employment Generation Programme — CMEGP (मुख्यमंत्री रोजगार निर्मिती कार्यक्रम)",
+    shortName: "Maharashtra CMEGP",
+    ministry: "Industries Department & KVIB, Government of Maharashtra",
+    category: "Rural Micro-Enterprises & Agro-Processing",
+    scope: "state",
+    applicableStates: ["Maharashtra"],
+    maxLoanAmount: 5000000,
+    loanRangeText: "Projects up to ₹10 Lakhs (Service/Trading) & ₹50 Lakhs (Manufacturing)",
+    interestRate: "Prevailing bank base rate (~8.5% – 10.5% p.a.)",
+    subsidyText: "15% to 35% margin money capital subsidy credited directly by Maharashtra State Government",
+    collateralRequired: false,
+    collateralText: "Zero Collateral up to ₹10 Lakhs (Covered under CGTMSE guarantee)",
+    tenure: "5 to 7 years with initial moratorium",
+    plainLanguageSummary: "Flagship Maharashtra State program for rural and semi-urban entrepreneurs. Provides up to 35% non-refundable margin money subsidy for setting up or expanding small retail shops, food processing, or agro-services in Maharashtra.",
+    lastVerified: "2026-03-01",
+    officialSourceUrl: "https://maha-cmegp.gov.in",
+    statutoryReference: "Govt of Maharashtra GR No. CMEGP-2019/CR-14/IND-7, Directorate of Industries",
+    whyYouQualifyLogic: (shop, creditScore) => {
+      const stateMatch = (shop.state || '').toLowerCase().includes('maharashtra') || (shop.state || '').toLowerCase() === 'mh';
+      if (!stateMatch) {
+        return {
+          eligible: false,
+          matchScore: 20,
+          reasons: ["Applicable exclusively to micro-enterprises located within the State of Maharashtra"]
+        };
+      }
+      const isVintageOk = shop.vintageYears >= 1.0;
+      const isRevenueOk = shop.monthlyRevenue >= 15000;
+      return {
+        eligible: true,
+        matchScore: isRevenueOk && isVintageOk ? 94 : 82,
+        reasons: [
+          `Enterprise is located in Maharashtra (${shop.district || 'Rural MH'}), fulfilling state domicile norms`,
+          "Eligible for 15% to 35% state margin money grant on project costs up to ₹10 Lakhs",
+          "Zero third-party collateral required under CGTMSE institutional coverage",
+          "Bahi-khata cash flow velocity supports required promoter contribution"
+        ]
+      };
+    },
+    requiredDocuments: [
+      "Maharashtra Domicile Certificate or Aadhaar showing Maharashtra address",
+      "PAN Card & Aadhaar Card of Proprietor",
+      "Educational qualification certificate (minimum 7th / 10th pass)",
+      "Detailed Project Report (DPR) / Vyapaar Saathi 90-day Bankable Dossier",
+      "Machinery or stock quotation from authorized suppliers"
+    ],
+    applicationSteps: [
+      "Register online at Maha-CMEGP portal (maha-cmegp.gov.in)",
+      "District Industries Center (DIC) scrutiny within 15 days",
+      "Bank sanction and physical verification by Lead District Bank",
+      "State margin money subsidy disbursed directly into subsidy reserve fund account"
+    ],
+    officialPortal: "https://maha-cmegp.gov.in"
+  },
+  {
+    id: "tn-uyegp",
+    name: "Tamil Nadu Unemployed Youth Employment Generation Programme — UYEGP (வேலைவாய்ப்பற்ற இளைஞர்களுக்கான வேலைவாய்ப்பு உருவாக்கும் திட்டம்)",
+    shortName: "Tamil Nadu UYEGP",
+    ministry: "Department of Industries and Commerce, Government of Tamil Nadu / DIC",
+    category: "Micro-Business, Retail & Agro-Trading",
+    scope: "state",
+    applicableStates: ["Tamil Nadu"],
+    maxLoanAmount: 500000,
+    loanRangeText: "Business/Service projects up to ₹5,00,000",
+    interestRate: "Commercial bank rate with DIC subsidy support (~9.0% – 10.5% p.a.)",
+    subsidyText: "25% Government subsidy (up to ₹1.25 Lakhs) directly funded by Tamil Nadu Government",
+    collateralRequired: false,
+    collateralText: "Zero Collateral for loans up to ₹5 Lakhs under CGTMSE",
+    tenure: "Up to 5 years",
+    plainLanguageSummary: "Tamil Nadu initiative supporting rural and urban micro-entrepreneurs. Offers a 25% upfront government subsidy up to ₹1.25 Lakhs on commercial bank loans up to ₹5 Lakhs for retail trades, service units, and small agro-enterprises.",
+    lastVerified: "2026-03-01",
+    officialSourceUrl: "https://msmeonline.tn.gov.in/uyegp",
+    statutoryReference: "Tamil Nadu MSME Department Policy Note, G.O. Ms. No. 54",
+    whyYouQualifyLogic: (shop, creditScore) => {
+      const stateMatch = (shop.state || '').toLowerCase().includes('tamil nadu') || (shop.state || '').toLowerCase() === 'tn';
+      if (!stateMatch) {
+        return {
+          eligible: false,
+          matchScore: 20,
+          reasons: ["Applicable exclusively to micro-enterprises located within the State of Tamil Nadu"]
+        };
+      }
+      return {
+        eligible: true,
+        matchScore: 92,
+        reasons: [
+          `Enterprise is located in Tamil Nadu (${shop.district || 'Rural TN'}), qualifying for state DIC subsidy`,
+          "25% direct capital grant (up to ₹1,25,000) non-repayable government subsidy",
+          "Zero third-party collateral required under CGTMSE guidelines",
+          "Simplified DIC sponsorship to Lead District Bank / Regional Rural Bank"
+        ]
+      };
+    },
+    requiredDocuments: [
+      "Aadhaar Card proving Tamil Nadu resident status",
+      "Proof of educational qualification (minimum 8th standard pass)",
+      "Community certificate (for category benefits if applicable)",
+      "Quotation for trade machinery or commercial stock inventory",
+      "Vyapaar Saathi 90-day Cash Flow Statement"
+    ],
+    applicationSteps: [
+      "Apply online at Tamil Nadu MSME portal (msmeonline.tn.gov.in/uyegp)",
+      "District Task Force Committee (DTFC) interview and selection",
+      "Bank sanction letter issued by sponsored commercial or cooperative bank",
+      "Mandatory 7-day EDP training followed by subsidy release"
+    ],
+    officialPortal: "https://msmeonline.tn.gov.in/uyegp"
+  },
+  {
+    id: "gj-svbs",
+    name: "Gujarat Shree Vajpayee Bankable Yojana — SVBS (શ્રી વાજપેયી બેંકેબલ યોજના)",
+    shortName: "Gujarat Vajpayee Bankable Scheme",
+    ministry: "Commissioner of Cottage & Rural Industries, Government of Gujarat",
+    category: "Rural Cottage Industries, Kirana & Service Enterprises",
+    scope: "state",
+    applicableStates: ["Gujarat"],
+    maxLoanAmount: 800000,
+    loanRangeText: "Up to ₹8,00,000 for service & rural micro-business",
+    interestRate: "Bank lending rate with state interest subsidy support (~8.5% – 10.0% p.a.)",
+    subsidyText: "20% to 40% subsidy (up to ₹1.25 Lakhs) based on rural/urban classification",
+    collateralRequired: false,
+    collateralText: "Zero Collateral under Credit Guarantee Scheme",
+    tenure: "3 to 5 years",
+    plainLanguageSummary: "Gujarat State Government scheme empowering rural cottage businesses, artisans, and small trade shops. Provides 20% to 40% margin subsidy up to ₹1.25 Lakhs on bank loans up to ₹8 Lakhs through nationalized and rural cooperative banks.",
+    lastVerified: "2026-03-01",
+    officialSourceUrl: "https://blp.gujarat.gov.in",
+    statutoryReference: "Cottage & Rural Industries Dept, Govt of Gujarat Resolution No. VBS-102012-358-Kh",
+    whyYouQualifyLogic: (shop, creditScore) => {
+      const stateMatch = (shop.state || '').toLowerCase().includes('gujarat') || (shop.state || '').toLowerCase() === 'gj';
+      if (!stateMatch) {
+        return {
+          eligible: false,
+          matchScore: 20,
+          reasons: ["Applicable exclusively to micro-enterprises located within the State of Gujarat"]
+        };
+      }
+      return {
+        eligible: true,
+        matchScore: 93,
+        reasons: [
+          `Enterprise is located in Gujarat (${shop.district || 'Rural Gujarat'}), meeting Cottage Industries norms`,
+          "Up to 40% margin money subsidy (maximum ₹1.25 Lakhs in rural areas)",
+          "Covered under statutory Credit Guarantee protection without pledging family property",
+          "Direct banking tie-up with Gujarat State Cooperative Bank and Lead Nationalized Banks"
+        ]
+      };
+    },
+    requiredDocuments: [
+      "Gujarat Resident Certificate / Domicile or Electoral photo ID",
+      "Aadhaar Card & PAN Card",
+      "Caste / Category certificate (for enhanced rural subsidy tiers)",
+      "Machinery or stock estimate quotation",
+      "Vyapaar Saathi Bahi-Khata record book"
+    ],
+    applicationSteps: [
+      "Submit application on Gujarat Bankable Loan Portal (blp.gujarat.gov.in)",
+      "District Cottage Industries Officer verification and DIC forwarding",
+      "Bank sanction by participating commercial bank branch",
+      "Government subsidy directly credited to beneficiary loan account"
+    ],
+    officialPortal: "https://blp.gujarat.gov.in"
+  },
+  {
+    id: "rj-mlupy",
+    name: "Rajasthan Mukhyamantri Laghu Udyog Protsahan Yojana — MLUPY (मुख्यमंत्री लघु उद्योग प्रोत्साहन योजना)",
+    shortName: "Rajasthan MLUPY Scheme",
+    ministry: "Department of Industries and Commerce, Government of Rajasthan",
+    category: "Micro, Small Enterprises & Service Units",
+    scope: "state",
+    applicableStates: ["Rajasthan"],
+    maxLoanAmount: 2500000,
+    loanRangeText: "Loans up to ₹25 Lakhs (Micro/Retail) & up to ₹5 Crores (Expansion)",
+    interestRate: "8% p.a. direct interest subsidy on loans up to ₹25 Lakhs",
+    subsidyText: "Government pays 8% interest subvention for 5 years, reducing effective interest rate to ~1-2% p.a.",
+    collateralRequired: false,
+    collateralText: "Zero Collateral for micro loans up to ₹10 Lakhs (CGTMSE covered)",
+    tenure: "Up to 5 years with annual interest subvention credit",
+    plainLanguageSummary: "Rajasthan flagship micro-enterprise incentive scheme. The Rajasthan State Government reimburses 8% of the loan interest annually for 5 years on business loans up to ₹25 Lakhs, making financing nearly interest-free for rural retailers and service units.",
+    lastVerified: "2026-03-01",
+    officialSourceUrl: "https://industries.rajasthan.gov.in/mlupy",
+    statutoryReference: "Government of Rajasthan Industries Dept Notification No. F.7(1)Ind./2/2019",
+    whyYouQualifyLogic: (shop, creditScore) => {
+      const stateMatch = (shop.state || '').toLowerCase().includes('rajasthan') || (shop.state || '').toLowerCase() === 'rj';
+      if (!stateMatch) {
+        return {
+          eligible: false,
+          matchScore: 20,
+          reasons: ["Applicable exclusively to micro-enterprises located within the State of Rajasthan"]
+        };
+      }
+      return {
+        eligible: true,
+        matchScore: 95,
+        reasons: [
+          `Enterprise is located in Rajasthan (${shop.district || 'Rural Rajasthan'}), eligible for 8% interest subvention`,
+          "8% interest waiver by Rajasthan Government yields near interest-free working capital",
+          "Collateral-free borrowing up to ₹10 Lakhs under CGTMSE institutional cover",
+          "Direct linkage with Rajasthan Marudhara Gramin Bank and SBI branches"
+        ]
+      };
+    },
+    requiredDocuments: [
+      "Rajasthan Jan Aadhaar Card / Aadhaar Card",
+      "Udyam Registration Certificate (or Vyapaar Saathi assisted Udyam number)",
+      "Bank Account details & 90-day Vyapaar Saathi Verified Bahi-Khata",
+      "Quotation / invoice for working capital or shop enhancement goods"
+    ],
+    applicationSteps: [
+      "Apply through Rajasthan SSO portal (sso.rajasthan.gov.in) under MLUPY service",
+      "District Level Task Force Committee (DLTFC) endorsement",
+      "Bank disburses credit and claims quarterly 8% interest subsidy directly from Government",
+      "Subvention credited automatically to shopkeeper's loan account"
+    ],
+    officialPortal: "https://industries.rajasthan.gov.in/mlupy"
   }
 ];

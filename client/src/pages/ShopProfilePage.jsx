@@ -17,6 +17,7 @@ import { api } from '../utils/api';
 import { useTranslation } from '../i18n/LanguageContext';
 import { WarliBorder } from '../components/WarliMotif';
 import { Card, Badge, SectionHeader, Button } from '../components/ui';
+import { INDIAN_STATES_AND_UTS, findStandardState } from '../data/indianStates';
 
 export function ShopProfilePage({ shop, onShopUpdated, onReloadDemo }) {
   const { language } = useTranslation();
@@ -25,7 +26,7 @@ export function ShopProfilePage({ shop, onShopUpdated, onReloadDemo }) {
   const [phone, setPhone] = useState(shop?.phone || '');
   const [village, setVillage] = useState(shop?.village || '');
   const [district, setDistrict] = useState(shop?.district || '');
-  const [state, setState] = useState(shop?.state || '');
+  const [state, setState] = useState(findStandardState(shop?.state) || 'Uttar Pradesh');
   const [vintage, setVintage] = useState(shop?.vintage_years ?? 1);
   const [bank, setBank] = useState(shop?.bank_account_type || 'State Bank of India');
   const [apiKey, setApiKey] = useState(localStorage.getItem('vyapaar_gemini_api_key') || '');
@@ -50,7 +51,7 @@ export function ShopProfilePage({ shop, onShopUpdated, onReloadDemo }) {
       setPhone(shop.phone || '');
       setVillage(shop.village || '');
       setDistrict(shop.district || '');
-      setState(shop.state || '');
+      setState(findStandardState(shop.state) || 'Uttar Pradesh');
       setVintage(shop.vintage_years ?? 4);
       setBank(shop.bank_account_type || '');
       setIsUdyamVerified(Boolean(shop.is_udyam_verified));
@@ -225,14 +226,22 @@ export function ShopProfilePage({ shop, onShopUpdated, onReloadDemo }) {
 
             <div>
               <label className="block text-xs font-bold text-indigoRural-700 mb-1.5">
-                {language === 'hi' ? 'राज्य (State)' : 'State'}
+                {language === 'hi' ? 'राज्य / UT (State / UT)' : 'State / Union Territory'}
               </label>
-              <input
-                type="text"
-                value={state}
+              <select
+                value={findStandardState(state)}
                 onChange={(e) => setState(e.target.value)}
-                className="w-full px-3.5 py-2.5 bg-paper-50 focus:bg-white rounded-xl border border-paper-300 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-terracotta-500/20 focus:border-terracotta-500 transition text-indigoRural-900"
-              />
+                className="w-full px-3.5 py-2.5 bg-paper-50 focus:bg-white rounded-xl border border-paper-300 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-terracotta-500/20 focus:border-terracotta-500 transition text-indigoRural-900"
+              >
+                <option value="">
+                  {language === 'hi' ? '-- राज्य / केंद्र शासित प्रदेश चुनें --' : '-- Select State / UT --'}
+                </option>
+                {INDIAN_STATES_AND_UTS.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.labelEn} ({s.labelHi})
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
 

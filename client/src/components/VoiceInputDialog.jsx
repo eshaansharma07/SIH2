@@ -10,11 +10,23 @@ import {
   Phone, 
   ArrowRight, 
   Volume2, 
+  VolumeX,
   RotateCcw,
-  CheckCircle2
+  CheckCircle2,
+  Edit3,
+  TrendingUp,
+  TrendingDown,
+  BookOpen,
+  DollarSign
 } from 'lucide-react';
 import { useTranslation } from '../i18n/LanguageContext';
-import { parseVoiceTranscriptWithFallback } from '../utils/voiceParser';
+import { 
+  parseVoiceTranscriptWithFallback, 
+  parseHindiAmount, 
+  parseTransactionType, 
+  extractCustomerName 
+} from '../utils/voiceParser';
+import { speak, stopSpeech, isSpeechSupported } from '../utils/speechService';
 import { api } from '../utils/api';
 import { Badge, Button } from './ui';
 
@@ -26,40 +38,161 @@ export function VoiceInputDialog({
   existingCustomers = [] 
 }) {
   const { language } = useTranslation();
+  
+  // Guided state machine: 'type' -> 'customer' -> 'phone' -> 'amount' -> 'confirm'
+  const [step, setStep] = useState('type');
   const [isListening, setIsListening] = useState(false);
+  const [isSpeakingState, setIsSpeakingState] = useState(false);
+  const [audioMuted, setAudioMuted] = useState(false);
   const [transcript, setTranscript] = useState('');
-  const [isParsing, setIsParsing] = useState(false);
-  const [step, setStep] = useState('listening'); // 'listening', 'confirm', 'unsupported'
   const [isSupported, setIsSupported] = useState(true);
 
-  // Editable parsed fields for confirmation card
-  const [amount, setAmount] = useState('');
+  // Form states
   const [type, setType] = useState('income'); // 'income', 'expense', 'udhaar_given', 'udhaar_repaid'
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
+  const [amount, setAmount] = useState('');
   const [category, setCategory] = useState('Daily Counter Sales');
-  const [errorMessage, setErrorMessage] = useState('');
+  
+  const [customerList, setCustomerList] = useState(existingCustomers);
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const recognitionRef = useRef(null);
+  const stepRef = useRef(step);
+  stepRef.current = step;
 
-  // Check browser SpeechRecognition support
+  // Load shop customers if not passed
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen || !shopId) return;
+    if (existingCustomers && existingCustomers.length > 0) {
+      setCustomerList(existingCustomers);
+    } else {
+      api.getCustomers(shopId).then(res => {
+        if (res?.customers && Array.isArray(res.customers)) {
+          setCustomerList(res.customers);
+        }
+      }).catch(() => {});
+    }
+  }, [isOpen, shopId, existingCustomers]);
+
+  // Check Web Speech API support on open
+  useEffect(() => {
+    if (!isOpen) {
+      stopSpeech();
+      try { recognitionRef.current?.abort(); } catch (_) {}
+      return;
+    }
 
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
       setIsSupported(false);
-      setStep('unsupported');
       return;
     }
-
     setIsSupported(true);
-    setStep('listening');
+
+    // Initialize state
+    setStep('type');
+    setType('income');
+    setCustomerName('');
+    setCustomerPhone('');
+    setAmount('');
     setTranscript('');
     setErrorMessage('');
     setSaveSuccess(false);
+
+    // Initial guided prompt for Step 1
+    promptForStep('type', { type: 'income', customerName: '', amount: '' });
+
+    return () => {
+      stopSpeech();
+      try { recognitionRef.current?.abort(); } catch (_) {}
+    };
+  }, [isOpen]);
+
+  // Speak prompt and start listening after speech finishes
+  const promptForStep = (targetStep, currentValues = {}) => {
+    stopSpeech();
+    try { recognitionRef.current?.abort(); } catch (_) {}
+    setIsListening(false);
+    setTranscript('');
+
+    const langCode = language === 'hi' ? 'hi-IN' : 'en-IN';
+    let promptText = '';
+
+    if (targetStep === 'type') {
+      promptText = language === 'hi'
+        ? 'क्या यह बिक्री है, खर्च है, उधार दिया है, या उधार वापस मिला?'
+        : 'Is this a sale, expense, udhaar given, or udhaar repaid?';
+    } else if (targetStep === 'customer') {
+      promptText = language === 'hi'
+        ? 'ग्राहक का नाम क्या है?'
+        : "What is the customer's name?";
+    } else if (targetStep === 'phone') {
+      promptText = language === 'hi'
+        ? 'कृपया ग्राहक का 10 अंकों का मोबाइल नंबर स्क्रीन पर दर्ज करें'
+        : 'Please enter the 10-digit mobile number on screen';
+    } else if (targetStep === 'amount') {
+      promptText = language === 'hi'
+        ? 'कितने रुपये का लेन-देन है?'
+        : 'What is the transaction amount?';
+    } else if (targetStep === 'confirm') {
+      const amt = currentValues.amount || amount;
+      const cName = currentValues.customerName || customerName;
+      const t = currentValues.type || type;
+
+      if (t === 'udhaar_given') {
+        promptText = language === 'hi'
+          ? `आपने कहा — ${cName || 'ग्राहक'} को ${amt} रुपये उधार दिया। क्या यह सही है?`
+          : `You said: ₹${amt} udhaar given to ${cName || 'customer'}. Is this correct?`;
+      } else if (t === 'udhaar_repaid') {
+        promptText = language === 'hi'
+          ? `आपने कहा — ${cName || 'ग्राहक'} से ${amt} रुपये उधार वापस मिला। क्या यह सही है?`
+          : `You said: ₹${amt} udhaar repaid by ${cName || 'customer'}. Is this correct?`;
+      } else if (t === 'expense') {
+        promptText = language === 'hi'
+          ? `आपने कहा — ${amt} रुपये का खर्च। क्या यह सही है?`
+          : `You said: ₹${amt} expense. Is this correct?`;
+      } else {
+        promptText = language === 'hi'
+          ? `आपने कहा — ${amt} रुपये की बिक्री। क्या यह सही है?`
+          : `You said: ₹${amt} sale. Is this correct?`;
+      }
+    }
+
+    if (!audioMuted && isSpeechSupported() && promptText) {
+      setIsSpeakingState(true);
+      speak({
+        text: promptText,
+        lang: langCode,
+        onEnd: () => {
+          setIsSpeakingState(false);
+          // Don't auto-listen on phone step (requires touch keypad)
+          if (targetStep !== 'phone') {
+            startListeningForStep(targetStep);
+          }
+        },
+        onError: () => {
+          setIsSpeakingState(false);
+          if (targetStep !== 'phone') {
+            startListeningForStep(targetStep);
+          }
+        }
+      });
+    } else {
+      if (targetStep !== 'phone') {
+        startListeningForStep(targetStep);
+      }
+    }
+  };
+
+  // Start Web Speech Recognition
+  const startListeningForStep = (currentStepName) => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) return;
+
+    try { recognitionRef.current?.abort(); } catch (_) {}
 
     const recognition = new SpeechRecognition();
     recognition.continuous = false;
@@ -71,23 +204,16 @@ export function VoiceInputDialog({
     };
 
     recognition.onresult = (event) => {
-      let currentText = '';
+      let text = '';
       for (let i = 0; i < event.results.length; i++) {
-        currentText += event.results[i][0].transcript;
+        text += event.results[i][0].transcript;
       }
-      setTranscript(currentText);
+      setTranscript(text);
     };
 
     recognition.onerror = (event) => {
-      console.warn('[SpeechRecognition] error:', event.error);
+      console.warn('[VoiceInputDialog] Mic error:', event.error);
       setIsListening(false);
-      if (event.error !== 'no-speech') {
-        setErrorMessage(
-          language === 'hi'
-            ? `माइक त्रुटि: ${event.error}`
-            : `Mic error: ${event.error}`
-        );
-      }
     };
 
     recognition.onend = () => {
@@ -95,109 +221,150 @@ export function VoiceInputDialog({
     };
 
     recognitionRef.current = recognition;
-
-    // Auto-start listening
     try {
       recognition.start();
     } catch (_) {}
-
-    return () => {
-      try {
-        recognition.stop();
-      } catch (_) {}
-    };
-  }, [isOpen, language]);
-
-  // When returning customer name changes, auto-fill phone if known
-  useEffect(() => {
-    if (!customerName) return;
-    const match = existingCustomers.find(
-      c => (c.name || c.customerName || '').trim().toLowerCase() === customerName.trim().toLowerCase()
-    );
-    if (match && (match.phone || match.cleanPhone)) {
-      const clean = (match.phone || match.cleanPhone).replace(/\D/g, '').slice(-10);
-      if (clean) setCustomerPhone(clean);
-    }
-  }, [customerName, existingCustomers]);
-
-  if (!isOpen) return null;
-
-  const handleStartListening = () => {
-    setErrorMessage('');
-    setTranscript('');
-    try {
-      recognitionRef.current?.start();
-      setIsListening(true);
-    } catch (_) {
-      try {
-        recognitionRef.current?.stop();
-        setTimeout(() => recognitionRef.current?.start(), 150);
-      } catch (_) {}
-    }
   };
 
-  const handleStopListening = async () => {
-    try {
-      recognitionRef.current?.stop();
-    } catch (_) {}
+  // Process transcript once user finishes or taps "Done"
+  const handleProcessTranscript = async (overrideTranscript = null) => {
+    const rawText = (overrideTranscript !== null ? overrideTranscript : transcript).trim();
+    if (!rawText) return;
+
+    try { recognitionRef.current?.stop(); } catch (_) {}
     setIsListening(false);
 
-    if (!transcript.trim()) {
-      setErrorMessage(
-        language === 'hi'
-          ? 'कोई आवाज़ सुनाई नहीं दी। कृपया दोबारा बोलें।'
-          : 'No speech detected. Please speak again.'
-      );
-      return;
-    }
+    const activeStep = stepRef.current;
 
-    setIsParsing(true);
-    try {
-      const parsed = await parseVoiceTranscriptWithFallback(transcript, {
-        knownCustomers: existingCustomers,
-        shopId
-      });
-
-      setAmount(parsed.amount ? String(parsed.amount) : '');
-      setType(parsed.type || 'income');
-      setCustomerName(parsed.customerName || '');
-      setCategory(parsed.category || (parsed.type === 'income' ? 'Daily Counter Sales' : 'Monthly Grocery Khata'));
-
-      // If customer was matched, lookup phone
-      if (parsed.customerName) {
-        const found = existingCustomers.find(
-          c => (c.name || c.customerName || '').trim().toLowerCase() === parsed.customerName.trim().toLowerCase()
-        );
-        if (found && (found.phone || found.cleanPhone)) {
-          setCustomerPhone((found.phone || found.cleanPhone).replace(/\D/g, '').slice(-10));
+    // STEP 1: TYPE PROCESSING
+    if (activeStep === 'type') {
+      // Check if user spoke a full compound sentence in one shot!
+      const parsedFull = await parseVoiceTranscriptWithFallback(rawText, { knownCustomers: customerList, shopId });
+      if (parsedFull.amount && parsedFull.amount > 0) {
+        // High confidence full extraction!
+        setType(parsedFull.type);
+        setAmount(String(parsedFull.amount));
+        if (parsedFull.customerName) setCustomerName(parsedFull.customerName);
+        if (parsedFull.customerName) {
+          const match = customerList.find(c => (c.name || c.customerName || '').toLowerCase() === parsedFull.customerName.toLowerCase());
+          if (match?.phone) setCustomerPhone(match.phone.replace(/\D/g, '').slice(-10));
         }
+        setStep('confirm');
+        promptForStep('confirm', {
+          type: parsedFull.type,
+          amount: String(parsedFull.amount),
+          customerName: parsedFull.customerName
+        });
+        return;
       }
 
-      setStep('confirm');
-    } catch (err) {
-      setErrorMessage(err.message);
-      setStep('confirm');
-    } finally {
-      setIsParsing(false);
+      // Single step parse
+      const detectedType = parseTransactionType(rawText);
+      setType(detectedType);
+
+      if (detectedType.startsWith('udhaar')) {
+        setStep('customer');
+        promptForStep('customer', { type: detectedType });
+      } else {
+        setStep('amount');
+        promptForStep('amount', { type: detectedType });
+      }
+    } 
+    // STEP 2: CUSTOMER PROCESSING
+    else if (activeStep === 'customer') {
+      const extracted = extractCustomerName(rawText, customerList) || rawText;
+      const cleanName = extracted.trim();
+      setCustomerName(cleanName);
+
+      // Match against known customers
+      const match = customerList.find(c => {
+        const cName = (c.name || c.customerName || '').toLowerCase();
+        return cName.includes(cleanName.toLowerCase()) || cleanName.toLowerCase().includes(cName);
+      });
+
+      if (match) {
+        const matchedName = match.name || match.customerName;
+        setCustomerName(matchedName);
+        if (match.phone || match.cleanPhone) {
+          const cleanPhone = (match.phone || match.cleanPhone).replace(/\D/g, '').slice(-10);
+          setCustomerPhone(cleanPhone);
+        }
+        // Speak verbal confirmation of customer found
+        if (!audioMuted && isSpeechSupported()) {
+          const matchMsg = language === 'hi' ? `${matchedName} जी मिल गए` : `Found ${matchedName}`;
+          speak({
+            text: matchMsg,
+            lang: language === 'hi' ? 'hi-IN' : 'en-IN',
+            onEnd: () => {
+              setStep('amount');
+              promptForStep('amount', { customerName: matchedName });
+            }
+          });
+          return;
+        }
+        setStep('amount');
+        promptForStep('amount', { customerName: matchedName });
+      } else {
+        // New customer: if udhaar_given, require phone number
+        if (type === 'udhaar_given') {
+          setStep('phone');
+          promptForStep('phone', { customerName: cleanName });
+        } else {
+          setStep('amount');
+          promptForStep('amount', { customerName: cleanName });
+        }
+      }
+    } 
+    // STEP 3: AMOUNT PROCESSING
+    else if (activeStep === 'amount') {
+      const parsedAmt = parseHindiAmount(rawText);
+      if (parsedAmt && parsedAmt > 0) {
+        setAmount(String(parsedAmt));
+        setStep('confirm');
+        promptForStep('confirm', { amount: String(parsedAmt) });
+      } else {
+        setErrorMessage(
+          language === 'hi' 
+            ? 'राशि समझ नहीं आई। कृपया नीचे दिए गए बटनों से चुनें या दोबारा बोलें।' 
+            : 'Could not understand amount. Please select from quick chips or speak again.'
+        );
+      }
+    } 
+    // STEP 4: CONFIRMATION PROCESSING
+    else if (activeStep === 'confirm') {
+      const lower = rawText.toLowerCase();
+      const isAffirmative = /हाँ|हां|सही|दर्ज|करो|yes|yep|correct|save|save it|theek|thik/i.test(lower);
+      const isNegative = /नहीं|गलत|बदलो|रद्द|no|nope|wrong|change|cancel/i.test(lower);
+
+      if (isAffirmative) {
+        handleConfirmSave();
+      } else if (isNegative) {
+        stopSpeech();
+        setErrorMessage(language === 'hi' ? 'लेन-देन रद्द किया गया या बदलाव के लिए तैयार' : 'Transaction confirmation rejected. You can edit fields manually.');
+      }
     }
   };
 
+  // Save Transaction
   const handleConfirmSave = async () => {
+    stopSpeech();
+    try { recognitionRef.current?.abort(); } catch (_) {}
+
     const numAmount = Number(amount);
     if (!amount || isNaN(numAmount) || numAmount <= 0) {
       setErrorMessage(language === 'hi' ? 'कृपया सही राशि दर्ज करें' : 'Please enter a valid amount');
       return;
     }
 
-    // Strict validation for udhaar_given: requires 10-digit Indian mobile number
     if (type === 'udhaar_given') {
       const cleanPhone = customerPhone.replace(/\D/g, '').slice(-10);
       if (!cleanPhone || !/^[6-9]\d{9}$/.test(cleanPhone)) {
         setErrorMessage(
           language === 'hi'
-            ? 'उधार देने के लिए ग्राहक का 10 अंकों का वैध मोबाइल नंबर अनिवार्य है'
+            ? 'उधार देने के लिए ग्राहक का 10 अंकों का वैध मोबाइल नंबर आवश्यक है'
             : 'A valid 10-digit mobile number is required to register udhaar'
         );
+        setStep('phone');
         return;
       }
     }
@@ -218,7 +385,7 @@ export function VoiceInputDialog({
       customer_vendor_name: customerName.trim() || (type.startsWith('udhaar') ? 'Village Customer' : ''),
       customer_phone: safePhone,
       customerPhone: safePhone,
-      notes: `Voice Entry: "${transcript.slice(0, 100)}"`,
+      notes: `Voice Conversational Entry: "${amount} ${type}"`,
       date: nowIso.split('T')[0],
       created_at: nowIso
     };
@@ -247,309 +414,619 @@ export function VoiceInputDialog({
     }
   };
 
+  if (!isOpen) return null;
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-indigoRural-950/70 backdrop-blur-sm animate-fadeIn">
-      <div className="w-full max-w-md bg-white rounded-2xl border border-paper-300 shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-indigoRural-950/70 backdrop-blur-xs animate-fadeIn">
+      <div className="bg-white rounded-3xl border border-paper-300 shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[92vh]">
         
-        {/* Header */}
-        <div className="px-5 py-4 bg-terracotta-600 text-white flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
-              <Mic className="w-4 h-4 text-white" />
+        {/* Header with Step Indicator and Audio Toggle */}
+        <div className="p-4 sm:p-5 bg-gradient-to-r from-terracotta-50 via-paper-50 to-indigoRural-50 border-b border-paper-200">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <span className="w-8 h-8 rounded-full bg-terracotta-600 text-white flex items-center justify-center shadow-xs">
+                <Mic className="w-4 h-4" />
+              </span>
+              <div>
+                <h3 className="text-base font-black text-indigoRural-900 tracking-tight font-display">
+                  {language === 'hi' ? 'आवाज़ से बही-खाता दर्ज करें' : 'Voice Bahi-Khata Assistant'}
+                </h3>
+                <p className="text-[11px] text-indigoRural-600 font-medium">
+                  {language === 'hi' ? 'साथी बोल द्वारा चरण-दर-चरण प्रविष्टि' : 'Step-by-step guided voice entry'}
+                </p>
+              </div>
             </div>
-            <div>
-              <h3 className="text-sm font-black tracking-tight font-display">
-                {language === 'hi' ? 'बोलकर बही-खाता दर्ज करें' : 'Voice Bahi-Khata Input'}
-              </h3>
-              <p className="text-[10px] text-paper-200">
-                {language === 'hi' ? 'हिन्दी (hi-IN) व English (en-IN) समर्थित' : 'Supports Hindi (hi-IN) & English (en-IN)'}
-              </p>
+
+            <div className="flex items-center gap-1.5">
+              {/* Audio Read-Aloud Toggle */}
+              <button
+                type="button"
+                onClick={() => {
+                  if (!audioMuted) stopSpeech();
+                  setAudioMuted(!audioMuted);
+                }}
+                className={`p-2 rounded-full border transition cursor-pointer ${
+                  audioMuted 
+                    ? 'bg-paper-100 text-slate-400 border-paper-300 hover:bg-paper-200' 
+                    : 'bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100'
+                }`}
+                title={audioMuted ? 'Unmute voice' : 'Mute spoken prompts'}
+              >
+                {audioMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+              </button>
+
+              {/* Close Dialog */}
+              <button
+                type="button"
+                onClick={() => {
+                  stopSpeech();
+                  try { recognitionRef.current?.abort(); } catch (_) {}
+                  onClose();
+                }}
+                className="p-2 rounded-full text-indigoRural-400 hover:text-indigoRural-800 hover:bg-paper-200 transition cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1 rounded-full text-white/80 hover:text-white hover:bg-white/10 transition cursor-pointer"
-          >
-            <X className="w-5 h-5" />
-          </button>
+
+          {/* Guided Step Indicator Pills */}
+          <div className="grid grid-cols-4 gap-1.5 mt-4 pt-3 border-t border-paper-200/80 text-[11px] font-black">
+            {[
+              { id: 'type', labelHi: '1. प्रकार', labelEn: '1. Type' },
+              { id: 'customer', labelHi: '2. ग्राहक', labelEn: '2. Customer' },
+              { id: 'amount', labelHi: '3. राशि', labelEn: '3. Amount' },
+              { id: 'confirm', labelHi: '4. पुष्टि', labelEn: '4. Confirm' }
+            ].map((s) => {
+              const isActive = step === s.id || (step === 'phone' && s.id === 'customer');
+              const isPast = 
+                (s.id === 'type' && step !== 'type') ||
+                (s.id === 'customer' && (step === 'amount' || step === 'confirm')) ||
+                (s.id === 'amount' && step === 'confirm');
+
+              return (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => {
+                    setStep(s.id);
+                    promptForStep(s.id);
+                  }}
+                  className={`py-1.5 px-2 rounded-xl text-center transition flex items-center justify-center gap-1 cursor-pointer ${
+                    isActive 
+                      ? 'bg-terracotta-600 text-white shadow-xs font-black ring-2 ring-terracotta-300'
+                      : isPast
+                      ? 'bg-emerald-100/80 text-emerald-800 border border-emerald-200 font-bold'
+                      : 'bg-white/60 text-indigoRural-400 border border-paper-200'
+                  }`}
+                >
+                  {isPast && <Check className="w-3 h-3 text-emerald-600" />}
+                  <span>{language === 'hi' ? s.labelHi : s.labelEn}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Content Body */}
-        <div className="p-5 space-y-4 overflow-y-auto flex-1">
+        <div className="p-4 sm:p-6 overflow-y-auto flex-1 space-y-4">
           
-          {/* Unsupported State */}
-          {step === 'unsupported' && (
-            <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 space-y-2 text-xs">
-              <div className="flex items-center gap-2 font-bold text-sm text-amber-800">
-                <AlertCircle className="w-4 h-4 text-amber-600" />
-                <span>{language === 'hi' ? 'आवाज़ पहचान समर्थित नहीं' : 'Voice Input Not Supported'}</span>
+          {/* Unsaved / Error Alert */}
+          {errorMessage && (
+            <div className="p-3 bg-terracotta-50 border border-terracotta-200 rounded-2xl flex items-start gap-2.5 text-xs text-terracotta-800">
+              <AlertCircle className="w-4 h-4 text-terracotta-600 shrink-0 mt-0.5" />
+              <div className="flex-1 font-semibold">{errorMessage}</div>
+            </div>
+          )}
+
+          {/* Dynamic Active Step Content */}
+          
+          {/* STEP 1: TYPE SELECTION */}
+          {step === 'type' && (
+            <div className="space-y-4">
+              <div className="text-center py-2">
+                <p className="text-xs font-bold text-terracotta-700 uppercase tracking-wider font-display">
+                  {language === 'hi' ? 'चरण 1: लेन-देन का प्रकार' : 'Step 1: Transaction Type'}
+                </p>
+                <h4 className="text-sm sm:text-base font-black text-indigoRural-950 mt-1">
+                  {language === 'hi' 
+                    ? '«बिक्री», «खर्च», «उधार दिया», या «उधार वापस» बोलें' 
+                    : 'Speak: "Sale", "Expense", "Udhaar Given", or "Udhaar Repaid"'}
+                </h4>
               </div>
-              <p>
-                {language === 'hi'
-                  ? 'आपका वर्तमान ब्राउज़र (Safari/Firefox) Web Speech API का समर्थन नहीं करता। कृपया Google Chrome या Microsoft Edge का उपयोग करें, या सीधे कीपैड से लेन-देन दर्ज करें।'
-                  : 'Your current browser lacks Web Speech API support. Please use Google Chrome or Microsoft Edge, or use the standard numeric keypad.'}
-              </p>
+
+              {/* Tap Chips fallback for instant selection */}
+              <div className="grid grid-cols-2 gap-2.5 pt-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setType('income');
+                    setStep('amount');
+                    promptForStep('amount', { type: 'income' });
+                  }}
+                  className={`p-3.5 rounded-2xl border-2 text-left transition flex flex-col gap-1 cursor-pointer active:scale-98 ${
+                    type === 'income' 
+                      ? 'border-emerald-500 bg-emerald-50/70 text-emerald-950 shadow-xs' 
+                      : 'border-paper-300 hover:border-emerald-300 bg-white'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-black text-emerald-700 flex items-center gap-1.5">
+                      <TrendingUp className="w-4 h-4" />
+                      {language === 'hi' ? 'बिक्री (आवक)' : 'Sale (Income)'}
+                    </span>
+                    <span className="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-bold">+ Cash</span>
+                  </div>
+                  <span className="text-[11px] text-indigoRural-600 font-medium">
+                    {language === 'hi' ? 'काउंटर नकद / UPI बिक्री' : 'Daily sales & revenue'}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setType('expense');
+                    setStep('amount');
+                    promptForStep('amount', { type: 'expense' });
+                  }}
+                  className={`p-3.5 rounded-2xl border-2 text-left transition flex flex-col gap-1 cursor-pointer active:scale-98 ${
+                    type === 'expense' 
+                      ? 'border-terracotta-500 bg-terracotta-50/70 text-terracotta-950 shadow-xs' 
+                      : 'border-paper-300 hover:border-terracotta-300 bg-white'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-black text-terracotta-700 flex items-center gap-1.5">
+                      <TrendingDown className="w-4 h-4" />
+                      {language === 'hi' ? 'दुकान खर्च' : 'Expense'}
+                    </span>
+                    <span className="text-[10px] bg-terracotta-100 text-terracotta-800 px-2 py-0.5 rounded-full font-bold">- Cash</span>
+                  </div>
+                  <span className="text-[11px] text-indigoRural-600 font-medium">
+                    {language === 'hi' ? 'थोक माल खरीद, बिजली, किराया' : 'Stock purchase, bills'}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setType('udhaar_given');
+                    setStep('customer');
+                    promptForStep('customer', { type: 'udhaar_given' });
+                  }}
+                  className={`p-3.5 rounded-2xl border-2 text-left transition flex flex-col gap-1 cursor-pointer active:scale-98 ${
+                    type === 'udhaar_given' 
+                      ? 'border-amber-500 bg-amber-50/70 text-amber-950 shadow-xs' 
+                      : 'border-paper-300 hover:border-amber-300 bg-white'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-black text-amber-700 flex items-center gap-1.5">
+                      <BookOpen className="w-4 h-4" />
+                      {language === 'hi' ? 'उधार दिया' : 'Udhaar Given'}
+                    </span>
+                    <span className="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-bold">खाता +</span>
+                  </div>
+                  <span className="text-[11px] text-indigoRural-600 font-medium">
+                    {language === 'hi' ? 'ग्राहक के खाते में लिखा' : 'Customer credit given'}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setType('udhaar_repaid');
+                    setStep('customer');
+                    promptForStep('customer', { type: 'udhaar_repaid' });
+                  }}
+                  className={`p-3.5 rounded-2xl border-2 text-left transition flex flex-col gap-1 cursor-pointer active:scale-98 ${
+                    type === 'udhaar_repaid' 
+                      ? 'border-indigo-500 bg-indigo-50/70 text-indigo-950 shadow-xs' 
+                      : 'border-paper-300 hover:border-indigo-300 bg-white'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-black text-indigo-700 flex items-center gap-1.5">
+                      <DollarSign className="w-4 h-4" />
+                      {language === 'hi' ? 'उधार वापस मिला' : 'Udhaar Repaid'}
+                    </span>
+                    <span className="text-[10px] bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded-full font-bold">खाता -</span>
+                  </div>
+                  <span className="text-[11px] text-indigoRural-600 font-medium">
+                    {language === 'hi' ? 'ग्राहक ने पुराना कर्ज चुकाया' : 'Customer debt settled'}
+                  </span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* STEP 2: CUSTOMER SELECTION */}
+          {step === 'customer' && (
+            <div className="space-y-4">
+              <div className="text-center py-2">
+                <p className="text-xs font-bold text-terracotta-700 uppercase tracking-wider font-display">
+                  {language === 'hi' ? 'चरण 2: ग्राहक का नाम' : 'Step 2: Customer Name'}
+                </p>
+                <h4 className="text-sm sm:text-base font-black text-indigoRural-950 mt-1">
+                  {language === 'hi' ? 'ग्राहक का नाम बोलें या नीचे सूची से चुनें' : 'Speak customer name or select below'}
+                </h4>
+              </div>
+
+              {/* Text Input / Quick Search fallback */}
+              <div className="relative">
+                <User className="w-4 h-4 text-indigoRural-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={customerName}
+                  onChange={(e) => setCustomerName(e.target.value)}
+                  placeholder={language === 'hi' ? 'उदा. रमेश कुमार, सीता देवी...' : 'e.g. Ramesh Kumar...'}
+                  className="w-full pl-10 pr-4 py-2.5 bg-paper-50 border border-paper-300 rounded-xl text-sm font-bold text-indigoRural-900 focus:outline-hidden focus:border-terracotta-500"
+                />
+              </div>
+
+              {/* Known Customer Quick Pills */}
+              {customerList && customerList.length > 0 && (
+                <div className="space-y-1.5">
+                  <p className="text-[11px] font-bold text-indigoRural-600">
+                    {language === 'hi' ? 'पसंदीदा ग्राहक:' : 'Registered Customers:'}
+                  </p>
+                  <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto p-1">
+                    {customerList.map((c, i) => {
+                      const name = c.name || c.customerName || `Customer ${i + 1}`;
+                      const phone = (c.phone || c.cleanPhone || '').replace(/\D/g, '').slice(-10);
+                      return (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => {
+                            setCustomerName(name);
+                            if (phone) setCustomerPhone(phone);
+                            setStep('amount');
+                            promptForStep('amount', { customerName: name });
+                          }}
+                          className="px-3 py-1.5 rounded-full text-xs font-extrabold bg-white border border-paper-300 hover:border-terracotta-500 text-indigoRural-900 hover:bg-terracotta-50 transition cursor-pointer flex items-center gap-1.5"
+                        >
+                          <span>{name}</span>
+                          {phone && <span className="text-[10px] text-indigoRural-400 font-normal">({phone.slice(-4)})</span>}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {customerName && (
+                <Button
+                  onClick={() => {
+                    const match = customerList.find(c => (c.name || c.customerName || '').toLowerCase() === customerName.toLowerCase());
+                    if (!match && type === 'udhaar_given') {
+                      setStep('phone');
+                      promptForStep('phone');
+                    } else {
+                      setStep('amount');
+                      promptForStep('amount');
+                    }
+                  }}
+                  variant="primary"
+                  className="w-full"
+                >
+                  {language === 'hi' ? 'आगे बढ़ें (राशि दर्ज करें)' : 'Continue to Amount'}
+                </Button>
+              )}
+            </div>
+          )}
+
+          {/* STEP 2.5: PHONE NUMBER FOR NEW UDHAAR (TOUCH-FRIENDLY KEYPAD) */}
+          {step === 'phone' && (
+            <div className="space-y-4">
+              <div className="text-center py-2">
+                <p className="text-xs font-bold text-terracotta-700 uppercase tracking-wider font-display">
+                  {language === 'hi' ? 'चरण 2.5: नया ग्राहक मोबाइल नंबर' : 'Step 2.5: New Customer Mobile'}
+                </p>
+                <h4 className="text-sm sm:text-base font-black text-indigoRural-950 mt-1">
+                  {language === 'hi' 
+                    ? `«${customerName}» के लिए 10 अंकों का मोबाइल नंबर दर्ज करें` 
+                    : `Enter 10-digit mobile number for ${customerName}`}
+                </h4>
+                <p className="text-[11px] text-amber-700 font-semibold mt-1">
+                  {language === 'hi' ? '⚠️ WhatsApp तगादा एवं UPI भुगतान लिंक हेतु अनिवार्य' : 'Required for WhatsApp reminders & UPI payment QR'}
+                </p>
+              </div>
+
+              {/* Display phone box */}
+              <div className="p-3.5 bg-paper-50 rounded-2xl border border-paper-300 text-center">
+                <span className="text-xs text-indigoRural-500 font-bold mr-2">+91</span>
+                <span className="text-xl font-black text-indigoRural-950 tracking-widest font-mono">
+                  {customerPhone || '----------'}
+                </span>
+              </div>
+
+              {/* Numeric Touch Keypad for phone number */}
+              <div className="grid grid-cols-3 gap-2">
+                {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map(digit => (
+                  <button
+                    key={digit}
+                    type="button"
+                    onClick={() => {
+                      if (customerPhone.length < 10) setCustomerPhone(prev => prev + digit);
+                    }}
+                    className="h-12 rounded-xl bg-white border border-paper-300 hover:bg-paper-100 active:scale-95 text-base font-black text-indigoRural-900 shadow-2xs cursor-pointer"
+                  >
+                    {digit}
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => setCustomerPhone('')}
+                  className="h-12 rounded-xl bg-terracotta-50 border border-terracotta-200 text-xs font-bold text-terracotta-700 cursor-pointer active:scale-95"
+                >
+                  Clear
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (customerPhone.length < 10) setCustomerPhone(prev => prev + '0');
+                  }}
+                  className="h-12 rounded-xl bg-white border border-paper-300 hover:bg-paper-100 active:scale-95 text-base font-black text-indigoRural-900 shadow-2xs cursor-pointer"
+                >
+                  0
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCustomerPhone(prev => prev.slice(0, -1))}
+                  className="h-12 rounded-xl bg-paper-200 border border-paper-300 text-xs font-bold text-indigoRural-700 cursor-pointer active:scale-95"
+                >
+                  ⌫
+                </button>
+              </div>
+
               <Button
-                onClick={onClose}
+                onClick={() => {
+                  if (customerPhone.length === 10 && /^[6-9]\d{9}$/.test(customerPhone)) {
+                    setErrorMessage('');
+                    setStep('amount');
+                    promptForStep('amount');
+                  } else {
+                    setErrorMessage(language === 'hi' ? 'कृपया 10 अंकों का वैध भारतीय मोबाइल नंबर डालें' : 'Please enter valid 10-digit Indian mobile number');
+                  }
+                }}
+                disabled={customerPhone.length !== 10}
                 variant="primary"
-                size="sm"
                 className="w-full mt-2"
               >
-                {language === 'hi' ? 'कीपैड पर वापस जाएं' : 'Back to Keypad'}
+                {language === 'hi' ? 'फोन सहेजें व राशि पर जाएँ' : 'Save Phone & Proceed to Amount'}
               </Button>
             </div>
           )}
 
-          {/* Listening State */}
-          {step === 'listening' && (
-            <div className="text-center py-4 space-y-4">
-              {/* Mic Ripple Animation */}
-              <div className="relative inline-block mx-auto">
-                {isListening && (
-                  <div className="absolute inset-0 rounded-full bg-terracotta-400 animate-ping opacity-30" />
-                )}
-                <button
-                  type="button"
-                  onClick={isListening ? handleStopListening : handleStartListening}
-                  className={`relative w-20 h-20 rounded-full flex items-center justify-center transition-all cursor-pointer shadow-lg ${
-                    isListening 
-                      ? 'bg-terracotta-600 text-white ring-4 ring-terracotta-200 scale-105' 
-                      : 'bg-paper-100 text-indigoRural-700 hover:bg-paper-200 border border-paper-300'
-                  }`}
-                >
-                  {isListening ? (
-                    <Mic className="w-9 h-9 animate-pulse" />
-                  ) : (
-                    <MicOff className="w-9 h-9 text-paper-400" />
-                  )}
-                </button>
-              </div>
-
-              <div>
-                <p className="text-xs font-black text-indigoRural-900">
-                  {isListening
-                    ? (language === 'hi' ? '🎙️ सुन रहे हैं... बोलिए...' : '🎙️ Listening... Speak now...')
-                    : (language === 'hi' ? 'माइक पर टैप करके बोलें' : 'Tap mic to speak')}
+          {/* STEP 3: AMOUNT SELECTION */}
+          {step === 'amount' && (
+            <div className="space-y-4">
+              <div className="text-center py-2">
+                <p className="text-xs font-bold text-terracotta-700 uppercase tracking-wider font-display">
+                  {language === 'hi' ? 'चरण 3: लेन-देन राशि' : 'Step 3: Transaction Amount'}
                 </p>
-                <p className="text-[11px] text-paper-500 mt-0.5">
-                  {language === 'hi'
-                    ? 'उदा: "रमेश को पांच सौ रुपये उधार दिया" या "दो हज़ार की बिक्री"'
-                    : 'e.g. "Ramesh ko 500 rupaye udhaar diya" or "2000 sale"'}
-                </p>
+                <h4 className="text-sm sm:text-base font-black text-indigoRural-950 mt-1">
+                  {language === 'hi' ? 'रुपये बोलें या तुरंत राशि चुनें' : 'Speak amount or select from chips'}
+                </h4>
               </div>
 
-              {/* Realtime Transcript Box */}
-              <div className="p-3.5 bg-paper-50 border border-paper-200 rounded-xl min-h-[64px] flex items-center justify-center text-xs text-indigoRural-950 font-medium">
-                {transcript ? (
-                  <span className="font-bold text-sm text-indigoRural-900">"{transcript}"</span>
-                ) : (
-                  <span className="text-paper-400 italic">
-                    {language === 'hi' ? 'बोले गए शब्द यहाँ दिखेंगे...' : 'Your speech transcript will appear here...'}
-                  </span>
-                )}
-              </div>
-
-              {errorMessage && (
-                <div className="text-[11px] text-red-600 font-bold bg-red-50 p-2 rounded-lg border border-red-200">
-                  {errorMessage}
-                </div>
-              )}
-
-              {/* Action Buttons */}
-              <div className="flex gap-2 pt-2">
-                {isListening ? (
-                  <Button
-                    onClick={handleStopListening}
-                    variant="primary"
-                    size="md"
-                    className="w-full"
-                    disabled={isParsing}
-                  >
-                    <span>{isParsing ? '...' : (language === 'hi' ? 'पूर्ण करें व पुष्टि देखें' : 'Done & Review')}</span>
-                    <ArrowRight className="w-4 h-4 ml-1" />
-                  </Button>
-                ) : (
-                  <Button
-                    onClick={handleStartListening}
-                    variant="secondary"
-                    size="md"
-                    className="w-full"
-                    icon={Mic}
-                  >
-                    <span>{language === 'hi' ? 'दोबारा बोलें' : 'Speak Again'}</span>
-                  </Button>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Confirmation Step (Mandatory Step before saving) */}
-          {step === 'confirm' && (
-            <div className="space-y-3 animate-fadeIn">
-              
-              <div className="p-2.5 bg-paper-100 rounded-xl border border-paper-200 flex items-center justify-between text-xs">
-                <div className="flex items-center gap-1.5 text-indigoRural-700">
-                  <Volume2 className="w-3.5 h-3.5 text-terracotta-600" />
-                  <span className="font-semibold truncate max-w-[240px]">"{transcript}"</span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setStep('listening')}
-                  className="text-[11px] font-bold text-terracotta-700 hover:underline flex items-center gap-1 cursor-pointer"
-                >
-                  <RotateCcw className="w-3 h-3" />
-                  <span>{language === 'hi' ? 'पुनः बोलें' : 'Retry'}</span>
-                </button>
-              </div>
-
-              {/* Transaction Type Segmented Pills */}
-              <div className="space-y-1">
-                <label className="text-[11px] font-bold text-indigoRural-800">
-                  {language === 'hi' ? 'लेन-देन प्रकार:' : 'Transaction Type:'}
-                </label>
-                <div className="grid grid-cols-2 gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => setType('income')}
-                    className={`py-2 px-2 text-xs font-bold rounded-lg border transition cursor-pointer ${
-                      type === 'income'
-                        ? 'bg-forestRural-700 text-white border-forestRural-700 shadow-2xs'
-                        : 'bg-paper-50 text-indigoRural-700 border-paper-300'
-                    }`}
-                  >
-                    {language === 'hi' ? 'बिक्री (आवक)' : 'Sale / Income'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setType('expense')}
-                    className={`py-2 px-2 text-xs font-bold rounded-lg border transition cursor-pointer ${
-                      type === 'expense'
-                        ? 'bg-terracotta-700 text-white border-terracotta-700 shadow-2xs'
-                        : 'bg-paper-50 text-indigoRural-700 border-paper-300'
-                    }`}
-                  >
-                    {language === 'hi' ? 'दुकान खर्च' : 'Expense'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setType('udhaar_given')}
-                    className={`py-2 px-2 text-xs font-bold rounded-lg border transition cursor-pointer ${
-                      type === 'udhaar_given'
-                        ? 'bg-ochre-600 text-white border-ochre-600 shadow-2xs'
-                        : 'bg-paper-50 text-indigoRural-700 border-paper-300'
-                    }`}
-                  >
-                    {language === 'hi' ? 'उधार दिया' : 'Udhaar Given'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setType('udhaar_repaid')}
-                    className={`py-2 px-2 text-xs font-bold rounded-lg border transition cursor-pointer ${
-                      type === 'udhaar_repaid'
-                        ? 'bg-emerald-700 text-white border-emerald-700 shadow-2xs'
-                        : 'bg-paper-50 text-indigoRural-700 border-paper-300'
-                    }`}
-                  >
-                    {language === 'hi' ? 'उधार जमा' : 'Udhaar Repaid'}
-                  </button>
-                </div>
-              </div>
-
-              {/* Amount Input */}
-              <div className="space-y-1">
-                <label className="text-[11px] font-bold text-indigoRural-800">
-                  {language === 'hi' ? 'राशि (रुपये):' : 'Amount (₹):'}
-                </label>
-                <div className="relative">
-                  <span className="absolute left-3 top-2.5 text-base font-extrabold text-indigoRural-400">₹</span>
+              {/* Big Amount Display Box */}
+              <div className="p-4 bg-paper-50 rounded-2xl border-2 border-dashed border-paper-300 text-center">
+                <span className="text-xs text-indigoRural-500 font-bold block mb-1">
+                  {language === 'hi' ? 'कुल राशि' : 'Amount'}
+                </span>
+                <div className="flex items-center justify-center gap-1">
+                  <span className="text-2xl font-black text-terracotta-600">₹</span>
                   <input
                     type="number"
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
                     placeholder="0"
-                    className="w-full pl-8 pr-3 py-2 bg-paper-50 border border-paper-300 rounded-xl text-lg font-black text-indigoRural-900 focus:outline-none focus:ring-2 focus:ring-terracotta-500"
+                    className="w-36 text-center text-3xl font-black text-indigoRural-950 bg-transparent border-b-2 border-terracotta-400 focus:outline-hidden font-display"
                   />
                 </div>
               </div>
 
-              {/* Customer Name Input (Shown for udhaar, or optional for sale) */}
-              <div className="space-y-1">
-                <label className="text-[11px] font-bold text-indigoRural-800 flex items-center justify-between">
-                  <span>{language === 'hi' ? 'ग्राहक का नाम:' : 'Customer Name:'}</span>
-                  {type.startsWith('udhaar') && (
-                    <span className="text-terracotta-600 font-extrabold">*</span>
-                  )}
-                </label>
-                <input
-                  type="text"
-                  value={customerName}
-                  onChange={(e) => setCustomerName(e.target.value)}
-                  placeholder={language === 'hi' ? 'e.g. रमेश कुमार' : 'e.g. Ramesh Kumar'}
-                  className="w-full px-3 py-2 bg-paper-50 border border-paper-300 rounded-xl text-xs font-semibold text-indigoRural-900 focus:outline-none focus:ring-2 focus:ring-terracotta-500"
-                />
+              {/* Quick Amount Chips */}
+              <div className="grid grid-cols-5 gap-2">
+                {[50, 100, 200, 500, 1000].map(val => (
+                  <button
+                    key={val}
+                    type="button"
+                    onClick={() => {
+                      setAmount(String(val));
+                      setStep('confirm');
+                      promptForStep('confirm', { amount: String(val) });
+                    }}
+                    className="py-2 px-1 rounded-xl bg-white border border-paper-300 hover:border-terracotta-500 active:scale-95 text-xs font-black text-indigoRural-900 shadow-2xs hover:bg-terracotta-50 transition cursor-pointer text-center"
+                  >
+                    +₹{val}
+                  </button>
+                ))}
               </div>
 
-              {/* Customer Phone (Mandatory for udhaar_given) */}
-              {type === 'udhaar_given' && (
-                <div className="space-y-1 p-3 bg-ochre-50/70 border border-ochre-200 rounded-xl">
-                  <label className="text-[11px] font-extrabold text-ochre-900 flex items-center justify-between">
-                    <span className="flex items-center gap-1">
-                      <Phone className="w-3.5 h-3.5 text-ochre-700" />
-                      <span>{language === 'hi' ? 'ग्राहक का 10-अंकीय मोबाइल नंबर (अनिवार्य):' : 'Customer 10-digit Mobile (Required):'}</span>
-                    </span>
-                    <span className="text-terracotta-700 font-black">*तगादा हेतु</span>
-                  </label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-2 text-xs font-mono font-bold text-ochre-700">+91</span>
-                    <input
-                      type="tel"
-                      maxLength={10}
-                      value={customerPhone}
-                      onChange={(e) => setCustomerPhone(e.target.value.replace(/\D/g, ''))}
-                      placeholder="9876543210"
-                      className="w-full pl-12 pr-3 py-1.5 bg-white border border-ochre-300 rounded-lg text-xs font-mono font-bold text-indigoRural-900 focus:outline-none focus:ring-2 focus:ring-ochre-500"
-                    />
-                  </div>
-                  <p className="text-[10px] text-ochre-700">
-                    {language === 'hi'
-                      ? '✓ यही नंबर व्हाट्सएप तगादा लिंक व यूपीआई संदेश में उपयोग होगा।'
-                      : '✓ Used directly for 1-click WhatsApp reminders & UPI settlements.'}
-                  </p>
-                </div>
-              )}
-
-              {errorMessage && (
-                <div className="text-[11px] text-red-600 font-bold bg-red-50 p-2 rounded-lg border border-red-200 flex items-center gap-1.5">
-                  <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                  <span>{errorMessage}</span>
-                </div>
-              )}
-
-              {/* Confirm & Save Button */}
-              <div className="pt-2">
+              {amount && Number(amount) > 0 && (
                 <Button
-                  onClick={handleConfirmSave}
+                  onClick={() => {
+                    setStep('confirm');
+                    promptForStep('confirm');
+                  }}
                   variant="primary"
-                  size="md"
+                  className="w-full"
+                >
+                  {language === 'hi' ? 'पुष्टि पर जाएँ' : 'Proceed to Confirmation'}
+                </Button>
+              )}
+            </div>
+          )}
+
+          {/* STEP 4: SPOKEN CONFIRMATION CARD */}
+          {step === 'confirm' && (
+            <div className="space-y-4">
+              <div className="text-center py-1">
+                <p className="text-xs font-bold text-emerald-700 uppercase tracking-wider font-display">
+                  {language === 'hi' ? 'चरण 4: बही-खाता पुष्टि' : 'Step 4: Summary Confirmation'}
+                </p>
+                <h4 className="text-sm sm:text-base font-black text-indigoRural-950 mt-1">
+                  {language === 'hi' 
+                    ? '«हाँ» बोलें या नीचे दिए बटन पर टैप करें' 
+                    : 'Speak "Yes" to confirm or tap the button below'}
+                </h4>
+              </div>
+
+              {/* Summary Card with tap-to-edit escape hatches */}
+              <div className="p-4 bg-gradient-to-br from-paper-50 to-white rounded-2xl border border-paper-300 shadow-sm space-y-3">
+                <div className="flex items-center justify-between pb-2 border-b border-paper-200">
+                  <span className="text-xs font-extrabold text-indigoRural-600">
+                    {language === 'hi' ? 'प्रकार:' : 'Type:'}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setStep('type')}
+                    className="text-xs font-black text-terracotta-700 flex items-center gap-1 hover:underline cursor-pointer"
+                  >
+                    <span className="capitalize">{type.replace('_', ' ')}</span>
+                    <Edit3 className="w-3 h-3" />
+                  </button>
+                </div>
+
+                {type.startsWith('udhaar') && (
+                  <>
+                    <div className="flex items-center justify-between pb-2 border-b border-paper-200">
+                      <span className="text-xs font-extrabold text-indigoRural-600">
+                        {language === 'hi' ? 'ग्राहक:' : 'Customer:'}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setStep('customer')}
+                        className="text-xs font-black text-indigoRural-900 flex items-center gap-1 hover:underline cursor-pointer"
+                      >
+                        <span>{customerName || 'Village Customer'}</span>
+                        <Edit3 className="w-3 h-3 text-terracotta-600" />
+                      </button>
+                    </div>
+
+                    <div className="flex items-center justify-between pb-2 border-b border-paper-200">
+                      <span className="text-xs font-extrabold text-indigoRural-600">
+                        {language === 'hi' ? 'मोबाइल:' : 'Mobile:'}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setStep('phone')}
+                        className="text-xs font-black text-indigoRural-900 flex items-center gap-1 hover:underline cursor-pointer"
+                      >
+                        <span className="font-mono">{customerPhone || 'Not set'}</span>
+                        <Edit3 className="w-3 h-3 text-terracotta-600" />
+                      </button>
+                    </div>
+                  </>
+                )}
+
+                <div className="flex items-center justify-between pt-1">
+                  <span className="text-xs font-extrabold text-indigoRural-600">
+                    {language === 'hi' ? 'कुल राशि:' : 'Amount:'}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setStep('amount')}
+                    className="text-xl font-black text-emerald-700 flex items-center gap-1 hover:underline cursor-pointer font-display"
+                  >
+                    <span>₹{amount}</span>
+                    <Edit3 className="w-4 h-4 text-terracotta-600" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Action Buttons: Yes / Edit */}
+              <div className="grid grid-cols-2 gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setStep('type')}
+                  className="py-3 px-4 rounded-xl border border-paper-300 hover:bg-paper-100 text-xs font-bold text-indigoRural-700 transition cursor-pointer flex items-center justify-center gap-1.5 active:scale-98"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>{language === 'hi' ? 'बदलें / रद्द करें' : 'Edit / Change'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleConfirmSave}
                   disabled={isSaving || saveSuccess}
-                  className="w-full shadow-md"
+                  className="py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black transition cursor-pointer flex items-center justify-center gap-1.5 shadow-md shadow-emerald-600/30 active:scale-98"
                 >
                   {saveSuccess ? (
                     <>
-                      <CheckCircle2 className="w-4 h-4 text-white" />
-                      <span>{language === 'hi' ? '✓ दर्ज हो गया!' : '✓ Recorded!'}</span>
+                      <Check className="w-4 h-4" />
+                      <span>{language === 'hi' ? 'सहेजा गया!' : 'Saved!'}</span>
                     </>
                   ) : (
                     <>
-                      <Check className="w-4 h-4" />
-                      <span>{isSaving ? '...' : (language === 'hi' ? 'पुष्टि करें और बही-खाता में सहेजें' : 'Confirm & Save to Khata')}</span>
+                      <CheckCircle2 className="w-4 h-4" />
+                      <span>{language === 'hi' ? 'हाँ, दर्ज करें' : 'Yes, Confirm & Save'}</span>
                     </>
                   )}
-                </Button>
+                </button>
               </div>
-
             </div>
           )}
+
+          {/* Voice Listening Waveform & Manual Speak Input Bar */}
+          <div className="pt-2 border-t border-paper-200">
+            <div className="flex items-center gap-3 p-3 bg-paper-50 rounded-2xl border border-paper-200">
+              
+              {/* Mic Indicator Button */}
+              <button
+                type="button"
+                onClick={() => {
+                  if (isListening) {
+                    try { recognitionRef.current?.stop(); } catch (_) {}
+                    setIsListening(false);
+                  } else {
+                    startListeningForStep(step);
+                  }
+                }}
+                className={`w-11 h-11 rounded-full flex items-center justify-center shrink-0 transition-all cursor-pointer ${
+                  isListening 
+                    ? 'bg-terracotta-600 text-white ring-4 ring-terracotta-300 animate-pulse' 
+                    : isSpeakingState
+                    ? 'bg-indigoRural-700 text-white ring-2 ring-indigoRural-300'
+                    : 'bg-paper-200 text-indigoRural-700 hover:bg-paper-300'
+                }`}
+                title={isListening ? 'Stop listening' : 'Start listening'}
+              >
+                {isListening ? <Mic className="w-5 h-5 animate-bounce" /> : <MicOff className="w-5 h-5" />}
+              </button>
+
+              {/* Transcript & Status text */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <span className={`w-2 h-2 rounded-full ${isListening ? 'bg-terracotta-600 animate-ping' : isSpeakingState ? 'bg-indigo-600 animate-pulse' : 'bg-slate-400'}`} />
+                  <span className="text-[10px] font-black uppercase tracking-wider text-indigoRural-600 font-display">
+                    {isSpeakingState 
+                      ? (language === 'hi' ? 'साथी बोल रहा है...' : 'Saathi is speaking...')
+                      : isListening 
+                      ? (language === 'hi' ? 'सुन रहा हूँ... बोलिए' : 'Listening... speak now')
+                      : (language === 'hi' ? 'माइक पर टैप करके बोलें' : 'Tap mic to speak')}
+                  </span>
+                </div>
+                <p className="text-xs font-bold text-indigoRural-950 truncate mt-0.5">
+                  {transcript || (language === 'hi' ? 'आपकी आवाज़ यहाँ दिखाई देगी...' : 'Your speech will appear here...')}
+                </p>
+              </div>
+
+              {/* If transcript captured, user can click "Done" */}
+              {transcript && isListening && (
+                <button
+                  type="button"
+                  onClick={() => handleProcessTranscript()}
+                  className="px-3 py-1.5 rounded-xl bg-terracotta-600 hover:bg-terracotta-700 text-white text-xs font-black shadow-xs cursor-pointer shrink-0"
+                >
+                  {language === 'hi' ? 'हो गया' : 'Done'}
+                </button>
+              )}
+            </div>
+          </div>
 
         </div>
 

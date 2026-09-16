@@ -28,6 +28,10 @@ export function WhatsAppReminderModal({ isOpen, onClose, customer, shop, onRemin
 
   const upiPaymentUri = `upi://pay?pa=${encodeURIComponent(defaultUpi)}&pn=${encodeURIComponent(shopName)}&am=${balance}&cu=INR&tn=${encodeURIComponent('Khata Settle ' + shopName)}`;
 
+  const origin = typeof window !== 'undefined' ? window.location.origin : '';
+  const shopSlug = shop?.id || 'ramesh-kirana';
+  const payLink = `${origin}/pay/${shopSlug}?amt=${balance}&customer=${encodeURIComponent(customerName)}&shopName=${encodeURIComponent(shopName)}&upi=${encodeURIComponent(defaultUpi)}`;
+
   useEffect(() => {
     if (!customer) return;
     const initialRaw = customer?.cleanPhone || customer?.phone || customer?.customer_phone || '';
@@ -44,14 +48,14 @@ export function WhatsAppReminderModal({ isOpen, onClose, customer, shop, onRemin
     if (selectedTone === 'polite') {
       setMessage(
         language === 'hi'
-          ? `नमस्ते ${customerName} जी! 🙏\n${shopName} से आपका ₹${balance.toLocaleString('en-IN')} का किराना हिसाब बाकी है।\nकृपया फुर्सत मिलते ही या नीचे दिए UPI पर भुगतान कर दें। धन्यवाद!\n\n💳 UPI ID: ${upiStr}`
-          : `Namaste ${customerName} ji! 🙏\nYour grocery khata balance at ${shopName} is ₹${balance.toLocaleString('en-IN')}.\nPlease settle when convenient via cash or UPI. Thank you!\n\n💳 UPI ID: ${upiStr}`
+          ? `नमस्ते ${customerName} जी! 🙏\n${shopName} से आपका ₹${balance.toLocaleString('en-IN')} का किराना हिसाब बाकी है।\n\n📲 सीधे UPI द्वारा भुगतान लिंक:\n${payLink}\n\n💳 UPI ID: ${upiStr}\n\nधन्यवाद!`
+          : `Namaste ${customerName} ji! 🙏\nYour grocery khata balance at ${shopName} is ₹${balance.toLocaleString('en-IN')}.\n\n📲 Tap link to scan & pay directly via UPI:\n${payLink}\n\n💳 UPI ID: ${upiStr}\n\nThank you!`
       );
     } else if (selectedTone === 'festive') {
       setMessage(
         language === 'hi'
-          ? `नमस्ते ${customerName} जी! 🌾✨\n${shopName} पर त्योहार व मंडी सीजन का नया माल आ चुका है।\nनिवेदन है कि पिछला ₹${balance.toLocaleString('en-IN')} का हिसाब चुकता करवाकर नया सामान ले जाएं। सपरिवार स्वागत है!\n\n💳 UPI ID: ${upiStr}`
-          : `Namaste ${customerName} ji! 🌾✨\nFresh festival and seasonal rations have arrived at ${shopName}.\nPlease clear your previous balance of ₹${balance.toLocaleString('en-IN')} at your earliest convenience.\n\n💳 UPI ID: ${upiStr}`
+          ? `नमस्ते ${customerName} जी! 🌾✨\n${shopName} पर नया माल आ चुका है।\nनिवेदन है कि पिछला ₹${balance.toLocaleString('en-IN')} का हिसाब चुकता करवाकर नया सामान ले जाएं।\n\n📲 सीधे UPI भुगतान लिंक:\n${payLink}\n\n💳 UPI ID: ${upiStr}\n\nसपरिवार स्वागत है!`
+          : `Namaste ${customerName} ji! 🌾✨\nFresh festival and seasonal rations have arrived at ${shopName}.\nPlease clear your previous balance of ₹${balance.toLocaleString('en-IN')}.\n\n📲 Tap link to pay directly via UPI:\n${payLink}\n\n💳 UPI ID: ${upiStr}\n\nThank you!`
       );
     } else if (selectedTone === 'statement') {
       const today = new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -62,16 +66,18 @@ export function WhatsAppReminderModal({ isOpen, onClose, customer, shop, onRemin
             `गाँव/पता: ${village}\n` +
             `कुल बकाया: *₹${balance.toLocaleString('en-IN')}*\n` +
             `दिनांक: ${today}\n\n` +
-            `कृपया बकाया राशि का भुगतान करें। धन्यवाद!\n💳 UPI ID: ${upiStr}`
+            `📲 सीधे ऑनलाइन भुगतान हेतु लिंक:\n${payLink}\n\n` +
+            `💳 UPI ID: ${upiStr}\nधन्यवाद!`
           : `📜 *${shopName} - Customer Statement*\n` +
             `Customer: ${customerName}\n` +
             `Address: ${village}\n` +
             `Balance Owed: *₹${balance.toLocaleString('en-IN')}*\n` +
             `Date: ${today}\n\n` +
-            `Please clear your pending amount. Thank you!\n💳 UPI ID: ${upiStr}`
+            `📲 Pay directly via online UPI link:\n${payLink}\n\n` +
+            `💳 UPI ID: ${upiStr}\nThank you!`
       );
     }
-  }, [selectedTone, customer, defaultUpi, language, shopName]);
+  }, [selectedTone, customer, defaultUpi, language, shopName, payLink]);
 
   if (!isOpen || !customer) return null;
 
@@ -287,6 +293,15 @@ export function WhatsAppReminderModal({ isOpen, onClose, customer, shop, onRemin
                     ? `ग्राहक सीधे किसी भी UPI ऐप (GPay / PhonePe / Paytm / BHIM) से स्कैन करके ₹${balance.toLocaleString('en-IN')} का भुगतान कर सकता है।`
                     : `Customer can scan directly from any UPI app to pay ₹${balance.toLocaleString('en-IN')} instantly.`}
                 </p>
+                <a
+                  href={payLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-[11px] font-bold text-terracotta-700 hover:text-terracotta-900 underline pt-1"
+                >
+                  <span>{language === 'hi' ? 'ग्राहक का डिजिटल भुगतान पेज खोलें' : 'Open Customer Payment Page'}</span>
+                  <ExternalLink className="w-3 h-3" />
+                </a>
               </div>
             )}
           </div>

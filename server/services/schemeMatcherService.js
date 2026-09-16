@@ -25,13 +25,46 @@ export function matchSchemesForShop(shopId) {
     tradeName: shop.trade_name || shop.tradeName || '',
     trade_name: shop.trade_name || shop.tradeName || '',
     ownerCategory: shop.owner_category || shop.ownerCategory || 'general',
-    owner_category: shop.owner_category || shop.ownerCategory || 'general'
+    owner_category: shop.owner_category || shop.ownerCategory || 'general',
+    state: shop.state || '',
+    district: shop.district || '',
+    village: shop.village || ''
   };
 
   const creditScore = creditResult.totalScore;
+  const shopState = (normalizedShop.state || '').trim().toLowerCase();
 
   const matchedSchemes = SCHEMES.map(scheme => {
-    const qualification = scheme.whyYouQualifyLogic(normalizedShop, creditScore);
+    // Check jurisdiction for state-scoped schemes
+    const isStateScheme = scheme.scope === 'state';
+    let isStateMatch = true;
+    if (isStateScheme && scheme.applicableStates && scheme.applicableStates.length > 0) {
+      isStateMatch = scheme.applicableStates.some(st => {
+        const s = st.toLowerCase();
+        if (s === 'uttar pradesh') {
+          return shopState === 'up' || shopState.includes('uttar');
+        }
+        return (
+          shopState === s || 
+          shopState.includes(s) || 
+          (s === 'maharashtra' && (shopState === 'mh' || shopState.includes('maha'))) || 
+          (s === 'tamil nadu' && (shopState === 'tn' || shopState.includes('tamil'))) || 
+          (s === 'rajasthan' && (shopState === 'rj' || shopState.includes('raj'))) || 
+          (s === 'gujarat' && (shopState === 'gj' || shopState.includes('guj')))
+        );
+      });
+    }
+
+    let qualification;
+    if (isStateScheme && !isStateMatch) {
+      qualification = {
+        eligible: false,
+        matchScore: 0,
+        reasons: [`State-specific scheme applicable exclusively to enterprises in ${scheme.applicableStates.join(', ')}`]
+      };
+    } else {
+      qualification = scheme.whyYouQualifyLogic(normalizedShop, creditScore);
+    }
 
     return {
       id: scheme.id,
@@ -39,6 +72,8 @@ export function matchSchemesForShop(shopId) {
       shortName: scheme.shortName,
       ministry: scheme.ministry,
       category: scheme.category,
+      scope: scheme.scope || 'central',
+      applicableStates: scheme.applicableStates || [],
       maxLoanAmount: scheme.maxLoanAmount,
       loanRangeText: scheme.loanRangeText,
       interestRate: scheme.interestRate,

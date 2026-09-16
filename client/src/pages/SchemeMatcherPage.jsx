@@ -133,12 +133,12 @@ export function SchemeMatcherPage({ shop, creditData, onNavigateTab }) {
 
       {/* Tab 1: Your Ranked Matches */}
       {activeTab === 'matched' && (
-        <div className="space-y-4">
+        <div className="space-y-6">
           <div className="p-4 bg-forestRural-50 border border-forestRural-200 rounded-xl text-xs text-forestRural-900 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <ShieldCheck className="w-4 h-4 text-forestRural-700 shrink-0" />
               <span className="font-semibold">
-                Ranked against your {turnoverText} turnover and {scoreText}.
+                Ranked against your {turnoverText} turnover and {scoreText} for {shop?.state || 'your state'}.
               </span>
             </div>
             <Badge variant="positive" size="sm">
@@ -146,8 +146,21 @@ export function SchemeMatcherPage({ shop, creditData, onNavigateTab }) {
             </Badge>
           </div>
 
+          {/* Section 1: Central Government Schemes */}
           <div className="space-y-3.5">
-            {matchedData?.schemes?.map((scheme) => {
+            <div className="flex items-center justify-between border-b border-paper-200 pb-2">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-terracotta-600" />
+                <h3 className="text-sm font-black text-indigoRural-950 font-display">
+                  {language === 'hi' ? 'केंद्रीकृत सरकारी योजनाएं' : 'Central Government Schemes (Pan-India)'}
+                </h3>
+              </div>
+              <Badge variant="neutral" size="sm">
+                🇮🇳 Government of India
+              </Badge>
+            </div>
+
+            {matchedData?.schemes?.filter(s => s.scope !== 'state' && s.isEligible).map((scheme) => {
               const isExpanded = expandedSchemeId === scheme.id;
               const isHighMatch = scheme.matchScore >= 90;
 
@@ -199,7 +212,6 @@ export function SchemeMatcherPage({ shop, creditData, onNavigateTab }) {
                   {/* Expanded Breakdown */}
                   {isExpanded && (
                     <div className="px-5 sm:px-6 pb-6 pt-2 border-t border-paper-200 bg-paper-50/50 space-y-4 animate-fadeIn text-xs">
-                      
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                         <div className="p-3 bg-white rounded-xl border border-paper-200">
                           <span className="text-indigoRural-400 text-[10px] block uppercase font-bold">Interest Rate</span>
@@ -214,8 +226,8 @@ export function SchemeMatcherPage({ shop, creditData, onNavigateTab }) {
                           <strong className="text-indigoRural-900 text-xs">{scheme.collateralText}</strong>
                         </div>
                         <div className="p-3 bg-white rounded-xl border border-paper-200">
-                          <span className="text-indigoRural-400 text-[10px] block uppercase font-bold">Target Nodal Bank</span>
-                          <strong className="text-indigoRural-900 text-xs">{scheme.nodalBankText}</strong>
+                          <span className="text-indigoRural-400 text-[10px] block uppercase font-bold">Target Nodal Authority</span>
+                          <strong className="text-indigoRural-900 text-xs truncate block">{scheme.ministry || scheme.nodalBankText}</strong>
                         </div>
                       </div>
 
@@ -223,7 +235,7 @@ export function SchemeMatcherPage({ shop, creditData, onNavigateTab }) {
                       <div className="p-4 bg-white rounded-xl border border-paper-200 space-y-2">
                         <span className="font-extrabold text-indigoRural-900 block">Required Documents (सरल दस्तावेज़ सूची):</span>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-indigoRural-700">
-                          {scheme.requiredDocuments.map((doc, dIdx) => (
+                          {scheme.requiredDocuments?.map((doc, dIdx) => (
                             <div key={dIdx} className="flex items-center gap-2">
                               <CheckCircle2 className="w-3.5 h-3.5 text-forestRural-600 shrink-0" />
                               <span>{doc}</span>
@@ -243,13 +255,150 @@ export function SchemeMatcherPage({ shop, creditData, onNavigateTab }) {
                           <span>Include in Bank Loan Dossier</span>
                         </Button>
                       </div>
-
                     </div>
                   )}
-
                 </Card>
               );
             })}
+          </div>
+
+          {/* Section 2: State Government Schemes */}
+          <div className="space-y-3.5 pt-2">
+            <div className="flex items-center justify-between border-b border-paper-200 pb-2">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-forestRural-600" />
+                <h3 className="text-sm font-black text-indigoRural-950 font-display">
+                  {language === 'hi' 
+                    ? `${shop?.state || 'राज्य'} सरकार की विशेष योजनाएं` 
+                    : `${shop?.state || 'State'} Government Schemes`}
+                </h3>
+              </div>
+              <Badge variant="neutral" size="sm">
+                🏛️ {shop?.state || 'State'} Jurisdiction
+              </Badge>
+            </div>
+
+            {matchedData?.schemes?.filter(s => s.scope === 'state' && s.isEligible).length > 0 ? (
+              matchedData.schemes.filter(s => s.scope === 'state' && s.isEligible).map((scheme) => {
+                const isExpanded = expandedSchemeId === scheme.id;
+                const isHighMatch = scheme.matchScore >= 90;
+
+                return (
+                  <Card 
+                    key={scheme.id}
+                    padding="none"
+                    className={`overflow-hidden transition-all border-forestRural-200 ${
+                      isExpanded ? 'ring-2 ring-forestRural-500 border-forestRural-400' : ''
+                    }`}
+                  >
+                    {/* Scheme Summary Header */}
+                    <div 
+                      onClick={() => setExpandedSchemeId(isExpanded ? null : scheme.id)}
+                      className="p-5 sm:p-6 cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-4 select-none hover:bg-forestRural-50/40 transition"
+                    >
+                      <div className="space-y-1 max-w-2xl">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-base font-extrabold text-indigoRural-900 tracking-tight font-display">
+                            {scheme.name}
+                          </span>
+                          <Badge variant="positive" size="sm">
+                            🏛️ {scheme.applicableStates?.[0] || 'State'} Govt
+                          </Badge>
+                          <Badge 
+                            variant={isHighMatch ? 'positive' : 'attention'} 
+                            size="sm"
+                          >
+                            {scheme.matchScore}% Match
+                          </Badge>
+                        </div>
+                        <p className="text-xs text-indigoRural-500 line-clamp-1 font-medium">
+                          {scheme.plainLanguageSummary}
+                        </p>
+                      </div>
+
+                      <div className="flex items-center justify-between sm:justify-end gap-4 shrink-0">
+                        <div className="text-left sm:text-right">
+                          <span className="text-[10px] text-indigoRural-400 font-bold block uppercase tracking-wider">
+                            Maximum Facility
+                          </span>
+                          <span className="text-base font-black text-indigoRural-900 tabular-nums">
+                            {scheme.loanRangeText}
+                          </span>
+                        </div>
+                        <span className="text-xs text-forestRural-800 font-bold px-3 py-1.5 bg-forestRural-50 rounded-lg border border-forestRural-200">
+                          {isExpanded ? 'Hide' : 'Details'}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Expanded Breakdown */}
+                    {isExpanded && (
+                      <div className="px-5 sm:px-6 pb-6 pt-2 border-t border-forestRural-200 bg-forestRural-50/30 space-y-4 animate-fadeIn text-xs">
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                          <div className="p-3 bg-white rounded-xl border border-paper-200">
+                            <span className="text-indigoRural-400 text-[10px] block uppercase font-bold">Interest Rate</span>
+                            <strong className="text-indigoRural-900 text-xs">{scheme.interestRate}</strong>
+                          </div>
+                          <div className="p-3 bg-white rounded-xl border border-paper-200">
+                            <span className="text-indigoRural-400 text-[10px] block uppercase font-bold">State Subsidy</span>
+                            <strong className="text-forestRural-700 text-xs">{scheme.subsidyText}</strong>
+                          </div>
+                          <div className="p-3 bg-white rounded-xl border border-paper-200">
+                            <span className="text-indigoRural-400 text-[10px] block uppercase font-bold">Collateral Required</span>
+                            <strong className="text-indigoRural-900 text-xs">{scheme.collateralText}</strong>
+                          </div>
+                          <div className="p-3 bg-white rounded-xl border border-paper-200">
+                            <span className="text-indigoRural-400 text-[10px] block uppercase font-bold">State Department</span>
+                            <strong className="text-indigoRural-900 text-xs truncate block">{scheme.ministry}</strong>
+                          </div>
+                        </div>
+
+                        {/* Required Documents Checklist */}
+                        <div className="p-4 bg-white rounded-xl border border-paper-200 space-y-2">
+                          <span className="font-extrabold text-indigoRural-900 block">Required Documents (सरल दस्तावेज़ सूची):</span>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-indigoRural-700">
+                            {scheme.requiredDocuments?.map((doc, dIdx) => (
+                              <div key={dIdx} className="flex items-center gap-2">
+                                <CheckCircle2 className="w-3.5 h-3.5 text-forestRural-600 shrink-0" />
+                                <span>{doc}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="flex justify-end pt-1">
+                          <Button
+                            onClick={() => onNavigateTab('dossier')}
+                            variant="dark"
+                            size="md"
+                            icon={ArrowRight}
+                            iconPosition="right"
+                          >
+                            <span>Include in Bank Loan Dossier</span>
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </Card>
+                );
+              })
+            ) : (
+              <div className="p-5 bg-amber-50/70 border border-amber-200 rounded-2xl text-xs text-amber-900 space-y-2 shadow-2xs">
+                <div className="flex items-center gap-2 font-bold text-amber-950">
+                  <Landmark className="w-4 h-4 text-amber-700 shrink-0" />
+                  <span>
+                    {language === 'hi' 
+                      ? `${shop?.state || 'राज्य'} हेतु विशेष सूचना` 
+                      : `Note for ${shop?.state || 'Your State'}`}
+                  </span>
+                </div>
+                <p className="text-[11px] leading-relaxed text-amber-800 font-medium">
+                  {language === 'hi' 
+                    ? `वर्तमान में ${shop?.state || 'आपके राज्य'} के लिए केंद्रीय योजनाएं प्रदर्शित की जा रही हैं। हम सक्रिय रूप से ${shop?.state || 'इस राज्य'} के जिला उद्योग केंद्र (DIC) एवं खादी बोर्ड की राज्य स्तरीय योजनाओं को सत्यापित कर जोड़ रहे हैं। कृपया शीघ्र पुनः देखें।`
+                    : `Currently displaying Central schemes for ${shop?.state || 'your state'}. We are actively indexing ${shop?.state || 'this state'}'s state-level micro-enterprise schemes (DIC / Khadi Board). Check back soon.`}
+                </p>
+              </div>
+            )}
           </div>
         </div>
       )}

@@ -26,6 +26,7 @@ import {
 import { motion, useReducedMotion } from 'framer-motion';
 import { WarliBorder } from '../components/WarliMotif';
 import { api } from '../utils/api';
+import { INDIAN_STATES_AND_UTS, findStandardState } from '../data/indianStates';
 import { useTranslation } from '../i18n/LanguageContext';
 import { Card, Badge, Button, PageTitle, SectionHeading, FieldLabel, HelperText } from '../components/ui';
 
@@ -628,15 +629,22 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
                 </div>
                 <div>
                   <FieldLabel>
-                    {language === 'hi' ? 'राज्य (State)' : 'State'}
+                    {language === 'hi' ? 'राज्य / UT (State / UT)' : 'State / Union Territory'}
                   </FieldLabel>
-                  <input
-                    type="text"
+                  <select
                     value={state}
                     onChange={(e) => setState(e.target.value)}
-                    placeholder="उदा. उत्तर प्रदेश (UP)"
-                    className="w-full px-3.5 py-2.5 saathi-input text-xs font-medium text-indigoRural-900"
-                  />
+                    className="w-full px-3.5 py-2.5 saathi-input text-xs font-semibold text-indigoRural-900 bg-white"
+                  >
+                    <option value="">
+                      {language === 'hi' ? '-- राज्य / केंद्र शासित प्रदेश चुनें --' : '-- Select State / UT --'}
+                    </option>
+                    {INDIAN_STATES_AND_UTS.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.labelEn} ({s.labelHi})
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
