@@ -41,7 +41,8 @@ function advisoryRateLimiter(req, res, next) {
 // Chat with Vyapaar Saathi Advisor
 router.post('/chat', advisoryRateLimiter, async (req, res) => {
   try {
-    const { shopId, question } = req.body;
+    const { shopId, question, apiKey } = req.body;
+    const clientApiKey = apiKey || req.headers['x-api-key'] || req.headers['anthropic-api-key'];
 
     if (!shopId) {
       return res.status(400).json({ success: false, error: 'shopId is required' });
@@ -51,8 +52,15 @@ router.post('/chat', advisoryRateLimiter, async (req, res) => {
       return res.status(400).json({ success: false, error: 'Question is required' });
     }
 
-    const advice = await generateAdvisoryResponse(shopId, question);
-    res.json({ success: true, advice });
+    const advice = await generateAdvisoryResponse(shopId, question, clientApiKey);
+    res.json({
+      success: true,
+      advice,
+      response: advice.content,
+      reply: advice.content,
+      answer: advice.content,
+      source: advice.source
+    });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }

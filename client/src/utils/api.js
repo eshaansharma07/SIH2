@@ -131,8 +131,13 @@ export const api = {
   getSchemeDetail: (id) => request(`/schemes/${id}`),
 
   // Advisory
-  chatAdvisor: (shopId, question) => 
-    request('/advisor/chat', { method: 'POST', body: JSON.stringify({ shopId, question }) }),
+  chatAdvisor: (shopId, question, apiKey) => {
+    const key = apiKey || (typeof localStorage !== 'undefined' ? (localStorage.getItem('vyapaar_claude_api_key') || localStorage.getItem('vyapaar_gemini_api_key')) : null);
+    return request('/advisor/chat', { 
+      method: 'POST', 
+      body: JSON.stringify({ shopId, question, apiKey: key }) 
+    });
+  },
   getAdvisorHistory: (shopId) => request(`/advisor/history?shopId=${shopId}`),
   getSeasonalCues: (shopId) => request(`/advisor/cues?shopId=${shopId}`),
 

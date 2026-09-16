@@ -85,12 +85,13 @@ export function AdvisorChatPage({ shop, creditData, summaryData, initialPrompt =
 
     try {
       const res = await api.chatAdvisor(shop.id, text);
-      if (res.success && res.response) {
+      const reply = res.response || res.advice?.content || res.reply;
+      if (res.success && reply) {
         setMessages(prev => [
           ...prev, 
           {
             role: 'assistant',
-            content: res.response,
+            content: reply,
             timestamp: new Date().toISOString()
           }
         ]);
@@ -138,7 +139,7 @@ export function AdvisorChatPage({ shop, creditData, summaryData, initialPrompt =
                   {language === 'hi' ? 'साथी AI' : 'Saathi AI'}
                 </h1>
                 <Badge variant="brand" size="sm">
-                  Gemini Grounded
+                  Claude Grounded
                 </Badge>
               </div>
               <p className="text-xs text-indigoRural-500">

@@ -10,7 +10,7 @@
 [![Recharts](https://img.shields.io/badge/Charts-Recharts_Time--Series-D97706.svg)](https://recharts.org/)
 [![Node.js](https://img.shields.io/badge/Backend-Node.js_%2B_Express-339933.svg)](https://nodejs.org/)
 [![SQLite](https://img.shields.io/badge/Database-SQLite_WAL-003B57.svg)](https://www.sqlite.org/)
-[![Google Gemini API](https://img.shields.io/badge/AI_Engine-Gemini_2.5_Flash-4285F4.svg)](https://aistudio.google.com/)
+[![Anthropic Claude API](https://img.shields.io/badge/AI_Engine-Claude_3.5_Sonnet-D97706.svg)](https://www.anthropic.com/)
 [![RBI PSL Compliant](https://img.shields.io/badge/Framework-RBI_Priority_Sector_Lending-1E293B.svg)](https://rbi.org.in/)
 
 <p align="center">
@@ -63,7 +63,7 @@ India's 63+ million rural micro-entrepreneurs (kirana grocers, village tailors, 
    │ 2. Recharts Seasonal Curves  │ Area curves of gross revenue & inventory outlays │
    │ 3. 4-Pillar Credit Scorer    │ Explainable 300-850 score based on cash flows │
    │ 4. Statutory Scheme Matcher  │ Rule-based matching against 10 official schemes │
-   │ 5. Saathi AI Advisor         │ Grounded Gemini 2.5 Flash with fallback net │
+   │ 5. Saathi AI Advisor         │ Grounded Claude 3.5 Sonnet with fallback net │
    │ 6. Bank Loan Dossier         │ Printable official RBI PSL-compliant statement│
    └───────────────────────────────────────────────────────────────────────────┘
 ```
@@ -145,7 +145,7 @@ Every scheme in the catalog is fact-checked against official Government of India
 | **UP ODOP Margin Money** | UP State Govt (DIUP MSME) | 25% margin grant up to ₹20 Lakh for regional crafts | [diupmsme.upsdc.gov.in](https://diupmsme.upsdc.gov.in) |
 | **NABARD Rural Retail Refinance** | NABARD / Regional Rural Banks | ₹1 Lakh to ₹15 Lakh refinance for village provision stores | [nabard.org](https://www.nabard.org) |
 
-### 4. Saathi AI Advisor (Google Gemini 2.5 Flash)
+### 4. Saathi AI Advisor (Anthropic Claude 3.5 Sonnet)
 - **Strict Grounding**: Context injects trade category, location, vintage in months, last 30-day itemized turnover, and upcoming APMC mandi harvest dates.
 - **6-Scenario Offline Fallback Net**: If an external API key is absent or rate-limited, the advisory gracefully defaults to data-grounded guidance for festive stock planning, udhaar recovery, margin optimization, and MUDRA equipment loans.
 - **Transparency Drawer**: "Inspect Data Fed to AI" allows judges to view the exact JSON payload passed to the model.

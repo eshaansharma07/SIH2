@@ -4,8 +4,8 @@ import { matchSchemesForShop } from './schemeMatcherService.js';
 import { getUpcomingFestivals } from './googleCalendarService.js';
 
 /**
- * Hyper-Local AI Advisory Service powered by Google Gemini API (Free Tier)
- * Uses gemini-2.5-flash or gemini-2.5-flash-lite via Google AI Studio.
+ * Hyper-Local AI Advisory Service powered by Anthropic Claude API
+ * Uses claude-3-5-sonnet-20241022 (or claude-3-5-haiku) via Anthropic API.
  * 
  * Strict System Prompt Grounding Rules:
  * Every response MUST reference at least one of:
@@ -190,7 +190,7 @@ For your **${ctx.tradeCategory}** in **${ctx.location}** (${ctx.monthsInOperatio
 /**
  * Main Advisory Handler
  */
-export async function generateAdvisoryResponse(shopId, userQuestion) {
+export async function generateAdvisoryResponse(shopId, userQuestion, clientApiKey = null) {
   try {
     const shop = db.prepare('SELECT * FROM shops WHERE id = ?').get(shopId) || 
                  db.prepare('SELECT * FROM shops LIMIT 1').get();
@@ -283,16 +283,15 @@ export async function generateAdvisoryResponse(shopId, userQuestion) {
     const isEnglishQuery = /^[a-zA-Z0-9\s.,?!'"₹$%()-]+$/.test(userQuestion.trim()) &&
       !/(ramesh|namaste|ram|bhai|ji|kya|kaise|kitna|kitni|mera|meri|dukaan|paisa|bachat)/i.test(userQuestion);
 
-    // 4. Try Google Gemini API Call (Free Tier via Google AI Studio)
-    const geminiKey = process.env.GEMINI_API_KEY;
+    // 4. Try Anthropic Claude API Call (or client-provided Claude key)
+    const claudeKey = clientApiKey || process.env.ANTHROPIC_API_KEY || process.env.CLAUDE_API_KEY;
+    const claudeModel = process.env.CLAUDE_MODEL || 'claude-3-5-sonnet-20241022';
 
-    if (geminiKey) {
+    if (claudeKey) {
       try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 14000); // 14-second timeout
+        const timeoutId = setTimeout(() => controller.abort(), 16000); // 16-second timeout
 
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`;
-        
         const languageInstruction = isEnglishQuery 
           ? 'Respond in clear, professional, warm Indian English tailored for rural micro-entrepreneurs.' 
           : 'Respond in respectful, friendly Hindi (using आप, राम-राम/नमस्ते) with common trade terms (स्टॉक, नकदी, मुनाफा, लोन).';
@@ -318,26 +317,24 @@ Every single response MUST reference at least ONE (and ideally multiple) of the 
 
 Provide practical, hyper-local advice: exact quantities to stock, wholesale mandi advice in Balrampur, udhaar recovery timing linked with paddy harvest, and loan steps. Keep advice in 2 to 4 readable paragraphs with clear bullet points.`;
 
-        const response = await fetch(url, {
+        const response = await fetch('https://api.anthropic.com/v1/messages', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': claudeKey,
+            'anthropic-version': '2023-06-01'
+          },
           signal: controller.signal,
           body: JSON.stringify({
-            contents: [
+            model: claudeModel,
+            max_tokens: 1000,
+            system: systemInstruction,
+            messages: [
               {
                 role: 'user',
-                parts: [
-                  { text: `${systemInstruction}\n\nShopkeeper Question: "${userQuestion}"` }
-                ]
+                content: `Shopkeeper Question: "${userQuestion}"`
               }
-            ],
-            generationConfig: {
-              temperature: 0.7,
-              maxOutputTokens: 800,
-              thinkingConfig: {
-                thinkingBudget: 0
-              }
-            }
+            ]
           })
         });
 
@@ -345,21 +342,22 @@ Provide practical, hyper-local advice: exact quantities to stock, wholesale mand
 
         if (response.ok) {
           const data = await response.json();
-          const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
+          const textBlock = data.content?.find(block => block.type === 'text');
+          const content = textBlock?.text || (typeof data.content?.[0] === 'string' ? data.content[0] : data.content?.[0]?.text);
           if (content && content.trim()) {
             saveChatMessage(shop.id, 'user', userQuestion);
             saveChatMessage(shop.id, 'assistant', content);
             return {
               content,
-              source: 'gemini-2.5-flash',
+              source: data.model || claudeModel,
               contextUsed: contextData
             };
           }
         } else {
-          console.warn('Gemini API returned non-200 status (rate-limit/error):', response.status, await response.text().catch(() => ''));
+          console.warn('Claude API returned non-200 status (rate-limit/error):', response.status, await response.text().catch(() => ''));
         }
       } catch (err) {
-        console.warn('Gemini API call timed out or failed, activating rural safety net fallback:', err.message);
+        console.warn('Claude API call timed out or failed, activating rural safety net fallback:', err.message);
       }
     }
 
@@ -371,14 +369,14 @@ Provide practical, hyper-local advice: exact quantities to stock, wholesale mand
 
     return {
       content: fallbackResponse,
-      source: 'gemini-fallback-grounded',
+      source: 'claude-fallback-grounded',
       contextUsed: contextData
     };
   } catch (criticalErr) {
     console.error('Critical fallback in advisory service:', criticalErr);
     return {
       content: `राम राम Ramesh Kumar जी! 🙏\n\nउत्तर प्रदेश के **Utraula Dehat village, Balrampur district** में आपकी **Kirana & General Store** पिछले **48 महीनों** से सफलता से चल रही है।\n\nदीपावली पर तेल, घी और चीनी की मांग में 40% से 45% उछाल आने का अनुमान है। आपका वैकल्पिक क्रेडिट स्कोर **785/850** है, जिससे आप **PM MUDRA** कार्यशील पूंजी लोन के लिए बिना किसी बंधक (0% Collateral) के 100% पात्र हैं।`,
-      source: 'gemini-fallback-grounded',
+      source: 'claude-fallback-grounded',
       contextUsed: null
     };
   }

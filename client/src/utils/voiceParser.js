@@ -1,4 +1,4 @@
-// Voice Hindi & English Bahi-Khata Rule-Based Parser + Gemini AI Fallback
+// Voice Hindi & English Bahi-Khata Rule-Based Parser + Claude AI Fallback
 
 const HINDI_NUMBER_WORDS = {
   'शून्य': 0, 'एक': 1, 'दो': 2, 'तीन': 3, 'चार': 4, 'पांच': 5, 'पाँच': 5,
@@ -236,7 +236,7 @@ export async function parseVoiceTranscriptWithFallback(transcript, { knownCustom
             type: parsed.type || parsedType,
             customerName: parsed.customerName || parsedCustomer,
             category: parsed.category || 'Daily Counter Sales',
-            method: 'gemini-fallback',
+            method: 'claude-fallback',
             confidence: 'high'
           };
         }

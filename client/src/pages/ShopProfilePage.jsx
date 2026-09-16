@@ -28,9 +28,11 @@ export function ShopProfilePage({ shop, onShopUpdated, onReloadDemo }) {
   const [district, setDistrict] = useState(shop?.district || '');
   const [state, setState] = useState(findStandardState(shop?.state) || 'Uttar Pradesh');
   const [vintage, setVintage] = useState(shop?.vintage_years ?? 1);
-  const [bank, setBank] = useState(shop?.bank_account_type || 'State Bank of India');
-  const [apiKey, setApiKey] = useState(localStorage.getItem('vyapaar_gemini_api_key') || '');
-  const [savedSuccess, setSavedSuccess] = useState(false);
+  const [apiKey, setApiKey] = useState(
+    localStorage.getItem('vyapaar_claude_api_key') ||
+    localStorage.getItem('vyapaar_gemini_api_key') ||
+    ''
+  );
   const [errorMsg, setErrorMsg] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -98,8 +100,9 @@ export function ShopProfilePage({ shop, onShopUpdated, onReloadDemo }) {
     setErrorMsg('');
     try {
       if (apiKey) {
-        localStorage.setItem('vyapaar_gemini_api_key', apiKey);
+        localStorage.setItem('vyapaar_claude_api_key', apiKey);
       } else {
+        localStorage.removeItem('vyapaar_claude_api_key');
         localStorage.removeItem('vyapaar_gemini_api_key');
       }
 
@@ -278,19 +281,19 @@ export function ShopProfilePage({ shop, onShopUpdated, onReloadDemo }) {
             <div className="flex items-center gap-2">
               <Key className="w-4 h-4 text-ochre-600" />
               <h2 className="text-xs font-black text-indigoRural-900 uppercase tracking-wider font-display">
-                {language === 'hi' ? 'Google Gemini API (फ्री टियर)' : 'Google Gemini API (Free Tier via Google AI Studio)'}
+                {language === 'hi' ? 'Anthropic Claude API (Claude 3.5 Sonnet)' : 'Anthropic Claude API (Claude 3.5 Sonnet)'}
               </h2>
             </div>
             <p className="text-xs text-indigoRural-500 leading-relaxed">
               {language === 'hi'
-                ? 'व्यापार साथी बिना किसी एपीआई कुंजी के भी 6 पूर्व-निर्मित स्थानीय सलाह परिदृश्यों (Safety Net) पर पूरी तरह काम करता है। यदि आप लाइव जेमिनी 2.5 फ्लैश टेस्ट करना चाहते हैं तो अपनी निःशुल्क Google AI Studio कुंजी यहाँ दर्ज करें।'
-                : 'Vyapaar Saathi operates smoothly without an API key using 6 grounded rural fallback scenarios. To enable live gemini-2.5-flash responses, paste your free Google AI Studio key below.'}
+                ? 'व्यापार साथी बिना किसी एपीआई कुंजी के भी 6 पूर्व-निर्मित स्थानीय सलाह परिदृश्यों (Safety Net) पर पूरी तरह काम करता है। यदि आप लाइव Claude 3.5 Sonnet प्रतिक्रियाएं प्राप्त करना चाहते हैं तो अपनी Anthropic API कुंजी यहाँ दर्ज करें।'
+                : 'Vyapaar Saathi operates smoothly without an API key using 6 grounded rural fallback scenarios. To enable live Claude 3.5 Sonnet responses, paste your Anthropic API key below.'}
             </p>
             <input
               type="password"
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
-              placeholder="AIzaSy..."
+              placeholder="sk-ant-api03-..."
               className="w-full px-3.5 py-2.5 bg-paper-50 focus:bg-white rounded-xl border border-paper-300 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-terracotta-500/20 focus:border-terracotta-500 transition text-indigoRural-900"
             />
           </div>
