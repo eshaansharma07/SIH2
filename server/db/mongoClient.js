@@ -13,6 +13,8 @@ dotenv.config({ path: path.join(__dirname, '../../.env') });
 let cachedClient = null;
 let cachedDb = null;
 let indexesInitialized = false;
+let lastFailureTimestamp = 0;
+const FAILURE_COOLDOWN_MS = 60000; // 1 minute cooldown after connection failure
 
 /**
  * Checks if MONGODB_URI is provided in environment.
@@ -92,8 +94,14 @@ export async function getMongoDb() {
     return cachedDb;
   }
 
-  const maxAttempts = 3;
-  const backoffDelays = [500, 1000, 2000];
+  // Fast-path: if connection recently failed, fail fast to prevent serverless Lambda timeouts
+  if (Date.now() - lastFailureTimestamp < FAILURE_COOLDOWN_MS) {
+    return null;
+  }
+
+  const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+  const maxAttempts = isServerless ? 1 : 2;
+  const timeoutMs = isServerless ? 1500 : 3000;
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
@@ -101,9 +109,9 @@ export async function getMongoDb() {
         cachedClient = new MongoClient(uri, {
           maxPoolSize: 10,
           minPoolSize: 1,
-          serverSelectionTimeoutMS: 5000,
-          socketTimeoutMS: 15000,
-          connectTimeoutMS: 10000,
+          serverSelectionTimeoutMS: timeoutMs,
+          socketTimeoutMS: 5000,
+          connectTimeoutMS: timeoutMs,
         });
       }
 
@@ -116,17 +124,24 @@ export async function getMongoDb() {
       return cachedDb;
     } catch (err) {
       console.warn(`[MongoDB] Connection attempt ${attempt}/${maxAttempts} failed:`, err.message);
-      if (attempt < maxAttempts) {
-        await sleep(backoffDelays[attempt - 1]);
+      
+      const isUnreachable = err.message.includes('ECONNREFUSED') || 
+                            err.message.includes('ENOTFOUND') || 
+                            err.message.includes('querySrv');
+
+      if (attempt < maxAttempts && !isUnreachable) {
+        await sleep(500);
       } else {
-        console.warn('[MongoDB] All connection retries exhausted. Falling back to local SQLite store.');
+        console.warn('[MongoDB] Connection unavailable. Falling back immediately to local SQLite store.');
         cachedClient = null;
         cachedDb = null;
+        lastFailureTimestamp = Date.now();
         return null;
       }
     }
   }
 
+  lastFailureTimestamp = Date.now();
   return null;
 }
 
