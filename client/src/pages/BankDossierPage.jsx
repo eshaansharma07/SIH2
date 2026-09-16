@@ -46,6 +46,28 @@ export function BankDossierPage({ shop, onBack }) {
     window.print();
   };
 
+  const [downloadingCam, setDownloadingCam] = useState(false);
+
+  const handleDownloadCAM = async () => {
+    if (!shop?.id) return;
+    setDownloadingCam(true);
+    try {
+      const cam = await api.getCAM(shop.id);
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(cam, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `CAM_${shop.id}_${new Date().toISOString().slice(0, 10)}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    } catch (err) {
+      console.error('Failed to download CAM:', err);
+      alert('Error downloading CAM: ' + (err.message || 'Network error'));
+    } finally {
+      setDownloadingCam(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="py-16 text-center text-indigoRural-500 text-sm">
@@ -75,11 +97,20 @@ export function BankDossierPage({ shop, onBack }) {
             <span>{language === 'hi' ? 'डैशबोर्ड पर वापस जाएं' : 'Back to Dashboard'}</span>
           </Button>
 
-          <div className="flex items-center gap-3">
-            <span className="text-xs text-indigoRural-500 font-semibold hidden md:inline-flex items-center gap-1.5">
+          <div className="flex flex-wrap items-center gap-2.5">
+            <span className="text-xs text-indigoRural-500 font-semibold hidden lg:inline-flex items-center gap-1.5">
               <FileCheck className="w-3.5 h-3.5 text-forestRural-600" />
-              <span>Ready for Branch Manager / Credit Officer Appraisal</span>
+              <span>Nayak Working Capital & RBI PSL Ready</span>
             </span>
+            <Button
+              onClick={handleDownloadCAM}
+              disabled={downloadingCam}
+              variant="secondary"
+              size="md"
+              icon={Download}
+            >
+              <span>{downloadingCam ? (language === 'hi' ? 'डाउनलोड हो रहा है...' : 'Downloading CAM...') : (language === 'hi' ? 'CAM (JSON)' : 'Download CAM (JSON)')}</span>
+            </Button>
             <Button
               onClick={handlePrint}
               variant="dark"

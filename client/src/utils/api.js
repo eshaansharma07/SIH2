@@ -78,9 +78,25 @@ export const api = {
   deleteCustomer: (id) => request(`/customers/${id}`, { method: 'DELETE' }),
   recordReminderSent: (id) => request(`/customers/${id}/reminder-sent`, { method: 'POST' }),
 
-  // Credit Scoring
+  // Credit Scoring & CAM
   getCreditScore: (shopId) => request(`/credit-score?shopId=${shopId}`),
+  getCAM: (shopId) => request(`/credit-score/${shopId}/cam`),
   simulateCreditScore: (payload) => request('/credit-score/simulate', { method: 'POST', body: JSON.stringify(payload) }),
+
+  // DPI Mock Gateway (Sahamati AA, Udyam MSME, DigiLocker)
+  requestAAConsent: (data) => request('/dpi/account-aggregator/consent', { method: 'POST', body: JSON.stringify(data) }),
+  fetchAAStatement: (data) => request('/dpi/account-aggregator/fetch', { method: 'POST', body: JSON.stringify(data) }),
+  verifyUdyam: (data) => request('/dpi/udyam-verify', { method: 'POST', body: JSON.stringify(data) }),
+  verifyDigiLocker: (data) => request('/dpi/digilocker-verify', { method: 'POST', body: JSON.stringify(data) }),
+
+  // ONDC B2B Wholesale Price Discovery
+  getWholesaleCatalog: (category = '', search = '') => {
+    let q = '';
+    if (category) q += `?category=${encodeURIComponent(category)}`;
+    if (search) q += `${q ? '&' : '?'}search=${encodeURIComponent(search)}`;
+    return request(`/ondc/wholesale-catalog${q}`);
+  },
+  compareWholesalePrice: (itemName) => request(`/ondc/compare/${encodeURIComponent(itemName)}`),
 
   // Schemes
   getMatchedSchemes: (shopId) => request(`/schemes/match?shopId=${shopId}`),
@@ -101,3 +117,4 @@ export const api = {
   // Bank Dossier
   generateDossier: (shopId) => request(`/dossier/generate?shopId=${shopId}`),
 };
+

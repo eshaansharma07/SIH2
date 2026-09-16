@@ -28,6 +28,7 @@ export function DashboardPage({
   summaryData, 
   cuesData, 
   onOpenKeypad, 
+  onOpenWholesale,
   onNavigateTab, 
   onAskPrompt,
   onStartDemoTour,
@@ -385,6 +386,14 @@ export function DashboardPage({
               <span>{language === 'hi' ? 'साथी AI' : 'Saathi AI'}</span>
             </Button>
             <Button
+              onClick={onOpenWholesale}
+              variant="forest"
+              size="sm"
+              icon={ShoppingBag}
+            >
+              <span>{language === 'hi' ? 'ONDC थोक भाव' : 'ONDC Wholesale'}</span>
+            </Button>
+            <Button
               onClick={() => onNavigateTab('dossier')}
               variant="outline"
               size="sm"
@@ -445,9 +454,13 @@ export function DashboardPage({
               <div className="text-2xl sm:text-3xl font-black text-indigoRural-900 tabular-nums tracking-tight font-display">
                 {metrics.totalExpense !== null ? `₹${metrics.totalExpense.toLocaleString('en-IN')}` : '—'}
               </div>
-              <span className="text-[11px] font-semibold text-indigoRural-500">
-                {expenseRatio ? `${expenseRatio}% wholesale stock` : 'Wholesale stock'}
-              </span>
+              <button
+                type="button"
+                onClick={onOpenWholesale}
+                className="text-[11px] font-semibold text-forestRural-700 hover:text-forestRural-900 flex items-center gap-1 cursor-pointer transition-colors underline underline-offset-2"
+              >
+                <span>ONDC Wholesale (-12%)</span>
+              </button>
             </div>
 
             <div className="space-y-1 border-l border-paper-200 pl-4">
@@ -677,24 +690,34 @@ export function DashboardPage({
           </div>
 
           {/* 4 Pillars Activity Progress Bars - Bound to creditData.factors */}
-          <div className="space-y-2.5 pt-3 border-t border-paper-200 text-xs">
+          <div className="space-y-3 pt-3 border-t border-paper-200 text-xs">
             {factors.length > 0 ? (
               factors.map((factor) => {
                 const name = language === 'hi' ? (factor.nameHindi || factor.name) : factor.name;
                 const isPositive = factor.status === 'positive' || factor.percentage >= 70;
                 
                 return (
-                  <div key={factor.id} className="space-y-1">
-                    <div className="flex justify-between items-center text-indigoRural-600">
-                      <span className="font-bold">{name}</span>
-                      <span className="font-black text-indigoRural-900 tabular-nums">{factor.percentage}%</span>
+                  <div key={factor.id} className="space-y-1.5 bg-paper-50/60 p-2 rounded-xl border border-paper-200/70">
+                    <div className="flex justify-between items-center text-indigoRural-700">
+                      <span className="font-bold text-[11px]">{name}</span>
+                      <span className="font-black text-indigoRural-900 tabular-nums text-[11px]">{factor.percentage}% ({factor.score}/{factor.maxScore})</span>
                     </div>
-                    <div className="w-full bg-paper-200 h-2 rounded-full overflow-hidden">
+                    <div className="w-full bg-paper-200 h-1.5 rounded-full overflow-hidden">
                       <div 
                         className={`h-full rounded-full transition-all duration-500 ${isPositive ? 'bg-forestRural-600' : 'bg-ochre-500'}`} 
                         style={{ width: `${factor.percentage}%` }} 
                       />
                     </div>
+                    {factor.subFactors && factor.subFactors.length > 0 && (
+                      <div className="pt-1 space-y-0.5 border-t border-paper-200/50">
+                        {factor.subFactors.map((sub, sIdx) => (
+                          <div key={sIdx} className="flex justify-between items-center text-[10px] text-indigoRural-500">
+                            <span className="truncate pr-1">• {sub.name}</span>
+                            <span className="font-semibold tabular-nums shrink-0">{sub.score} / {sub.maxScore}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 );
               })

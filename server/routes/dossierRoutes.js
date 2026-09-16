@@ -1,33 +1,30 @@
 import express from 'express';
-import db from '../db/database.js';
+import dataStore from '../db/dataStore.js';
 import { calculateCreditScore } from '../services/creditScoringService.js';
 import { matchSchemesForShop } from '../services/schemeMatcherService.js';
 
 const router = express.Router();
 
 // Generate Formal Bankable Financial Dossier aligned with RBI PSL Guidelines
-router.get('/generate', (req, res) => {
+router.get('/generate', async (req, res) => {
   try {
     const shopId = req.query.shopId;
     if (!shopId) {
       return res.status(400).json({ success: false, error: 'shopId is required' });
     }
-    const shop = db.prepare('SELECT * FROM shops WHERE id = ?').get(shopId);
+
+    const shop = await dataStore.getShopById(shopId);
     if (!shop) {
       return res.status(404).json({ success: false, error: 'Shop not found' });
     }
 
-    const creditData = calculateCreditScore(shopId);
+    const txs = await dataStore.getTransactions(shopId, { limit: 1000 });
+    const creditData = calculateCreditScore(shop, txs && txs.length > 0 ? txs : null);
     const schemeData = matchSchemesForShop(shopId);
-
-    // Get 90-day transactions summary
-    const txs = db.prepare(`
-      SELECT * FROM transactions WHERE shop_id = ? ORDER BY date ASC
-    `).all(shopId);
 
     const monthlySummary = {};
     txs.forEach(t => {
-      const m = t.date.substring(0, 7);
+      const m = t.date ? t.date.substring(0, 7) : 'Unknown';
       if (!monthlySummary[m]) {
         monthlySummary[m] = { month: m, grossSales: 0, stockPurchases: 0, netSurplus: 0, upiSales: 0 };
       }
@@ -43,7 +40,8 @@ router.get('/generate', (req, res) => {
       m.netSurplus = m.grossSales - m.stockPurchases;
     });
 
-    const dossierNumber = `VS-DOC-${shop.district.substring(0, 3).toUpperCase()}-${Date.now().toString().slice(-6)}`;
+    const districtCode = (shop.district || 'IND').substring(0, 3).toUpperCase();
+    const dossierNumber = `VS-DOC-${districtCode}-${Date.now().toString().slice(-6)}`;
     const issueDate = new Date().toLocaleDateString('en-IN', {
       day: 'numeric',
       month: 'long',
@@ -81,12 +79,12 @@ router.get('/generate', (req, res) => {
         },
         financialAudit: {
           period: '90 Days Cash Flow & Digital Audit',
-          totalGrossSales: creditData.metrics.totalIncome,
-          totalExpenses: creditData.metrics.totalExpense,
-          netOperatingSurplus: creditData.metrics.netSurplus,
-          digitalCollectionPercentage: `${creditData.metrics.digitalSharePct}%`,
-          customerUdhaarPending: creditData.metrics.totalUdhaarPending,
-          udhaarRecoveryRate: `${creditData.metrics.udhaarRecoveryRate}%`,
+          totalGrossSales: creditData.metrics?.totalIncome || 0,
+          totalExpenses: creditData.metrics?.totalExpense || 0,
+          netOperatingSurplus: creditData.metrics?.netSurplus || 0,
+          digitalCollectionPercentage: `${creditData.metrics?.digitalSharePct || 0}%`,
+          customerUdhaarPending: creditData.metrics?.totalUdhaarPending || 0,
+          udhaarRecoveryRate: `${creditData.metrics?.udhaarRecoveryRate || 100}%`,
           monthlyBreakdown: Object.values(monthlySummary)
         },
         recommendedSchemes: schemeData.schemes.filter(s => s.isEligible).slice(0, 3).map(s => ({

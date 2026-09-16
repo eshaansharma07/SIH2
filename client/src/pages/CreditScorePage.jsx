@@ -201,10 +201,21 @@ export function CreditScorePage({ shop, creditData, onNavigateTab }) {
                     />
                   </div>
 
-                  <div className="flex justify-between text-[11px] text-indigoRural-400 font-bold pt-1">
-                    <span>Score</span>
-                    <span className="text-indigoRural-900 tabular-nums">{factor.score} / {factor.maxScore}</span>
+                  <div className="flex justify-between text-[11px] text-indigoRural-500 font-bold pt-1 border-t border-paper-200/60">
+                    <span>Pillar Weight: {factor.weight}</span>
+                    <span className="text-indigoRural-900 tabular-nums font-black">{factor.score} / {factor.maxScore}</span>
                   </div>
+
+                  {factor.subFactors && factor.subFactors.length > 0 && (
+                    <div className="pt-2 border-t border-paper-200/50 space-y-1">
+                      {factor.subFactors.map((sub, sIdx) => (
+                        <div key={sIdx} className="flex justify-between items-center text-[10px] text-indigoRural-600 bg-paper-100/60 px-2 py-1 rounded-lg">
+                          <span className="truncate pr-1 font-medium">• {sub.name}</span>
+                          <span className="font-bold tabular-nums shrink-0">{sub.score}/{sub.maxScore}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </Card>
               );
             })

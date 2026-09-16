@@ -10,6 +10,7 @@ import { ShopProfilePage } from './pages/ShopProfilePage';
 import { OnboardingPage } from './pages/OnboardingPage';
 import { NumericKeypadModal } from './components/NumericKeypadModal';
 import { InteractiveDemoTour } from './components/InteractiveDemoTour';
+import { WholesaleDiscoveryModal } from './components/WholesaleDiscoveryModal';
 import { FloatingThumbDock } from './components/FloatingThumbDock';
 import { WarliBorder } from './components/WarliMotif';
 import { api } from './utils/api';
@@ -41,6 +42,7 @@ export default function App() {
   const [summaryData, setSummaryData] = useState(null);
   const [cuesData, setCuesData] = useState(null);
   const [keypadOpen, setKeypadOpen] = useState(false);
+  const [wholesaleModalOpen, setWholesaleModalOpen] = useState(false);
   const [demoTourOpen, setDemoTourOpen] = useState(false);
   const [initialAdvisorPrompt, setInitialAdvisorPrompt] = useState('');
   const [refreshKey, setRefreshKey] = useState(0);
@@ -398,6 +400,7 @@ export default function App() {
                 summaryData={summaryData}
                 cuesData={cuesData}
                 onOpenKeypad={() => setKeypadOpen(true)}
+                onOpenWholesale={() => setWholesaleModalOpen(true)}
                 onNavigateTab={(tab) => changeTab(tab)}
                 onAskPrompt={handleAskPrompt}
                 onStartDemoTour={() => setDemoTourOpen(true)}
@@ -421,6 +424,7 @@ export default function App() {
               <CashFlowPage
                 shop={currentShop}
                 onOpenKeypad={() => setKeypadOpen(true)}
+                onOpenWholesale={() => setWholesaleModalOpen(true)}
                 refreshKey={refreshKey}
                 latestTx={latestTx}
                 onTransactionSaved={handleTransactionSaved}
@@ -471,6 +475,12 @@ export default function App() {
         onClose={() => setKeypadOpen(false)}
         onTransactionSaved={handleTransactionSaved}
         shopId={currentShop?.id}
+      />
+
+      {/* ONDC B2B Wholesale Price Discovery Modal */}
+      <WholesaleDiscoveryModal
+        isOpen={wholesaleModalOpen}
+        onClose={() => setWholesaleModalOpen(false)}
       />
 
       {/* Interactive Animated Guided Demo Tour for SIH Judges */}

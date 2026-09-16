@@ -1,6 +1,6 @@
 import express from 'express';
-import { calculateCreditScore } from '../services/creditScoringService.js';
-import { getTransactionsCollection } from '../db/mongoClient.js';
+import { calculateCreditScore, generateCAM } from '../services/creditScoringService.js';
+import dataStore from '../db/dataStore.js';
 
 const router = express.Router();
 
@@ -22,25 +22,48 @@ router.get('/', async (req, res) => {
       });
     }
 
-    let txs = null;
-    try {
-      const col = await getTransactionsCollection();
-      if (col) {
-        txs = await col.find({ shop_id: shopId }).sort({ date: -1 }).toArray();
-      }
-    } catch (mongoErr) {
-      console.warn('[MongoDB Atlas] Fallback to SQLite for credit score:', mongoErr.message);
+    const [shop, txs] = await Promise.all([
+      dataStore.getShopById(shopId),
+      dataStore.getTransactions(shopId, { limit: 1000 })
+    ]);
+
+    if (!shop) {
+      return res.status(404).json({ success: false, error: 'Shop not found' });
     }
 
-    const scoreData = calculateCreditScore(shopId, txs && txs.length > 0 ? txs : null);
+    const scoreData = calculateCreditScore(shop, txs && txs.length > 0 ? txs : null);
     res.json({ success: true, ...scoreData });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
 });
 
+// Export Banker Credit Appraisal Memo (CAM) in Standard Underwriting JSON format
+router.get(['/:shopId/cam', '/cam'], async (req, res) => {
+  try {
+    const shopId = req.params.shopId || req.query.shopId;
+    if (!shopId) {
+      return res.status(400).json({ success: false, error: 'shopId is required' });
+    }
+
+    const [shop, txs] = await Promise.all([
+      dataStore.getShopById(shopId),
+      dataStore.getTransactions(shopId, { limit: 1000 })
+    ]);
+
+    if (!shop) {
+      return res.status(404).json({ success: false, error: 'Shop not found' });
+    }
+
+    const cam = generateCAM(shop, txs && txs.length > 0 ? txs : null);
+    res.json({ success: true, cam });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // Interactive score simulation (e.g. "What if I recover ₹5,000 udhaar and log 30 days?")
-router.post('/simulate', (req, res) => {
+router.post('/simulate', async (req, res) => {
   try {
     const shopId = req.body.shopId;
     if (!shopId) {
@@ -52,7 +75,16 @@ router.post('/simulate', (req, res) => {
       targetUpiSharePct = 0
     } = req.body;
 
-    const baseData = calculateCreditScore(shopId);
+    const [shop, txs] = await Promise.all([
+      dataStore.getShopById(shopId),
+      dataStore.getTransactions(shopId, { limit: 1000 })
+    ]);
+
+    if (!shop) {
+      return res.status(404).json({ success: false, error: 'Shop not found' });
+    }
+
+    const baseData = calculateCreditScore(shop, txs && txs.length > 0 ? txs : null);
     let projectedDelta = 0;
 
     // Logging days impact
@@ -66,8 +98,8 @@ router.post('/simulate', (req, res) => {
     }
 
     // UPI digital share increase impact
-    if (targetUpiSharePct > baseData.metrics.digitalSharePct) {
-      const upiDiff = targetUpiSharePct - baseData.metrics.digitalSharePct;
+    if (targetUpiSharePct > (baseData.metrics?.digitalSharePct || 0)) {
+      const upiDiff = targetUpiSharePct - (baseData.metrics?.digitalSharePct || 0);
       projectedDelta += Math.min(25, Math.round(upiDiff * 0.6));
     }
 
@@ -76,24 +108,19 @@ router.post('/simulate', (req, res) => {
 
     res.json({
       success: true,
-      isUnrated: baseData.isUnrated || false,
       currentScore,
       projectedScore,
-      delta: projectedDelta,
-      simulationImpacts: [
-        {
-          action: `Maintaining daily logs for next ${additionalLoggingDays} days`,
-          points: `+${Math.min(35, Math.round(additionalLoggingDays * 0.8))} pts`
-        },
-        {
-          action: `Recovering ₹${Number(udhaarRecoveryAmount).toLocaleString('en-IN')} pending customer credit`,
-          points: `+${Math.min(28, Math.round((udhaarRecoveryAmount / 5000) * 15))} pts`
-        },
-        {
-          action: `Increasing digital UPI sales to ${targetUpiSharePct}%`,
-          points: `+${Math.min(25, Math.round(Math.max(0, targetUpiSharePct - baseData.metrics.digitalSharePct) * 0.6))} pts`
-        }
-      ]
+      projectedDelta,
+      simulationBreakdown: {
+        loggingDaysGain: Math.min(35, Math.round(additionalLoggingDays * 0.8)),
+        udhaarRecoveryGain: udhaarRecoveryAmount > 0 ? Math.min(28, Math.round((udhaarRecoveryAmount / 5000) * 15)) : 0,
+        digitalAdoptionGain: targetUpiSharePct > (baseData.metrics?.digitalSharePct || 0) 
+          ? Math.min(25, Math.round((targetUpiSharePct - (baseData.metrics?.digitalSharePct || 0)) * 0.6)) 
+          : 0
+      },
+      advice: projectedDelta > 30 
+        ? 'Outstanding! This simulation elevates you to the next banking tier, significantly reducing your MUDRA loan interest rate.'
+        : 'Steady progress. Maintaining consistent daily records builds verifiable alternative credit standing.'
     });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });

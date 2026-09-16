@@ -33,6 +33,16 @@ export function ShopProfilePage({ shop, onShopUpdated, onReloadDemo }) {
   const [errorMsg, setErrorMsg] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // DPI Udyam Verification States
+  const [udyamNumber, setUdyamNumber] = useState(
+    shop?.udyam_number || (shop?.id ? `UDYAM-${(shop.state || 'UP').substring(0, 2).toUpperCase()}-01-0024891` : 'UDYAM-UP-01-0024891')
+  );
+  const [isUdyamVerified, setIsUdyamVerified] = useState(Boolean(shop?.is_udyam_verified));
+  const [udyamLoading, setUdyamLoading] = useState(false);
+  const [udyamSuccessMsg, setUdyamSuccessMsg] = useState('');
+  const [udyamErrorMsg, setUdyamErrorMsg] = useState('');
+  const [udyamDetails, setUdyamDetails] = useState(null);
+
   useEffect(() => {
     if (shop) {
       setShopName(shop.name || '');
@@ -43,8 +53,43 @@ export function ShopProfilePage({ shop, onShopUpdated, onReloadDemo }) {
       setState(shop.state || '');
       setVintage(shop.vintage_years ?? 4);
       setBank(shop.bank_account_type || '');
+      setIsUdyamVerified(Boolean(shop.is_udyam_verified));
+      if (shop.udyam_number) setUdyamNumber(shop.udyam_number);
     }
   }, [shop]);
+
+  const handleVerifyUdyam = async () => {
+    if (!udyamNumber) {
+      setUdyamErrorMsg('Please enter an Udyam Registration Number.');
+      return;
+    }
+    setUdyamLoading(true);
+    setUdyamErrorMsg('');
+    setUdyamSuccessMsg('');
+    try {
+      const res = await api.verifyUdyam({
+        udyamNumber: udyamNumber.trim().toUpperCase(),
+        shopId: shop?.id
+      });
+      if (res.verified) {
+        setIsUdyamVerified(true);
+        setUdyamDetails(res);
+        setUdyamSuccessMsg(language === 'hi' ? 'उद्यम पंजीकरण सफलतापूर्वक सत्यापित हो गया!' : 'Udyam Registration successfully verified!');
+        if (shop) {
+          const updatedShop = {
+            ...shop,
+            is_udyam_verified: 1,
+            udyam_number: res.udyamNumber
+          };
+          onShopUpdated?.(updatedShop);
+        }
+      }
+    } catch (err) {
+      setUdyamErrorMsg(err.message || 'Verification failed. Format: UDYAM-XX-00-0000000');
+    } finally {
+      setUdyamLoading(false);
+    }
+  };
 
   const handleSaveProfile = async (e) => {
     e.preventDefault();
@@ -264,6 +309,90 @@ export function ShopProfilePage({ shop, onShopUpdated, onReloadDemo }) {
           </div>
 
         </form>
+      </Card>
+
+      {/* DPI India Stack — Udyam MSME Verification Section */}
+      <Card padding="lg" className="space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-paper-200 pb-3">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 rounded-xl bg-forestRural-50 text-forestRural-700 border border-forestRural-200 shadow-2xs">
+              <ShieldCheck className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="text-sm font-black text-indigoRural-900 font-display">
+                {language === 'hi' ? 'DPI इंडिया स्टैक — उद्यम एमएसएमई सत्यापन' : 'DPI India Stack — Udyam MSME Verification'}
+              </h2>
+              <p className="text-xs text-indigoRural-500">
+                {language === 'hi' ? 'सूक्ष्म, लघु एवं मध्यम उद्यम मंत्रालय के साथ डिजिटल पहचान' : 'Ministry of MSME official sovereign registration gateway (Mock)'}
+              </p>
+            </div>
+          </div>
+          <Badge variant={isUdyamVerified ? 'positive' : 'attention'} size="md">
+            {isUdyamVerified ? '● UDYAM VERIFIED' : 'UNVERIFIED (OPTIONAL)'}
+          </Badge>
+        </div>
+
+        {udyamSuccessMsg && (
+          <div className="bg-forestRural-50 border border-forestRural-200 text-forestRural-800 text-xs px-4 py-2.5 rounded-xl font-semibold flex items-center gap-2">
+            <Check className="w-4 h-4 text-forestRural-600 shrink-0" />
+            <span>{udyamSuccessMsg}</span>
+          </div>
+        )}
+
+        {udyamErrorMsg && (
+          <div className="bg-terracotta-50 border border-terracotta-200 text-terracotta-800 text-xs px-4 py-2.5 rounded-xl font-semibold flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 text-terracotta-600 shrink-0" />
+            <span>{udyamErrorMsg}</span>
+          </div>
+        )}
+
+        <div className="space-y-2">
+          <label className="block text-xs font-bold text-indigoRural-700">
+            {language === 'hi' ? 'उद्यम पंजीकरण संख्या' : 'Udyam Registration Number'}
+          </label>
+          <div className="flex flex-col sm:flex-row gap-2.5">
+            <input
+              type="text"
+              value={udyamNumber}
+              onChange={(e) => setUdyamNumber(e.target.value.toUpperCase())}
+              placeholder="UDYAM-UP-01-0024891"
+              className="flex-1 px-3.5 py-2.5 bg-paper-50 focus:bg-white rounded-xl border border-paper-300 text-xs font-mono font-bold tracking-wider focus:outline-none focus:ring-2 focus:ring-forestRural-500/20 focus:border-forestRural-500 transition text-indigoRural-900 uppercase"
+            />
+            <Button
+              type="button"
+              onClick={handleVerifyUdyam}
+              disabled={udyamLoading}
+              variant="forest"
+              size="md"
+              icon={ShieldCheck}
+            >
+              <span>{udyamLoading ? (language === 'hi' ? 'सत्यापित किया जा रहा है...' : 'Verifying with DPI...') : (language === 'hi' ? 'सत्यापित करें' : 'Verify Udyam')}</span>
+            </Button>
+          </div>
+          <p className="text-[11px] text-indigoRural-400">
+            Format: <code className="font-mono text-indigoRural-600 font-bold">UDYAM-XX-00-0000000</code> (e.g. UDYAM-UP-01-0024891, UDYAM-MH-12-0049281)
+          </p>
+        </div>
+
+        {isUdyamVerified && (
+          <div className="bg-paper-50 rounded-xl p-3.5 border border-paper-200 text-xs space-y-2">
+            <div className="flex justify-between items-center font-semibold text-indigoRural-600">
+              <span>Enterprise Classification:</span>
+              <strong className="text-forestRural-700 font-bold">Micro Enterprise (RBI PSL Tier-A)</strong>
+            </div>
+            <div className="flex justify-between items-center font-semibold text-indigoRural-600">
+              <span>Primary Business Activity:</span>
+              <strong className="text-indigoRural-900 font-bold">Retail Trade (NIC 4711)</strong>
+            </div>
+            <div className="flex justify-between items-center font-semibold text-indigoRural-600">
+              <span>District Industries Centre (DIC):</span>
+              <strong className="text-indigoRural-900 font-bold">{shop?.district || 'Varanasi'}, {shop?.state || 'Uttar Pradesh'}</strong>
+            </div>
+            <div className="text-[10px] text-indigoRural-400 pt-1 border-t border-paper-200/60 italic">
+              Verification confirmed via DPI India Stack Mock Gateway conforming to Sahamati & MSME standards.
+            </div>
+          </div>
+        )}
       </Card>
 
     </div>

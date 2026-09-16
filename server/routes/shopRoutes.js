@@ -1,7 +1,6 @@
 import express from 'express';
-import db from '../db/database.js';
 import { seedDatabase } from '../db/seed.js';
-import { getShopsCollection } from '../db/mongoClient.js';
+import dataStore from '../db/dataStore.js';
 
 const router = express.Router();
 
@@ -14,42 +13,12 @@ router.get('/current', async (req, res) => {
       return res.json({ success: true, shop: null });
     }
 
-    let shop = db.prepare('SELECT * FROM shops WHERE id = ?').get(shopId);
-
-    // If not found in SQLite, check MongoDB Atlas for serverless persistence
-    if (!shop) {
-      try {
-        const col = await getShopsCollection();
-        if (col) {
-          const mongoShop = await col.findOne({ id: shopId });
-          if (mongoShop) {
-            const { _id, ...cleanShop } = mongoShop;
-            shop = cleanShop;
-            try {
-              db.prepare(`
-                INSERT OR REPLACE INTO shops (
-                  id, name, owner_name, trade_type, trade_name, village, district, state,
-                  vintage_years, monthly_revenue, ownership, bank_account_type, phone, owner_category, is_demo
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-              `).run(
-                shop.id, shop.name, shop.owner_name, shop.trade_type, shop.trade_name || '',
-                shop.village || '', shop.district || '', shop.state || '',
-                shop.vintage_years || 0, shop.monthly_revenue || 0,
-                shop.ownership || 'rented', shop.bank_account_type || 'savings',
-                shop.phone || '', shop.owner_category || 'general', shop.is_demo || 0
-              );
-            } catch (_) {}
-          }
-        }
-      } catch (mongoErr) {
-        console.warn('[MongoDB Atlas] Error querying shop:', mongoErr.message);
-      }
-    }
+    let shop = await dataStore.getShopById(shopId);
 
     // If requesting ramesh-kirana specifically and database is unseeded, seed it
     if (!shop && shopId === 'ramesh-kirana') {
       seedDatabase();
-      shop = db.prepare('SELECT * FROM shops WHERE id = ?').get('ramesh-kirana');
+      shop = await dataStore.getShopById('ramesh-kirana');
     }
 
     if (!shop) {
@@ -95,44 +64,31 @@ router.post('/setup', async (req, res) => {
     const id = `shop-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`;
     const finalPassword = (password && String(password).trim()) || '1234';
 
-    const insert = db.prepare(`
-      INSERT INTO shops (
-        id, name, owner_name, trade_type, trade_name, village, district, state,
-        vintage_years, monthly_revenue, ownership, bank_account_type, phone, password, owner_category, is_demo
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
-    `);
-
-    insert.run(
+    const newShop = {
       id,
-      name.trim(),
-      owner_name.trim(),
+      name: name.trim(),
+      owner_name: owner_name.trim(),
       trade_type,
-      trade_name || 'Micro-Enterprise',
-      village || 'Gram Panchayat',
-      district || 'Balrampur',
-      state || 'Uttar Pradesh',
-      Math.max(0, Number(vintage_years) || 0),
-      Math.max(0, Number(monthly_revenue) || 0),
-      ownership || 'rented',
-      bank_account_type || 'savings',
-      phone ? phone.trim() : '',
-      finalPassword,
-      owner_category || 'general'
-    );
+      trade_name: trade_name || 'Micro-Enterprise',
+      village: village || 'Gram Panchayat',
+      district: district || 'Balrampur',
+      state: state || 'Uttar Pradesh',
+      vintage_years: Math.max(0, Number(vintage_years) || 0),
+      monthly_revenue: Math.max(0, Number(monthly_revenue) || 0),
+      ownership: ownership || 'rented',
+      bank_account_type: bank_account_type || 'savings',
+      phone: phone ? phone.trim() : '',
+      password: finalPassword,
+      owner_category: owner_category || 'general',
+      is_demo: 0,
+      is_udyam_verified: 0,
+      udyam_number: '',
+      created_at: new Date().toISOString()
+    };
 
-    const createdShop = db.prepare('SELECT * FROM shops WHERE id = ?').get(id);
+    await dataStore.upsertShop(newShop);
 
-    // Sync to MongoDB Atlas for cross-container serverless persistence
-    try {
-      const col = await getShopsCollection();
-      if (col && createdShop) {
-        await col.updateOne({ id }, { $set: createdShop }, { upsert: true });
-      }
-    } catch (mErr) {
-      console.warn('[MongoDB Atlas] Shop setup sync warning:', mErr.message);
-    }
-
-    res.json({ success: true, shop: createdShop });
+    res.json({ success: true, shop: newShop });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
@@ -153,54 +109,7 @@ router.post('/login', async (req, res) => {
     const digitsOnly = cleanInput.replace(/\D/g, '');
     const cleanPwd = String(password).trim();
 
-    // 1. Check in SQLite
-    let shop = db.prepare(`
-      SELECT * FROM shops 
-      WHERE (
-        phone = ? 
-        OR (phone != '' AND REPLACE(REPLACE(phone, ' ', ''), '+91', '') = ?)
-        OR id = ?
-        OR LOWER(name) = LOWER(?)
-      )
-      ORDER BY is_demo ASC, created_at DESC
-      LIMIT 1
-    `).get(cleanInput, digitsOnly || cleanInput, cleanInput, cleanInput);
-
-    // 2. If not found in SQLite, check MongoDB Atlas
-    if (!shop) {
-      try {
-        const col = await getShopsCollection();
-        if (col) {
-          const mongoShop = await col.findOne({
-            $or: [
-              { phone: cleanInput },
-              { id: cleanInput },
-              ...(digitsOnly ? [{ phone: { $regex: digitsOnly } }] : [])
-            ]
-          });
-          if (mongoShop) {
-            const { _id, ...cleanData } = mongoShop;
-            shop = cleanData;
-            try {
-              db.prepare(`
-                INSERT OR REPLACE INTO shops (
-                  id, name, owner_name, trade_type, trade_name, village, district, state,
-                  vintage_years, monthly_revenue, ownership, bank_account_type, phone, password, owner_category, is_demo
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-              `).run(
-                shop.id, shop.name, shop.owner_name, shop.trade_type, shop.trade_name || '',
-                shop.village || '', shop.district || '', shop.state || '',
-                shop.vintage_years || 0, shop.monthly_revenue || 0,
-                shop.ownership || 'rented', shop.bank_account_type || 'savings',
-                shop.phone || '', shop.password || '1234', shop.owner_category || 'general', shop.is_demo || 0
-              );
-            } catch (_) {}
-          }
-        }
-      } catch (mErr) {
-        console.warn('[MongoDB Atlas] Login lookup notice:', mErr.message);
-      }
-    }
+    const shop = await dataStore.findShopByPhoneOrId(cleanInput, digitsOnly);
 
     if (!shop) {
       return res.status(404).json({ 
@@ -228,7 +137,7 @@ router.post('/login', async (req, res) => {
 router.post('/reset-demo', async (req, res) => {
   try {
     seedDatabase();
-    const shop = db.prepare('SELECT * FROM shops WHERE id = ?').get('ramesh-kirana');
+    const shop = await dataStore.getShopById('ramesh-kirana');
     
     // Sync freshly seeded transactions to MongoDB Atlas in background
     try {
@@ -246,7 +155,7 @@ router.post('/reset-demo', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const existing = db.prepare('SELECT * FROM shops WHERE id = ?').get(id);
+    const existing = await dataStore.getShopById(id);
     if (!existing) {
       return res.status(404).json({ success: false, error: 'Shop not found' });
     }
@@ -262,44 +171,27 @@ router.put('/:id', async (req, res) => {
       vintage_years,
       monthly_revenue,
       bank_account_type,
-      phone
+      phone,
+      is_udyam_verified,
+      udyam_number
     } = req.body;
 
-    const update = db.prepare(`
-      UPDATE shops SET
-        name = COALESCE(?, name),
-        owner_name = COALESCE(?, owner_name),
-        trade_name = COALESCE(?, trade_name),
-        trade_type = COALESCE(?, trade_type),
-        village = COALESCE(?, village),
-        district = COALESCE(?, district),
-        state = COALESCE(?, state),
-        vintage_years = COALESCE(?, vintage_years),
-        monthly_revenue = COALESCE(?, monthly_revenue),
-        bank_account_type = COALESCE(?, bank_account_type),
-        phone = COALESCE(?, phone)
-      WHERE id = ?
-    `);
+    const updatePayload = {};
+    if (name !== undefined) updatePayload.name = name;
+    if (owner_name !== undefined) updatePayload.owner_name = owner_name;
+    if (trade_name !== undefined) updatePayload.trade_name = trade_name;
+    if (trade_type !== undefined) updatePayload.trade_type = trade_type;
+    if (village !== undefined) updatePayload.village = village;
+    if (district !== undefined) updatePayload.district = district;
+    if (state !== undefined) updatePayload.state = state;
+    if (vintage_years !== undefined) updatePayload.vintage_years = Number(vintage_years);
+    if (monthly_revenue !== undefined) updatePayload.monthly_revenue = Number(monthly_revenue);
+    if (bank_account_type !== undefined) updatePayload.bank_account_type = bank_account_type;
+    if (phone !== undefined) updatePayload.phone = phone;
+    if (is_udyam_verified !== undefined) updatePayload.is_udyam_verified = is_udyam_verified ? 1 : 0;
+    if (udyam_number !== undefined) updatePayload.udyam_number = udyam_number;
 
-    update.run(
-      name, owner_name, trade_name, trade_type, village, district, state,
-      vintage_years !== undefined ? Number(vintage_years) : null,
-      monthly_revenue !== undefined ? Number(monthly_revenue) : null,
-      bank_account_type, phone,
-      id
-    );
-
-    const updated = db.prepare('SELECT * FROM shops WHERE id = ?').get(id);
-
-    // Sync to MongoDB Atlas
-    try {
-      const col = await getShopsCollection();
-      if (col && updated) {
-        await col.updateOne({ id }, { $set: updated }, { upsert: true });
-      }
-    } catch (mErr) {
-      console.warn('[MongoDB Atlas] Shop update sync warning:', mErr.message);
-    }
+    const updated = await dataStore.updateShop(id, updatePayload);
 
     res.json({ success: true, shop: updated });
   } catch (err) {

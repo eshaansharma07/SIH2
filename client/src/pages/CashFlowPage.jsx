@@ -23,7 +23,8 @@ import {
   Search,
   PhoneCall,
   MapPin,
-  AlertTriangle
+  AlertTriangle,
+  ShoppingBag
 } from 'lucide-react';
 import { 
   ResponsiveContainer, 
@@ -72,7 +73,7 @@ function CustomChartTooltip({ active, payload, label }) {
   return null;
 }
 
-export function CashFlowPage({ shop, onOpenKeypad, refreshKey, latestTx, onTransactionSaved }) {
+export function CashFlowPage({ shop, onOpenKeypad, onOpenWholesale, refreshKey, latestTx, onTransactionSaved }) {
   const { t, language } = useTranslation();
   const [activeTab, setActiveTab] = useState('all'); // 'all' or 'udhaar'
   const [transactions, setTransactions] = useState([]);
@@ -346,15 +347,24 @@ export function CashFlowPage({ shop, onOpenKeypad, refreshKey, latestTx, onTrans
             </p>
           </div>
 
-          <Button
-            onClick={onOpenKeypad}
-            variant="primary"
-            size="lg"
-            icon={PlusCircle}
-            className="self-start sm:self-auto"
-          >
-            <span>{language === 'hi' ? 'नया लेन-देन दर्ज करें' : '+ Record Transaction'}</span>
-          </Button>
+          <div className="flex items-center gap-2 self-start sm:self-auto">
+            <Button
+              onClick={onOpenWholesale}
+              variant="forest"
+              size="md"
+              icon={ShoppingBag}
+            >
+              <span>{language === 'hi' ? 'ONDC थोक भाव' : 'ONDC Wholesale'}</span>
+            </Button>
+            <Button
+              onClick={onOpenKeypad}
+              variant="primary"
+              size="lg"
+              icon={PlusCircle}
+            >
+              <span>{language === 'hi' ? 'नया लेन-देन दर्ज करें' : '+ Record Transaction'}</span>
+            </Button>
+          </div>
         </div>
 
         {/* Warli Folk Art Border */}
