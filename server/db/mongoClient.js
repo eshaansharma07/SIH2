@@ -49,3 +49,8 @@ export async function getShopsCollection() {
   const db = await getMongoDb();
   return db ? db.collection('shops') : null;
 }
+
+export async function getCustomersCollection() {
+  const db = await getMongoDb();
+  return db ? db.collection('customers') : null;
+}

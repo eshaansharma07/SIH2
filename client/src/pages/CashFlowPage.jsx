@@ -18,7 +18,12 @@ import {
   BarChart3,
   CheckCircle2,
   FileText,
-  Trash2
+  Trash2,
+  UserPlus,
+  Search,
+  PhoneCall,
+  MapPin,
+  AlertTriangle
 } from 'lucide-react';
 import { 
   ResponsiveContainer, 
@@ -34,6 +39,8 @@ import { api } from '../utils/api';
 import { useTranslation } from '../i18n/LanguageContext';
 import { WarliBorder } from '../components/WarliMotif';
 import { Card, Badge, SectionHeader, Button } from '../components/ui';
+import { RegisterCustomerModal } from '../components/RegisterCustomerModal';
+import { WhatsAppReminderModal } from '../components/WhatsAppReminderModal';
 
 // Custom Chart Tooltip using warm paper aesthetic
 function CustomChartTooltip({ active, payload, label }) {
@@ -76,6 +83,10 @@ export function CashFlowPage({ shop, onOpenKeypad, refreshKey, latestTx, onTrans
   const [reminderToast, setReminderToast] = useState(null);
   const [justUpdated, setJustUpdated] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
+  const [isRegisterCustomerOpen, setIsRegisterCustomerOpen] = useState(false);
+  const [selectedWhatsAppCustomer, setSelectedWhatsAppCustomer] = useState(null);
+  const [customerSearchQuery, setCustomerSearchQuery] = useState('');
+  const [customerFilter, setCustomerFilter] = useState('all'); // 'all', 'owing', 'near_limit'
 
   const handleDeleteTransaction = async (txId) => {
     const confirmMsg = language === 'hi'
@@ -723,48 +734,263 @@ export function CashFlowPage({ shop, onOpenKeypad, refreshKey, latestTx, onTrans
 
         {/* Tab 2: Customer Udhaar Khata */}
         {activeTab === 'udhaar' && (
-          <div className="divide-y divide-paper-200 max-h-[500px] overflow-y-auto">
-            {udhaarLedger.length === 0 ? (
-              <div className="p-12 text-center text-indigoRural-400 text-sm">
-                No active udhaar accounts.
+          <div>
+            {/* Top Toolbar for Customer Udhaar Book */}
+            <div className="p-3.5 bg-paper-100/70 border-b border-paper-200 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 text-xs">
+              
+              {/* Search Box */}
+              <div className="relative flex-1 max-w-sm">
+                <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-indigoRural-400" />
+                <input
+                  type="text"
+                  value={customerSearchQuery}
+                  onChange={(e) => setCustomerSearchQuery(e.target.value)}
+                  placeholder={language === 'hi' ? 'ग्राहक का नाम, फोन या गाँव खोजें...' : 'Search by name, phone or village...'}
+                  className="w-full pl-8 pr-3 py-2 bg-white border border-paper-300 rounded-xl text-xs font-semibold text-indigoRural-900 focus:outline-none focus:ring-2 focus:ring-terracotta-500 placeholder:text-paper-400"
+                />
               </div>
-            ) : (
-              udhaarLedger.map((cust, idx) => (
-                <div key={idx} className="p-4 hover:bg-paper-50 transition flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-ochre-50 text-ochre-700 border border-ochre-200 flex items-center justify-center font-bold text-sm">
-                      {cust.customerName.charAt(0)}
-                    </div>
-                    <div>
-                      <div className="font-extrabold text-sm text-indigoRural-900">{cust.customerName}</div>
-                      <div className="text-xs text-indigoRural-500 font-medium">Last active: {cust.lastDate}</div>
-                    </div>
-                  </div>
 
-                  <div className="flex items-center gap-4">
-                    <div className="text-right">
-                      <div className="text-base font-black text-ochre-700 tabular-nums">
-                        ₹{cust.balanceOwed.toLocaleString('en-IN')}
-                      </div>
-                      <span className="text-[10px] text-indigoRural-400">Balance Owed</span>
-                    </div>
-
-                    <Button
-                      onClick={() => handleSimulateReminder(cust)}
-                      variant="forest"
-                      size="sm"
-                      icon={MessageCircle}
-                    >
-                      <span>WhatsApp</span>
-                    </Button>
-                  </div>
+              {/* Filter Pills & Register Button */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <div className="flex items-center gap-1 bg-paper-200/80 p-1 rounded-xl">
+                  <button
+                    type="button"
+                    onClick={() => setCustomerFilter('all')}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
+                      customerFilter === 'all' ? 'bg-white text-indigoRural-900 shadow-2xs' : 'text-indigoRural-600 hover:text-indigoRural-900'
+                    }`}
+                  >
+                    {language === 'hi' ? 'सभी' : 'All'} ({udhaarLedger.length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCustomerFilter('owing')}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
+                      customerFilter === 'owing' ? 'bg-white text-indigoRural-900 shadow-2xs' : 'text-indigoRural-600 hover:text-indigoRural-900'
+                    }`}
+                  >
+                    {language === 'hi' ? 'बकायादार' : 'With Balance'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCustomerFilter('near_limit')}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
+                      customerFilter === 'near_limit' ? 'bg-white text-indigoRural-900 shadow-2xs' : 'text-indigoRural-600 hover:text-indigoRural-900'
+                    }`}
+                  >
+                    {language === 'hi' ? 'सीमा अलर्ट' : 'Near Limit'}
+                  </button>
                 </div>
-              ))
-            )}
+
+                <Button
+                  onClick={() => setIsRegisterCustomerOpen(true)}
+                  variant="primary"
+                  size="sm"
+                  icon={UserPlus}
+                >
+                  <span>{language === 'hi' ? '+ नया ग्राहक जोड़ें' : '+ Add Customer'}</span>
+                </Button>
+              </div>
+
+            </div>
+
+            {/* Customers List */}
+            <div className="divide-y divide-paper-200 max-h-[550px] overflow-y-auto">
+              {(() => {
+                const filtered = udhaarLedger.filter(cust => {
+                  const q = customerSearchQuery.trim().toLowerCase();
+                  const matchesQuery = !q || 
+                    (cust.customerName && cust.customerName.toLowerCase().includes(q)) ||
+                    (cust.phone && cust.phone.includes(q)) ||
+                    (cust.village && cust.village.toLowerCase().includes(q));
+
+                  if (!matchesQuery) return false;
+
+                  if (customerFilter === 'owing') {
+                    return (cust.balanceOwed || 0) > 0;
+                  }
+                  if (customerFilter === 'near_limit') {
+                    const limit = cust.creditLimit || 5000;
+                    return (cust.balanceOwed || 0) >= 0.8 * limit;
+                  }
+                  return true;
+                });
+
+                if (filtered.length === 0) {
+                  return (
+                    <div className="p-12 text-center space-y-3">
+                      <div className="w-12 h-12 mx-auto rounded-2xl bg-paper-100 flex items-center justify-center text-indigoRural-400">
+                        <Users className="w-6 h-6" />
+                      </div>
+                      <h4 className="font-bold text-sm text-indigoRural-800">
+                        {language === 'hi' ? 'कोई ग्राहक खाता नहीं मिला' : 'No Customer Accounts Found'}
+                      </h4>
+                      <p className="text-xs text-indigoRural-500 max-w-sm mx-auto">
+                        {language === 'hi'
+                          ? 'नया ग्राहक पंजीकृत करें और 1-क्लिक व्हाट्सएप तगादा संदेश भेजें।'
+                          : 'Register a customer to track credit limits and send 1-click WhatsApp reminders.'}
+                      </p>
+                      <div className="pt-1">
+                        <Button
+                          onClick={() => setIsRegisterCustomerOpen(true)}
+                          variant="dark"
+                          size="sm"
+                          icon={UserPlus}
+                        >
+                          <span>{language === 'hi' ? '+ पहला ग्राहक जोड़ें' : '+ Register First Customer'}</span>
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                }
+
+                return filtered.map((cust, idx) => {
+                  const limit = cust.creditLimit || 5000;
+                  const balance = cust.balanceOwed || 0;
+                  const usagePercent = Math.min(100, Math.round((balance / limit) * 100));
+                  const isNearLimit = usagePercent >= 80;
+                  const isOverLimit = balance > limit;
+
+                  return (
+                    <div key={idx} className="p-4 hover:bg-paper-50 transition flex flex-col md:flex-row md:items-center justify-between gap-4">
+                      
+                      {/* Left: Avatar & Identity */}
+                      <div className="flex items-start sm:items-center gap-3.5 min-w-[240px]">
+                        <div className={`w-11 h-11 rounded-2xl flex items-center justify-center font-extrabold text-sm shrink-0 border ${
+                          isOverLimit ? 'bg-terracotta-100 text-terracotta-700 border-terracotta-300' :
+                          isNearLimit ? 'bg-ochre-100 text-ochre-800 border-ochre-300' :
+                          'bg-paper-100 text-indigoRural-800 border-paper-300'
+                        }`}>
+                          {cust.customerName.charAt(0)}
+                        </div>
+
+                        <div className="space-y-0.5">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-black text-sm text-indigoRural-900">{cust.customerName}</span>
+                            {cust.isRegistered ? (
+                              <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-md bg-forestRural-100 text-forestRural-800 border border-forestRural-200">
+                                {language === 'hi' ? 'पंजीकृत' : 'Verified'}
+                              </span>
+                            ) : (
+                              <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-md bg-paper-200 text-indigoRural-600">
+                                {language === 'hi' ? 'बही-खाता' : 'Ledger'}
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="flex items-center gap-3 text-xs text-indigoRural-500 font-semibold flex-wrap">
+                            {cust.phone ? (
+                              <a 
+                                href={`tel:${cust.phone}`}
+                                className="flex items-center gap-1 text-forestRural-700 hover:underline"
+                              >
+                                <PhoneCall className="w-3 h-3" />
+                                <span>+91 {cust.phone.replace(/^91/, '')}</span>
+                              </a>
+                            ) : (
+                              <span className="text-paper-400 italic">
+                                {language === 'hi' ? 'मोबाइल नंबर नहीं' : 'No Phone'}
+                              </span>
+                            )}
+
+                            {cust.village && (
+                              <span className="flex items-center gap-1 text-indigoRural-600">
+                                <MapPin className="w-3 h-3 text-ochre-600" />
+                                <span>{cust.village}</span>
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Center: Credit Limit Utilization Bar */}
+                      <div className="flex-1 max-w-xs space-y-1">
+                        <div className="flex justify-between text-[11px] font-bold">
+                          <span className="text-indigoRural-600">
+                            {language === 'hi' ? 'उधार सीमा उपयोग' : 'Credit Limit Used'}
+                          </span>
+                          <span className={`${isOverLimit ? 'text-terracotta-700' : isNearLimit ? 'text-ochre-700' : 'text-indigoRural-700'}`}>
+                            ₹{balance.toLocaleString('en-IN')} / ₹{limit.toLocaleString('en-IN')} ({usagePercent}%)
+                          </span>
+                        </div>
+                        <div className="w-full h-2 bg-paper-200 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full rounded-full transition-all ${
+                              isOverLimit ? 'bg-terracotta-600' :
+                              isNearLimit ? 'bg-ochre-500' :
+                              'bg-forestRural-600'
+                            }`}
+                            style={{ width: `${Math.min(100, usagePercent)}%` }}
+                          />
+                        </div>
+                        {isNearLimit && (
+                          <div className="flex items-center gap-1 text-[10px] font-bold text-ochre-700">
+                            <AlertTriangle className="w-3 h-3 text-ochre-600 shrink-0" />
+                            <span>{language === 'hi' ? 'उधार सीमा 80% से अधिक है' : 'Approaching credit limit threshold'}</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Right: Balance & Actions */}
+                      <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0">
+                        <div className="text-right">
+                          <div className={`text-base font-black tabular-nums ${
+                            balance > 0 ? 'text-terracotta-700' : 'text-forestRural-700'
+                          }`}>
+                            ₹{balance.toLocaleString('en-IN')}
+                          </div>
+                          <div className="text-[10px] text-indigoRural-400 font-medium">
+                            {cust.lastReminderSent ? (
+                              <span className="text-forestRural-700 font-bold">
+                                ✓ {language === 'hi' ? 'तगादा भेजा गया' : 'Reminder Sent'}
+                              </span>
+                            ) : cust.lastDate ? (
+                              <span>{language === 'hi' ? 'अंतिम:' : 'Active:'} {cust.lastDate}</span>
+                            ) : (
+                              <span>{language === 'hi' ? 'नया खाता' : 'New Khata'}</span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* WhatsApp Action Button */}
+                        <button
+                          type="button"
+                          onClick={() => setSelectedWhatsAppCustomer(cust)}
+                          className="px-3.5 py-2 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] active:scale-95 text-white font-extrabold text-xs flex items-center gap-1.5 shadow-xs transition cursor-pointer"
+                          title={language === 'hi' ? 'व्हाट्सएप तगादा भेजें' : 'Send WhatsApp Reminder'}
+                        >
+                          <MessageCircle className="w-3.5 h-3.5 fill-current" />
+                          <span>WhatsApp</span>
+                        </button>
+                      </div>
+
+                    </div>
+                  );
+                });
+              })()}
+            </div>
+
           </div>
         )}
 
       </Card>
+
+      {/* Customer Registration Modal */}
+      <RegisterCustomerModal
+        isOpen={isRegisterCustomerOpen}
+        onClose={() => setIsRegisterCustomerOpen(false)}
+        shopId={shop?.id}
+        onCustomerRegistered={() => loadData()}
+      />
+
+      {/* WhatsApp Payment Reminder Modal */}
+      <WhatsAppReminderModal
+        isOpen={Boolean(selectedWhatsAppCustomer)}
+        onClose={() => setSelectedWhatsAppCustomer(null)}
+        customer={selectedWhatsAppCustomer}
+        shop={shop}
+        onReminderSent={() => loadData()}
+      />
 
     </div>
   );

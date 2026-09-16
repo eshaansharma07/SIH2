@@ -7,6 +7,7 @@ import creditRoutes from './routes/creditRoutes.js';
 import schemeRoutes from './routes/schemeRoutes.js';
 import advisoryRoutes from './routes/advisoryRoutes.js';
 import dossierRoutes from './routes/dossierRoutes.js';
+import customerRoutes from './routes/customerRoutes.js';
 import { seedDatabase } from './db/seed.js';
 
 dotenv.config();
@@ -49,7 +50,8 @@ const routeMap = [
   ['/credit-score', creditRoutes],
   ['/schemes', schemeRoutes],
   ['/advisor', advisoryRoutes],
-  ['/dossier', dossierRoutes]
+  ['/dossier', dossierRoutes],
+  ['/customers', customerRoutes]
 ];
 
 for (const [routePath, router] of routeMap) {

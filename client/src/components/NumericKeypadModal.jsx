@@ -11,9 +11,22 @@ export function NumericKeypadModal({ isOpen, onClose, onTransactionSaved, shopId
   const [paymentMode, setPaymentMode] = useState('cash'); // 'cash', 'upi', 'khata'
   const [category, setCategory] = useState('Daily Counter Sales');
   const [customerName, setCustomerName] = useState('');
+  const [customerList, setCustomerList] = useState([]);
   const [loading, setLoading] = useState(false);
   const [successToast, setSuccessToast] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+
+  // Fetch shop customers for quick selection
+  React.useEffect(() => {
+    if (!isOpen || !shopId) return;
+    api.getCustomers(shopId)
+      .then(res => {
+        if (res?.customers && Array.isArray(res.customers)) {
+          setCustomerList(res.customers);
+        }
+      })
+      .catch(() => {});
+  }, [isOpen, shopId]);
 
   if (!isOpen) return null;
 
@@ -226,12 +239,16 @@ export function NumericKeypadModal({ isOpen, onClose, onTransactionSaved, shopId
                 className="w-full px-3 py-2 bg-paper-50 border border-paper-300 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-terracotta-500 text-indigoRural-900"
               />
               <div className="flex gap-1 overflow-x-auto py-1">
-                {commonVillageCustomers.slice(0, 3).map(c => (
+                {(customerList.length > 0 ? customerList.map(c => c.name) : commonVillageCustomers).slice(0, 6).map(c => (
                   <button
                     key={c}
                     type="button"
                     onClick={() => setCustomerName(c)}
-                    className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-paper-100 hover:bg-paper-200 text-indigoRural-700 whitespace-nowrap border border-paper-300 cursor-pointer"
+                    className={`text-[10px] font-bold px-2 py-0.5 rounded-md whitespace-nowrap border transition cursor-pointer ${
+                      customerName === c
+                        ? 'bg-terracotta-600 text-white border-terracotta-600'
+                        : 'bg-paper-100 hover:bg-paper-200 text-indigoRural-700 border-paper-300'
+                    }`}
                   >
                     {c.split(' ')[0]}
                   </button>

@@ -372,13 +372,37 @@ router.get('/udhaar-ledger', async (req, res) => {
       `).all(shopId);
     }
 
+    // 3. Load registered customers to enrich ledger with phone, village & credit limit
+    let registeredCustomers = [];
+    try {
+      registeredCustomers = db.prepare(`
+        SELECT * FROM customers WHERE shop_id = ?
+      `).all(shopId);
+    } catch (_) {
+      registeredCustomers = [];
+    }
+
+    const regCustomerMap = new Map();
+    registeredCustomers.forEach(rc => {
+      regCustomerMap.set((rc.name || '').trim().toLowerCase(), rc);
+    });
+
     const customerMap = {};
 
     txs.forEach(t => {
-      const name = t.customer_vendor_name || 'Village Customer';
+      const name = (t.customer_vendor_name || 'Village Customer').trim();
+      const nameKey = name.toLowerCase();
+      const reg = regCustomerMap.get(nameKey);
+
       if (!customerMap[name]) {
         customerMap[name] = {
+          customerId: reg ? reg.id : null,
           customerName: name,
+          phone: reg ? reg.phone : '',
+          village: reg ? reg.village_address : '',
+          creditLimit: reg ? reg.credit_limit : 5000,
+          lastReminderSent: reg ? reg.last_reminder_sent : null,
+          isRegistered: Boolean(reg),
           totalGiven: 0,
           totalRepaid: 0,
           balanceOwed: 0,
@@ -402,8 +426,30 @@ router.get('/udhaar-ledger', async (req, res) => {
       });
     });
 
+    // Also include registered customers who may have 0 pending balance yet
+    registeredCustomers.forEach(rc => {
+      const nameKey = (rc.name || '').trim().toLowerCase();
+      if (!customerMap[rc.name]) {
+        customerMap[rc.name] = {
+          customerId: rc.id,
+          customerName: rc.name,
+          phone: rc.phone,
+          village: rc.village_address,
+          creditLimit: rc.credit_limit || 5000,
+          lastReminderSent: rc.last_reminder_sent,
+          isRegistered: true,
+          totalGiven: 0,
+          totalRepaid: 0,
+          balanceOwed: 0,
+          lastDate: null,
+          history: []
+        };
+      }
+    });
+
     const ledger = Object.values(customerMap).map(c => {
       c.balanceOwed = Math.max(0, c.totalGiven - c.totalRepaid);
+      c.usagePercent = Math.min(100, Math.round((c.balanceOwed / (c.creditLimit || 5000)) * 100));
       return c;
     }).sort((a, b) => b.balanceOwed - a.balanceOwed);
 

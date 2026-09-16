@@ -50,11 +50,21 @@ export async function syncToMongoDB() {
       }
     }
 
-    console.log(`✅ MongoDB Atlas Sync Complete: ${shops.length} shop(s), ${transactions.length} transactions synced.`);
+    // 4. Sync Customers
+    const customers = db.prepare('SELECT * FROM customers').all();
+    if (customers.length > 0) {
+      const custCol = mongoDb.collection('customers');
+      for (const c of customers) {
+        await custCol.updateOne({ id: c.id }, { $set: c }, { upsert: true });
+      }
+    }
+
+    console.log(`✅ MongoDB Atlas Sync Complete: ${shops.length} shop(s), ${transactions.length} transactions, ${customers.length} customers synced.`);
     return {
       success: true,
       syncedShops: shops.length,
-      syncedTransactions: transactions.length
+      syncedTransactions: transactions.length,
+      syncedCustomers: customers.length
     };
   } catch (err) {
     console.error('❌ MongoDB Sync Error:', err.message);

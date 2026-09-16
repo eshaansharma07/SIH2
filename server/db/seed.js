@@ -32,6 +32,76 @@ export function seedDatabase() {
 
   // 2. Clear old records for clean demo
   db.prepare(`DELETE FROM transactions WHERE shop_id = 'ramesh-kirana'`).run();
+  db.prepare(`DELETE FROM customers WHERE shop_id = 'ramesh-kirana'`).run();
+
+  // 2b. Seed Verified Rural Customers with Mobile & Credit Limits
+  const insertCustomer = db.prepare(`
+    INSERT OR REPLACE INTO customers (id, shop_id, name, phone, village_address, credit_limit, notes)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `);
+
+  const initialCustomers = [
+    {
+      id: 'cust-ramesh-1',
+      name: 'Masterji Ramswaroop',
+      phone: '9876543210',
+      village: 'Utraula Dehat',
+      credit_limit: 8000,
+      notes: 'Primary school headmaster, monthly salary settlement'
+    },
+    {
+      id: 'cust-ramesh-2',
+      name: 'Dharmendra Yadav',
+      phone: '9812345678',
+      village: 'Chauhanpur',
+      credit_limit: 5000,
+      notes: 'Dairy farmer, settles after milk union payout'
+    },
+    {
+      id: 'cust-ramesh-3',
+      name: 'Suresh Sharma (Badhai)',
+      phone: '9823456789',
+      village: 'Utraula Ward 4',
+      credit_limit: 4000,
+      notes: 'Carpenter & wood craftsman'
+    },
+    {
+      id: 'cust-ramesh-4',
+      name: 'Amit Kumar (Panchayat Sahayak)',
+      phone: '9834567890',
+      village: 'Panchayat Bhawan',
+      credit_limit: 6000,
+      notes: 'Panchayat office employee'
+    },
+    {
+      id: 'cust-ramesh-5',
+      name: 'Kunti Devi (Chachi)',
+      phone: '9845678901',
+      village: 'Purwa Tola',
+      credit_limit: 3000,
+      notes: 'Regular household rations, cleared bi-weekly'
+    },
+    {
+      id: 'cust-ramesh-6',
+      name: 'Bablu (Tempo Driver)',
+      phone: '9856789012',
+      village: 'Mandi Chowk',
+      credit_limit: 3500,
+      notes: 'Tempo transport operator'
+    },
+    {
+      id: 'cust-ramesh-7',
+      name: 'Ramu Halwai (Village Sweetmaker)',
+      phone: '9867890123',
+      village: 'Main Bazaar',
+      credit_limit: 10000,
+      notes: 'Bulk sugar, ghee and besan orders'
+    }
+  ];
+
+  for (const c of initialCustomers) {
+    insertCustomer.run(c.id, 'ramesh-kirana', c.name, c.phone, c.village, c.credit_limit, c.notes);
+  }
 
   // 3. Seed 4 Months (120 Days) of Realistic Daily Rural Retail History
   // Pattern:
@@ -64,15 +134,7 @@ export function seedDatabase() {
     'Dairy & Tea Packets'
   ];
 
-  const customers = [
-    'Masterji Ramswaroop',
-    'Dharmendra Yadav',
-    'Suresh Sharma (Badhai)',
-    'Amit Kumar (Panchayat Sahayak)',
-    'Kunti Devi (Chachi)',
-    'Bablu (Tempo Driver)',
-    'Ramu Halwai (Village Sweetmaker)'
-  ];
+  const customers = initialCustomers.map(c => c.name);
 
   const vendors = [
     'Galla Mandi Wholesaler Balrampur',

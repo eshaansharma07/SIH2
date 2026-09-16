@@ -97,6 +97,19 @@ db.exec(`
     calculated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(shop_id) REFERENCES shops(id)
   );
+
+  CREATE TABLE IF NOT EXISTS customers (
+    id TEXT PRIMARY KEY,
+    shop_id TEXT NOT NULL,
+    name TEXT NOT NULL,
+    phone TEXT NOT NULL,
+    village_address TEXT,
+    credit_limit REAL DEFAULT 5000,
+    notes TEXT,
+    last_reminder_sent DATETIME,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(shop_id) REFERENCES shops(id)
+  );
 `);
 
 // Safe migration for existing sqlite db instances
@@ -110,6 +123,27 @@ try {
   db.exec("ALTER TABLE shops ADD COLUMN password TEXT DEFAULT '1234';");
 } catch (_) {
   // Column already exists
+}
+
+try {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS customers (
+      id TEXT PRIMARY KEY,
+      shop_id TEXT NOT NULL,
+      name TEXT NOT NULL,
+      phone TEXT NOT NULL,
+      village_address TEXT,
+      credit_limit REAL DEFAULT 5000,
+      notes TEXT,
+      last_reminder_sent DATETIME,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY(shop_id) REFERENCES shops(id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_customers_shop_id ON customers(shop_id);
+    CREATE INDEX IF NOT EXISTS idx_customers_phone ON customers(phone);
+  `);
+} catch (_) {
+  // Table / index already exists
 }
 
 export default db;

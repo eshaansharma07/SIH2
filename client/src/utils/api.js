@@ -71,6 +71,13 @@ export const api = {
   getTransactionSummary: (shopId) => request(`/transactions/summary?shopId=${shopId}`),
   getUdhaarLedger: (shopId) => request(`/transactions/udhaar-ledger?shopId=${shopId}`),
 
+  // Customers & WhatsApp Khata
+  getCustomers: (shopId) => request(`/customers?shopId=${shopId}`),
+  createCustomer: (data) => request('/customers', { method: 'POST', body: JSON.stringify(data) }),
+  updateCustomer: (id, data) => request(`/customers/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteCustomer: (id) => request(`/customers/${id}`, { method: 'DELETE' }),
+  recordReminderSent: (id) => request(`/customers/${id}/reminder-sent`, { method: 'POST' }),
+
   // Credit Scoring
   getCreditScore: (shopId) => request(`/credit-score?shopId=${shopId}`),
   simulateCreditScore: (payload) => request('/credit-score/simulate', { method: 'POST', body: JSON.stringify(payload) }),
