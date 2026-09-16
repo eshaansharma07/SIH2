@@ -2,6 +2,7 @@ import express from 'express';
 import dataStore from '../db/dataStore.js';
 import { calculateCreditScore } from '../services/creditScoringService.js';
 import { matchSchemesForShop } from '../services/schemeMatcherService.js';
+import { seedDatabase } from '../db/seed.js';
 
 const router = express.Router();
 
@@ -13,12 +14,27 @@ router.get('/generate', async (req, res) => {
       return res.status(400).json({ success: false, error: 'shopId is required' });
     }
 
-    const shop = await dataStore.getShopById(shopId);
+    let shop = await dataStore.getShopById(shopId);
+    if (!shop && (shopId === 'ramesh-kirana' || String(shopId).includes('demo'))) {
+      try {
+        seedDatabase();
+        shop = await dataStore.getShopById(shopId);
+      } catch (e) {
+        console.warn('Auto-seed on empty shop in dossier:', e.message);
+      }
+    }
+
     if (!shop) {
       return res.status(404).json({ success: false, error: 'Shop not found' });
     }
 
-    const txs = await dataStore.getTransactions(shopId, { limit: 1000 });
+    let txs = await dataStore.getTransactions(shopId, { limit: 1000 });
+    if ((!txs || txs.length === 0) && (shopId === 'ramesh-kirana' || String(shopId).includes('demo'))) {
+      try {
+        seedDatabase();
+        txs = await dataStore.getTransactions(shopId, { limit: 1000 });
+      } catch (e) {}
+    }
     const creditData = calculateCreditScore(shop, txs && txs.length > 0 ? txs : null);
     const schemeData = matchSchemesForShop(shopId);
 

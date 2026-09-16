@@ -391,7 +391,7 @@ export default function App() {
       />
 
       {/* Main Page Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 pt-5 pb-20 lg:pb-10">
+      <main className="flex-1 max-w-7xl xl:max-w-[1440px] w-full mx-auto px-4 sm:px-6 pt-3 sm:pt-4 pb-20 lg:pb-10">
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}
@@ -467,6 +467,7 @@ export default function App() {
             {activeTab === 'dossier' && (
               <BankDossierPage
                 shop={currentShop}
+                isDemoMode={isDemoMode}
                 onBack={() => changeTab('dashboard')}
               />
             )}

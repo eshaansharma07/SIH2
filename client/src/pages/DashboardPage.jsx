@@ -201,11 +201,11 @@ export function DashboardPage({
   const pslLabel = creditData?.totalScore && creditData.totalScore >= 750 ? 'Internal PSL-Format Tier: A (Self-Assessed)' : 'Demo PSL-Format Assessment';
 
   return (
-    <div className="space-y-6 sm:space-y-8 animate-fadeIn pb-24 lg:pb-12">
+    <div className="space-y-4 sm:space-y-5 animate-fadeIn pb-16 lg:pb-8">
 
       {/* Persistent Demo Data Badge */}
       {isDemoMode && (
-        <div className="flex items-center justify-between bg-ochre-50 border border-ochre-300 rounded-xl px-4 py-2.5 text-xs">
+        <div className="flex items-center justify-between bg-ochre-50 border border-ochre-300 rounded-xl px-3.5 py-1.5 text-xs">
           <div className="flex items-center gap-2 font-bold text-ochre-800">
             <Sparkles className="w-4 h-4 text-ochre-600" />
             <span>DEMO DATA • Ramesh Kirana (SIH Evaluator Mode)</span>
@@ -220,10 +220,10 @@ export function DashboardPage({
 
       {/* Progressive Onboarding Checklist (visible for non-demo real users) */}
       {!isDemoMode && !step5Complete && (
-        <Card elevation={1} padding="lg" className="space-y-4">
+        <Card elevation={1} padding="md" className="space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <div className="p-2 rounded-xl bg-forestRural-50 border border-forestRural-200 text-forestRural-700 shadow-2xs">
+              <div className="p-1.5 rounded-xl bg-forestRural-50 border border-forestRural-200 text-forestRural-700 shadow-2xs">
                 <Activity className="w-4 h-4" />
               </div>
               <div>
@@ -241,7 +241,7 @@ export function DashboardPage({
           </div>
 
           {/* Smooth Animated Progress Bar */}
-          <div className="w-full h-2.5 bg-paper-200 rounded-full overflow-hidden p-0.5 border border-paper-300">
+          <div className="w-full h-2 bg-paper-200 rounded-full overflow-hidden p-0.5 border border-paper-300">
             <motion.div 
               className="h-full bg-gradient-to-r from-forestRural-500 to-forestRural-600 rounded-full shadow-2xs" 
               initial={{ width: 0 }}
@@ -250,12 +250,12 @@ export function DashboardPage({
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-5 gap-2.5">
+          <div className="grid grid-cols-1 sm:grid-cols-5 gap-2">
             {checklistSteps.map((step) => (
               <motion.div 
                 key={step.id} 
                 whileHover={{ y: -2, transition: { duration: 0.15 } }}
-                className={`p-3 rounded-xl border text-center space-y-1.5 transition-all ${
+                className={`p-2.5 rounded-xl border text-center space-y-1 transition-all ${
                   step.completed 
                     ? 'bg-forestRural-50/70 border-forestRural-200 shadow-2xs' 
                     : step.active 
@@ -263,7 +263,7 @@ export function DashboardPage({
                     : 'bg-paper-50/60 border-paper-200 opacity-65'
                 }`}
               >
-                <div className={`w-6 h-6 mx-auto rounded-full flex items-center justify-center text-[11px] font-black ${
+                <div className={`w-5 h-5 mx-auto rounded-full flex items-center justify-center text-[10px] font-black ${
                   step.completed ? 'bg-forestRural-600 text-white shadow-2xs' : step.active ? 'bg-terracotta-600 text-white shadow-2xs' : 'bg-paper-300 text-indigoRural-500'
                 }`}>
                   {step.completed ? (
@@ -272,14 +272,14 @@ export function DashboardPage({
                       animate={{ scale: 1 }} 
                       transition={{ type: 'spring', stiffness: 500, damping: 20 }}
                     >
-                      <Check className="w-3.5 h-3.5" />
+                      <Check className="w-3 h-3" />
                     </motion.span>
                   ) : step.num}
                 </div>
-                <p className="text-[11px] font-bold text-indigoRural-900 leading-tight">{step.title}</p>
-                <p className="text-[10px] text-indigoRural-500 leading-snug">{step.desc}</p>
+                <p className="text-[10px] font-bold text-indigoRural-900 leading-tight">{step.title}</p>
+                <p className="text-[9px] text-indigoRural-500 leading-snug">{step.desc}</p>
                 {step.active && step.action && (
-                  <button onClick={step.action} className="mt-1 text-[10px] font-bold text-terracotta-700 hover:text-terracotta-900 underline underline-offset-2 cursor-pointer transition-colors">
+                  <button onClick={step.action} className="mt-0.5 text-[9px] font-bold text-terracotta-700 hover:text-terracotta-900 underline underline-offset-2 cursor-pointer transition-colors">
                     {step.actionText}
                   </button>
                 )}
@@ -290,23 +290,23 @@ export function DashboardPage({
       )}
       
       {/* 1. Merchant Executive Card (Warli + Terracotta Identity) */}
-      <Card variant="hero" padding="lg" className="space-y-6">
+      <Card variant="hero" padding="md" className="space-y-3.5 sm:space-y-4">
         
         {/* Tri-color Accent Bar */}
         <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-terracotta-500 via-paper-300 to-forestRural-600" />
 
         {/* Verification Credentials Strip */}
-        <div className="flex flex-wrap items-center justify-between gap-3 pb-5 border-b border-paper-200 text-xs">
-          <div className="flex items-center gap-2.5 flex-wrap">
+        <div className="flex flex-wrap items-center justify-between gap-2.5 pb-2.5 sm:pb-3 border-b border-paper-200 text-xs">
+          <div className="flex items-center gap-2 flex-wrap">
             <Badge variant={shop?.is_udyam_verified ? 'positive' : 'neutral'} size="sm" dot>
               <span>{udyamLabel}</span>
             </Badge>
             <span className="text-paper-400 hidden sm:inline">•</span>
-            <span className="font-mono text-xs text-indigoRural-600 font-bold tracking-wider">
+            <span className="font-mono text-[11px] text-indigoRural-600 font-bold tracking-wider">
               {udyamNumber}
             </span>
             <span className="text-paper-400 hidden sm:inline">•</span>
-            <span className="text-indigoRural-600 text-xs font-semibold">
+            <span className="text-indigoRural-600 text-[11px] font-semibold">
               {vintageLabel}
             </span>
           </div>
@@ -323,16 +323,16 @@ export function DashboardPage({
         </div>
 
         {/* Core Hero Body */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-          <div className="space-y-3 max-w-2xl">
-            <div className="space-y-1">
-              <span className="text-[11px] font-black uppercase tracking-wider text-terracotta-600 block">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 lg:gap-6">
+          <div className="space-y-2 max-w-2xl">
+            <div className="space-y-0.5">
+              <span className="text-[10px] font-black uppercase tracking-wider text-terracotta-600 block">
                 {language === 'hi' ? 'सूक्ष्म उद्यम प्रोफ़ाइल' : 'Micro-Enterprise Profile (Self-Assessed)'}
               </span>
-              <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-indigoRural-900 font-display">
+              <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-indigoRural-900 font-display">
                 {shop?.name || (language === 'hi' ? 'मेरी दुकान' : 'My Store')}
               </h1>
-              <p className="text-indigoRural-600 text-xs sm:text-sm font-medium flex items-center gap-2 pt-0.5">
+              <p className="text-indigoRural-600 text-xs font-medium flex items-center gap-2 pt-0.5">
                 <span className="font-bold text-indigoRural-900">{shop?.owner_name || (language === 'hi' ? 'दुकानदार' : 'Proprietor')} (Proprietor)</span>
                 <span className="text-paper-400">•</span>
                 <span>{shop?.village || '—'}, {shop?.district || '—'} ({shop?.state || '—'})</span>
@@ -340,18 +340,18 @@ export function DashboardPage({
             </div>
 
             {/* Turnover & Surplus Highlights */}
-            <div className="flex flex-wrap items-baseline gap-6 pt-2">
+            <div className="flex flex-wrap items-baseline gap-4 sm:gap-6 pt-1">
               <div>
-                <span className="text-[11px] font-bold text-indigoRural-400 uppercase tracking-wider block mb-1">
+                <span className="text-[10px] font-bold text-indigoRural-400 uppercase tracking-wider block mb-0.5">
                   {language === 'hi' ? 'सत्यापित कारोबार (Turnover)' : 'Audited Turnover'}
                 </span>
-                <div className="text-3xl sm:text-4xl font-black tracking-tight tabular-nums text-indigoRural-900 font-display">
+                <div className="text-2xl sm:text-3xl font-black tracking-tight tabular-nums text-indigoRural-900 font-display">
                   {hasFinancialData ? `₹${metrics.totalIncome.toLocaleString('en-IN')}` : '—'}
                 </div>
               </div>
-              <div className="border-l border-paper-300 pl-6">
-                <div className="flex items-center gap-1.5 mb-1">
-                  <span className="text-[11px] font-bold text-indigoRural-400 uppercase tracking-wider block">
+              <div className="border-l border-paper-300 pl-4 sm:pl-6">
+                <div className="flex items-center gap-1.5 mb-0.5">
+                  <span className="text-[10px] font-bold text-indigoRural-400 uppercase tracking-wider block">
                     {language === 'hi' ? 'शुद्ध परिचालन अधिशेष' : 'Net Operating Surplus'}
                   </span>
                   <AudioReadAloudButton
@@ -360,67 +360,71 @@ export function DashboardPage({
                     textEn={`Net operating surplus: ₹${metrics.netSurplus !== null ? Number(metrics.netSurplus).toLocaleString('en-IN') : 0}.`}
                   />
                 </div>
-                <div className="text-2xl sm:text-3xl font-black tracking-tight tabular-nums text-forestRural-700 font-display">
+                <div className="text-xl sm:text-2xl font-black tracking-tight tabular-nums text-forestRural-700 font-display">
                   {metrics.netSurplus !== null ? `₹${metrics.netSurplus.toLocaleString('en-IN')}` : '—'}
                 </div>
               </div>
-              <div className="border-l border-paper-300 pl-6 hidden sm:block">
-                <span className="text-[11px] font-bold text-indigoRural-400 uppercase tracking-wider block mb-1">
+              <div className="border-l border-paper-300 pl-4 sm:pl-6 hidden sm:block">
+                <span className="text-[10px] font-bold text-indigoRural-400 uppercase tracking-wider block mb-0.5">
                   {language === 'hi' ? 'बचत मार्जिन' : 'Operating Margin'}
                 </span>
-                <div className="text-2xl sm:text-3xl font-black tracking-tight tabular-nums text-terracotta-700 font-display">
+                <div className="text-xl sm:text-2xl font-black tracking-tight tabular-nums text-terracotta-700 font-display">
                   {operatingMargin ? `+${operatingMargin}%` : '—'}
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Clean Executive Tactile Action Buttons */}
-          <div className="flex flex-col sm:flex-row lg:flex-col gap-2.5 shrink-0">
+          {/* Clean Executive Tactile Action Buttons in 2x2 Grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-2 shrink-0 lg:w-72 xl:w-80">
             <Button
               onClick={onOpenKeypad}
               variant="dark"
-              size="lg"
+              size="sm"
               icon={PlusCircle}
+              className="w-full justify-center !py-2.5 shadow-2xs"
             >
-              <span>{language === 'hi' ? 'खाते में लेनदेन दर्ज करें' : '+ Record Transaction'}</span>
+              <span className="truncate">{language === 'hi' ? '+ लेन-देन दर्ज' : '+ Record Sale'}</span>
             </Button>
             <Button
               onClick={() => onNavigateTab('advisor')}
               variant="secondary"
-              size="md"
+              size="sm"
               icon={Sparkles}
+              className="w-full justify-center !py-2.5"
             >
-              <span>{language === 'hi' ? 'साथी AI' : 'Saathi AI'}</span>
+              <span className="truncate">{language === 'hi' ? 'साथी AI' : 'Saathi AI'}</span>
             </Button>
             <Button
               onClick={onOpenWholesale}
               variant="forest"
               size="sm"
               icon={ShoppingBag}
+              className="w-full justify-center !py-2.5"
             >
-              <span>{language === 'hi' ? 'ONDC थोक भाव' : 'ONDC Wholesale'}</span>
+              <span className="truncate">{language === 'hi' ? 'ONDC थोक' : 'ONDC Wholesale'}</span>
             </Button>
             <Button
               onClick={() => onNavigateTab('dossier')}
               variant="outline"
               size="sm"
               icon={FileText}
+              className="w-full justify-center !py-2.5"
             >
-              <span>{language === 'hi' ? 'आधिकारिक बैंक डॉसियर' : 'Official Bank Dossier'}</span>
+              <span className="truncate">{language === 'hi' ? 'बैंक डॉसियर' : 'Bank Dossier'}</span>
             </Button>
           </div>
         </div>
 
         {/* Warli Folk Art Line Border */}
-        <WarliBorder className="w-full h-6 text-terracotta-400 opacity-50" />
+        <WarliBorder className="w-full h-4 text-terracotta-400 opacity-40" />
       </Card>
 
       {/* 2. Asymmetric Financial Pulse Bento */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
         
         {/* Primary Engine (8 Cols): Audited Financial Pulse & Cash Flow Breakdown */}
-        <Card padding="lg" className="lg:col-span-8 space-y-5">
+        <Card padding="md" className="lg:col-span-8 space-y-3.5 sm:space-y-4">
           <SectionHeader
             icon={TrendingUp}
             iconColor="forest"
@@ -442,37 +446,37 @@ export function DashboardPage({
           />
 
           {/* 3 Structured Metrics with Deep Context */}
-          <div className="grid grid-cols-3 gap-4">
-            <div className="space-y-1">
+          <div className="grid grid-cols-3 gap-3 sm:gap-4">
+            <div className="space-y-0.5">
               <span className="text-[10px] font-bold text-indigoRural-400 uppercase tracking-wider block">
                 {language === 'hi' ? 'सत्यापित कुल बिक्री' : 'Gross Turnover'}
               </span>
-              <div className="text-2xl sm:text-3xl font-black text-indigoRural-900 tabular-nums tracking-tight font-display">
+              <div className="text-xl sm:text-2xl font-black text-indigoRural-900 tabular-nums tracking-tight font-display">
                 {hasFinancialData ? `₹${metrics.totalIncome.toLocaleString('en-IN')}` : '—'}
               </div>
-              <span className="text-[11px] font-semibold text-forestRural-700 flex items-center gap-1">
-                <span>↑</span> 100% audited sales
+              <span className="text-[10px] font-semibold text-forestRural-700 flex items-center gap-1">
+                <span>↑</span> 100% audited
               </span>
             </div>
 
-            <div className="space-y-1 border-l border-paper-200 pl-4">
+            <div className="space-y-0.5 border-l border-paper-200 pl-3 sm:pl-4">
               <span className="text-[10px] font-bold text-indigoRural-400 uppercase tracking-wider block">
                 {language === 'hi' ? 'माल व दुकान खर्च' : 'Operating Outlay'}
               </span>
-              <div className="text-2xl sm:text-3xl font-black text-indigoRural-900 tabular-nums tracking-tight font-display">
+              <div className="text-xl sm:text-2xl font-black text-indigoRural-900 tabular-nums tracking-tight font-display">
                 {metrics.totalExpense !== null ? `₹${metrics.totalExpense.toLocaleString('en-IN')}` : '—'}
               </div>
               <button
                 type="button"
                 onClick={onOpenWholesale}
-                className="text-[11px] font-semibold text-forestRural-700 hover:text-forestRural-900 flex items-center gap-1 cursor-pointer transition-colors underline underline-offset-2"
+                className="text-[10px] font-semibold text-forestRural-700 hover:text-forestRural-900 flex items-center gap-1 cursor-pointer transition-colors underline underline-offset-2"
               >
-                <span>ONDC Wholesale (-12%)</span>
+                <span>ONDC (-12%)</span>
               </button>
             </div>
 
-            <div className="space-y-1 border-l border-paper-200 pl-4">
-              <div className="flex items-center gap-1.5">
+            <div className="space-y-0.5 border-l border-paper-200 pl-3 sm:pl-4">
+              <div className="flex items-center gap-1">
                 <span className="text-[10px] font-bold text-indigoRural-400 uppercase tracking-wider block">
                   {language === 'hi' ? 'शुद्ध बचत' : 'Retained Surplus'}
                 </span>
@@ -482,30 +486,30 @@ export function DashboardPage({
                   textEn={`Retained surplus: ₹${metrics.netSurplus !== null ? Number(metrics.netSurplus).toLocaleString('en-IN') : 0}.`}
                 />
               </div>
-              <div className="text-2xl sm:text-3xl font-black text-forestRural-700 tabular-nums tracking-tight font-display">
+              <div className="text-xl sm:text-2xl font-black text-forestRural-700 tabular-nums tracking-tight font-display">
                 {metrics.netSurplus !== null ? `₹${metrics.netSurplus.toLocaleString('en-IN')}` : '—'}
               </div>
-              <span className="text-[11px] font-semibold text-forestRural-700">
-                Prime repayment capacity
+              <span className="text-[10px] font-semibold text-forestRural-700">
+                Prime capacity
               </span>
             </div>
           </div>
 
           {/* Payment Channels Deepening Bar (RBI Mandated Digital Ratio) */}
-          <div className="space-y-2 pt-4 border-t border-paper-200">
+          <div className="space-y-1.5 pt-3 border-t border-paper-200">
             <div className="flex items-center justify-between text-xs font-bold">
               <span className="text-indigoRural-500 uppercase tracking-wider text-[10px]">
                 {language === 'hi' ? 'भुगतान माध्यम वितरण (Cash vs. UPI)' : 'Payment Channel Distribution'}
               </span>
-              <span className="text-terracotta-600 font-extrabold text-[11px]">
-                {language === 'hi' ? 'डिजिटल लेनदेन अनुपात (PSL बेंचमार्क)' : 'Digital Deepening (PSL Benchmark)'}
+              <span className="text-terracotta-600 font-extrabold text-[10px] sm:text-[11px]">
+                {language === 'hi' ? 'डिजिटल लेनदेन अनुपात (PSL)' : 'Digital Deepening (PSL)'}
               </span>
             </div>
 
             {/* Segmented Distribution Bar */}
             {digitalPct !== null ? (
               <>
-                <div className="w-full h-3.5 bg-paper-200 rounded-full overflow-hidden flex p-[1.5px] gap-1">
+                <div className="w-full h-2.5 bg-paper-200 rounded-full overflow-hidden flex p-[1px] gap-1">
                   <div 
                     className="bg-terracotta-600 h-full rounded-full transition-all duration-500" 
                     style={{ width: `${digitalPct}%` }} 
@@ -518,19 +522,19 @@ export function DashboardPage({
                   />
                 </div>
 
-                <div className="flex items-center justify-between text-xs text-indigoRural-600 font-semibold pt-0.5">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-terracotta-600 shrink-0" />
-                    <span>Digital UPI: <strong>{digitalPct}%</strong> ({hasFinancialData ? `₹${Math.round(metrics.totalIncome * (digitalPct / 100)).toLocaleString('en-IN')}` : '—'})</span>
+                <div className="flex items-center justify-between text-[11px] text-indigoRural-600 font-semibold pt-0.5">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-terracotta-600 shrink-0" />
+                    <span>UPI: <strong>{digitalPct}%</strong> ({hasFinancialData ? `₹${Math.round(metrics.totalIncome * (digitalPct / 100)).toLocaleString('en-IN')}` : '—'})</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-forestRural-600 shrink-0" />
-                    <span>Cash Receipts: <strong>{cashPct}%</strong> ({hasFinancialData ? `₹${Math.round(metrics.totalIncome * (cashPct / 100)).toLocaleString('en-IN')}` : '—'})</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-forestRural-600 shrink-0" />
+                    <span>Cash: <strong>{cashPct}%</strong> ({hasFinancialData ? `₹${Math.round(metrics.totalIncome * (cashPct / 100)).toLocaleString('en-IN')}` : '—'})</span>
                   </div>
                 </div>
               </>
             ) : (
-              <div className="py-2 text-xs text-indigoRural-400 italic">
+              <div className="py-1 text-xs text-indigoRural-400 italic">
                 Awaiting transaction channel breakdown...
               </div>
             )}
@@ -538,7 +542,7 @@ export function DashboardPage({
         </Card>
 
         {/* Secondary Card (4 Cols): Udhaar Working Capital & Recovery Meter */}
-        <Card padding="lg" className="lg:col-span-4 flex flex-col justify-between gap-5">
+        <Card padding="md" className="lg:col-span-4 flex flex-col justify-between gap-3.5 sm:gap-4">
           <SectionHeader
             icon={ShoppingBag}
             iconColor="ochre"
@@ -547,7 +551,7 @@ export function DashboardPage({
             action={
               riskPct !== null ? (
                 <Badge variant={Number(riskPct) < 5 ? 'positive' : 'attention'} size="sm">
-                  {Number(riskPct) < 5 ? `Low Risk (${riskPct}%)` : `Attention (${riskPct}%)`}
+                  {Number(riskPct) < 5 ? `Low (${riskPct}%)` : `Attention (${riskPct}%)`}
                 </Badge>
               ) : (
                 <Badge variant="neutral" size="sm">Safe Ratio</Badge>
@@ -555,34 +559,34 @@ export function DashboardPage({
             }
           />
 
-          <div className="space-y-1">
+          <div className="space-y-0.5">
             <span className="text-[10px] font-bold text-indigoRural-400 uppercase tracking-wider block">
               {language === 'hi' ? 'बकाया ग्राहक खाता' : 'Active Udhaar Balance'}
             </span>
-            <div className="text-3xl sm:text-4xl font-black text-indigoRural-900 tabular-nums font-display">
+            <div className="text-2xl sm:text-3xl font-black text-indigoRural-900 tabular-nums font-display">
               {metrics.totalUdhaarPending !== null ? `₹${metrics.totalUdhaarPending.toLocaleString('en-IN')}` : '—'}
             </div>
-            <p className="text-[11px] text-indigoRural-500 font-medium pt-0.5">
+            <p className="text-[10px] text-indigoRural-500 font-medium pt-0.5">
               Strict 7-day credit limit maintained with village patrons.
             </p>
           </div>
 
-          <div className="space-y-2 pt-3 border-t border-paper-200 text-xs">
+          <div className="space-y-1.5 pt-2.5 border-t border-paper-200 text-xs">
             <div className="flex items-center justify-between font-semibold text-indigoRural-600">
-              <span>Average Recovery Cycle</span>
-              <strong className="text-indigoRural-900 font-bold">
+              <span className="text-[11px]">Average Recovery</span>
+              <strong className="text-indigoRural-900 font-bold text-[11px]">
                 {summaryData?.avgRecoveryDays ? `${summaryData.avgRecoveryDays} Days` : (isDemoMode ? '4.2 Days' : '—')}
               </strong>
             </div>
             <div className="flex items-center justify-between font-semibold text-indigoRural-600">
-              <span>Active Khata Accounts</span>
-              <strong className="text-indigoRural-900 font-bold">
+              <span className="text-[11px]">Khata Accounts</span>
+              <strong className="text-indigoRural-900 font-bold text-[11px]">
                 {summaryData?.activeUdhaarCustomers !== undefined ? `${summaryData.activeUdhaarCustomers} Customers` : (shop?.customer_count ? `${shop.customer_count} Customers` : (isDemoMode ? '8 Customers' : '0 Customers'))}
               </strong>
             </div>
             <div className="flex items-center justify-between font-semibold text-indigoRural-600">
-              <span>Working Capital At Risk</span>
-              <strong className="text-forestRural-700 font-bold">
+              <span className="text-[11px]">Capital At Risk</span>
+              <strong className="text-forestRural-700 font-bold text-[11px]">
                 {riskPct ? `${riskPct}% (Safe)` : 'Safe'}
               </strong>
             </div>
@@ -591,10 +595,10 @@ export function DashboardPage({
           <Button
             onClick={() => onNavigateTab('cashflow')}
             variant="secondary"
-            size="md"
+            size="sm"
             icon={ArrowRight}
             iconPosition="right"
-            className="w-full"
+            className="w-full justify-center !py-2"
           >
             <span>{language === 'hi' ? 'ग्राहक खाता बही देखें' : 'View Customer Ledger'}</span>
           </Button>
@@ -603,10 +607,10 @@ export function DashboardPage({
       </div>
 
       {/* 3. National Seasonal Demand Radar & Credit Health Split */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5">
         
         {/* Left: Seasonal Demand Radar (7 Cols) */}
-        <Card padding="lg" className="lg:col-span-7 space-y-5">
+        <Card padding="md" className="lg:col-span-7 space-y-3.5 sm:space-y-4">
           <SectionHeader
             icon={Calendar}
             iconColor="ochre"
@@ -619,7 +623,7 @@ export function DashboardPage({
             }
           />
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
             {festivalList.map((item, idx) => {
               const name = (language === 'hi' && item.festivalHi) ? item.festivalHi : item.festival;
               const timing = (language === 'hi' && item.timingHi) ? item.timingHi : item.timing;
@@ -628,29 +632,29 @@ export function DashboardPage({
               return (
                 <div 
                   key={idx}
-                  className="p-4 rounded-2xl bg-paper-50 hover:bg-white hover:border-terracotta-300 transition duration-200 border border-paper-200 flex flex-col justify-between gap-3 group"
+                  className="p-3 rounded-xl bg-paper-50 hover:bg-white hover:border-terracotta-300 transition duration-200 border border-paper-200 flex flex-col justify-between gap-2 group"
                 >
-                  <div className="space-y-2">
+                  <div className="space-y-1.5">
                     <div className="flex items-center justify-between gap-2">
                       <span className="font-extrabold text-xs text-indigoRural-900 group-hover:text-terracotta-700 transition truncate">{name}</span>
-                      <Badge variant="attention" size="sm" className="shrink-0 tabular-nums flex items-center gap-1">
-                        <Clock className="w-3 h-3" />
+                      <Badge variant="attention" size="sm" className="shrink-0 tabular-nums flex items-center gap-1 text-[10px] py-0.5 px-1.5">
+                        <Clock className="w-2.5 h-2.5" />
                         <span>{item.daysRemaining}d</span>
                       </Badge>
                     </div>
-                    <div className="text-[11px] text-indigoRural-500 font-medium flex items-center gap-1.5">
-                      <Calendar className="w-3.5 h-3.5 text-indigoRural-400 shrink-0" />
+                    <div className="text-[10px] text-indigoRural-500 font-medium flex items-center gap-1">
+                      <Calendar className="w-3 h-3 text-indigoRural-400 shrink-0" />
                       <span>{timing}</span>
                     </div>
-                    <div className="text-[11px] text-indigoRural-800 font-semibold bg-white p-2.5 rounded-xl border border-paper-200">
-                      <span className="text-indigoRural-400 font-bold block text-[9px] uppercase tracking-wider mb-0.5">Wholesale Pre-Order</span>
+                    <div className="text-[10px] text-indigoRural-800 font-semibold bg-white p-2 rounded-lg border border-paper-200 leading-snug">
+                      <span className="text-indigoRural-400 font-bold block text-[8px] uppercase tracking-wider mb-0.5">Wholesale Pre-Order</span>
                       {stock}
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between pt-2 border-t border-paper-200 text-xs">
+                  <div className="flex items-center justify-between pt-1.5 border-t border-paper-200 text-[11px]">
                     <span className="text-indigoRural-500 font-medium">{language === 'hi' ? 'अनुमानित बिक्री उछाल' : 'Projected Surge'}</span>
-                    <span className="font-black text-forestRural-700 text-sm tabular-nums">{item.demandSurge}</span>
+                    <span className="font-black text-forestRural-700 text-xs tabular-nums">{item.demandSurge}</span>
                   </div>
                 </div>
               );
@@ -659,7 +663,7 @@ export function DashboardPage({
         </Card>
 
         {/* Right: Credit Score & Health Dial (5 Cols) */}
-        <Card padding="lg" className="lg:col-span-5 flex flex-col justify-between gap-5">
+        <Card padding="md" className="lg:col-span-5 flex flex-col justify-between gap-3.5 sm:gap-4">
           <SectionHeader
             icon={ShieldCheck}
             iconColor="terracotta"
@@ -678,16 +682,16 @@ export function DashboardPage({
             }
           />
 
-          <div className="py-1">
+          <div className="py-0.5">
             {(creditData?.isUnrated || creditData?.totalScore === null || creditData?.totalScore === undefined) && !isDemoMode ? (
-              <div className="text-center p-5 space-y-3">
-                <div className="w-14 h-14 mx-auto rounded-2xl bg-ochre-100 border border-ochre-300 flex items-center justify-center text-ochre-700">
-                  <ShieldCheck className="w-7 h-7" />
+              <div className="text-center p-4 space-y-2.5">
+                <div className="w-12 h-12 mx-auto rounded-xl bg-ochre-100 border border-ochre-300 flex items-center justify-center text-ochre-700">
+                  <ShieldCheck className="w-6 h-6" />
                 </div>
-                <h3 className="font-display font-black text-base text-indigoRural-900">
+                <h3 className="font-display font-black text-sm text-indigoRural-900">
                   {language === 'hi' ? 'अवर्गीकृत (Unrated)' : 'Unrated Enterprise'}
                 </h3>
-                <p className="text-xs text-indigoRural-600 max-w-xs mx-auto leading-relaxed">
+                <p className="text-[11px] text-indigoRural-600 max-w-xs mx-auto leading-relaxed">
                   {language === 'hi'
                     ? 'पहले हफ्ते की बिक्री दर्ज करें (5 लेनदेन, 3 दिन) ताकि 4-पिलर बैंक-मान्य स्कोर अनलॉक हो सके।'
                     : 'Log your first week of sales (5 transactions, 3 days) to unlock your 4-pillar bankable credit score.'}
@@ -705,39 +709,29 @@ export function DashboardPage({
           </div>
 
           {/* 4 Pillars Activity Progress Bars - Bound to creditData.factors */}
-          <div className="space-y-3 pt-3 border-t border-paper-200 text-xs">
+          <div className="space-y-2 pt-2.5 border-t border-paper-200 text-xs">
             {factors.length > 0 ? (
               factors.map((factor) => {
                 const name = language === 'hi' ? (factor.nameHindi || factor.name) : factor.name;
                 const isPositive = factor.status === 'positive' || factor.percentage >= 70;
                 
                 return (
-                  <div key={factor.id} className="space-y-1.5 bg-paper-50/60 p-2 rounded-xl border border-paper-200/70">
+                  <div key={factor.id} className="space-y-1 bg-paper-50/60 p-1.5 rounded-lg border border-paper-200/70">
                     <div className="flex justify-between items-center text-indigoRural-700">
-                      <span className="font-bold text-[11px]">{name}</span>
-                      <span className="font-black text-indigoRural-900 tabular-nums text-[11px]">{factor.percentage}% ({factor.score}/{factor.maxScore})</span>
+                      <span className="font-bold text-[10px]">{name}</span>
+                      <span className="font-black text-indigoRural-900 tabular-nums text-[10px]">{factor.percentage}% ({factor.score}/{factor.maxScore})</span>
                     </div>
-                    <div className="w-full bg-paper-200 h-1.5 rounded-full overflow-hidden">
+                    <div className="w-full bg-paper-200 h-1 rounded-full overflow-hidden">
                       <div 
                         className={`h-full rounded-full transition-all duration-500 ${isPositive ? 'bg-forestRural-600' : 'bg-ochre-500'}`} 
                         style={{ width: `${factor.percentage}%` }} 
                       />
                     </div>
-                    {factor.subFactors && factor.subFactors.length > 0 && (
-                      <div className="pt-1 space-y-0.5 border-t border-paper-200/50">
-                        {factor.subFactors.map((sub, sIdx) => (
-                          <div key={sIdx} className="flex justify-between items-center text-[10px] text-indigoRural-500">
-                            <span className="truncate pr-1">• {sub.name}</span>
-                            <span className="font-semibold tabular-nums shrink-0">{sub.score} / {sub.maxScore}</span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
                   </div>
                 );
               })
             ) : (
-              <div className="py-2 text-center text-indigoRural-400 text-xs">
+              <div className="py-1 text-center text-indigoRural-400 text-xs">
                 Auditing 4-pillar alternative credit score...
               </div>
             )}
@@ -747,13 +741,13 @@ export function DashboardPage({
       </div>
 
       {/* 4. Saathi AI Suggestion Prompts */}
-      <Card variant="accent" padding="lg" className="space-y-3.5">
+      <Card variant="accent" padding="md" className="space-y-2.5">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="p-1.5 rounded-xl bg-terracotta-600 text-white shadow-2xs">
-              <Sparkles className="w-3.5 h-3.5 text-ochre-200" />
+          <div className="flex items-center gap-2">
+            <div className="p-1 rounded-lg bg-terracotta-600 text-white shadow-2xs">
+              <Sparkles className="w-3 h-3 text-ochre-200" />
             </div>
-            <span className="text-xs font-black text-indigoRural-900 uppercase tracking-wider font-display">
+            <span className="text-[11px] font-black text-indigoRural-900 uppercase tracking-wider font-display">
               {language === 'hi' ? 'साथी AI से तुरंत पूछें' : 'Saathi AI Intelligence Prompts'}
             </span>
           </div>
@@ -768,15 +762,15 @@ export function DashboardPage({
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
           {sampleQuestions.map((q, i) => (
             <button
               key={i}
               onClick={() => onAskPrompt(language === 'hi' ? q.text : q.textEn)}
-              className="p-3.5 bg-white hover:bg-paper-50 active:scale-[0.98] rounded-xl border border-paper-300/80 hover:border-terracotta-300 text-left transition duration-150 shadow-2xs flex items-center justify-between gap-2.5 text-xs font-extrabold text-indigoRural-900 group cursor-pointer"
+              className="p-2.5 bg-white hover:bg-paper-50 active:scale-[0.98] rounded-xl border border-paper-300/80 hover:border-terracotta-300 text-left transition duration-150 shadow-2xs flex items-center justify-between gap-2 text-xs font-extrabold text-indigoRural-900 group cursor-pointer"
             >
               <span className="truncate group-hover:text-terracotta-700 transition">{language === 'hi' ? q.text : q.textEn}</span>
-              <ArrowUpRight className="w-4 h-4 text-indigoRural-400 group-hover:text-terracotta-600 shrink-0 transition" />
+              <ArrowUpRight className="w-3.5 h-3.5 text-indigoRural-400 group-hover:text-terracotta-600 shrink-0 transition" />
             </button>
           ))}
         </div>

@@ -2188,3 +2188,253 @@ export const DEMO_UDHAAR_LEDGER = [
     "usagePercent": 0
   }
 ];
+
+export const DEMO_DOSSIER = {
+  "dossierNumber": "VS-DOC-BAL-493587",
+  "issueDate": "16 September 2026",
+  "validity": "Valid for 90 days from date of issue",
+  "issuingPlatform": "Vyapaar Saathi — Alternative Credit & Financial Structuring Platform",
+  "pslClassification": "Micro-Enterprise (Trading / Services) — Eligible for RBI PSL 7.5% Sub-target",
+  "endorsedFor": "Priority Sector Lending (PSL) Micro-Enterprise Credit Appraisal (Nayak Committee Cash-Flow Method)",
+  "shop": {
+    "id": "ramesh-kirana",
+    "name": "Ramesh's Kirana Store",
+    "ownerName": "Ramesh Kumar",
+    "tradeName": "Kirana & General Store (किराना एवं जनरल स्टोर)",
+    "tradeType": "kirana",
+    "village": "Utraula Dehat",
+    "district": "Balrampur",
+    "state": "Uttar Pradesh",
+    "vintageYears": 4,
+    "bankAccount": "Gramin Bank (Aryavart Bank, Savings A/c)",
+    "phone": "+91 98391 24789"
+  },
+  "creditEvaluation": {
+    "totalScore": 745,
+    "maxScore": 850,
+    "ratingLabel": "सक्षम एवं सुरक्षित (Loan Ready)",
+    "ratingBadge": "Loan Ready",
+    "factors": [
+      {
+        "id": "consistency",
+        "name": "Cash Flow & Logging Regularity",
+        "nameHindi": "दैनिक बही-खाता नियमितता",
+        "weight": "30%",
+        "score": 210,
+        "maxScore": 255,
+        "percentage": 82,
+        "status": "positive",
+        "explanation": "Logged 118 active transaction days with a healthy net cash surplus of ₹68,657.",
+        "explanationHindi": "पिछले 90 दिनों में आपने 118 दिन बही-खाते में प्रविष्टि की है और दुकान का शुद्ध अधिशेष ₹68,657 रहा।",
+        "tip": "Log transactions every evening to earn +20 points in 30 days.",
+        "subFactors": [
+          {
+            "id": "daily_logging",
+            "name": "Daily Logging Regularity",
+            "nameHindi": "दैनिक बही-खाता प्रविष्टि",
+            "score": 160,
+            "maxScore": 160,
+            "status": "high"
+          },
+          {
+            "id": "cash_discipline",
+            "name": "Cash Flow Predictability (Low CV)",
+            "nameHindi": "रोकड़ प्रवाह स्थिरता एवं अनुशासन",
+            "score": 50,
+            "maxScore": 95,
+            "status": "medium"
+          }
+        ]
+      },
+      {
+        "id": "growth",
+        "name": "Revenue Stability & Turnover",
+        "nameHindi": "बिक्री स्थिरता एवं मासिक आय",
+        "weight": "25%",
+        "score": 135,
+        "maxScore": 212,
+        "percentage": 64,
+        "status": "average",
+        "explanation": "Recorded ₹2,30,907 cumulative sales with resilient seasonal management.",
+        "explanationHindi": "दुकान ने कुल ₹2,30,907 की बिक्री दर्ज की और मानसून सीजन के प्रभाव को कुशलता से संभाला।",
+        "tip": "Diversify daily essentials to maintain sales above ₹1,800/day.",
+        "subFactors": [
+          {
+            "id": "revenue_momentum",
+            "name": "Revenue Momentum & Volume",
+            "nameHindi": "बिक्री वृद्धि एवं व्यापार आकार",
+            "score": 90,
+            "maxScore": 120,
+            "status": "high"
+          },
+          {
+            "id": "seasonal_resiliency",
+            "name": "Seasonal & Monsoon Resiliency",
+            "nameHindi": "मौसमी एवं मानसून स्थिरता",
+            "score": 45,
+            "maxScore": 92,
+            "status": "medium"
+          }
+        ]
+      },
+      {
+        "id": "discipline",
+        "name": "Udhaar Discipline & Working Capital",
+        "nameHindi": "उधार नियंत्रण एवं अनुशासन",
+        "weight": "25%",
+        "score": 198,
+        "maxScore": 213,
+        "percentage": 93,
+        "status": "positive",
+        "explanation": "Customer udhaar is 3.8% of sales with an exceptional 95% recovery rate.",
+        "explanationHindi": "कुल बिक्री में उधार का अनुपात 3.8% है और बकाया वसूली दर 95% उत्कृष्ट है।",
+        "tip": "Keep total customer credit below 20% of monthly sales to maximize score.",
+        "subFactors": [
+          {
+            "id": "udhaar_control",
+            "name": "Conservative Udhaar-to-Sales Ratio",
+            "nameHindi": "उधार अनुपात नियंत्रण",
+            "score": 115,
+            "maxScore": 115,
+            "status": "high"
+          },
+          {
+            "id": "recovery_efficiency",
+            "name": "Timely Repayment Recovery Rate",
+            "nameHindi": "समय पर वसूली दर",
+            "score": 71,
+            "maxScore": 75,
+            "status": "high"
+          },
+          {
+            "id": "digital_adoption",
+            "name": "Digital UPI Velocity Multiplier",
+            "nameHindi": "यूपीआई डिजिटल लेनदेन प्रोत्साहन",
+            "score": 12,
+            "maxScore": 23,
+            "status": "medium"
+          }
+        ]
+      },
+      {
+        "id": "vintage",
+        "name": "Business Vintage & Digital Adoption",
+        "nameHindi": "व्यापार का अनुभव एवं डिजिटल प्रमाण",
+        "weight": "20%",
+        "score": 145,
+        "maxScore": 170,
+        "percentage": 85,
+        "status": "positive",
+        "explanation": "Operational for 4 years in Balrampur with digital payments share at 38%.",
+        "explanationHindi": "Balrampur में 4 वर्षों से निरंतर दुकान संचालन और 38% डिजिटल यूपीआई लेनदेन का प्रमाण।",
+        "tip": "Encourage customers to scan UPI QR on purchases above ₹100.",
+        "subFactors": [
+          {
+            "id": "operating_vintage",
+            "name": "Operating History in Locality",
+            "nameHindi": "स्थानीय बाजार में व्यापारिक अनुभव",
+            "score": 95,
+            "maxScore": 110,
+            "status": "high"
+          },
+          {
+            "id": "banking_linkage",
+            "name": "Commercial Banking Account Linkage",
+            "nameHindi": "बैंक खाता एवं एमएसएमई पंजीकरण",
+            "score": 50,
+            "maxScore": 60,
+            "status": "high"
+          }
+        ]
+      }
+    ]
+  },
+  "financialAudit": {
+    "period": "90 Days Cash Flow & Digital Audit",
+    "totalGrossSales": 230907,
+    "totalExpenses": 162250,
+    "netOperatingSurplus": 68657,
+    "digitalCollectionPercentage": "38%",
+    "customerUdhaarPending": 450,
+    "udhaarRecoveryRate": "95%",
+    "monthlyBreakdown": [
+      {
+        "month": "2026-09",
+        "grossSales": 17138,
+        "stockPurchases": 14150,
+        "netSurplus": 2988,
+        "upiSales": 9900
+      },
+      {
+        "month": "2026-08",
+        "grossSales": 80183,
+        "stockPurchases": 48850,
+        "netSurplus": 31333,
+        "upiSales": 33134
+      },
+      {
+        "month": "2026-07",
+        "grossSales": 53655,
+        "stockPurchases": 38850,
+        "netSurplus": 14805,
+        "upiSales": 18266
+      },
+      {
+        "month": "2026-06",
+        "grossSales": 36404,
+        "stockPurchases": 26750,
+        "netSurplus": 9654,
+        "upiSales": 12392
+      },
+      {
+        "month": "2026-05",
+        "grossSales": 43527,
+        "stockPurchases": 33650,
+        "netSurplus": 9877,
+        "upiSales": 14816
+      }
+    ]
+  },
+  "recommendedSchemes": [
+    {
+      "name": "PM MUDRA Yojana — Kishor (प्रधानमंत्री मुद्रा योजना - किशोर)",
+      "maxAmount": "₹50,000 to ₹5,00,000",
+      "interestRate": "9.0% – 11.5% p.a.",
+      "subsidy": "Subsidized interest spread with CGFMU credit guarantee protection",
+      "collateral": "Zero Collateral (Hypothecation of shop assets purchased)",
+      "matchScore": 98,
+      "whyQualifies": [
+        "Operating for 4 years proves vintage stability",
+        "Monthly turnover (₹54,000) covers Kishor debt servicing",
+        "Vyapaar Saathi Alternative Credit Score (753) indicates prime debt repayment"
+      ]
+    },
+    {
+      "name": "PM MUDRA Yojana — Shishu (प्रधानमंत्री मुद्रा योजना - शिशु)",
+      "maxAmount": "Up to ₹50,000",
+      "interestRate": "8.5% – 10.0% p.a.",
+      "subsidy": "No direct capital subsidy; zero processing fee and full credit guarantee under CGFMU",
+      "collateral": "Zero Collateral (100% Credit Guarantee under CGFMU)",
+      "matchScore": 96,
+      "whyQualifies": [
+        "Monthly revenue fulfills Shishu working capital servicing threshold",
+        "Zero formal CIBIL requirement (covered under CGFMU credit guarantee)",
+        "Trade category qualifies for non-farm rural micro-credit",
+        "Bahi-khata ledger shows steady daily cash velocity"
+      ]
+    },
+    {
+      "name": "UP One District One Product (ODOP) Margin Money Scheme (यूपी एक जिला एक उत्पाद)",
+      "maxAmount": "Projects up to ₹25 Lakhs (Subsidy up to ₹6.25 Lakhs)",
+      "interestRate": "Commercial bank rate with UP State interest subvention",
+      "subsidy": "Up to 25% margin money subsidy (maximum ₹6.25 Lakhs) funded directly by UP State Government",
+      "collateral": "Covered under CGTMSE guarantee protocol",
+      "matchScore": 93,
+      "whyQualifies": [
+        "Enterprise is located in Uttar Pradesh (Balrampur), eligible for state MSME grant",
+        "25% capital margin money subsidy credited upon loan sanction",
+        "Priority allotment in state-run Gramin Haats and regional exhibitions"
+      ]
+    }
+  ]
+};

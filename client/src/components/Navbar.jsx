@@ -54,7 +54,7 @@ export function Navbar({ activeTab, setActiveTab, currentShop, isDemoMode, onRel
       {/* Tri-Color Micro-Rule */}
       <div className="h-[3px] w-full bg-gradient-to-r from-terracotta-500 via-paper-200 to-forestRural-600" />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+      <div className="max-w-7xl xl:max-w-[1440px] mx-auto px-4 sm:px-6">
         <div className="flex items-center justify-between h-16 gap-4">
           
           {/* Brand Mark: Rural Micro-Enterprise Ledger */}
@@ -103,7 +103,7 @@ export function Navbar({ activeTab, setActiveTab, currentShop, isDemoMode, onRel
           </div>
 
           {/* Desktop Navigation: Segmented Controls */}
-          <nav className="hidden xl:flex items-center p-1 rounded-xl bg-paper-200/80 border border-paper-300 shadow-2xs">
+          <nav className="hidden lg:flex items-center p-1 rounded-xl bg-paper-200/80 border border-paper-300 shadow-2xs">
             {navItems.map(item => {
               const Icon = item.icon;
               const isActive = activeTab === item.id;
@@ -111,7 +111,7 @@ export function Navbar({ activeTab, setActiveTab, currentShop, isDemoMode, onRel
                 <button
                   key={item.id}
                   onClick={() => setActiveTab(item.id)}
-                  className={`relative flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-150 cursor-pointer ${
+                  className={`relative flex items-center gap-1.5 xl:gap-2 px-2.5 xl:px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-150 cursor-pointer ${
                     isActive 
                       ? 'bg-white text-indigoRural-950 shadow-2xs scale-[1.02]' 
                       : 'text-indigoRural-600 hover:text-indigoRural-900 hover:bg-white/60'
@@ -213,7 +213,7 @@ export function Navbar({ activeTab, setActiveTab, currentShop, isDemoMode, onRel
             {/* Mobile Menu Toggle */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="xl:hidden p-2 rounded-xl text-indigoRural-700 hover:bg-paper-200 transition cursor-pointer"
+              className="lg:hidden p-2 rounded-xl text-indigoRural-700 hover:bg-paper-200 transition cursor-pointer"
               aria-label="Toggle navigation menu"
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -226,7 +226,7 @@ export function Navbar({ activeTab, setActiveTab, currentShop, isDemoMode, onRel
 
       {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
-        <div className="xl:hidden border-t border-paper-300 bg-white/95 backdrop-blur-2xl p-4 space-y-2 animate-fadeIn shadow-lg">
+        <div className="lg:hidden border-t border-paper-300 bg-white/95 backdrop-blur-2xl p-4 space-y-2 animate-fadeIn shadow-lg">
           <div className="grid grid-cols-2 gap-2 pb-3 border-b border-paper-200">
             {navItems.map(item => {
               const Icon = item.icon;
