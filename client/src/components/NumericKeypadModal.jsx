@@ -55,7 +55,7 @@ export function NumericKeypadModal({ isOpen, onClose, onTransactionSaved, shopId
       return;
     }
     const numAmount = Number(amountStr);
-    if (!amount || isNaN(numAmount) || numAmount <= 0) {
+    if (!amountStr || isNaN(numAmount) || numAmount <= 0) {
       setErrorMessage(language === 'hi' ? 'कृपया सही राशि दर्ज करें' : 'Please enter a valid amount');
       return;
     }
@@ -76,7 +76,12 @@ export function NumericKeypadModal({ isOpen, onClose, onTransactionSaved, shopId
     setLoading(true);
     setErrorMessage('');
 
-    const assignedCategory = category || (type === 'income' ? 'Daily Counter Sales' : type === 'expense' ? 'Wholesale Stock Purchase' : 'Monthly Grocery Khata');
+    const assignedCategory = category || (
+      type === 'income' ? 'Daily Counter Sales' : 
+      type === 'expense' ? 'Wholesale Stock Purchase' : 
+      type === 'udhaar_repaid' ? 'Partial Cash Clearing' : 
+      'Monthly Grocery Khata'
+    );
     const assignedMode = type.startsWith('udhaar') ? 'khata' : paymentMode;
     const nowIso = new Date().toISOString();
 
@@ -261,9 +266,35 @@ export function NumericKeypadModal({ isOpen, onClose, onTransactionSaved, shopId
             </button>
           </div>
 
-          {/* 4. Customer Name and Phone for Udhaar or Payment Mode for Sale */}
+          {/* 4. Customer Name, Phone & Given/Repaid Sub-Toggle for Udhaar */}
           {type.startsWith('udhaar') ? (
-            <div className="space-y-1.5 p-2.5 bg-paper-100/70 border border-paper-300 rounded-xl">
+            <div className="space-y-2 p-2.5 bg-paper-100/70 border border-paper-300 rounded-xl">
+              {/* Udhaar Sub-Toggle: Given vs Repaid */}
+              <div className="grid grid-cols-2 gap-1 p-1 bg-paper-200/80 rounded-lg">
+                <button
+                  type="button"
+                  onClick={() => { setType('udhaar_given'); setCategory('Monthly Grocery Khata'); }}
+                  className={`py-1.5 text-[11px] font-extrabold rounded-md transition-all cursor-pointer ${
+                    type === 'udhaar_given'
+                      ? 'bg-ochre-500 text-white shadow-2xs'
+                      : 'text-indigoRural-600 hover:text-indigoRural-900'
+                  }`}
+                >
+                  {language === 'hi' ? 'उधार दिया' : 'Udhaar Given'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setType('udhaar_repaid'); setCategory('Partial Cash Clearing'); }}
+                  className={`py-1.5 text-[11px] font-extrabold rounded-md transition-all cursor-pointer ${
+                    type === 'udhaar_repaid'
+                      ? 'bg-forestRural-600 text-white shadow-2xs'
+                      : 'text-indigoRural-600 hover:text-indigoRural-900'
+                  }`}
+                >
+                  {language === 'hi' ? 'उधार वापस मिला' : 'Udhaar Repaid'}
+                </button>
+              </div>
+
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <label className="text-[10px] font-bold text-indigoRural-700 block mb-0.5">
@@ -296,6 +327,23 @@ export function NumericKeypadModal({ isOpen, onClose, onTransactionSaved, shopId
                   />
                 </div>
               </div>
+
+              {/* Category Selector for Udhaar */}
+              <div className="flex items-center justify-between pt-0.5">
+                <span className="text-[10px] font-bold text-indigoRural-600">
+                  {language === 'hi' ? 'खाता श्रेणी' : 'Khata Category'}:
+                </span>
+                <select
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  className="px-2 py-1 bg-white text-indigoRural-800 font-semibold rounded-md text-[11px] border border-paper-300 focus:ring-1 focus:ring-terracotta-500"
+                >
+                  {(categoriesByType[type] || categoriesByType.udhaar_given).map(cat => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+              </div>
+
               <div className="flex gap-1 overflow-x-auto py-0.5">
                 {(customerList.length > 0 ? customerList : commonVillageCustomers.map(n => ({ name: n, phone: '' }))).slice(0, 6).map(c => {
                   const name = c.name;

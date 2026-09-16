@@ -88,4 +88,41 @@ test('Customer Credit & WhatsApp Reminders Suite', async (t) => {
 
     db.prepare('DELETE FROM customers WHERE id = ?').run(custId);
   });
+
+  await t.test('5. Udhaar Given and Udhaar Repaid transaction cycle records properly', () => {
+    const shopId = 'ramesh-kirana';
+    const custName = 'Dharmendra Yadav';
+    const nowIso = new Date().toISOString();
+    const dateStr = nowIso.split('T')[0];
+
+    // Record udhaar_given of 1200
+    const txGivenId = `tx-given-${Date.now()}`;
+    db.prepare(`
+      INSERT INTO transactions (id, shop_id, date, type, amount, category, payment_mode, customer_vendor_name, customer_phone, notes)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(txGivenId, shopId, dateStr, 'udhaar_given', 1200, 'Monthly Grocery Khata', 'khata', custName, '9876543211', 'Lent on credit');
+
+    // Record udhaar_repaid of 700 (Partial cash repayment)
+    const txRepaidId = `tx-repaid-${Date.now()}`;
+    db.prepare(`
+      INSERT INTO transactions (id, shop_id, date, type, amount, category, payment_mode, customer_vendor_name, customer_phone, notes)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(txRepaidId, shopId, dateStr, 'udhaar_repaid', 700, 'Partial Cash Clearing', 'khata', custName, '9876543211', 'Partial repayment');
+
+    // Verify both records exist and have distinct types
+    const given = db.prepare('SELECT * FROM transactions WHERE id = ?').get(txGivenId);
+    const repaid = db.prepare('SELECT * FROM transactions WHERE id = ?').get(txRepaidId);
+
+    assert.ok(given && repaid);
+    assert.strictEqual(given.type, 'udhaar_given');
+    assert.strictEqual(repaid.type, 'udhaar_repaid');
+    assert.strictEqual(given.amount, 1200);
+    assert.strictEqual(repaid.amount, 700);
+    assert.strictEqual(given.category, 'Monthly Grocery Khata');
+    assert.strictEqual(repaid.category, 'Partial Cash Clearing');
+
+    // Clean up
+    db.prepare('DELETE FROM transactions WHERE id IN (?, ?)').run(txGivenId, txRepaidId);
+  });
 });
+
