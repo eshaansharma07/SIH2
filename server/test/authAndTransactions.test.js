@@ -85,4 +85,57 @@ test('Shop Auth & Transaction Operations Suite', async (t) => {
     // Clean up test shop
     db.prepare('DELETE FROM shops WHERE id = ?').run(newShopId);
   });
+
+  await t.test('4. Transaction creation with customer_phone', async () => {
+    const txId = `tx-phone-${Date.now()}`;
+    const insert = db.prepare(`
+      INSERT INTO transactions (id, shop_id, date, type, amount, category, payment_mode, customer_vendor_name, customer_phone, notes)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+
+    insert.run(txId, 'ramesh-kirana', '2026-09-16', 'udhaar_given', 650, 'Customer Khata', 'khata', 'Sunil Kirana Grahak', '9876543210', 'Voice Udhaar entry');
+
+    const created = db.prepare('SELECT * FROM transactions WHERE id = ?').get(txId);
+    assert.ok(created, 'Transaction with customer_phone must exist');
+    assert.strictEqual(created.customer_phone, '9876543210', 'Phone number must be persisted');
+    assert.strictEqual(created.customer_vendor_name, 'Sunil Kirana Grahak');
+
+    // Clean up
+    db.prepare('DELETE FROM transactions WHERE id = ?').run(txId);
+  });
+
+  await t.test('5. Backend Idempotency protection on replay', async () => {
+    const dataStore = (await import('../db/dataStore.js')).default;
+    const clientTxId = `idempotent-test-${Date.now()}`;
+
+    const tx = {
+      id: clientTxId,
+      shop_id: 'ramesh-kirana',
+      shopId: 'ramesh-kirana',
+      date: '2026-09-16',
+      type: 'income',
+      amount: 1200,
+      category: 'Daily Counter Sales',
+      payment_mode: 'cash',
+      customer_vendor_name: 'Walk-in',
+      customer_phone: '',
+      notes: 'Initial attempt'
+    };
+
+    // First attempt
+    const firstSave = await dataStore.createTransaction(tx);
+    assert.ok(firstSave, 'First save should succeed');
+
+    // Second attempt (simulating flaky connection retry)
+    const secondSave = await dataStore.createTransaction(tx);
+    assert.ok(secondSave, 'Second save should return without error');
+    assert.strictEqual(secondSave.isExisting, true, 'Second attempt must be flagged as existing/idempotent');
+
+    // Verify exactly 1 transaction exists in DB
+    const count = db.prepare('SELECT COUNT(*) as count FROM transactions WHERE id = ?').get(clientTxId);
+    assert.strictEqual(count.count, 1, 'Transaction must not be duplicated');
+
+    // Clean up
+    db.prepare('DELETE FROM transactions WHERE id = ?').run(clientTxId);
+  });
 });

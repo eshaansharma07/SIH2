@@ -8,6 +8,7 @@ import {
   LayoutDashboard
 } from 'lucide-react';
 import { useTranslation } from '../i18n/LanguageContext';
+import { SyncStatusBadge } from './SyncStatusBadge';
 
 export function FloatingThumbDock({ 
   activeTab, 
@@ -52,10 +53,13 @@ export function FloatingThumbDock({
   ];
 
   return (
-    <div className="lg:hidden fixed bottom-4 inset-x-0 mx-auto w-fit z-40 px-3 select-none print:hidden animate-fadeIn">
+    <div className="lg:hidden fixed bottom-4 inset-x-0 mx-auto w-fit z-40 px-3 select-none print:hidden animate-fadeIn flex flex-col items-center gap-1.5 pointer-events-none">
+      <div className="pointer-events-auto">
+        <SyncStatusBadge compact className="shadow-md" />
+      </div>
       <nav 
         aria-label="Mobile Thumb Navigation Dock"
-        className="flex items-center gap-1.5 p-2 rounded-full bg-indigoRural-900/95 backdrop-blur-2xl border border-paper-300/20 shadow-2xl text-white transition-all duration-300 ring-1 ring-black/40"
+        className="pointer-events-auto flex items-center gap-1.5 p-2 rounded-full bg-indigoRural-900/95 backdrop-blur-2xl border border-paper-300/20 shadow-2xl text-white transition-all duration-300 ring-1 ring-black/40"
       >
         {/* Rapid Thumb Add Action Button */}
         <button

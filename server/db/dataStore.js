@@ -192,7 +192,30 @@ export const dataStore = {
     return this.getTransactions(shopId, { type: query.type, limit: query.limit || 200 });
   },
 
+  async getTransactionById(id) {
+    if (!id) return null;
+    const isMongo = await this.isPrimaryMongo();
+    if (isMongo) {
+      try {
+        const col = await getTransactionsCollection();
+        const doc = await col.findOne({ id });
+        if (doc) return cleanDoc(doc);
+      } catch (err) {
+        console.warn('[DataStore] Mongo getTransactionById fallback:', err.message);
+      }
+    }
+    return db.prepare('SELECT * FROM transactions WHERE id = ?').get(id) || null;
+  },
+
   async createTransaction(txData) {
+    // Idempotency: if transaction with this ID already exists, return it cleanly
+    if (txData.id) {
+      const existing = await this.getTransactionById(txData.id);
+      if (existing) {
+        return { ...existing, isExisting: true };
+      }
+    }
+
     const isMongo = await this.isPrimaryMongo();
     if (isMongo) {
       try {
@@ -207,12 +230,13 @@ export const dataStore = {
     try {
       db.prepare(`
         INSERT OR REPLACE INTO transactions (
-          id, shop_id, date, type, amount, category, payment_mode, customer_vendor_name, notes, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          id, shop_id, date, type, amount, category, payment_mode, customer_vendor_name, customer_phone, notes, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).run(
         txData.id, txData.shop_id || txData.shopId, txData.date, txData.type,
         txData.amount, txData.category, txData.payment_mode || txData.paymentMode || 'cash',
         txData.customer_vendor_name || txData.customerVendorName || '',
+        txData.customer_phone || txData.customerPhone || '',
         txData.notes || '', txData.created_at || new Date().toISOString()
       );
     } catch (_) {}

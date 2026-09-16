@@ -15,6 +15,7 @@ import { api } from '../utils/api';
 import { useTranslation } from '../i18n/LanguageContext';
 import { WarliBorder } from '../components/WarliMotif';
 import { Card, Badge, SectionHeader, Button } from '../components/ui';
+import { AudioReadAloudButton } from '../components/AudioReadAloudButton';
 
 export function CreditScorePage({ shop, creditData, onNavigateTab }) {
   const { t, language } = useTranslation();
@@ -123,7 +124,17 @@ export function CreditScorePage({ shop, creditData, onNavigateTab }) {
 
           <div className="flex items-center justify-between pt-4 border-t border-white/15 text-xs">
             <div>
-              <span className="text-paper-400 block text-[10px] uppercase font-bold">Alternative Score</span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-paper-400 block text-[10px] uppercase font-bold">Alternative Score</span>
+                {baseScore !== null && (
+                  <AudioReadAloudButton
+                    size="sm"
+                    className="!bg-white/15 !border-white/20 !text-white"
+                    textHi={`आपकी दुकान का क्रेडिट स्कोर: ${baseScore} अंक है, 850 में से। बैंक ऋण पात्रता उत्तम है।`}
+                    textEn={`Store credit score: ${baseScore} out of 850. Loan eligibility is strong.`}
+                  />
+                )}
+              </div>
               <span className="text-2xl font-black text-white tabular-nums font-display">
                 {baseScore !== null ? baseScore : '—'} <span className="text-xs text-paper-300 font-normal">/ 850</span>
               </span>
@@ -157,7 +168,7 @@ export function CreditScorePage({ shop, creditData, onNavigateTab }) {
               </div>
             </div>
           ) : (
-            <CreditGauge score={baseScore} />
+            <CreditGauge score={simulatedData?.projectedScore ?? baseScore} />
           )}
         </Card>
 

@@ -19,6 +19,7 @@ import {
 import { useTranslation } from '../i18n/LanguageContext';
 import { api } from '../utils/api';
 import { Badge, Button } from './ui';
+import { SyncStatusBadge } from './SyncStatusBadge';
 
 export function Navbar({ activeTab, setActiveTab, currentShop, isDemoMode, onReloadDemo, onStartDemoTour, onSwitchToDemo, onSwitchToRegister, onLogout }) {
   const { t, language, toggleLanguage } = useTranslation();
@@ -132,6 +133,8 @@ export function Navbar({ activeTab, setActiveTab, currentShop, isDemoMode, onRel
 
           {/* Right Action Controls */}
           <div className="flex items-center gap-2 shrink-0">
+            {/* Real-time DPI / PWA Sync & Connectivity Badge */}
+            <SyncStatusBadge />
             
             {/* Live Guided Demo Button */}
             {isDemoMode && (

@@ -20,6 +20,7 @@ import { CreditGauge } from '../components/CreditGauge';
 import { useTranslation } from '../i18n/LanguageContext';
 import { WarliBorder } from '../components/WarliMotif';
 import { Card, Badge, SectionHeader, Button } from '../components/ui';
+import { AudioReadAloudButton } from '../components/AudioReadAloudButton';
 import { motion, useReducedMotion } from 'framer-motion';
 
 export function DashboardPage({ 
@@ -349,9 +350,16 @@ export function DashboardPage({
                 </div>
               </div>
               <div className="border-l border-paper-300 pl-6">
-                <span className="text-[11px] font-bold text-indigoRural-400 uppercase tracking-wider block mb-1">
-                  {language === 'hi' ? 'शुद्ध परिचालन अधिशेष' : 'Net Operating Surplus'}
-                </span>
+                <div className="flex items-center gap-1.5 mb-1">
+                  <span className="text-[11px] font-bold text-indigoRural-400 uppercase tracking-wider block">
+                    {language === 'hi' ? 'शुद्ध परिचालन अधिशेष' : 'Net Operating Surplus'}
+                  </span>
+                  <AudioReadAloudButton
+                    size="sm"
+                    textHi={`आज का शुद्ध मुनाफा: ${metrics.netSurplus !== null ? Number(metrics.netSurplus).toLocaleString('en-IN') : 0} रुपये।`}
+                    textEn={`Net operating surplus: ₹${metrics.netSurplus !== null ? Number(metrics.netSurplus).toLocaleString('en-IN') : 0}.`}
+                  />
+                </div>
                 <div className="text-2xl sm:text-3xl font-black tracking-tight tabular-nums text-forestRural-700 font-display">
                   {metrics.netSurplus !== null ? `₹${metrics.netSurplus.toLocaleString('en-IN')}` : '—'}
                 </div>
@@ -464,9 +472,16 @@ export function DashboardPage({
             </div>
 
             <div className="space-y-1 border-l border-paper-200 pl-4">
-              <span className="text-[10px] font-bold text-indigoRural-400 uppercase tracking-wider block">
-                {language === 'hi' ? 'शुद्ध बचत' : 'Retained Surplus'}
-              </span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] font-bold text-indigoRural-400 uppercase tracking-wider block">
+                  {language === 'hi' ? 'शुद्ध बचत' : 'Retained Surplus'}
+                </span>
+                <AudioReadAloudButton
+                  size="sm"
+                  textHi={`शुद्ध बचत: ${metrics.netSurplus !== null ? Number(metrics.netSurplus).toLocaleString('en-IN') : 0} रुपये।`}
+                  textEn={`Retained surplus: ₹${metrics.netSurplus !== null ? Number(metrics.netSurplus).toLocaleString('en-IN') : 0}.`}
+                />
+              </div>
               <div className="text-2xl sm:text-3xl font-black text-forestRural-700 tabular-nums tracking-tight font-display">
                 {metrics.netSurplus !== null ? `₹${metrics.netSurplus.toLocaleString('en-IN')}` : '—'}
               </div>

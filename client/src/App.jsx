@@ -9,6 +9,7 @@ import { BankDossierPage } from './pages/BankDossierPage';
 import { ShopProfilePage } from './pages/ShopProfilePage';
 import { OnboardingPage } from './pages/OnboardingPage';
 import { NumericKeypadModal } from './components/NumericKeypadModal';
+import { VoiceInputDialog } from './components/VoiceInputDialog';
 import { InteractiveDemoTour } from './components/InteractiveDemoTour';
 import { WholesaleDiscoveryModal } from './components/WholesaleDiscoveryModal';
 import { FloatingThumbDock } from './components/FloatingThumbDock';
@@ -42,6 +43,7 @@ export default function App() {
   const [summaryData, setSummaryData] = useState(null);
   const [cuesData, setCuesData] = useState(null);
   const [keypadOpen, setKeypadOpen] = useState(false);
+  const [voiceModalOpen, setVoiceModalOpen] = useState(false);
   const [wholesaleModalOpen, setWholesaleModalOpen] = useState(false);
   const [demoTourOpen, setDemoTourOpen] = useState(false);
   const [initialAdvisorPrompt, setInitialAdvisorPrompt] = useState('');
@@ -58,6 +60,16 @@ export default function App() {
 
   useEffect(() => {
     loadAllShopData();
+
+    const handleSyncDone = () => {
+      const activeShopId = localStorage.getItem('vyapaar_active_shop_id');
+      if (activeShopId) {
+        fetchFinancials(activeShopId);
+        setRefreshKey(k => k + 1);
+      }
+    };
+    window.addEventListener('vyapaar:sync-completed', handleSyncDone);
+    return () => window.removeEventListener('vyapaar:sync-completed', handleSyncDone);
   }, []);
 
   const fetchFinancials = async (shopId) => {
@@ -475,6 +487,15 @@ export default function App() {
         onClose={() => setKeypadOpen(false)}
         onTransactionSaved={handleTransactionSaved}
         shopId={currentShop?.id}
+        onOpenVoice={() => setVoiceModalOpen(true)}
+      />
+
+      {/* Global Voice Bahi-Khata Input Dialog */}
+      <VoiceInputDialog
+        isOpen={voiceModalOpen}
+        onClose={() => setVoiceModalOpen(false)}
+        shopId={currentShop?.id}
+        onTransactionSaved={handleTransactionSaved}
       />
 
       {/* ONDC B2B Wholesale Price Discovery Modal */}

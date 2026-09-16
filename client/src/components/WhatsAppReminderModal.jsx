@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { X, Send, Copy, Check, MessageSquare, Smartphone, ExternalLink, Sparkles, AlertCircle, ShieldCheck } from 'lucide-react';
+import { X, Send, Copy, Check, MessageSquare, Smartphone, ExternalLink, Sparkles, AlertCircle, ShieldCheck, QrCode } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 import { api } from '../utils/api';
 import { useTranslation } from '../i18n/LanguageContext';
 
@@ -8,6 +9,8 @@ export function WhatsAppReminderModal({ isOpen, onClose, customer, shop, onRemin
   const [selectedTone, setSelectedTone] = useState('polite'); // 'polite', 'festive', 'statement', 'custom'
   const [message, setMessage] = useState('');
   const [shopUpiId, setShopUpiId] = useState('');
+  const [phoneInput, setPhoneInput] = useState('');
+  const [showQrCode, setShowQrCode] = useState(false);
   const [copied, setCopied] = useState(false);
   const [dispatching, setDispatching] = useState(false);
   const [dispatchSuccess, setDispatchSuccess] = useState(false);
@@ -18,10 +21,19 @@ export function WhatsAppReminderModal({ isOpen, onClose, customer, shop, onRemin
   const defaultUpi = shopUpiId || `${shopPhone}@upi`;
 
   const customerName = customer?.name || customer?.customerName || (language === 'hi' ? 'ग्राहक' : 'Customer');
-  const rawPhone = customer?.cleanPhone || customer?.phone || '';
-  const cleanPhone = String(rawPhone).replace(/\D/g, '').replace(/^91/, '');
+  const rawPhone = customer?.cleanPhone || customer?.phone || customer?.customer_phone || '';
+  const cleanPhone = (phoneInput || String(rawPhone).replace(/\D/g, '').replace(/^91/, '')).slice(-10);
   const balance = Number(customer?.balanceOwed || 0);
   const village = customer?.village_address || customer?.village || (language === 'hi' ? 'स्थानीय' : 'Local');
+
+  const upiPaymentUri = `upi://pay?pa=${encodeURIComponent(defaultUpi)}&pn=${encodeURIComponent(shopName)}&am=${balance}&cu=INR&tn=${encodeURIComponent('Khata Settle ' + shopName)}`;
+
+  useEffect(() => {
+    if (!customer) return;
+    const initialRaw = customer?.cleanPhone || customer?.phone || customer?.customer_phone || '';
+    const initialClean = String(initialRaw).replace(/\D/g, '').replace(/^91/, '').slice(-10);
+    setPhoneInput(initialClean);
+  }, [customer]);
 
   // Regenerate message when tone, customer, or UPI changes
   useEffect(() => {
@@ -71,7 +83,7 @@ export function WhatsAppReminderModal({ isOpen, onClose, customer, shop, onRemin
 
   const handleOpenWhatsApp = async () => {
     if (!cleanPhone || cleanPhone.length < 10) {
-      alert(language === 'hi' ? 'ग्राहक का 10 अंकों का फोन नंबर उपलब्ध नहीं है।' : 'Customer phone number is missing or invalid.');
+      handleCopyMessage();
       return;
     }
 
@@ -82,9 +94,10 @@ export function WhatsAppReminderModal({ isOpen, onClose, customer, shop, onRemin
     window.open(waUrl, '_blank', 'noopener,noreferrer');
 
     // Record reminder sent timestamp on server if customer has an id
-    if (customer.id && !customer.id.startsWith('unregistered-')) {
+    const custId = customer.customerId || customer.id;
+    if (custId && !String(custId).startsWith('unregistered-')) {
       try {
-        await api.recordReminderSent(customer.id);
+        await api.recordReminderSent(custId);
       } catch (err) {
         console.warn('Could not record reminder timestamp:', err.message);
       }
@@ -95,6 +108,7 @@ export function WhatsAppReminderModal({ isOpen, onClose, customer, shop, onRemin
 
     onReminderSent?.({
       ...customer,
+      phone: cleanPhone,
       last_reminder_sent: new Date().toISOString()
     });
 
@@ -247,6 +261,62 @@ export function WhatsAppReminderModal({ isOpen, onClose, customer, shop, onRemin
             />
           </div>
 
+          {/* Instant UPI Payment QR Code Section */}
+          <div className="border border-paper-300 rounded-xl overflow-hidden bg-paper-50">
+            <button
+              type="button"
+              onClick={() => setShowQrCode(!showQrCode)}
+              className="w-full px-3.5 py-2.5 flex items-center justify-between font-bold text-xs text-indigoRural-900 hover:bg-paper-100 transition cursor-pointer"
+            >
+              <span className="flex items-center gap-2">
+                <QrCode className="w-4 h-4 text-forestRural-600" />
+                <span>{language === 'hi' ? 'दुकान का UPI QR कोड दिखाएं' : 'Show UPI Payment QR Code'}</span>
+              </span>
+              <span className="text-[11px] text-forestRural-700 font-extrabold">
+                {showQrCode ? (language === 'hi' ? 'छुपाएं ▲' : 'Hide ▲') : (language === 'hi' ? 'खोलें ▼' : 'View ▼')}
+              </span>
+            </button>
+            {showQrCode && (
+              <div className="p-4 bg-white border-t border-paper-200 flex flex-col items-center justify-center space-y-2 text-center animate-fadeIn">
+                <div className="p-3 bg-white border-2 border-forestRural-500 rounded-2xl shadow-sm inline-block">
+                  <QRCodeSVG value={upiPaymentUri} size={140} level="M" />
+                </div>
+                <div className="text-[11px] font-mono font-bold text-forestRural-800">{defaultUpi}</div>
+                <p className="text-[10px] text-paper-500 max-w-xs">
+                  {language === 'hi'
+                    ? `ग्राहक सीधे किसी भी UPI ऐप (GPay / PhonePe / Paytm / BHIM) से स्कैन करके ₹${balance.toLocaleString('en-IN')} का भुगतान कर सकता है।`
+                    : `Customer can scan directly from any UPI app to pay ₹${balance.toLocaleString('en-IN')} instantly.`}
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Missing Phone Number Graceful Fallback Banner */}
+          {(!cleanPhone || cleanPhone.length < 10) && (
+            <div className="p-3 bg-amber-50 border border-amber-300 rounded-xl space-y-2">
+              <div className="flex items-center gap-2 text-amber-900 font-bold text-xs">
+                <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+                <span>{language === 'hi' ? 'ग्राहक का फोन नंबर दर्ज नहीं है' : 'Customer mobile number missing'}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-mono font-bold text-amber-900">+91</span>
+                <input
+                  type="tel"
+                  maxLength={10}
+                  value={phoneInput}
+                  onChange={(e) => setPhoneInput(e.target.value.replace(/\D/g, ''))}
+                  placeholder="9876543210"
+                  className="flex-1 px-2.5 py-1.5 bg-white border border-amber-300 rounded-lg text-xs font-mono font-bold text-indigoRural-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                />
+              </div>
+              <p className="text-[10px] text-amber-800">
+                {language === 'hi'
+                  ? 'मोबाइल नंबर दर्ज करने पर सीधे व्हाट्सएप खुलेगा, अथवा नीचे संदेश कॉपी करें।'
+                  : 'Enter 10-digit number to launch WhatsApp, or click "Copy Message" below.'}
+              </p>
+            </div>
+          )}
+
           {/* Action Buttons */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
             
@@ -277,6 +347,8 @@ export function WhatsAppReminderModal({ isOpen, onClose, customer, shop, onRemin
               className={`py-3 px-4 rounded-xl font-black text-xs flex items-center justify-center gap-2 transition cursor-pointer shadow-md active:scale-95 ${
                 dispatchSuccess
                   ? 'bg-forestRural-700 text-white'
+                  : (!cleanPhone || cleanPhone.length < 10)
+                  ? 'bg-amber-600 hover:bg-amber-700 text-white'
                   : 'bg-[#25D366] hover:bg-[#20bd5a] text-white'
               }`}
             >
@@ -284,6 +356,11 @@ export function WhatsAppReminderModal({ isOpen, onClose, customer, shop, onRemin
                 <>
                   <Check className="w-4 h-4" />
                   <span>{language === 'hi' ? 'व्हाट्सएप खुल गया!' : 'Dispatched!'}</span>
+                </>
+              ) : (!cleanPhone || cleanPhone.length < 10) ? (
+                <>
+                  <Copy className="w-4 h-4" />
+                  <span>{language === 'hi' ? 'संदेश कॉपी करें (नंबर नहीं)' : 'Copy Message (No Phone)'}</span>
                 </>
               ) : (
                 <>

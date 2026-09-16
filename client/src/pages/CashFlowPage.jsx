@@ -24,7 +24,9 @@ import {
   PhoneCall,
   MapPin,
   AlertTriangle,
-  ShoppingBag
+  ShoppingBag,
+  Mic,
+  Volume2
 } from 'lucide-react';
 import { 
   ResponsiveContainer, 
@@ -42,6 +44,8 @@ import { WarliBorder } from '../components/WarliMotif';
 import { Card, Badge, SectionHeader, Button } from '../components/ui';
 import { RegisterCustomerModal } from '../components/RegisterCustomerModal';
 import { WhatsAppReminderModal } from '../components/WhatsAppReminderModal';
+import { VoiceInputDialog } from '../components/VoiceInputDialog';
+import { AudioReadAloudButton } from '../components/AudioReadAloudButton';
 
 // Custom Chart Tooltip using warm paper aesthetic
 function CustomChartTooltip({ active, payload, label }) {
@@ -88,6 +92,7 @@ export function CashFlowPage({ shop, onOpenKeypad, onOpenWholesale, refreshKey, 
   const [selectedWhatsAppCustomer, setSelectedWhatsAppCustomer] = useState(null);
   const [customerSearchQuery, setCustomerSearchQuery] = useState('');
   const [customerFilter, setCustomerFilter] = useState('all'); // 'all', 'owing', 'near_limit'
+  const [isVoiceOpen, setIsVoiceOpen] = useState(false);
 
   const handleDeleteTransaction = async (txId) => {
     const confirmMsg = language === 'hi'
@@ -298,13 +303,41 @@ export function CashFlowPage({ shop, onOpenKeypad, onOpenWholesale, refreshKey, 
   const handleSimulateReminder = (customer) => {
     const shopDisplayName = shop?.name || (language === 'hi' ? 'हमारी दुकान' : 'our store');
     const msg = language === 'hi'
-      ? `नमस्ते ${customer.customerName} जी, ${shopDisplayName} पर आपका ₹${customer.balanceOwed} का हिसाब बाकी है। सुविधा अनुसार भुगतान करें। धन्यवाद!`
+      ? `नमस्ते ${customer.customerName} जी, ${shopDisplayName} पर आपका ₹${customer.balanceOwed} का किराना हिसाब बाकी है। सुविधा अनुसार भुगतान करें। धन्यवाद!`
       : `Namaste ${customer.customerName}, your grocery khata balance at ${shopDisplayName} is ₹${customer.balanceOwed}. Please settle when convenient. Thank you!`;
 
-    setReminderToast({ name: customer.customerName, message: msg });
-    setTimeout(() => {
-      setReminderToast(null);
-    }, 4000);
+    const rawPhone = customer?.phone || customer?.customer_phone || customer?.cleanPhone || '';
+    const cleanPhone = String(rawPhone).replace(/\D/g, '').replace(/^91/, '').slice(-10);
+
+    if (cleanPhone && cleanPhone.length === 10) {
+      const waUrl = `https://wa.me/91${cleanPhone}?text=${encodeURIComponent(msg)}`;
+      window.open(waUrl, '_blank', 'noopener,noreferrer');
+
+      // Record reminder sent timestamp on server if customer has an id
+      const custId = customer.customerId || customer.id;
+      if (custId && !String(custId).startsWith('unregistered-')) {
+        api.recordReminderSent(custId).catch(() => {});
+      }
+
+      setReminderToast({ 
+        name: customer.customerName, 
+        message: language === 'hi' 
+          ? `✓ व्हाट्सएप खुल गया (+91 ${cleanPhone})` 
+          : `✓ WhatsApp reminder launched for +91 ${cleanPhone}` 
+      });
+      setTimeout(() => setReminderToast(null), 4000);
+    } else {
+      // Fallback: Copy to clipboard and open reminder modal to add phone / view UPI QR
+      navigator.clipboard?.writeText?.(msg);
+      setSelectedWhatsAppCustomer(customer);
+      setReminderToast({ 
+        name: customer.customerName, 
+        message: language === 'hi' 
+          ? 'फोन नंबर उपलब्ध नहीं - संदेश कॉपी हुआ। कृपया फोन नंबर दर्ज करें।' 
+          : 'Phone missing - reminder copied to clipboard. Please add customer phone.' 
+      });
+      setTimeout(() => setReminderToast(null), 4000);
+    }
   };
 
   // Dynamic calculations for seasonal trends
@@ -347,7 +380,17 @@ export function CashFlowPage({ shop, onOpenKeypad, onOpenWholesale, refreshKey, 
             </p>
           </div>
 
-          <div className="flex items-center gap-2 self-start sm:self-auto">
+          <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+            <Button
+              onClick={() => setIsVoiceOpen(true)}
+              variant="secondary"
+              size="md"
+              icon={Mic}
+              className="!border-terracotta-300 hover:!bg-terracotta-50 !text-terracotta-800 font-extrabold shadow-2xs"
+              title={language === 'hi' ? 'बोलकर बही-खाता दर्ज करें (हिन्दी/English)' : 'Voice Bahi-Khata Input (Hindi/English)'}
+            >
+              <span>{language === 'hi' ? 'बोलकर लिखें' : 'Voice Input'}</span>
+            </Button>
             <Button
               onClick={onOpenWholesale}
               variant="forest"
@@ -438,9 +481,16 @@ export function CashFlowPage({ shop, onOpenKeypad, onOpenWholesale, refreshKey, 
             title={language === 'hi' ? 'मौसमी नकदी प्रवाह रुझान (Seasonal Trend)' : 'Seasonal Cash Flow Trend'}
             subtitle={language === 'hi' ? 'वास्तविक समय-श्रृंखला ग्राफ: मासिक बिक्री एवं लागत' : 'Audited time-series: gross sales vs operating stock outlays over time'}
             action={
-              <Badge variant="positive" size="sm" dot>
-                {monthlyTrend.length} Months Computed
-              </Badge>
+              <div className="flex items-center gap-2">
+                <AudioReadAloudButton
+                  size="sm"
+                  textHi={`मौसमी रुझान: दर्ज बिक्री ${summary?.totalIncome ? Number(summary.totalIncome).toLocaleString('en-IN') : 0} रुपये, खर्च ${summary?.totalExpense ? Number(summary.totalExpense).toLocaleString('en-IN') : 0} रुपये, शुद्ध बचत ${summary?.netSurplus ? Number(summary.netSurplus).toLocaleString('en-IN') : 0} रुपये।`}
+                  textEn={`Seasonal trend: Gross sales ₹${summary?.totalIncome || 0}, expenses ₹${summary?.totalExpense || 0}, net surplus ₹${summary?.netSurplus || 0}.`}
+                />
+                <Badge variant="positive" size="sm" dot>
+                  {monthlyTrend.length} Months Computed
+                </Badge>
+              </div>
             }
           />
 
@@ -898,9 +948,14 @@ export function CashFlowPage({ shop, onOpenKeypad, onOpenWholesale, refreshKey, 
                                 <span>+91 {cust.phone.replace(/^91/, '')}</span>
                               </a>
                             ) : (
-                              <span className="text-paper-400 italic">
-                                {language === 'hi' ? 'मोबाइल नंबर नहीं' : 'No Phone'}
-                              </span>
+                              <button
+                                type="button"
+                                onClick={() => setSelectedWhatsAppCustomer(cust)}
+                                className="text-terracotta-600 hover:text-terracotta-800 text-[11px] font-bold underline cursor-pointer"
+                                title={language === 'hi' ? 'फोन नंबर जोड़ें' : 'Add customer phone'}
+                              >
+                                {language === 'hi' ? '+ फोन नंबर जोड़ें' : '+ Add phone'}
+                              </button>
                             )}
 
                             {cust.village && (
@@ -965,7 +1020,7 @@ export function CashFlowPage({ shop, onOpenKeypad, onOpenWholesale, refreshKey, 
                         {/* WhatsApp Action Button */}
                         <button
                           type="button"
-                          onClick={() => setSelectedWhatsAppCustomer(cust)}
+                          onClick={() => handleSimulateReminder(cust)}
                           className="px-3.5 py-2 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] active:scale-95 text-white font-extrabold text-xs flex items-center gap-1.5 shadow-xs transition cursor-pointer"
                           title={language === 'hi' ? 'व्हाट्सएप तगादा भेजें' : 'Send WhatsApp Reminder'}
                         >
@@ -1000,6 +1055,36 @@ export function CashFlowPage({ shop, onOpenKeypad, onOpenWholesale, refreshKey, 
         customer={selectedWhatsAppCustomer}
         shop={shop}
         onReminderSent={() => loadData()}
+      />
+
+      {/* Floating Voice Mic Action Button for Rural Voice Ledger Logging */}
+      <div className="fixed bottom-20 sm:bottom-8 right-5 sm:right-8 z-40 print:hidden animate-fadeIn">
+        <button
+          type="button"
+          onClick={() => setIsVoiceOpen(true)}
+          className="flex items-center gap-2.5 px-4 py-3 rounded-full bg-terracotta-600 hover:bg-terracotta-700 text-white font-extrabold text-xs shadow-2xl shadow-terracotta-600/40 active:scale-95 transition-all cursor-pointer border border-white/25 group ring-2 ring-terracotta-400/30"
+          title={language === 'hi' ? 'बोलकर बही-खाता दर्ज करें (हिन्दी / English)' : 'Voice Bahi-Khata Input (Hindi / English)'}
+        >
+          <span className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+            <Mic className="w-3.5 h-3.5 text-white" />
+          </span>
+          <span className="font-extrabold tracking-wide">
+            {language === 'hi' ? 'बोलकर लिखें' : 'Voice Entry'}
+          </span>
+        </button>
+      </div>
+
+      {/* Voice Bahi-Khata Input Dialog */}
+      <VoiceInputDialog
+        isOpen={isVoiceOpen}
+        onClose={() => setIsVoiceOpen(false)}
+        shopId={shop?.id}
+        existingCustomers={udhaarLedger}
+        onTransactionSaved={(newTx) => {
+          setTransactions(prev => [newTx, ...prev]);
+          loadData();
+          onTransactionSaved?.(newTx);
+        }}
       />
 
     </div>

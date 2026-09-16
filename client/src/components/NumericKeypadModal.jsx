@@ -1,16 +1,17 @@
 import React, { useState } from 'react';
-import { X, Check, Delete, ArrowRight, User, Tag, Calendar, Banknote, ShieldCheck, Smartphone, AlertCircle } from 'lucide-react';
+import { X, Check, Delete, ArrowRight, User, Tag, Calendar, Banknote, ShieldCheck, Smartphone, AlertCircle, Phone, Mic } from 'lucide-react';
 import { api } from '../utils/api';
 import { useTranslation } from '../i18n/LanguageContext';
 import { Badge, Button } from './ui';
 
-export function NumericKeypadModal({ isOpen, onClose, onTransactionSaved, shopId }) {
+export function NumericKeypadModal({ isOpen, onClose, onTransactionSaved, shopId, onOpenVoice }) {
   const { t, language } = useTranslation();
   const [amountStr, setAmountStr] = useState('');
   const [type, setType] = useState('income'); // 'income', 'expense', 'udhaar_given', 'udhaar_repaid'
   const [paymentMode, setPaymentMode] = useState('cash'); // 'cash', 'upi', 'khata'
   const [category, setCategory] = useState('Daily Counter Sales');
   const [customerName, setCustomerName] = useState('');
+  const [customerPhone, setCustomerPhone] = useState('');
   const [customerList, setCustomerList] = useState([]);
   const [loading, setLoading] = useState(false);
   const [successToast, setSuccessToast] = useState(false);
@@ -53,10 +54,23 @@ export function NumericKeypadModal({ isOpen, onClose, onTransactionSaved, shopId
       setErrorMessage(language === 'hi' ? 'दुकान की पहचान उपलब्ध नहीं है' : 'Shop ID is missing. Please set up a shop first.');
       return;
     }
-    const amount = Number(amountStr);
-    if (!amount || amount <= 0) {
+    const numAmount = Number(amountStr);
+    if (!amount || isNaN(numAmount) || numAmount <= 0) {
       setErrorMessage(language === 'hi' ? 'कृपया सही राशि दर्ज करें' : 'Please enter a valid amount');
       return;
+    }
+
+    // Strict requirement: udhaar_given requires a valid 10-digit Indian phone
+    const cleanPhone = customerPhone.replace(/\D/g, '').slice(-10);
+    if (type === 'udhaar_given') {
+      if (!cleanPhone || !/^[6-9]\d{9}$/.test(cleanPhone)) {
+        setErrorMessage(
+          language === 'hi'
+            ? 'उधार देने के लिए ग्राहक का 10 अंकों का वैध मोबाइल नंबर दर्ज करना अनिवार्य है'
+            : 'A valid 10-digit Indian mobile number is required to record udhaar'
+        );
+        return;
+      }
     }
 
     setLoading(true);
@@ -70,11 +84,13 @@ export function NumericKeypadModal({ isOpen, onClose, onTransactionSaved, shopId
       id: `tx-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
       shop_id: shopId,
       shopId,
-      amount,
+      amount: numAmount,
       type,
       payment_mode: assignedMode,
       category: assignedCategory,
       customer_vendor_name: customerName.trim(),
+      customer_phone: cleanPhone,
+      customerPhone: cleanPhone,
       date: nowIso.split('T')[0],
       created_at: nowIso
     };
@@ -90,6 +106,7 @@ export function NumericKeypadModal({ isOpen, onClose, onTransactionSaved, shopId
         setSuccessToast(false);
         setAmountStr('');
         setCustomerName('');
+        setCustomerPhone('');
         setErrorMessage('');
         onClose();
       }, 500);
@@ -101,6 +118,7 @@ export function NumericKeypadModal({ isOpen, onClose, onTransactionSaved, shopId
         setSuccessToast(false);
         setAmountStr('');
         setCustomerName('');
+        setCustomerPhone('');
         setErrorMessage('');
         onClose();
       }, 500);
@@ -130,12 +148,27 @@ export function NumericKeypadModal({ isOpen, onClose, onTransactionSaved, shopId
               {language === 'hi' ? 'लेन-देन दर्ज करें' : 'Log Transaction'}
             </h3>
           </div>
-          <button 
-            onClick={onClose}
-            className="p-1 rounded-full text-indigoRural-400 hover:text-indigoRural-800 hover:bg-paper-200 transition cursor-pointer"
-          >
-            <X className="w-4 h-4" />
-          </button>
+          <div className="flex items-center gap-1.5">
+            {onOpenVoice && (
+              <button 
+                type="button"
+                onClick={() => {
+                  onClose();
+                  onOpenVoice();
+                }}
+                className="p-1.5 rounded-full text-terracotta-700 bg-terracotta-50 hover:bg-terracotta-100 border border-terracotta-200 transition cursor-pointer"
+                title={language === 'hi' ? 'आवाज़ द्वारा बोलकर दर्ज करें' : 'Switch to Voice Input'}
+              >
+                <Mic className="w-4 h-4" />
+              </button>
+            )}
+            <button 
+              onClick={onClose}
+              className="p-1 rounded-full text-indigoRural-400 hover:text-indigoRural-800 hover:bg-paper-200 transition cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
         {/* Body Content */}
@@ -228,31 +261,62 @@ export function NumericKeypadModal({ isOpen, onClose, onTransactionSaved, shopId
             </button>
           </div>
 
-          {/* 4. Customer Name for Udhaar or Payment Mode for Sale */}
+          {/* 4. Customer Name and Phone for Udhaar or Payment Mode for Sale */}
           {type.startsWith('udhaar') ? (
-            <div className="space-y-1">
-              <input
-                type="text"
-                value={customerName}
-                onChange={(e) => setCustomerName(e.target.value)}
-                placeholder={language === 'hi' ? 'ग्राहक का नाम (e.g. मास्टरजी)' : 'Customer Name (e.g. Masterji)'}
-                className="w-full px-3 py-2 bg-paper-50 border border-paper-300 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-terracotta-500 text-indigoRural-900"
-              />
-              <div className="flex gap-1 overflow-x-auto py-1">
-                {(customerList.length > 0 ? customerList.map(c => c.name) : commonVillageCustomers).slice(0, 6).map(c => (
-                  <button
-                    key={c}
-                    type="button"
-                    onClick={() => setCustomerName(c)}
-                    className={`text-[10px] font-bold px-2 py-0.5 rounded-md whitespace-nowrap border transition cursor-pointer ${
-                      customerName === c
-                        ? 'bg-terracotta-600 text-white border-terracotta-600'
-                        : 'bg-paper-100 hover:bg-paper-200 text-indigoRural-700 border-paper-300'
-                    }`}
-                  >
-                    {c.split(' ')[0]}
-                  </button>
-                ))}
+            <div className="space-y-1.5 p-2.5 bg-paper-100/70 border border-paper-300 rounded-xl">
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="text-[10px] font-bold text-indigoRural-700 block mb-0.5">
+                    {language === 'hi' ? 'ग्राहक का नाम' : 'Customer'} {type === 'udhaar_given' && <span className="text-terracotta-600">*</span>}
+                  </label>
+                  <input
+                    type="text"
+                    value={customerName}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setCustomerName(val);
+                      const match = customerList.find(c => (c.name || '').toLowerCase() === val.toLowerCase());
+                      if (match && match.phone) setCustomerPhone(match.phone.replace(/\D/g, '').slice(-10));
+                    }}
+                    placeholder={language === 'hi' ? 'उदा: मास्टरजी' : 'e.g. Masterji'}
+                    className="w-full px-2.5 py-1.5 bg-white border border-paper-300 rounded-lg text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-terracotta-500 text-indigoRural-900"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold text-indigoRural-700 block mb-0.5">
+                    {language === 'hi' ? 'मोबाइल (+91)' : 'Mobile (+91)'} {type === 'udhaar_given' && <span className="text-terracotta-600 font-black">*</span>}
+                  </label>
+                  <input
+                    type="tel"
+                    maxLength={10}
+                    value={customerPhone}
+                    onChange={(e) => setCustomerPhone(e.target.value.replace(/\D/g, ''))}
+                    placeholder="9876543210"
+                    className="w-full px-2.5 py-1.5 bg-white border border-paper-300 rounded-lg text-xs font-mono font-bold focus:outline-none focus:ring-2 focus:ring-terracotta-500 text-indigoRural-900"
+                  />
+                </div>
+              </div>
+              <div className="flex gap-1 overflow-x-auto py-0.5">
+                {(customerList.length > 0 ? customerList : commonVillageCustomers.map(n => ({ name: n, phone: '' }))).slice(0, 6).map(c => {
+                  const name = c.name;
+                  return (
+                    <button
+                      key={name}
+                      type="button"
+                      onClick={() => {
+                        setCustomerName(name);
+                        if (c.phone) setCustomerPhone(c.phone.replace(/\D/g, '').slice(-10));
+                      }}
+                      className={`text-[10px] font-bold px-2 py-0.5 rounded-md whitespace-nowrap border transition cursor-pointer ${
+                        customerName === name
+                          ? 'bg-terracotta-600 text-white border-terracotta-600'
+                          : 'bg-white hover:bg-paper-100 text-indigoRural-700 border-paper-300'
+                      }`}
+                    >
+                      {name.split(' ')[0]}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           ) : (

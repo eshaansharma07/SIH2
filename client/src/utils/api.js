@@ -1,3 +1,5 @@
+import { enqueueTransaction, syncPendingTransactions } from './offlineQueue';
+
 let API_BASE_URL = '/api';
 
 async function request(endpoint, options = {}) {
@@ -65,7 +67,27 @@ export const api = {
   // Transactions & Bahi-Khata
   getTransactions: (shopId, type = '', limit = 50) => 
     request(`/transactions?shopId=${shopId}${type ? `&type=${type}` : ''}&limit=${limit}`),
-  createTransaction: (data) => request('/transactions', { method: 'POST', body: JSON.stringify(data) }),
+  createTransaction: async (data) => {
+    const id = data.id || `tx-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`;
+    const txPayload = { ...data, id };
+
+    // Explicit offline check
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      console.log('[API] Offline detected, queuing transaction locally:', id);
+      await enqueueTransaction(txPayload);
+      return { success: true, transaction: txPayload, offline: true };
+    }
+
+    try {
+      const res = await request('/transactions', { method: 'POST', body: JSON.stringify(txPayload) });
+      return res;
+    } catch (err) {
+      console.warn('[API] Network error during transaction creation, queuing offline:', err.message);
+      await enqueueTransaction(txPayload);
+      return { success: true, transaction: txPayload, offline: true, error: err.message };
+    }
+  },
+  syncPendingTransactions: () => syncPendingTransactions(),
   deleteTransaction: (id, shopId = '') => 
     request(`/transactions/${id}${shopId ? `?shopId=${shopId}` : ''}`, { method: 'DELETE' }),
   getTransactionSummary: (shopId) => request(`/transactions/summary?shopId=${shopId}`),

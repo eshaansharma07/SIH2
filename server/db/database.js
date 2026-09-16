@@ -60,6 +60,7 @@ db.exec(`
     category TEXT NOT NULL, -- 'Groceries', 'Vegetables', 'Dairy', 'Stock Purchase', 'Electricity', etc.
     payment_mode TEXT NOT NULL, -- 'cash', 'upi', 'khata'
     customer_vendor_name TEXT,
+    customer_phone TEXT,
     notes TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(shop_id) REFERENCES shops(id)
@@ -121,6 +122,12 @@ try {
 
 try {
   db.exec("ALTER TABLE shops ADD COLUMN password TEXT DEFAULT '1234';");
+} catch (_) {
+  // Column already exists
+}
+
+try {
+  db.exec('ALTER TABLE transactions ADD COLUMN customer_phone TEXT;');
 } catch (_) {
   // Column already exists
 }
