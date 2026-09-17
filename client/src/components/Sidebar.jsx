@@ -14,6 +14,7 @@ import {
   MessageCircle
 } from 'lucide-react';
 import { useTranslation } from '../i18n/LanguageContext';
+import { VyapaarVikasVishwas } from './VyapaarVikasVishwas';
 
 export function Sidebar({
   activeTab,
@@ -140,12 +141,9 @@ export function Sidebar({
               {/* Circular Store Avatar */}
               <div className="w-10 h-10 rounded-full border-2 border-amber-400/80 overflow-hidden shrink-0 bg-stone-800 flex items-center justify-center">
                 <img 
-                  src="/images/overview-sidebar-card-2x.png" 
+                  src="/assets/saakhsetu/shopkeeper-avatar.png" 
                   alt={shopName} 
-                  className="w-full h-full object-cover scale-150"
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none';
-                  }}
+                  className="w-full h-full object-cover"
                 />
               </div>
 
@@ -197,12 +195,8 @@ export function Sidebar({
         {/* Middle / Lower Decorative Artistic Area */}
         <div className="p-4 sm:p-5 pt-2 flex flex-col items-center">
           {/* Calligraphic 'Vyapaar Vikas Vishwas' Art */}
-          <div className="w-full my-2 flex justify-center opacity-90 hover:opacity-100 transition-opacity">
-            <img 
-              src="/images/overview-sidebar-art-2x.png" 
-              alt="Vyapaar Vikas Vishwas" 
-              className="max-w-[130px] w-full object-contain pointer-events-none select-none"
-            />
+          <div className="w-full my-2 flex justify-center opacity-95">
+            <VyapaarVikasVishwas className="w-full" />
           </div>
 
           {/* Help & Support Button */}

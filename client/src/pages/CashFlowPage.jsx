@@ -39,6 +39,7 @@ import { WhatsAppReminderModal } from '../components/WhatsAppReminderModal';
 import { VoiceInputDialog } from '../components/VoiceInputDialog';
 import { DEMO_TRANSACTIONS, DEMO_SUMMARY, DEMO_UDHAAR_LEDGER } from '../data/demoData';
 import { getCustomerDetails, cleanIndianPhone, maskIndianPhone } from '../utils/customerMatcher';
+import { TricolorBrush } from '../components/TricolorBrush';
 
 export function CashFlowPage({ 
   shop, 
@@ -639,13 +640,20 @@ export function CashFlowPage({
           </div>
 
           {/* Right Visual: Shopkeeper writing in ledger + Handwritten quote */}
-          <div className="lg:col-span-6 relative flex items-center justify-end overflow-hidden select-none pointer-events-none">
-            <div className="relative w-full max-w-[530px] rounded-2xl overflow-hidden">
+          <div className="lg:col-span-6 relative flex items-center justify-end select-none">
+            <div className="relative w-full max-w-[530px] rounded-2xl bg-[#FAF7F2] border border-[#EAE3D6] overflow-hidden shadow-2xs">
               <img 
-                src="/images/bahi-khata-hero-full-2x.png" 
-                alt="Chhote hisaab, badi tasveer banate hain" 
-                className="w-full h-auto object-contain"
+                src="/assets/saakhsetu/bahikhata-hero.png" 
+                alt="Rural Shopkeeper Recording Bahi-Khata Ledger" 
+                className="w-full h-auto object-contain select-none pointer-events-none"
               />
+              {/* Authentic Motivational Calligraphic Strip */}
+              <div className="px-4 py-2.5 bg-[#FAF7F2]/95 border-t border-[#EAE3D6] flex items-center justify-between flex-wrap gap-2">
+                <span className="font-serif italic font-bold text-xs sm:text-sm text-[#0F3E2E] tracking-wide">
+                  "छोटे हिसाब, बड़ी तस्वीर बनाते हैं।"
+                </span>
+                <TricolorBrush className="w-20 h-2.5 shrink-0" />
+              </div>
             </div>
           </div>
 
@@ -1473,7 +1481,7 @@ export function CashFlowPage({
         {/* Decorative Rural Trees Illustration Backdrop */}
         <div className="absolute right-0 bottom-0 top-0 opacity-15 pointer-events-none overflow-hidden select-none">
           <img 
-            src="/images/rural-landscape.png" 
+            src="/assets/saakhsetu/rural-landscape.png" 
             alt="Rural Backdrop" 
             className="h-full w-auto object-cover object-right"
           />

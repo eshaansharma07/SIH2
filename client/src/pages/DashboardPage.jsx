@@ -16,6 +16,8 @@ import {
   MessageSquare
 } from 'lucide-react';
 import { useTranslation } from '../i18n/LanguageContext';
+import { TricolorBrush } from '../components/TricolorBrush';
+import { SurveyChecklistIcon } from '../components/SurveyChecklistIcon';
 
 export function DashboardPage({ 
   shop, 
@@ -166,13 +168,20 @@ export function DashboardPage({
           </div>
 
           {/* Right Hero Visual & Handwritten Art */}
-          <div className="lg:col-span-7 relative flex items-center justify-center lg:justify-end overflow-hidden select-none pointer-events-none">
-            <div className="relative w-full max-w-[620px] rounded-2xl overflow-hidden">
+          <div className="lg:col-span-7 relative flex items-center justify-center lg:justify-end select-none">
+            <div className="relative w-full max-w-[580px] rounded-2xl bg-[#FAF7F2] border border-[#EBE4D8] overflow-hidden shadow-2xs">
               <img 
-                src="/images/overview-hero-full-2x.png" 
-                alt="Chhote vyapari badi soch rakhte hain" 
-                className="w-full h-auto object-contain"
+                src="/assets/saakhsetu/overview-hero.png" 
+                alt="Ramesh Kirana Store in Rural Bharat" 
+                className="w-full h-auto object-contain select-none pointer-events-none"
               />
+              {/* Authentic Motivational Calligraphic Strip */}
+              <div className="px-4 py-2.5 bg-[#FAF7F2]/95 border-t border-[#EBE4D8] flex items-center justify-between flex-wrap gap-2">
+                <span className="font-serif italic font-bold text-xs sm:text-sm text-[#0F3E2E] tracking-wide">
+                  "छोटे व्यापारी, बड़ी सोच रखते हैं।"
+                </span>
+                <TricolorBrush className="w-20 h-2.5 shrink-0" />
+              </div>
             </div>
           </div>
 
@@ -260,11 +269,7 @@ export function DashboardPage({
 
             {/* Checklist Illustration */}
             <div className="my-3 flex justify-center select-none">
-              <img 
-                src="/images/overview-survey-icon-2x.png" 
-                alt="Survey Checklist" 
-                className="w-32 h-auto object-contain"
-              />
+              <SurveyChecklistIcon className="w-24 h-24 sm:w-28 sm:h-28" />
             </div>
 
             {/* Content Copy */}
@@ -325,14 +330,21 @@ export function DashboardPage({
             </div>
           </div>
 
-          {/* Right Panoramic Rural Village Landscape */}
-          <div className="lg:col-span-6 flex justify-end overflow-hidden select-none pointer-events-none">
-            <div className="w-full max-w-[540px]">
+          {/* Right Dedicated Rural Village Landscape Artwork */}
+          <div className="lg:col-span-6 flex justify-end select-none">
+            <div className="w-full max-w-[540px] rounded-2xl bg-[#FAF7F2] border border-[#EAE3D6] overflow-hidden shadow-2xs">
               <img 
-                src="/images/overview-growing-art-2x.png" 
-                alt="Gaon se Gaurav tak" 
-                className="w-full h-auto object-contain"
+                src="/assets/saakhsetu/growing-together.png" 
+                alt="Rural Village Landscape of Bharat" 
+                className="w-full h-auto object-contain select-none pointer-events-none"
               />
+              {/* Cultural Pride Caption Strip */}
+              <div className="px-4 py-2 bg-[#FAF7F2]/95 border-t border-[#EAE3D6] flex items-center justify-between">
+                <span className="font-serif font-bold text-xs text-[#0F3E2E] tracking-wider">
+                  गाँव से गौरव तक
+                </span>
+                <TricolorBrush className="w-16 h-2 shrink-0" />
+              </div>
             </div>
           </div>
 

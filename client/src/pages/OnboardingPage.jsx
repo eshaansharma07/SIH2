@@ -753,9 +753,9 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
               <div className="relative w-full max-w-md lg:max-w-none">
                 {/* Seamless Background Image blending with canvas */}
                 <img
-                  src="/images/hero-shopkeeper.png"
+                  src="/assets/saakhsetu/hero-shopkeeper.png"
                   alt="Rural Kirana Shopkeeper in Utraula Dehat Village"
-                  className="w-full h-auto object-contain rounded-none select-none pointer-events-none drop-shadow-sm mix-blend-multiply"
+                  className="w-full h-auto object-contain rounded-2xl border border-[#E7DFD5]/80 shadow-md select-none pointer-events-none"
                 />
               </div>
             </div>
@@ -938,7 +938,7 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
             {/* Shopkeeper Portrait */}
             <div className="w-44 h-44 sm:w-56 sm:h-56 rounded-full overflow-hidden shrink-0 border-2 border-[#D5CCBC] shadow-sm">
               <img
-                src="/images/ramesh-portrait.png"
+                src="/assets/saakhsetu/ramesh-portrait.png"
                 alt="Ramesh Yadav - Kirana Store Owner"
                 className="w-full h-full object-cover"
               />
@@ -970,7 +970,7 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
           {/* SIH Emblem & Text */}
           <div className="flex items-center gap-3.5">
             <img 
-              src="/images/sih-emblem.png" 
+              src="/assets/saakhsetu/sih-emblem.png" 
               alt="Smart India Hackathon 2026 Emblem" 
               className="w-12 h-12 object-contain"
             />
@@ -987,7 +987,7 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
           {/* Calligraphic Accent: Gaon Se Growth Tak */}
           <div className="flex items-center gap-4">
             <img 
-              src="/images/gaon-se-growth.png" 
+              src="/assets/saakhsetu/gaon-se-growth.png" 
               alt="Gaon Se Growth Tak" 
               className="h-12 w-auto object-contain select-none"
             />
@@ -1001,9 +1001,9 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
       {/* ========================================================================= */}
       <div className="w-full overflow-hidden border-t border-[#E7DFD5]/60 bg-[#FAF7F2]">
         <img
-          src="/images/rural-landscape.png"
+          src="/assets/saakhsetu/rural-landscape.png"
           alt="Rural Indian Village Landscape Line Art"
-          className="w-full h-auto max-h-32 object-cover object-bottom select-none pointer-events-none opacity-85"
+          className="w-full h-auto max-h-36 object-cover object-bottom select-none pointer-events-none opacity-85"
         />
       </div>
 
