@@ -295,40 +295,12 @@ export function DashboardPage({
         {/* Tri-color Accent Bar */}
         <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-terracotta-500 via-paper-300 to-forestRural-600" />
 
-        {/* Verification Credentials Strip */}
-        <div className="flex flex-wrap items-center justify-between gap-2 pb-2.5 sm:pb-3 border-b border-paper-200 text-xs">
-          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap min-w-0">
-            <Badge variant={shop?.is_udyam_verified ? 'positive' : 'neutral'} size="sm" dot className="text-[10px] sm:text-xs">
-              <span>{udyamLabel}</span>
-            </Badge>
-            <span className="text-paper-400 hidden sm:inline">•</span>
-            <span className="font-mono text-[10px] sm:text-[11px] text-indigoRural-600 font-bold tracking-wider">
-              {udyamNumber}
-            </span>
-            <span className="text-paper-400 hidden sm:inline">•</span>
-            <span className="text-indigoRural-600 text-[10px] sm:text-[11px] font-semibold">
-              {vintageLabel}
-            </span>
-          </div>
 
-          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-            <Badge variant="brand" size="sm" className="text-[10px] sm:text-xs">
-              <ShieldCheck className="w-3.5 h-3.5 text-terracotta-600 mr-1" />
-              <span>{pslLabel}</span>
-            </Badge>
-            <Badge variant="neutral" size="sm" className="text-[10px] sm:text-xs">
-              DPI-Inspired Design (Prototype)
-            </Badge>
-          </div>
-        </div>
 
         {/* Core Hero Body */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 lg:gap-6">
           <div className="space-y-2 max-w-2xl min-w-0">
             <div className="space-y-0.5">
-              <span className="text-[10px] font-black uppercase tracking-wider text-terracotta-600 block">
-                {language === 'hi' ? 'सूक्ष्म उद्यम प्रोफ़ाइल' : 'Micro-Enterprise Profile (Self-Assessed)'}
-              </span>
               <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-indigoRural-900 font-display truncate">
                 {shop?.name || (language === 'hi' ? 'मेरी दुकान' : 'My Store')}
               </h1>
@@ -432,15 +404,6 @@ export function DashboardPage({
             subtitle={language === 'hi' ? 'दैनिक बिक्री, माल खरीद एवं शुद्ध परिचालन अधिशेष' : 'Daily gross revenue, inventory replenishment outlays, and net retained margins'}
             action={
               <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-                <Badge variant="positive" size="sm" dot className="text-[10px] sm:text-xs">
-                  {metrics.loggedDaysCount ? `● ${metrics.loggedDaysCount} Days Audited` : '● Live Sync'}
-                </Badge>
-                {operatingMargin && (
-                  <Badge variant="neutral" size="sm" className="hidden sm:inline-flex text-[10px] sm:text-xs">
-                    <span>Margin: </span>
-                    <strong className="text-forestRural-700 font-extrabold ml-1">+{operatingMargin}%</strong>
-                  </Badge>
-                )}
               </div>
             }
           />
@@ -501,9 +464,6 @@ export function DashboardPage({
               <span className="text-indigoRural-500 uppercase tracking-wider text-[10px]">
                 {language === 'hi' ? 'भुगतान माध्यम वितरण (Cash vs. UPI)' : 'Payment Channel Distribution'}
               </span>
-              <span className="text-terracotta-600 font-extrabold text-[10px] sm:text-[11px]">
-                {language === 'hi' ? 'डिजिटल लेनदेन अनुपात (PSL)' : 'Digital Deepening (PSL)'}
-              </span>
             </div>
 
             {/* Segmented Distribution Bar */}
@@ -548,15 +508,7 @@ export function DashboardPage({
             iconColor="ochre"
             title={language === 'hi' ? 'ग्राहक उधारी जोखिम' : 'Customer Credit Exposure'}
             subtitle="Working Capital Protection"
-            action={
-              riskPct !== null ? (
-                <Badge variant={Number(riskPct) < 5 ? 'positive' : 'attention'} size="sm">
-                  {Number(riskPct) < 5 ? `Low (${riskPct}%)` : `Attention (${riskPct}%)`}
-                </Badge>
-              ) : (
-                <Badge variant="neutral" size="sm">Safe Ratio</Badge>
-              )
-            }
+            action={null}
           />
 
           <div className="space-y-0.5">
@@ -616,11 +568,7 @@ export function DashboardPage({
             iconColor="ochre"
             title={language === 'hi' ? 'मौसमी मांग रडार (Demand Radar)' : 'Seasonal Demand Radar'}
             subtitle={`${shop?.district || 'Balrampur'} Mandi Agricultural & Festival Projections`}
-            action={
-              <Badge variant="positive" size="sm" dot>
-                <span>Google Calendar 2026</span>
-              </Badge>
-            }
+            action={null}
           />
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
@@ -637,17 +585,12 @@ export function DashboardPage({
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between gap-2">
                       <span className="font-extrabold text-xs text-indigoRural-900 group-hover:text-terracotta-700 transition truncate">{name}</span>
-                      <Badge variant="attention" size="sm" className="shrink-0 tabular-nums flex items-center gap-1 text-[10px] py-0.5 px-1.5">
-                        <Clock className="w-2.5 h-2.5" />
-                        <span>{item.daysRemaining}d</span>
-                      </Badge>
                     </div>
                     <div className="text-[10px] text-indigoRural-500 font-medium flex items-center gap-1">
                       <Calendar className="w-3 h-3 text-indigoRural-400 shrink-0" />
                       <span>{timing}</span>
                     </div>
                     <div className="text-[10px] text-indigoRural-800 font-semibold bg-white p-2 rounded-lg border border-paper-200 leading-snug">
-                      <span className="text-indigoRural-400 font-bold block text-[8px] uppercase tracking-wider mb-0.5">Wholesale Pre-Order</span>
                       {stock}
                     </div>
                   </div>
@@ -669,17 +612,7 @@ export function DashboardPage({
             iconColor="terracotta"
             title={language === 'hi' ? 'वैकल्पिक क्रेडिट स्वास्थ्य' : 'Alternative Credit Health'}
             subtitle="4-Pillar Non-CIBIL Score"
-            action={
-              <Button
-                onClick={() => onNavigateTab('credit')}
-                variant="ghost"
-                size="sm"
-                icon={ArrowRight}
-                iconPosition="right"
-              >
-                <span>{language === 'hi' ? 'सिम्युलेटर' : 'Simulate'}</span>
-              </Button>
-            }
+            action={null}
           />
 
           <div className="py-0.5">
