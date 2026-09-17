@@ -84,11 +84,7 @@ export function Navbar({ activeTab, setActiveTab, currentShop, isDemoMode, onRel
                   <Badge variant="positive" size="sm" className="px-1.5 py-0 text-[10px] shrink-0">
                     LIVE
                   </Badge>
-                ) : (
-                  <Badge variant="brand" size="sm" className="px-1.5 py-0 text-[10px] shrink-0">
-                    DPI Stack
-                  </Badge>
-                )}
+                ) : null}
               </div>
               <div className="text-[10px] font-semibold text-indigoRural-500 flex items-center gap-1.5 mt-0.5 min-w-0">
                 <span className="font-bold text-indigoRural-800 truncate max-w-[110px] xs:max-w-[150px] sm:max-w-none">

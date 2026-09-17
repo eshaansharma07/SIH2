@@ -236,10 +236,7 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
       >
         <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div className="space-y-2.5 max-w-xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-ochre-400/20 text-ochre-200 rounded-full text-xs font-bold border border-ochre-300/30">
-              <Sparkles className="w-3.5 h-3.5 text-ochre-300 animate-pulse" />
-              <span>SIH 2026 Grand Finale • Evaluator Demo Mode</span>
-            </div>
+
             <PageTitle className="!text-white">
               {language === 'hi' ? 'जज एवं मूल्यांकनकर्ता डेमो (Ramesh Kirana)' : 'Evaluator Demo (Ramesh Kirana)'}
             </PageTitle>
