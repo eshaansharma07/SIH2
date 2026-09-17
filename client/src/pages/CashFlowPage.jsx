@@ -105,6 +105,24 @@ export function CashFlowPage({
   const [customerFilter, setCustomerFilter] = useState('all'); // 'all', 'owing', 'near_limit'
   const [isVoiceOpen, setIsVoiceOpen] = useState(false);
 
+  useEffect(() => {
+    const handleSwitch = (e) => {
+      if (e.detail?.tab) setActiveTab(e.detail.tab);
+    };
+    const handleFilter = (e) => {
+      if (e.detail?.filter !== undefined) {
+        setFilterType(e.detail.filter);
+        setActiveTab('all');
+      }
+    };
+    window.addEventListener('saakhsetu:switch-tab', handleSwitch);
+    window.addEventListener('saakhsetu:filter-tx', handleFilter);
+    return () => {
+      window.removeEventListener('saakhsetu:switch-tab', handleSwitch);
+      window.removeEventListener('saakhsetu:filter-tx', handleFilter);
+    };
+  }, []);
+
   const handleDeleteTransaction = async (txId) => {
     const confirmMsg = language === 'hi'
       ? 'क्या आप इस लेन-देन को हटाना चाहते हैं?'

@@ -1,5 +1,7 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { Navbar } from './components/Navbar';
+import { Sidebar } from './components/Sidebar';
+import { FloatingSetuAI } from './components/FloatingSetuAI';
 import { NumericKeypadModal } from './components/NumericKeypadModal';
 import { FloatingThumbDock } from './components/FloatingThumbDock';
 import { WarliBorder } from './components/WarliMotif';
@@ -70,6 +72,7 @@ export default function App() {
   const [demoTourOpen, setDemoTourOpen] = useState(false);
   const [initialAdvisorPrompt, setInitialAdvisorPrompt] = useState('');
   const [refreshKey, setRefreshKey] = useState(0);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [latestTx, setLatestTx] = useState(null);
 
@@ -412,117 +415,141 @@ export default function App() {
   return (
     <div className="min-h-screen w-full max-w-full overflow-x-hidden relative paper-canvas flex flex-col font-sans text-stone-900 selection:bg-amber-100 selection:text-amber-900 antialiased">
       
-      {/* Top Navbar */}
-      <Navbar 
-        activeTab={activeTab} 
-        setActiveTab={changeTab} 
-        currentShop={currentShop}
-        isDemoMode={isDemoMode}
-        onReloadDemo={handleReloadDemo}
-        onStartDemoTour={() => setDemoTourOpen(true)}
-        onSwitchToDemo={handleSelectDemo}
-        onSwitchToRegister={handleSwitchToRegister}
-        onLogout={handleSwitchToRegister}
-      />
+      {/* Onboarding / Showcase Landing Page */}
+      {activeTab === 'onboarding' ? (
+        <main className="flex-1 w-full min-w-0 p-0 pb-0">
+          <Suspense fallback={<PageSkeleton />}>
+            <OnboardingPage 
+              onComplete={handleRealRegistrationComplete}
+              onSelectDemo={handleSelectDemo}
+            />
+          </Suspense>
+        </main>
+      ) : (
+        /* Authenticated View: 2-Column Desktop Shell (Left Sidebar + Right Content Area) */
+        <div className="flex min-h-screen w-full">
+          {/* Left Sidebar */}
+          <Sidebar 
+            activeTab={activeTab}
+            setActiveTab={changeTab}
+            currentShop={currentShop}
+            onOpenWholesale={() => setWholesaleModalOpen(true)}
+            isOpen={sidebarOpen}
+            onClose={() => setSidebarOpen(false)}
+          />
 
-      {/* Main Page Container */}
-      <main className={`flex-1 w-full min-w-0 ${activeTab === 'onboarding' ? 'p-0 pb-0' : 'max-w-7xl xl:max-w-[1440px] mx-auto px-3 sm:px-6 pt-3 sm:pt-5 pb-28 sm:pb-32 lg:pb-12'}`}>
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeTab}
-            initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, x: 20 }}
-            animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, x: 0 }}
-            exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, x: -20 }}
-            transition={shouldReduceMotion ? { duration: 0.1 } : { duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
-            className="w-full min-w-0"
-          >
-            <Suspense fallback={<PageSkeleton />}>
-              {activeTab === 'onboarding' && (
-                <OnboardingPage 
-                  onComplete={handleRealRegistrationComplete}
-                  onSelectDemo={handleSelectDemo}
-                />
-              )}
+          {/* Right Main Area */}
+          <div className="flex-1 flex flex-col min-w-0 bg-[#FAF8F5]">
+            {/* Top Navbar */}
+            <Navbar 
+              activeTab={activeTab} 
+              setActiveTab={changeTab} 
+              currentShop={currentShop}
+              isDemoMode={isDemoMode}
+              onReloadDemo={handleReloadDemo}
+              onStartDemoTour={() => setDemoTourOpen(true)}
+              onSwitchToDemo={handleSelectDemo}
+              onSwitchToRegister={handleSwitchToRegister}
+              onLogout={handleSwitchToRegister}
+              onToggleSidebar={() => setSidebarOpen(prev => !prev)}
+            />
 
-              {activeTab === 'dashboard' && (
-                <DashboardPage
-                  shop={currentShop}
-                  creditData={creditData}
-                  summaryData={summaryData}
-                  cuesData={cuesData}
-                  onOpenKeypad={() => setKeypadOpen(true)}
-                  onOpenWholesale={() => setWholesaleModalOpen(true)}
-                  onNavigateTab={(tab) => changeTab(tab)}
-                  onAskPrompt={handleAskPrompt}
-                  onStartDemoTour={() => setDemoTourOpen(true)}
-                  isDemoMode={isDemoMode}
-                  onSwitchToDemo={handleSelectDemo}
-                  onSwitchToRegister={handleSwitchToRegister}
-                />
-              )}
+            {/* Main Page Container */}
+            <main className="flex-1 w-full min-w-0 px-4 sm:px-6 lg:px-8 py-4 sm:py-6 max-w-7xl xl:max-w-[1440px] mx-auto pb-28 sm:pb-32 lg:pb-12">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeTab}
+                  initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, x: 15 }}
+                  animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, x: 0 }}
+                  exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, x: -15 }}
+                  transition={shouldReduceMotion ? { duration: 0.1 } : { duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+                  className="w-full min-w-0"
+                >
+                  <Suspense fallback={<PageSkeleton />}>
+                    {activeTab === 'dashboard' && (
+                      <DashboardPage
+                        shop={currentShop}
+                        onOpenKeypad={() => setKeypadOpen(true)}
+                        onOpenWholesale={() => setWholesaleModalOpen(true)}
+                        onNavigateTab={(tab) => changeTab(tab)}
+                      />
+                    )}
 
-              {activeTab === 'advisor' && (
-                <AdvisorChatPage
-                  shop={currentShop}
-                  creditData={creditData}
-                  summaryData={summaryData}
-                  initialPrompt={initialAdvisorPrompt}
-                  onPromptUsed={() => setInitialAdvisorPrompt('')}
-                />
-              )}
+                    {activeTab === 'advisor' && (
+                      <AdvisorChatPage
+                        shop={currentShop}
+                        creditData={creditData}
+                        summaryData={summaryData}
+                        initialPrompt={initialAdvisorPrompt}
+                        onPromptUsed={() => setInitialAdvisorPrompt('')}
+                      />
+                    )}
 
-              {activeTab === 'cashflow' && (
-                <CashFlowPage
-                  shop={currentShop}
-                  isDemoMode={isDemoMode}
-                  summaryData={summaryData}
-                  onOpenKeypad={() => setKeypadOpen(true)}
-                  onOpenWholesale={() => setWholesaleModalOpen(true)}
-                  refreshKey={refreshKey}
-                  latestTx={latestTx}
-                  onTransactionSaved={handleTransactionSaved}
-                />
-              )}
+                    {activeTab === 'cashflow' && (
+                      <CashFlowPage
+                        shop={currentShop}
+                        isDemoMode={isDemoMode}
+                        summaryData={summaryData}
+                        onOpenKeypad={() => setKeypadOpen(true)}
+                        onOpenWholesale={() => setWholesaleModalOpen(true)}
+                        refreshKey={refreshKey}
+                        latestTx={latestTx}
+                        onTransactionSaved={handleTransactionSaved}
+                      />
+                    )}
 
-              {activeTab === 'credit' && (
-                <CreditScorePage
-                  shop={currentShop}
-                  creditData={creditData}
-                  onNavigateTab={(tab) => changeTab(tab)}
-                />
-              )}
+                    {activeTab === 'credit' && (
+                      <CreditScorePage
+                        shop={currentShop}
+                        creditData={creditData}
+                        onNavigateTab={(tab) => changeTab(tab)}
+                      />
+                    )}
 
-              {activeTab === 'schemes' && (
-                <SchemeMatcherPage
-                  shop={currentShop}
-                  creditData={creditData}
-                  onNavigateTab={(tab) => changeTab(tab)}
-                />
-              )}
+                    {activeTab === 'schemes' && (
+                      <SchemeMatcherPage
+                        shop={currentShop}
+                        creditData={creditData}
+                        onNavigateTab={(tab) => changeTab(tab)}
+                      />
+                    )}
 
-              {activeTab === 'dossier' && (
-                <BankDossierPage
-                  shop={currentShop}
-                  isDemoMode={isDemoMode}
-                  onBack={() => changeTab('dashboard')}
-                />
-              )}
+                    {activeTab === 'dossier' && (
+                      <BankDossierPage
+                        shop={currentShop}
+                        isDemoMode={isDemoMode}
+                        onBack={() => changeTab('dashboard')}
+                      />
+                    )}
 
-              {activeTab === 'profile' && (
-                <ShopProfilePage
-                  shop={currentShop}
-                  onShopUpdated={(updated) => {
-                    setCurrentShop(updated);
-                    localStorage.setItem('vyapaar_active_shop', JSON.stringify(updated));
-                    setRefreshKey(k => k + 1);
-                  }}
-                  onReloadDemo={handleReloadDemo}
-                />
-              )}
-            </Suspense>
-          </motion.div>
-        </AnimatePresence>
-      </main>
+                    {activeTab === 'profile' && (
+                      <ShopProfilePage
+                        shop={currentShop}
+                        onShopUpdated={(updated) => {
+                          setCurrentShop(updated);
+                          localStorage.setItem('vyapaar_active_shop', JSON.stringify(updated));
+                          setRefreshKey(k => k + 1);
+                        }}
+                        onReloadDemo={handleReloadDemo}
+                      />
+                    )}
+                  </Suspense>
+                </motion.div>
+              </AnimatePresence>
+            </main>
+          </div>
+        </div>
+      )}
+
+      {/* Floating Setu AI Pop-Up (Globally available across authenticated tabs) */}
+      {currentShop && activeTab !== 'onboarding' && (
+        <FloatingSetuAI 
+          currentShop={currentShop}
+          onNavigateTab={changeTab}
+          onOpenKeypad={() => setKeypadOpen(true)}
+          onOpenWholesale={() => setWholesaleModalOpen(true)}
+        />
+      )}
 
       {/* Tactile Touch Numeric Keypad Modal */}
       <NumericKeypadModal
@@ -580,8 +607,9 @@ export default function App() {
         />
       )}
 
-      {/* Clean Institutional Prototype Footer */}
-      <footer className="print:hidden border-t border-stone-200/80 bg-[#FAF8F5]/90 backdrop-blur-md py-8 px-4 text-center text-xs text-stone-600 pb-28 sm:pb-24">
+      {/* Clean Institutional Prototype Footer (shown on inner tabs; Overview has its own reference footer) */}
+      {currentShop && activeTab !== 'onboarding' && activeTab !== 'dashboard' && (
+        <footer className="print:hidden border-t border-stone-200/80 bg-[#FAF8F5]/90 backdrop-blur-md py-8 px-4 text-center text-xs text-stone-600 pb-28 sm:pb-24">
         <div className="max-w-4xl mx-auto space-y-2">
           <div className="flex items-center justify-center gap-2 flex-wrap">
             <span className="font-bold text-stone-900 font-serif text-sm">{APP_NAME_HI} ({APP_NAME_EN}) — Prototype</span>
@@ -605,6 +633,7 @@ export default function App() {
           </div>
         </div>
       </footer>
+      )}
 
     </div>
   );
