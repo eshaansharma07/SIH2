@@ -4,8 +4,9 @@ import hi from './hi.json';
 import ta from './ta.json';
 import te from './te.json';
 import pa from './pa.json';
+import gu from './gu.json';
 
-const translations = { en, hi, ta, te, pa };
+const translations = { en, hi, ta, te, pa, gu };
 
 export const LANGUAGES = [
   { code: 'en', label: 'EN', nativeLabel: 'English' },
@@ -13,6 +14,7 @@ export const LANGUAGES = [
   { code: 'ta', label: 'TA', nativeLabel: 'தமிழ்' },
   { code: 'te', label: 'TE', nativeLabel: 'తెలుగు' },
   { code: 'pa', label: 'PA', nativeLabel: 'ਪੰਜਾਬੀ' },
+  { code: 'gu', label: 'GU', nativeLabel: 'ગુજરાતી' },
 ];
 
 const LanguageContext = createContext();

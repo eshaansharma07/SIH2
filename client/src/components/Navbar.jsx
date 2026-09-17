@@ -40,7 +40,8 @@ export function Navbar({ activeTab, setActiveTab, currentShop, isDemoMode, onRel
     hi: { liveTour: 'लाइव टूर', realReg: 'असली पंजीकरण', judgeDemo: 'जज डेमो', reset: 'रीसेट', logOut: 'लॉग आउट', store: 'दुकान', logOutTitle: 'दुकान से लॉग आउट करें' },
     ta: { liveTour: 'நேரடி சுற்றுப்பயணம்', realReg: 'உண்மையான பதிவு', judgeDemo: 'நடுவர் டெமோ', reset: 'மீட்டமை', logOut: 'வெளியேறு', store: 'கடை', logOutTitle: 'கணக்கிலிருந்து வெளியேறு' },
     te: { liveTour: 'లైవ్ టూర్', realReg: 'నిజమైన నమోదు', judgeDemo: 'జడ్జి డెమో', reset: 'రీసెట్', logOut: 'లాగ్ అవుట్', store: 'దుకాణం', logOutTitle: 'సెషన్ నుండి లాగ్ అవుట్ చేయండి' },
-    pa: { liveTour: 'ਲਾਇਵ ਟੂਰ', realReg: 'ਅਸਲ ਰਜਿਸਟ੍ਰੇਸ਼ਨ', judgeDemo: 'ਜੱਜ ਡੈਮੋ', reset: 'ਰੀਸੈਟ', logOut: 'ਲੌਗ ਆਊਟ', store: 'ਦੁਕਾਨ', logOutTitle: 'ਸੈਸ਼ਨ ਤੋਂ ਲੌਗ ਆਊਟ ਕਰੋ' }
+    pa: { liveTour: 'ਲਾਇਵ ਟੂਰ', realReg: 'ਅਸਲ ਰਜਿਸਟ੍ਰੇਸ਼ਨ', judgeDemo: 'ਜੱਜ ਡੈਮੋ', reset: 'ਰੀਸੈਟ', logOut: 'ਲੌਗ ਆਊਟ', store: 'ਦੁਕਾਨ', logOutTitle: 'ਸੈਸ਼ਨ ਤੋਂ ਲੌਗ ਆਊਟ ਕਰੋ' },
+    gu: { liveTour: 'લાઇવ ટૂર', realReg: 'વાસ્તવિક નોંધણી', judgeDemo: 'જજ ડેમો', reset: 'રીસેટ', logOut: 'લોગ આઉટ', store: 'દુકાન', logOutTitle: 'સક્રિય સત્રમાંથી લોગ આઉટ કરો' }
   };
   const nui = NAV_STRINGS[language] || NAV_STRINGS.en;
 

@@ -172,9 +172,36 @@ export function DashboardPage({
       seasonalRadar: 'ਮੌਸਮੀ ਮੰਗ ਰਾਡਾਰ', projectedSurge: 'ਅਨੁਮਾਨਿਤ ਵਾਧਾ',
       altCreditHealth: 'ਵਿਕਲਪਕ ਕ੍ਰੈਡਿਟ ਸਿਹਤ', unratedEnterprise: 'ਅਣਰੇਟਡ ਉੱਦਮ',
       unratedDesc: 'ਆਪਣਾ 4-ਥੰਮ੍ਹ ਬੈਂਕਯੋਗ ਕ੍ਰੈਡਿਟ ਸਕੋਰ ਅਨਲੌਕ ਕਰਨ ਲਈ ਪਹਿਲੇ ਹਫ਼ਤੇ ਦੀਆਂ ਵਿਕਰੀਆਂ ਦਰਜ ਕਰੋ (5 ਲੈਣ-ਦੇਣ, 3 ਦਿਨ)।',
-      recordASale: 'ਵਿਕਰੀ ਦਰਜ ਕਰੋ', aiPrompts: 'ਸਾਥੀ AI ਪ੍ਰੋਂਪਟ', openSaathiAI: 'ਸਾਥੀ AI ਖੋਲੋ',
+      recordASale: 'ਵिकਰੀ ਦਰਜ ਕਰੋ', aiPrompts: 'ਸਾਥੀ AI ਪ੍ਰੋਂਪਟ', openSaathiAI: 'ਸਾਥੀ AI ਖੋਲੋ',
       strictCredit: 'ਪਿੰਡ ਦੇ ਗਾਹਕਾਂ ਨਾਲ 7 ਦਿਨਾਂ ਦੀ ਸਖ਼ਤ ਕ੍ਰੈਡਿਟ ਸੀਮਾ ਬਣਾਈ ਰੱਖੀ ਗਈ ਹੈ।',
       primeBankable: 'ਪ੍ਰਾਈਮ ਬੈਂਕਯੋਗ',
+    },
+    gu: {
+      storeProfile: 'દુકાન પ્રોફાઇલ', enterpriseReg: 'નોંધણી પૂર્ણ ✓',
+      logFirstSale: 'પ્રથમ વેચાણ નોંધો', recordFirstSale: 'પ્રથમ વેચાણ ઉમેરો',
+      recordSaleBtn: '+ વેચાણ નોંધો', threeDays: '3 સક્રિય દિવસો',
+      bahiRegularity: 'બહી-ખાતા નિયમિતતા', logToday: '+ આજનું ખાતું',
+      unlockScore: 'સ્કોર અનલોક કરો', minTx: 'ઓછામાં ઓછા 5 વેચાણ & 3 દિવસો',
+      viewScore: 'સ્કોર જુઓ', matchSchemes: 'યોજનાઓ મેચ કરો',
+      loanMatch: 'કાયદાકીય લોન મેચ', schemesBtn: 'યોજનાઓ',
+      testRealReg: 'વાસ્તવિક નોંધણી ટેસ્ટ કરો', onboardingChecklist: 'ઓનબોર્ડિંગ ચેકલિસ્ટ',
+      complete: 'પૂર્ણ', viewJudgeDemo: 'જજ ડેમો જુઓ',
+      myStore: 'મારી દુકાન', proprietor: 'માલિક',
+      auditedTurnover: 'ઓડિટ થયેલ ટર્નઓવર', netOpSurplus: 'ચોખ્ખો ઓપરેટિંગ સરપ્લસ',
+      opMargin: 'ઓપરેટિંગ માર્જિન', recordSale: '+ વેચાણ નોંધો',
+      saathiAI: 'સાથી AI', ondcWholesale: 'ONDC જથ્થાબંધ', bankDossier: 'બેંક ફાઇલ',
+      auditedFinancial: 'ઓડિટ થયેલ નાણાકીય કામગીરી',
+      auditedFinancialSub: 'દૈનિક ગ્રોસ આવક, સ્ટોક ખરીદી ખર્ચ અને ચોખ્ખો નફો',
+      grossTurnover: 'ગ્રોસ ટર્નઓવર', opOutlay: 'ઓપરેટિંગ ખર્ચ', retainedSurplus: 'જાળવી રાખેલ સરપ્લસ',
+      paymentChannel: 'ચુકવણી ચેનલ વિતરણ (Cash vs. UPI)',
+      customerCredit: 'ગ્રાહક ક્રેડિટ જોખમ', activeUdhaar: 'બાકી ગ્રાહક ખાતું',
+      viewCustomerLedger: 'ગ્રાહક ખાતા ચોપડો જુઓ',
+      seasonalRadar: 'મોસમી માંગ રેડાર', projectedSurge: 'અનુમાનિત વેચાણ વધારો',
+      altCreditHealth: 'વૈકલ્પિક ક્રેડિટ સ્વાસ્થ્ય', unratedEnterprise: 'અનરેટેડ એન્ટરપ્રાઇઝ',
+      unratedDesc: 'તમારો 4-સ્તંભ ક્રેડિટ સ્કોર અનલોક કરવા પ્રથમ સપ્તાહનું વેચાણ નોંધો (5 વ્યવહારો, 3 દિવસો).',
+      recordASale: 'વેચાણ નોંધો', aiPrompts: 'સાથી AI પ્રશ્નો', openSaathiAI: 'સાથી AI ખોલો',
+      strictCredit: 'ગામના ગ્રાહકો સાથે 7 દિવસની કડક ક્રેડિટ સીમા જાળવી રાખવામાં આવી છે.',
+      primeBankable: 'પ્રાઇમ બેંકેબલ',
     },
   };
   const ui = UI_STRINGS[language] || UI_STRINGS.en;
@@ -286,6 +313,7 @@ export function DashboardPage({
     if (language === 'ta') return q.textTa || q.textEn;
     if (language === 'te') return q.textTe || q.textEn;
     if (language === 'pa') return q.textPa || q.textEn;
+    if (language === 'gu') return q.textGu || q.textEn;
     return q.textEn;
   };
 
@@ -757,9 +785,9 @@ export function DashboardPage({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
             {festivalList.map((item, idx) => {
-              const name = (language === 'hi' && item.festivalHi) ? item.festivalHi : (language === 'ta' && item.festivalTa) ? item.festivalTa : (language === 'te' && item.festivalTe) ? item.festivalTe : (language === 'pa' && item.festivalPa) ? item.festivalPa : item.festival;
-              const timing = (language === 'hi' && item.timingHi) ? item.timingHi : (language === 'ta' && item.timingTa) ? item.timingTa : (language === 'te' && item.timingTe) ? item.timingTe : (language === 'pa' && item.timingPa) ? item.timingPa : item.timing;
-              const stock = (language === 'hi' && item.priorityItemsHi) ? item.priorityItemsHi : (language === 'ta' && item.priorityItemsTa) ? item.priorityItemsTa : (language === 'te' && item.priorityItemsTe) ? item.priorityItemsTe : (language === 'pa' && item.priorityItemsPa) ? item.priorityItemsPa : item.priorityItems;
+              const name = (language === 'hi' && item.festivalHi) ? item.festivalHi : (language === 'ta' && item.festivalTa) ? item.festivalTa : (language === 'te' && item.festivalTe) ? item.festivalTe : (language === 'pa' && item.festivalPa) ? item.festivalPa : (language === 'gu' && item.festivalGu) ? item.festivalGu : item.festival;
+              const timing = (language === 'hi' && item.timingHi) ? item.timingHi : (language === 'ta' && item.timingTa) ? item.timingTa : (language === 'te' && item.timingTe) ? item.timingTe : (language === 'pa' && item.timingPa) ? item.timingPa : (language === 'gu' && item.timingGu) ? item.timingGu : item.timing;
+              const stock = (language === 'hi' && item.priorityItemsHi) ? item.priorityItemsHi : (language === 'ta' && item.priorityItemsTa) ? item.priorityItemsTa : (language === 'te' && item.priorityItemsTe) ? item.priorityItemsTe : (language === 'pa' && item.priorityItemsPa) ? item.priorityItemsPa : (language === 'gu' && item.priorityItemsGu) ? item.priorityItemsGu : item.priorityItems;
 
               return (
                 <div 
@@ -827,7 +855,7 @@ export function DashboardPage({
           <div className="space-y-2 pt-2.5 border-t border-paper-200 text-xs">
             {factors.length > 0 ? (
               factors.map((factor) => {
-                const name = (language === 'hi' && factor.nameHindi) ? factor.nameHindi : (language === 'ta' && factor.nameTa) ? factor.nameTa : (language === 'te' && factor.nameTe) ? factor.nameTe : (language === 'pa' && factor.namePa) ? factor.namePa : factor.name;
+                const name = (language === 'hi' && factor.nameHindi) ? factor.nameHindi : (language === 'ta' && factor.nameTa) ? factor.nameTa : (language === 'te' && factor.nameTe) ? factor.nameTe : (language === 'pa' && factor.namePa) ? factor.namePa : (language === 'gu' && factor.nameGu) ? factor.nameGu : factor.name;
                 const isPositive = factor.status === 'positive' || factor.percentage >= 70;
                 
                 return (
