@@ -126,7 +126,6 @@ export function Navbar({ activeTab, setActiveTab, currentShop, isDemoMode, onRel
                       ? 'text-terracotta-600' 
                       : isActive ? 'text-terracotta-600' : 'text-indigoRural-500'
                   }`} />
-                  <span>{item.label}</span>
                   {item.isAi && (
                     <span className="w-1.5 h-1.5 rounded-full bg-terracotta-600" />
                   )}
