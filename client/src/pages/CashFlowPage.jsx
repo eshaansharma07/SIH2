@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   ShoppingCart, 
   ArrowDownRight, 
@@ -12,6 +13,7 @@ import {
   Filter, 
   MoreHorizontal, 
   ChevronRight, 
+  ChevronDown,
   ChevronLeft, 
   Clock, 
   Trash2, 
@@ -80,6 +82,82 @@ export function CashFlowPage({
   const [selectedWhatsAppCustomer, setSelectedWhatsAppCustomer] = useState(null);
   const [isVoiceOpen, setIsVoiceOpen] = useState(false);
   const [moreActionsOpen, setMoreActionsOpen] = useState(false);
+  const moreActionsBtnRef = useRef(null);
+  const moreActionsMenuRef = useRef(null);
+  const [dropdownCoords, setDropdownCoords] = useState({ top: 0, left: 0, width: 240, placement: 'bottom' });
+
+  // Compute precise viewport position for anchored dropdown
+  const updateDropdownPosition = useCallback(() => {
+    if (!moreActionsBtnRef.current) return;
+    const rect = moreActionsBtnRef.current.getBoundingClientRect();
+    const dropdownWidth = Math.min(256, window.innerWidth - 32);
+
+    // Align right edge of dropdown with right edge of button
+    let left = rect.right - dropdownWidth;
+    if (left + dropdownWidth > window.innerWidth - 16) {
+      left = window.innerWidth - 16 - dropdownWidth;
+    }
+    if (left < 16) {
+      left = 16;
+    }
+
+    // Default: directly below the trigger
+    let top = rect.bottom + 6;
+    let placement = 'bottom';
+    const estimatedHeight = 340;
+
+    // Flip to open above if overflowing window bottom and room exists above
+    if (top + estimatedHeight > window.innerHeight - 16 && rect.top > estimatedHeight + 16) {
+      top = rect.top - estimatedHeight - 6;
+      placement = 'top';
+    }
+
+    setDropdownCoords({ top, left, width: dropdownWidth, placement });
+  }, []);
+
+  // Dropdown listeners: close on outside click, Escape, scroll/resize tracking
+  useEffect(() => {
+    if (!moreActionsOpen) return;
+
+    updateDropdownPosition();
+
+    const handleScrollOrResize = () => {
+      updateDropdownPosition();
+    };
+
+    const handleClickOutside = (e) => {
+      if (
+        (moreActionsBtnRef.current && moreActionsBtnRef.current.contains(e.target)) ||
+        (moreActionsMenuRef.current && moreActionsMenuRef.current.contains(e.target))
+      ) {
+        return;
+      }
+      setMoreActionsOpen(false);
+    };
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setMoreActionsOpen(false);
+      }
+    };
+
+    window.addEventListener('resize', handleScrollOrResize);
+    window.addEventListener('scroll', handleScrollOrResize, true);
+    document.addEventListener('pointerdown', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('resize', handleScrollOrResize);
+      window.removeEventListener('scroll', handleScrollOrResize, true);
+      document.removeEventListener('pointerdown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [moreActionsOpen, updateDropdownPosition]);
+
+  // Close dropdown on category or tab switch
+  useEffect(() => {
+    setMoreActionsOpen(false);
+  }, [selectedCategoryTab]);
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -660,183 +738,447 @@ export function CashFlowPage({
         </div>
       </section>
 
-      {/* 2. HORIZONTAL TRANSACTION CATEGORY SELECTOR */}
-      <section className="flex items-center gap-3 overflow-x-auto pb-1 no-scrollbar">
-        {/* All Transactions */}
-        <button
-          type="button"
-          onClick={() => { setSelectedCategoryTab('all'); setTypeFilter('all'); }}
-          className={`flex-1 min-w-[145px] p-3.5 rounded-2xl border text-left transition-all duration-150 cursor-pointer ${
-            selectedCategoryTab === 'all'
-              ? 'bg-[#0F3E2E] text-white border-[#0F3E2E] shadow-sm'
-              : 'bg-white/95 text-stone-800 border-stone-200/80 hover:border-stone-300 hover:bg-white'
-          }`}
-        >
-          <div className="flex items-center gap-2 mb-1">
-            <FileText className={`w-4 h-4 ${selectedCategoryTab === 'all' ? 'text-white' : 'text-stone-500'}`} />
-            <span className="font-serif font-bold text-xs">
-              {language === 'hi' ? 'सभी लेन-देन' : 'All Transactions'}
-            </span>
-          </div>
-          <p className={`text-[10px] ${selectedCategoryTab === 'all' ? 'text-emerald-200' : 'text-stone-500'}`}>
-            View every record
-          </p>
-        </button>
-
-        {/* Customers */}
-        <button
-          type="button"
-          onClick={() => { setSelectedCategoryTab('customers'); }}
-          className={`flex-1 min-w-[135px] p-3.5 rounded-2xl border text-left transition-all duration-150 cursor-pointer ${
-            selectedCategoryTab === 'customers'
-              ? 'bg-[#0F3E2E] text-white border-[#0F3E2E] shadow-sm'
-              : 'bg-white/95 text-stone-800 border-stone-200/80 hover:border-stone-300 hover:bg-white'
-          }`}
-        >
-          <div className="flex items-center gap-2 mb-1">
-            <Users className={`w-4 h-4 ${selectedCategoryTab === 'customers' ? 'text-white' : 'text-emerald-700'}`} />
-            <span className="font-serif font-bold text-xs">
-              {language === 'hi' ? 'ग्राहक खाता' : 'Customers'}
-            </span>
-          </div>
-          <p className={`text-[10px] ${selectedCategoryTab === 'customers' ? 'text-emerald-200' : 'text-stone-500'}`}>
-            Party accounts & ledger
-          </p>
-        </button>
-
-        {/* Sales */}
-        <button
-          type="button"
-          onClick={() => { setSelectedCategoryTab('sales'); setTypeFilter('income'); }}
-          className={`flex-1 min-w-[130px] p-3.5 rounded-2xl border text-left transition-all duration-150 cursor-pointer ${
-            selectedCategoryTab === 'sales'
-              ? 'bg-[#0F3E2E] text-white border-[#0F3E2E] shadow-sm'
-              : 'bg-white/95 text-stone-800 border-stone-200/80 hover:border-stone-300 hover:bg-white'
-          }`}
-        >
-          <div className="flex items-center gap-2 mb-1">
-            <ShoppingCart className={`w-4 h-4 ${selectedCategoryTab === 'sales' ? 'text-white' : 'text-emerald-700'}`} />
-            <span className="font-serif font-bold text-xs">
-              {language === 'hi' ? 'बिक्री' : 'Sales'}
-            </span>
-          </div>
-          <p className={`text-[10px] ${selectedCategoryTab === 'sales' ? 'text-emerald-200' : 'text-stone-500'}`}>
-            Money in
-          </p>
-        </button>
-
-        {/* Purchases */}
-        <button
-          type="button"
-          onClick={() => { setSelectedCategoryTab('purchases'); setTypeFilter('expense'); }}
-          className={`flex-1 min-w-[130px] p-3.5 rounded-2xl border text-left transition-all duration-150 cursor-pointer ${
-            selectedCategoryTab === 'purchases'
-              ? 'bg-[#0F3E2E] text-white border-[#0F3E2E] shadow-sm'
-              : 'bg-white/95 text-stone-800 border-stone-200/80 hover:border-stone-300 hover:bg-white'
-          }`}
-        >
-          <div className="flex items-center gap-2 mb-1">
-            <ArrowDownRight className={`w-4 h-4 ${selectedCategoryTab === 'purchases' ? 'text-white' : 'text-indigo-600'}`} />
-            <span className="font-serif font-bold text-xs">
-              {language === 'hi' ? 'खरीद' : 'Purchases'}
-            </span>
-          </div>
-          <p className={`text-[10px] ${selectedCategoryTab === 'purchases' ? 'text-emerald-200' : 'text-stone-500'}`}>
-            Money out
-          </p>
-        </button>
-
-        {/* Expenses */}
-        <button
-          type="button"
-          onClick={() => { setSelectedCategoryTab('expenses'); setTypeFilter('expense'); }}
-          className={`flex-1 min-w-[130px] p-3.5 rounded-2xl border text-left transition-all duration-150 cursor-pointer ${
-            selectedCategoryTab === 'expenses'
-              ? 'bg-[#0F3E2E] text-white border-[#0F3E2E] shadow-sm'
-              : 'bg-white/95 text-stone-800 border-stone-200/80 hover:border-stone-300 hover:bg-white'
-          }`}
-        >
-          <div className="flex items-center gap-2 mb-1">
-            <BarChart3 className={`w-4 h-4 ${selectedCategoryTab === 'expenses' ? 'text-white' : 'text-teal-600'}`} />
-            <span className="font-serif font-bold text-xs">
-              {language === 'hi' ? 'खर्च' : 'Expenses'}
-            </span>
-          </div>
-          <p className={`text-[10px] ${selectedCategoryTab === 'expenses' ? 'text-emerald-200' : 'text-stone-500'}`}>
-            Business costs
-          </p>
-        </button>
-
-        {/* Udhaar */}
-        <button
-          type="button"
-          onClick={() => { setSelectedCategoryTab('udhaar'); setTypeFilter('all'); }}
-          className={`flex-1 min-w-[130px] p-3.5 rounded-2xl border text-left transition-all duration-150 cursor-pointer ${
-            selectedCategoryTab === 'udhaar'
-              ? 'bg-[#0F3E2E] text-white border-[#0F3E2E] shadow-sm'
-              : 'bg-white/95 text-stone-800 border-stone-200/80 hover:border-stone-300 hover:bg-white'
-          }`}
-        >
-          <div className="flex items-center gap-2 mb-1">
-            <IndianRupee className={`w-4 h-4 ${selectedCategoryTab === 'udhaar' ? 'text-white' : 'text-amber-600'}`} />
-            <span className="font-serif font-bold text-xs">
-              {language === 'hi' ? 'उधार' : 'Udhaar'}
-            </span>
-          </div>
-          <p className={`text-[10px] ${selectedCategoryTab === 'udhaar' ? 'text-emerald-200' : 'text-stone-500'}`}>
-            Given & received
-          </p>
-        </button>
-
-        {/* More Actions Dropdown */}
-        <div className="relative shrink-0">
+      {/* 2. HORIZONTAL TRANSACTION CATEGORY SELECTOR & MORE ACTIONS */}
+      <section className="relative flex items-center justify-between gap-3">
+        {/* Category Pills (horizontally scrollable without trapping More Actions) */}
+        <div className="flex items-center gap-3 overflow-x-auto pb-1 no-scrollbar flex-1 min-w-0">
+          {/* All Transactions */}
           <button
             type="button"
-            onClick={() => setMoreActionsOpen(!moreActionsOpen)}
-            className="p-3.5 px-4 rounded-2xl border border-stone-200/80 bg-white/95 text-stone-700 hover:text-stone-950 hover:bg-white flex items-center gap-1.5 text-xs font-semibold cursor-pointer shadow-2xs"
+            onClick={() => { setSelectedCategoryTab('all'); setTypeFilter('all'); }}
+            className={`flex-1 min-w-[145px] p-3.5 rounded-2xl border text-left transition-all duration-150 cursor-pointer shrink-0 ${
+              selectedCategoryTab === 'all'
+                ? 'bg-[#0F3E2E] text-white border-[#0F3E2E] shadow-sm'
+                : 'bg-white/95 text-stone-800 border-stone-200/80 hover:border-stone-300 hover:bg-white'
+            }`}
           >
-            <span>More Actions</span>
-            <ChevronRight className={`w-3.5 h-3.5 transition-transform ${moreActionsOpen ? 'rotate-90' : ''}`} />
+            <div className="flex items-center gap-2 mb-1">
+              <FileText className={`w-4 h-4 ${selectedCategoryTab === 'all' ? 'text-white' : 'text-stone-500'}`} />
+              <span className="font-serif font-bold text-xs">
+                {language === 'hi' ? 'सभी लेन-देन' : 'All Transactions'}
+              </span>
+            </div>
+            <p className={`text-[10px] ${selectedCategoryTab === 'all' ? 'text-emerald-200' : 'text-stone-500'}`}>
+              View every record
+            </p>
           </button>
 
-          {moreActionsOpen && (
-            <div className="absolute right-0 mt-2 w-52 bg-white border border-stone-200 rounded-2xl p-1.5 shadow-xl z-30 space-y-1 text-xs">
+          {/* Customers */}
+          <button
+            type="button"
+            onClick={() => { setSelectedCategoryTab('customers'); }}
+            className={`flex-1 min-w-[135px] p-3.5 rounded-2xl border text-left transition-all duration-150 cursor-pointer shrink-0 ${
+              selectedCategoryTab === 'customers'
+                ? 'bg-[#0F3E2E] text-white border-[#0F3E2E] shadow-sm'
+                : 'bg-white/95 text-stone-800 border-stone-200/80 hover:border-stone-300 hover:bg-white'
+            }`}
+          >
+            <div className="flex items-center gap-2 mb-1">
+              <Users className={`w-4 h-4 ${selectedCategoryTab === 'customers' ? 'text-white' : 'text-emerald-700'}`} />
+              <span className="font-serif font-bold text-xs">
+                {language === 'hi' ? 'ग्राहक खाता' : 'Customers'}
+              </span>
+            </div>
+            <p className={`text-[10px] ${selectedCategoryTab === 'customers' ? 'text-emerald-200' : 'text-stone-500'}`}>
+              Party accounts & ledger
+            </p>
+          </button>
+
+          {/* Sales */}
+          <button
+            type="button"
+            onClick={() => { setSelectedCategoryTab('sales'); setTypeFilter('income'); }}
+            className={`flex-1 min-w-[130px] p-3.5 rounded-2xl border text-left transition-all duration-150 cursor-pointer shrink-0 ${
+              selectedCategoryTab === 'sales'
+                ? 'bg-[#0F3E2E] text-white border-[#0F3E2E] shadow-sm'
+                : 'bg-white/95 text-stone-800 border-stone-200/80 hover:border-stone-300 hover:bg-white'
+            }`}
+          >
+            <div className="flex items-center gap-2 mb-1">
+              <ShoppingCart className={`w-4 h-4 ${selectedCategoryTab === 'sales' ? 'text-white' : 'text-emerald-700'}`} />
+              <span className="font-serif font-bold text-xs">
+                {language === 'hi' ? 'बिक्री' : 'Sales'}
+              </span>
+            </div>
+            <p className={`text-[10px] ${selectedCategoryTab === 'sales' ? 'text-emerald-200' : 'text-stone-500'}`}>
+              Money in
+            </p>
+          </button>
+
+          {/* Purchases */}
+          <button
+            type="button"
+            onClick={() => { setSelectedCategoryTab('purchases'); setTypeFilter('expense'); }}
+            className={`flex-1 min-w-[130px] p-3.5 rounded-2xl border text-left transition-all duration-150 cursor-pointer shrink-0 ${
+              selectedCategoryTab === 'purchases'
+                ? 'bg-[#0F3E2E] text-white border-[#0F3E2E] shadow-sm'
+                : 'bg-white/95 text-stone-800 border-stone-200/80 hover:border-stone-300 hover:bg-white'
+            }`}
+          >
+            <div className="flex items-center gap-2 mb-1">
+              <ArrowDownRight className={`w-4 h-4 ${selectedCategoryTab === 'purchases' ? 'text-white' : 'text-indigo-600'}`} />
+              <span className="font-serif font-bold text-xs">
+                {language === 'hi' ? 'खरीद' : 'Purchases'}
+              </span>
+            </div>
+            <p className={`text-[10px] ${selectedCategoryTab === 'purchases' ? 'text-emerald-200' : 'text-stone-500'}`}>
+              Money out
+            </p>
+          </button>
+
+          {/* Expenses */}
+          <button
+            type="button"
+            onClick={() => { setSelectedCategoryTab('expenses'); setTypeFilter('expense'); }}
+            className={`flex-1 min-w-[130px] p-3.5 rounded-2xl border text-left transition-all duration-150 cursor-pointer shrink-0 ${
+              selectedCategoryTab === 'expenses'
+                ? 'bg-[#0F3E2E] text-white border-[#0F3E2E] shadow-sm'
+                : 'bg-white/95 text-stone-800 border-stone-200/80 hover:border-stone-300 hover:bg-white'
+            }`}
+          >
+            <div className="flex items-center gap-2 mb-1">
+              <BarChart3 className={`w-4 h-4 ${selectedCategoryTab === 'expenses' ? 'text-white' : 'text-teal-600'}`} />
+              <span className="font-serif font-bold text-xs">
+                {language === 'hi' ? 'खर्च' : 'Expenses'}
+              </span>
+            </div>
+            <p className={`text-[10px] ${selectedCategoryTab === 'expenses' ? 'text-emerald-200' : 'text-stone-500'}`}>
+              Business costs
+            </p>
+          </button>
+
+          {/* Udhaar */}
+          <button
+            type="button"
+            onClick={() => { setSelectedCategoryTab('udhaar'); setTypeFilter('all'); }}
+            className={`flex-1 min-w-[130px] p-3.5 rounded-2xl border text-left transition-all duration-150 cursor-pointer shrink-0 ${
+              selectedCategoryTab === 'udhaar'
+                ? 'bg-[#0F3E2E] text-white border-[#0F3E2E] shadow-sm'
+                : 'bg-white/95 text-stone-800 border-stone-200/80 hover:border-stone-300 hover:bg-white'
+            }`}
+          >
+            <div className="flex items-center gap-2 mb-1">
+              <IndianRupee className={`w-4 h-4 ${selectedCategoryTab === 'udhaar' ? 'text-white' : 'text-amber-600'}`} />
+              <span className="font-serif font-bold text-xs">
+                {language === 'hi' ? 'उधार' : 'Udhaar'}
+              </span>
+            </div>
+            <p className={`text-[10px] ${selectedCategoryTab === 'udhaar' ? 'text-emerald-200' : 'text-stone-500'}`}>
+              Given & received
+            </p>
+          </button>
+        </div>
+
+        {/* More Actions Trigger (Fixed cleanly on right, unclipped) */}
+        <div className="relative shrink-0">
+          <button
+            ref={moreActionsBtnRef}
+            type="button"
+            aria-haspopup="true"
+            aria-expanded={moreActionsOpen}
+            onClick={() => setMoreActionsOpen(prev => !prev)}
+            className={`h-full py-3.5 px-4 rounded-2xl border transition-all duration-150 flex items-center gap-2 text-xs font-semibold cursor-pointer shadow-2xs select-none ${
+              moreActionsOpen
+                ? 'bg-[#0F3E2E] text-white border-[#0F3E2E]'
+                : 'bg-white/95 text-stone-700 border-stone-200/80 hover:text-stone-950 hover:border-stone-300 hover:bg-white'
+            }`}
+          >
+            <span>{language === 'hi' ? 'अन्य विकल्प' : 'More Actions'}</span>
+            <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${moreActionsOpen ? 'rotate-180 text-white' : 'text-stone-500'}`} />
+          </button>
+        </div>
+      </section>
+
+      {/* MORE ACTIONS DROPDOWN PORTAL (Completely unclipped, anchored to trigger, Apple-grade styling) */}
+      {moreActionsOpen && typeof document !== 'undefined' && createPortal(
+        <>
+          {/* Subtle mobile backdrop overlay */}
+          <div
+            className="fixed inset-0 z-[100] sm:hidden bg-stone-900/20 backdrop-blur-[1px] transition-opacity"
+            onClick={() => setMoreActionsOpen(false)}
+            aria-hidden="true"
+          />
+
+          {/* Desktop/Tablet Anchored Popover (sm and up) */}
+          <div
+            ref={moreActionsMenuRef}
+            style={{
+              top: `${dropdownCoords.top}px`,
+              left: `${dropdownCoords.left}px`,
+              width: `${dropdownCoords.width}px`
+            }}
+            className="hidden sm:block fixed z-[101] bg-white border border-stone-200/90 rounded-2xl p-1.5 shadow-[0_12px_36px_rgba(0,0,0,0.12)] space-y-1 text-xs select-none animate-in fade-in zoom-in-95 duration-150"
+          >
+            <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-stone-400 border-b border-stone-100 mb-1 flex items-center justify-between">
+              <span>{language === 'hi' ? 'त्वरित कार्य' : 'Actions'}</span>
+              <span className="text-[9px] text-stone-400 lowercase font-normal">esc to close</span>
+            </div>
+
+            {/* Record Sale */}
+            <button
+              type="button"
+              onClick={() => { onOpenKeypad?.(); setMoreActionsOpen(false); }}
+              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-stone-700 hover:bg-[#FAF8F5] hover:text-stone-950 text-left transition-colors cursor-pointer group"
+            >
+              <div className="w-6 h-6 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                <ShoppingCart className="w-3.5 h-3.5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <span className="font-medium text-xs block truncate text-stone-800">
+                  {language === 'hi' ? 'बिक्री दर्ज करें' : 'Record Sale'}
+                </span>
+                <span className="text-[10px] text-stone-400 block truncate">
+                  {language === 'hi' ? 'दुकान की बिक्री' : 'Daily sales (Money In)'}
+                </span>
+              </div>
+            </button>
+
+            {/* Record Purchase */}
+            <button
+              type="button"
+              onClick={() => { onOpenKeypad?.(); setMoreActionsOpen(false); }}
+              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-stone-700 hover:bg-[#FAF8F5] hover:text-stone-950 text-left transition-colors cursor-pointer group"
+            >
+              <div className="w-6 h-6 rounded-lg bg-indigo-50 text-indigo-700 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                <ArrowDownRight className="w-3.5 h-3.5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <span className="font-medium text-xs block truncate text-stone-800">
+                  {language === 'hi' ? 'खरीद दर्ज करें' : 'Record Purchase'}
+                </span>
+                <span className="text-[10px] text-stone-400 block truncate">
+                  {language === 'hi' ? 'स्टॉक / माल खरीद' : 'Stock & goods'}
+                </span>
+              </div>
+            </button>
+
+            {/* Add Expense */}
+            <button
+              type="button"
+              onClick={() => { onOpenKeypad?.(); setMoreActionsOpen(false); }}
+              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-stone-700 hover:bg-[#FAF8F5] hover:text-stone-950 text-left transition-colors cursor-pointer group"
+            >
+              <div className="w-6 h-6 rounded-lg bg-teal-50 text-teal-700 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                <BarChart3 className="w-3.5 h-3.5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <span className="font-medium text-xs block truncate text-stone-800">
+                  {language === 'hi' ? 'खर्च जोड़ें' : 'Add Expense'}
+                </span>
+                <span className="text-[10px] text-stone-400 block truncate">
+                  {language === 'hi' ? 'बिजली, किराया आदि' : 'Bills, transport, misc'}
+                </span>
+              </div>
+            </button>
+
+            {/* Add Customer Account */}
+            <button
+              type="button"
+              onClick={() => { setIsRegisterCustomerOpen(true); setMoreActionsOpen(false); }}
+              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-stone-700 hover:bg-[#FAF8F5] hover:text-stone-950 text-left transition-colors cursor-pointer group"
+            >
+              <div className="w-6 h-6 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                <UserPlus className="w-3.5 h-3.5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <span className="font-medium text-xs block truncate text-stone-800">
+                  {language === 'hi' ? 'नया ग्राहक खाता' : 'Add Customer Account'}
+                </span>
+                <span className="text-[10px] text-stone-400 block truncate">
+                  {language === 'hi' ? 'उधार खाता शुरू करें' : 'Open party khata'}
+                </span>
+              </div>
+            </button>
+
+            {/* Voice Khata Entry */}
+            <button
+              type="button"
+              onClick={() => { setIsVoiceOpen(true); setMoreActionsOpen(false); }}
+              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-stone-700 hover:bg-[#FAF8F5] hover:text-stone-950 text-left transition-colors cursor-pointer group"
+            >
+              <div className="w-6 h-6 rounded-lg bg-amber-50 text-amber-700 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                <Mic className="w-3.5 h-3.5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <span className="font-medium text-xs block truncate text-stone-800">
+                  {language === 'hi' ? 'बोलकर खाता लिखें' : 'Voice Khata Entry'}
+                </span>
+                <span className="text-[10px] text-stone-400 block truncate">
+                  {language === 'hi' ? 'हिंदी / अंग्रेजी वॉइस' : 'Speak to record'}
+                </span>
+              </div>
+            </button>
+
+            {/* Subtle Divider */}
+            <div className="my-1 border-t border-stone-100" />
+
+            {/* Export CSV Ledger */}
+            <button
+              type="button"
+              onClick={() => { handleExportCSV(); setMoreActionsOpen(false); }}
+              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-stone-700 hover:bg-[#FAF8F5] hover:text-stone-950 text-left transition-colors cursor-pointer group"
+            >
+              <div className="w-6 h-6 rounded-lg bg-stone-100 text-stone-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                <Download className="w-3.5 h-3.5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <span className="font-medium text-xs block truncate text-stone-800">
+                  {language === 'hi' ? 'CSV लेजर डाउनलोड करें' : 'Export CSV Ledger'}
+                </span>
+              </div>
+            </button>
+
+            {/* Print Ledger */}
+            <button
+              type="button"
+              onClick={() => { window.print(); setMoreActionsOpen(false); }}
+              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-stone-700 hover:bg-[#FAF8F5] hover:text-stone-950 text-left transition-colors cursor-pointer group"
+            >
+              <div className="w-6 h-6 rounded-lg bg-stone-100 text-stone-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                <Printer className="w-3.5 h-3.5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <span className="font-medium text-xs block truncate text-stone-800">
+                  {language === 'hi' ? 'लेजर प्रिंट करें' : 'Print Ledger'}
+                </span>
+              </div>
+            </button>
+          </div>
+
+          {/* Mobile Action Bottom Sheet (< 640px) */}
+          <div
+            ref={moreActionsMenuRef}
+            className="sm:hidden fixed inset-x-3 bottom-5 z-[101] bg-white border border-stone-200/90 rounded-2xl p-3 shadow-2xl space-y-1.5 text-xs select-none animate-in slide-in-from-bottom-4 duration-200"
+          >
+            <div className="flex items-center justify-between pb-2 border-b border-stone-100 mb-1">
+              <span className="font-serif font-bold text-xs text-stone-900 tracking-wide uppercase">
+                {language === 'hi' ? 'कार्य व विकल्प' : 'Actions & Tools'}
+              </span>
+              <button
+                type="button"
+                onClick={() => setMoreActionsOpen(false)}
+                className="p-1 rounded-lg text-stone-400 hover:text-stone-700 hover:bg-stone-100 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 gap-1 max-h-[60vh] overflow-y-auto">
+              <button
+                type="button"
+                onClick={() => { onOpenKeypad?.(); setMoreActionsOpen(false); }}
+                className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-[#FAF8F5] text-left transition-colors cursor-pointer"
+              >
+                <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
+                  <ShoppingCart className="w-4 h-4" />
+                </div>
+                <div>
+                  <span className="font-medium text-xs block text-stone-800">
+                    {language === 'hi' ? 'बिक्री दर्ज करें' : 'Record Sale'}
+                  </span>
+                  <span className="text-[10px] text-stone-400 block">
+                    {language === 'hi' ? 'दुकान की बिक्री' : 'Daily sales (Money In)'}
+                  </span>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => { onOpenKeypad?.(); setMoreActionsOpen(false); }}
+                className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-[#FAF8F5] text-left transition-colors cursor-pointer"
+              >
+                <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-700 flex items-center justify-center shrink-0">
+                  <ArrowDownRight className="w-4 h-4" />
+                </div>
+                <div>
+                  <span className="font-medium text-xs block text-stone-800">
+                    {language === 'hi' ? 'खरीद दर्ज करें' : 'Record Purchase'}
+                  </span>
+                  <span className="text-[10px] text-stone-400 block">
+                    {language === 'hi' ? 'स्टॉक / माल खरीद' : 'Stock & goods'}
+                  </span>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => { onOpenKeypad?.(); setMoreActionsOpen(false); }}
+                className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-[#FAF8F5] text-left transition-colors cursor-pointer"
+              >
+                <div className="w-8 h-8 rounded-lg bg-teal-50 text-teal-700 flex items-center justify-center shrink-0">
+                  <BarChart3 className="w-4 h-4" />
+                </div>
+                <div>
+                  <span className="font-medium text-xs block text-stone-800">
+                    {language === 'hi' ? 'खर्च जोड़ें' : 'Add Expense'}
+                  </span>
+                  <span className="text-[10px] text-stone-400 block">
+                    {language === 'hi' ? 'बिजली, किराया आदि' : 'Bills, transport, misc'}
+                  </span>
+                </div>
+              </button>
+
               <button
                 type="button"
                 onClick={() => { setIsRegisterCustomerOpen(true); setMoreActionsOpen(false); }}
-                className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-stone-700 hover:bg-stone-100 hover:text-stone-950 text-left transition-colors cursor-pointer"
+                className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-[#FAF8F5] text-left transition-colors cursor-pointer"
               >
-                <UserPlus className="w-4 h-4 text-emerald-700" />
-                <span>Add Customer Account</span>
+                <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
+                  <UserPlus className="w-4 h-4" />
+                </div>
+                <div>
+                  <span className="font-medium text-xs block text-stone-800">
+                    {language === 'hi' ? 'नया ग्राहक खाता' : 'Add Customer Account'}
+                  </span>
+                  <span className="text-[10px] text-stone-400 block">
+                    {language === 'hi' ? 'उधार खाता शुरू करें' : 'Open party khata'}
+                  </span>
+                </div>
               </button>
+
               <button
                 type="button"
                 onClick={() => { setIsVoiceOpen(true); setMoreActionsOpen(false); }}
-                className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-stone-700 hover:bg-stone-100 hover:text-stone-950 text-left transition-colors cursor-pointer"
+                className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-[#FAF8F5] text-left transition-colors cursor-pointer"
               >
-                <Mic className="w-4 h-4 text-amber-600" />
-                <span>Voice Khata Entry</span>
+                <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-700 flex items-center justify-center shrink-0">
+                  <Mic className="w-4 h-4" />
+                </div>
+                <div>
+                  <span className="font-medium text-xs block text-stone-800">
+                    {language === 'hi' ? 'बोलकर खाता लिखें' : 'Voice Khata Entry'}
+                  </span>
+                  <span className="text-[10px] text-stone-400 block">
+                    {language === 'hi' ? 'हिंदी / अंग्रेजी' : 'Speak to record'}
+                  </span>
+                </div>
               </button>
-              <button
-                type="button"
-                onClick={() => { handleExportCSV(); setMoreActionsOpen(false); }}
-                className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-stone-700 hover:bg-stone-100 hover:text-stone-950 text-left transition-colors cursor-pointer"
-              >
-                <Download className="w-4 h-4 text-stone-500" />
-                <span>Export CSV Ledger</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => { window.print(); setMoreActionsOpen(false); }}
-                className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-stone-700 hover:bg-stone-100 hover:text-stone-950 text-left transition-colors cursor-pointer"
-              >
-                <Printer className="w-4 h-4 text-stone-500" />
-                <span>Print Ledger</span>
-              </button>
+
+              <div className="my-1 border-t border-stone-100" />
+
+              <div className="flex items-center gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => { handleExportCSV(); setMoreActionsOpen(false); }}
+                  className="flex-1 flex items-center justify-center gap-2 p-2.5 rounded-xl bg-stone-50 hover:bg-stone-100 border border-stone-200 text-stone-700 text-xs font-semibold cursor-pointer"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Export CSV</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { window.print(); setMoreActionsOpen(false); }}
+                  className="flex-1 flex items-center justify-center gap-2 p-2.5 rounded-xl bg-stone-50 hover:bg-stone-100 border border-stone-200 text-stone-700 text-xs font-semibold cursor-pointer"
+                >
+                  <Printer className="w-3.5 h-3.5" />
+                  <span>Print</span>
+                </button>
+              </div>
             </div>
-          )}
-        </div>
-      </section>
+          </div>
+        </>,
+        document.body
+      )}
 
       {/* 3. SEARCH & FILTER TOOLBAR */}
       <section className="w-full flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 bg-white/90 border border-stone-200/80 p-2.5 sm:p-3 rounded-2xl shadow-2xs">
