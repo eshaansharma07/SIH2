@@ -81,13 +81,13 @@ export function CreditGauge({
         >
           <defs>
             <linearGradient id="setuCreditGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#DE8361" />    {/* Terracotta */}
-              <stop offset="35%" stopColor="#D97706" />   {/* Turmeric Ochre */}
-              <stop offset="70%" stopColor="#276749" />   {/* ForestRural */}
-              <stop offset="100%" stopColor="#1E2A4A" />  {/* LedgerInk */}
+              <stop offset="0%" stopColor="#B91C1C" />    {/* Vermillion */}
+              <stop offset="35%" stopColor="#D97706" />   {/* Turmeric Gold */}
+              <stop offset="70%" stopColor="#15803D" />   {/* Reserve Green */}
+              <stop offset="100%" stopColor="#047857" />  {/* Deep Emerald */}
             </linearGradient>
             <filter id="turmericGlow" x="-20%" y="-20%" width="140%" height="140%">
-              <feDropShadow dx="0" dy="0" stdDeviation="3.5" floodColor="#D97706" floodOpacity="0.45"/>
+              <feDropShadow dx="0" dy="0" stdDeviation="3.5" floodColor="#D97706" floodOpacity="0.3"/>
             </filter>
           </defs>
 
@@ -95,7 +95,7 @@ export function CreditGauge({
           <path
             d={`M ${cx - radius} ${cy} A ${radius} ${radius} 0 0 1 ${cx + radius} ${cy}`}
             fill="none"
-            stroke="#ECE4D4"
+            stroke="#E7DFD5"
             strokeWidth={compact ? "10" : "14"}
             strokeLinecap="round"
           />
@@ -124,35 +124,35 @@ export function CreditGauge({
                 cy={dotY} 
                 r={compact ? "7" : "8.5"} 
                 fill="#D97706" 
-                opacity="0.35"
+                opacity="0.3"
               />
               {/* Core Solid Needle Point */}
               <circle 
                 cx={dotX} 
                 cy={dotY} 
                 r={compact ? "4.5" : "5.5"} 
-                fill="#FAF7F2" 
-                stroke="#1E2A4A"
+                fill="#FAF8F5" 
+                stroke="#1C1917"
                 strokeWidth="2.5"
                 className="drop-shadow-sm"
               />
             </g>
           )}
 
-          {/* Scale Labels in warm ledger tones (no slate) */}
-          <text x={cx - radius} y={cy + 16} fontSize="10" fontWeight="700" fill="#7C6E5A" textAnchor="middle" fontFamily="IBM Plex Sans, sans-serif">300</text>
-          <text x={cx} y={cy - radius - 6} fontSize="9" fontWeight="700" fill="#7C6E5A" textAnchor="middle" fontFamily="IBM Plex Sans, sans-serif">600</text>
-          <text x={cx + radius} y={cy + 16} fontSize="10" fontWeight="700" fill="#7C6E5A" textAnchor="middle" fontFamily="IBM Plex Sans, sans-serif">850</text>
+          {/* Scale Labels in warm stone tones */}
+          <text x={cx - radius} y={cy + 16} fontSize="10" fontWeight="700" fill="#78716C" textAnchor="middle" fontFamily="Plus Jakarta Sans, sans-serif">300</text>
+          <text x={cx} y={cy - radius - 6} fontSize="9" fontWeight="700" fill="#78716C" textAnchor="middle" fontFamily="Plus Jakarta Sans, sans-serif">600</text>
+          <text x={cx + radius} y={cy + 16} fontSize="10" fontWeight="700" fill="#78716C" textAnchor="middle" fontFamily="Plus Jakarta Sans, sans-serif">850</text>
         </svg>
       </div>
 
       {/* Score Number & Badge */}
       <div className="mt-0.5 flex flex-col items-center">
         <div className="flex items-baseline gap-1">
-          <span className={`${compact ? 'text-3xl' : 'text-4xl'} font-black text-ledgerInk tracking-tight tabular-nums font-serif`}>
+          <span className={`${compact ? 'text-3xl' : 'text-4xl'} font-black text-stone-900 tracking-tight tabular-nums font-serif`}>
             {hasScore ? currentScoreForDisplay : '—'}
           </span>
-          <span className="text-xs font-semibold text-ledgerInk/60 font-sans">/ {maxScore}</span>
+          <span className="text-xs font-semibold text-stone-400 font-sans">/ {maxScore}</span>
         </div>
 
         <div className="mt-1">

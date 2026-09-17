@@ -21,19 +21,19 @@ export function SectionHeader({
   };
 
   return (
-    <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 border-b border-paper-200/90 pb-3 sm:pb-4 min-w-0 ${className}`}>
+    <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 border-b border-stone-200/70 pb-3 sm:pb-3.5 min-w-0 ${className}`}>
       <div className="flex items-start sm:items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
         {Icon && (
-          <div className={`p-2 sm:p-2.5 rounded-xl border shadow-2xs shrink-0 ${iconThemes[iconColor] || iconThemes.terracotta}`}>
-            <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
+          <div className={`p-2 rounded-xl border shadow-2xs shrink-0 ${iconThemes[iconColor] || iconThemes.terracotta}`}>
+            <Icon className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
           </div>
         )}
         <div className="min-w-0 flex-1">
-          <h2 className="text-sm sm:text-lg font-black text-indigoRural-900 tracking-tight font-display break-words">
+          <h2 className="text-sm sm:text-base font-bold text-stone-900 tracking-tight font-display break-words">
             {title}
           </h2>
           {subtitle && (
-            <p className="text-[11px] sm:text-xs text-indigoRural-600 font-medium mt-0.5 break-words">
+            <p className="text-[11px] sm:text-xs text-stone-500 font-normal mt-0.5 break-words">
               {subtitle}
             </p>
           )}

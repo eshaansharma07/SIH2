@@ -81,14 +81,14 @@ export function SchemeMatcherPage({ shop, creditData, onNavigateTab }) {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2.5">
-              <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-indigoRural-900 font-display">
+              <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-stone-900 font-display">
                 {language === 'hi' ? 'सरकारी योजना मिलान' : 'Government Scheme Matcher'}
               </h1>
               <Badge variant="positive" size="sm" dot>
                 {eligibleCount} Eligible Schemes
               </Badge>
             </div>
-            <p className="text-xs text-indigoRural-500 mt-1">
+            <p className="text-xs text-stone-500 mt-1">
               {language === 'hi' ? 'बिना गारंटी 10 प्रामाणिक भारतीय सरकारी योजनाएं' : 'Real, verified Indian credit schemes matched to your audited turnover'}
             </p>
           </div>
@@ -108,13 +108,13 @@ export function SchemeMatcherPage({ shop, creditData, onNavigateTab }) {
       </div>
 
       {/* 2. Segmented Pill Tabs */}
-      <div className="flex gap-1 p-1 bg-paper-200/80 rounded-xl max-w-md">
+      <div className="flex gap-1 p-1 bg-stone-100/80 rounded-xl max-w-md">
         <button
           onClick={() => setActiveTab('matched')}
           className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
             activeTab === 'matched' 
-              ? 'bg-white text-indigoRural-900 shadow-2xs' 
-              : 'text-indigoRural-600 hover:text-indigoRural-900'
+              ? 'bg-white text-stone-900 shadow-2xs' 
+              : 'text-stone-600 hover:text-stone-900'
           }`}
         >
           <CheckCircle2 className="w-3.5 h-3.5" />
@@ -124,8 +124,8 @@ export function SchemeMatcherPage({ shop, creditData, onNavigateTab }) {
           onClick={() => setActiveTab('library')}
           className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
             activeTab === 'library' 
-              ? 'bg-white text-indigoRural-900 shadow-2xs' 
-              : 'text-indigoRural-600 hover:text-indigoRural-900'
+              ? 'bg-white text-stone-900 shadow-2xs' 
+              : 'text-stone-600 hover:text-stone-900'
           }`}
         >
           <BookOpen className="w-3.5 h-3.5" />
@@ -136,9 +136,9 @@ export function SchemeMatcherPage({ shop, creditData, onNavigateTab }) {
       {/* Tab 1: Your Ranked Matches */}
       {activeTab === 'matched' && (
         <div className="space-y-6">
-          <div className="p-4 bg-forestRural-50 border border-forestRural-200 rounded-xl text-xs text-forestRural-900 flex items-center justify-between">
+          <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-900 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4 text-forestRural-700 shrink-0" />
+              <ShieldCheck className="w-4 h-4 text-emerald-700 shrink-0" />
               <span className="font-semibold">
                 Ranked against your {turnoverText} turnover and {scoreText} for {shop?.state || 'your state'}.
               </span>
@@ -150,10 +150,10 @@ export function SchemeMatcherPage({ shop, creditData, onNavigateTab }) {
 
           {/* Section 1: Central Government Schemes */}
           <div className="space-y-3.5">
-            <div className="flex items-center justify-between border-b border-paper-200 pb-2">
+            <div className="flex items-center justify-between border-b border-stone-200 pb-2">
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-terracotta-600" />
-                <h3 className="text-sm font-black text-indigoRural-950 font-display">
+                <h3 className="text-sm font-black text-stone-950 font-display">
                   {language === 'hi' ? 'केंद्रीकृत सरकारी योजनाएं' : 'Central Government Schemes (Pan-India)'}
                 </h3>
               </div>
@@ -182,11 +182,11 @@ export function SchemeMatcherPage({ shop, creditData, onNavigateTab }) {
                   {/* Scheme Summary Header */}
                   <div 
                     onClick={() => setExpandedSchemeId(isExpanded ? null : scheme.id)}
-                    className="p-5 sm:p-6 cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-4 select-none hover:bg-paper-50/60 transition"
+                    className="p-5 sm:p-6 cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-4 select-none hover:bg-stone-50/60 transition"
                   >
                     <div className="space-y-1 max-w-2xl">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-base font-extrabold text-indigoRural-900 tracking-tight font-display">
+                        <span className="text-base font-extrabold text-stone-900 tracking-tight font-display">
                           {scheme.name}
                         </span>
                         <Badge 
@@ -196,17 +196,17 @@ export function SchemeMatcherPage({ shop, creditData, onNavigateTab }) {
                           {scheme.matchScore}% Match
                         </Badge>
                       </div>
-                      <p className="text-xs text-indigoRural-500 line-clamp-1 font-medium">
+                      <p className="text-xs text-stone-500 line-clamp-1 font-medium">
                         {scheme.plainLanguageSummary}
                       </p>
                     </div>
 
                     <div className="flex items-center justify-between sm:justify-end gap-4 shrink-0">
                       <div className="text-left sm:text-right">
-                        <span className="text-[10px] text-indigoRural-400 font-bold block uppercase tracking-wider">
+                        <span className="text-[10px] text-stone-400 font-bold block uppercase tracking-wider">
                           Maximum Facility
                         </span>
-                        <span className="text-base font-black text-indigoRural-900 tabular-nums">
+                        <span className="text-base font-black text-stone-900 tabular-nums">
                           {scheme.loanRangeText}
                         </span>
                       </div>
@@ -218,33 +218,33 @@ export function SchemeMatcherPage({ shop, creditData, onNavigateTab }) {
 
                   {/* Expanded Breakdown */}
                   {isExpanded && (
-                    <div className="px-5 sm:px-6 pb-6 pt-2 border-t border-paper-200 bg-paper-50/50 space-y-4 animate-fadeIn text-xs">
+                    <div className="px-5 sm:px-6 pb-6 pt-2 border-t border-stone-200 bg-stone-50/50 space-y-4 animate-fadeIn text-xs">
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                        <div className="p-3 bg-white rounded-xl border border-paper-200">
-                          <span className="text-indigoRural-400 text-[10px] block uppercase font-bold">Interest Rate</span>
-                          <strong className="text-indigoRural-900 text-xs">{scheme.interestRate}</strong>
+                        <div className="p-3 bg-white rounded-xl border border-stone-200">
+                          <span className="text-stone-400 text-[10px] block uppercase font-bold">Interest Rate</span>
+                          <strong className="text-stone-900 text-xs">{scheme.interestRate}</strong>
                         </div>
-                        <div className="p-3 bg-white rounded-xl border border-paper-200">
-                          <span className="text-indigoRural-400 text-[10px] block uppercase font-bold">Govt Subsidy</span>
-                          <strong className="text-forestRural-700 text-xs">{scheme.subsidyText}</strong>
+                        <div className="p-3 bg-white rounded-xl border border-stone-200">
+                          <span className="text-stone-400 text-[10px] block uppercase font-bold">Govt Subsidy</span>
+                          <strong className="text-emerald-700 text-xs">{scheme.subsidyText}</strong>
                         </div>
-                        <div className="p-3 bg-white rounded-xl border border-paper-200">
-                          <span className="text-indigoRural-400 text-[10px] block uppercase font-bold">Collateral Required</span>
-                          <strong className="text-indigoRural-900 text-xs">{scheme.collateralText}</strong>
+                        <div className="p-3 bg-white rounded-xl border border-stone-200">
+                          <span className="text-stone-400 text-[10px] block uppercase font-bold">Collateral Required</span>
+                          <strong className="text-stone-900 text-xs">{scheme.collateralText}</strong>
                         </div>
-                        <div className="p-3 bg-white rounded-xl border border-paper-200">
-                          <span className="text-indigoRural-400 text-[10px] block uppercase font-bold">Target Nodal Authority</span>
-                          <strong className="text-indigoRural-900 text-xs truncate block">{scheme.ministry || scheme.nodalBankText}</strong>
+                        <div className="p-3 bg-white rounded-xl border border-stone-200">
+                          <span className="text-stone-400 text-[10px] block uppercase font-bold">Target Nodal Authority</span>
+                          <strong className="text-stone-900 text-xs truncate block">{scheme.ministry || scheme.nodalBankText}</strong>
                         </div>
                       </div>
 
                       {/* Required Documents Checklist */}
-                      <div className="p-4 bg-white rounded-xl border border-paper-200 space-y-2">
-                        <span className="font-extrabold text-indigoRural-900 block">Required Documents (सरल दस्तावेज़ सूची):</span>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-indigoRural-700">
+                      <div className="p-4 bg-white rounded-xl border border-stone-200 space-y-2">
+                        <span className="font-extrabold text-stone-900 block">Required Documents (सरल दस्तावेज़ सूची):</span>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-stone-700">
                           {scheme.requiredDocuments?.map((doc, dIdx) => (
                             <div key={dIdx} className="flex items-center gap-2">
-                              <CheckCircle2 className="w-3.5 h-3.5 text-forestRural-600 shrink-0" />
+                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                               <span>{doc}</span>
                             </div>
                           ))}
@@ -272,10 +272,10 @@ export function SchemeMatcherPage({ shop, creditData, onNavigateTab }) {
 
           {/* Section 2: State Government Schemes */}
           <div className="space-y-3.5 pt-2">
-            <div className="flex items-center justify-between border-b border-paper-200 pb-2">
+            <div className="flex items-center justify-between border-b border-stone-200 pb-2">
               <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-forestRural-600" />
-                <h3 className="text-sm font-black text-indigoRural-950 font-display">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-600" />
+                <h3 className="text-sm font-black text-stone-950 font-display">
                   {language === 'hi' 
                     ? `${shop?.state || 'राज्य'} सरकार की विशेष योजनाएं` 
                     : `${shop?.state || 'State'} Government Schemes`}
@@ -300,18 +300,18 @@ export function SchemeMatcherPage({ shop, creditData, onNavigateTab }) {
                   >
                     <Card 
                       padding="none"
-                      className={`overflow-hidden transition-all border-forestRural-200 ${
-                        isExpanded ? 'ring-2 ring-forestRural-500 border-forestRural-400' : ''
+                      className={`overflow-hidden transition-all border-emerald-200 ${
+                        isExpanded ? 'ring-2 ring-emerald-500 border-emerald-400' : ''
                       }`}
                     >
                     {/* Scheme Summary Header */}
                     <div 
                       onClick={() => setExpandedSchemeId(isExpanded ? null : scheme.id)}
-                      className="p-5 sm:p-6 cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-4 select-none hover:bg-forestRural-50/40 transition"
+                      className="p-5 sm:p-6 cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-4 select-none hover:bg-emerald-50/40 transition"
                     >
                       <div className="space-y-1 max-w-2xl">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-base font-extrabold text-indigoRural-900 tracking-tight font-display">
+                          <span className="text-base font-extrabold text-stone-900 tracking-tight font-display">
                             {scheme.name}
                           </span>
                           <Badge variant="positive" size="sm">
@@ -324,21 +324,21 @@ export function SchemeMatcherPage({ shop, creditData, onNavigateTab }) {
                             {scheme.matchScore}% Match
                           </Badge>
                         </div>
-                        <p className="text-xs text-indigoRural-500 line-clamp-1 font-medium">
+                        <p className="text-xs text-stone-500 line-clamp-1 font-medium">
                           {scheme.plainLanguageSummary}
                         </p>
                       </div>
 
                       <div className="flex items-center justify-between sm:justify-end gap-4 shrink-0">
                         <div className="text-left sm:text-right">
-                          <span className="text-[10px] text-indigoRural-400 font-bold block uppercase tracking-wider">
+                          <span className="text-[10px] text-stone-400 font-bold block uppercase tracking-wider">
                             Maximum Facility
                           </span>
-                          <span className="text-base font-black text-indigoRural-900 tabular-nums">
+                          <span className="text-base font-black text-stone-900 tabular-nums">
                             {scheme.loanRangeText}
                           </span>
                         </div>
-                        <span className="text-xs text-forestRural-800 font-bold px-3 py-1.5 bg-forestRural-50 rounded-lg border border-forestRural-200">
+                        <span className="text-xs text-emerald-800 font-bold px-3 py-1.5 bg-emerald-50 rounded-lg border border-emerald-200">
                           {isExpanded ? 'Hide' : 'Details'}
                         </span>
                       </div>
@@ -346,33 +346,33 @@ export function SchemeMatcherPage({ shop, creditData, onNavigateTab }) {
 
                     {/* Expanded Breakdown */}
                     {isExpanded && (
-                      <div className="px-5 sm:px-6 pb-6 pt-2 border-t border-forestRural-200 bg-forestRural-50/30 space-y-4 animate-fadeIn text-xs">
+                      <div className="px-5 sm:px-6 pb-6 pt-2 border-t border-emerald-200 bg-emerald-50/30 space-y-4 animate-fadeIn text-xs">
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                          <div className="p-3 bg-white rounded-xl border border-paper-200">
-                            <span className="text-indigoRural-400 text-[10px] block uppercase font-bold">Interest Rate</span>
-                            <strong className="text-indigoRural-900 text-xs">{scheme.interestRate}</strong>
+                          <div className="p-3 bg-white rounded-xl border border-stone-200">
+                            <span className="text-stone-400 text-[10px] block uppercase font-bold">Interest Rate</span>
+                            <strong className="text-stone-900 text-xs">{scheme.interestRate}</strong>
                           </div>
-                          <div className="p-3 bg-white rounded-xl border border-paper-200">
-                            <span className="text-indigoRural-400 text-[10px] block uppercase font-bold">State Subsidy</span>
-                            <strong className="text-forestRural-700 text-xs">{scheme.subsidyText}</strong>
+                          <div className="p-3 bg-white rounded-xl border border-stone-200">
+                            <span className="text-stone-400 text-[10px] block uppercase font-bold">State Subsidy</span>
+                            <strong className="text-emerald-700 text-xs">{scheme.subsidyText}</strong>
                           </div>
-                          <div className="p-3 bg-white rounded-xl border border-paper-200">
-                            <span className="text-indigoRural-400 text-[10px] block uppercase font-bold">Collateral Required</span>
-                            <strong className="text-indigoRural-900 text-xs">{scheme.collateralText}</strong>
+                          <div className="p-3 bg-white rounded-xl border border-stone-200">
+                            <span className="text-stone-400 text-[10px] block uppercase font-bold">Collateral Required</span>
+                            <strong className="text-stone-900 text-xs">{scheme.collateralText}</strong>
                           </div>
-                          <div className="p-3 bg-white rounded-xl border border-paper-200">
-                            <span className="text-indigoRural-400 text-[10px] block uppercase font-bold">State Department</span>
-                            <strong className="text-indigoRural-900 text-xs truncate block">{scheme.ministry}</strong>
+                          <div className="p-3 bg-white rounded-xl border border-stone-200">
+                            <span className="text-stone-400 text-[10px] block uppercase font-bold">State Department</span>
+                            <strong className="text-stone-900 text-xs truncate block">{scheme.ministry}</strong>
                           </div>
                         </div>
 
                         {/* Required Documents Checklist */}
-                        <div className="p-4 bg-white rounded-xl border border-paper-200 space-y-2">
-                          <span className="font-extrabold text-indigoRural-900 block">Required Documents (सरल दस्तावेज़ सूची):</span>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-indigoRural-700">
+                        <div className="p-4 bg-white rounded-xl border border-stone-200 space-y-2">
+                          <span className="font-extrabold text-stone-900 block">Required Documents (सरल दस्तावेज़ सूची):</span>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-stone-700">
                             {scheme.requiredDocuments?.map((doc, dIdx) => (
                               <div key={dIdx} className="flex items-center gap-2">
-                                <CheckCircle2 className="w-3.5 h-3.5 text-forestRural-600 shrink-0" />
+                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                                 <span>{doc}</span>
                               </div>
                             ))}
@@ -424,15 +424,15 @@ export function SchemeMatcherPage({ shop, creditData, onNavigateTab }) {
             {filteredLibrary.map(s => (
               <Card key={s.id} padding="md" className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="font-extrabold text-sm text-indigoRural-900">{s.name}</span>
+                  <span className="font-extrabold text-sm text-stone-900">{s.name}</span>
                   <Badge variant="neutral" size="sm">
                     {s.category}
                   </Badge>
                 </div>
-                <p className="text-xs text-indigoRural-500 line-clamp-2">{s.plainLanguageSummary}</p>
-                <div className="flex justify-between items-center pt-2 border-t border-paper-200 text-xs font-bold">
-                  <span className="text-indigoRural-400">Limit</span>
-                  <span className="text-indigoRural-900">{s.loanRangeText}</span>
+                <p className="text-xs text-stone-500 line-clamp-2">{s.plainLanguageSummary}</p>
+                <div className="flex justify-between items-center pt-2 border-t border-stone-200 text-xs font-bold">
+                  <span className="text-stone-400">Limit</span>
+                  <span className="text-stone-900">{s.loanRangeText}</span>
                 </div>
               </Card>
             ))}

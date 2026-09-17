@@ -179,7 +179,7 @@ export function BankDossierPage({ shop, isDemoMode, onBack }) {
 
   if (loading && !dossierData) {
     return (
-      <div className="py-16 text-center text-indigoRural-500 text-sm">
+      <div className="py-16 text-center text-stone-500 text-sm">
         {language === 'hi' ? 'बैंक प्रमाण-पत्र तैयार किया जा रहा है...' : 'Generating Official Bankable Dossier...'}
       </div>
     );
@@ -230,8 +230,8 @@ export function BankDossierPage({ shop, isDemoMode, onBack }) {
           </Button>
 
           <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
-            <span className="text-xs text-indigoRural-500 font-semibold hidden lg:inline-flex items-center gap-1.5">
-              <FileCheck className="w-3.5 h-3.5 text-forestRural-600" />
+            <span className="text-xs text-stone-500 font-semibold hidden lg:inline-flex items-center gap-1.5">
+              <FileCheck className="w-3.5 h-3.5 text-emerald-600" />
               <span>Working Capital Summary — PSL-Format Ready</span>
             </span>
             <Button
@@ -272,35 +272,35 @@ export function BankDossierPage({ shop, isDemoMode, onBack }) {
       </div>
 
       {/* Official Printable Bank Dossier Sheet */}
-      <div className="bg-white rounded-2xl p-3.5 sm:p-10 border border-paper-300 shadow-sm space-y-5 sm:space-y-6 text-indigoRural-900 print:border-0 print:shadow-none print:p-0 print:m-0 font-sans">
+      <div className="bg-white rounded-2xl p-3.5 sm:p-10 border border-stone-300 shadow-sm space-y-5 sm:space-y-6 text-stone-900 print:border-0 print:shadow-none print:p-0 print:m-0 font-sans">
         
         {/* Dossier Letterhead */}
-        <div className="border-b-2 border-indigoRural-900 pb-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="border-b-2 border-stone-900 pb-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="flex items-center gap-3.5">
             <SaathiAvatar size="lg" />
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-xl sm:text-2xl font-black text-indigoRural-900 tracking-tight font-display">
+                <h1 className="text-xl sm:text-2xl font-black text-stone-900 tracking-tight font-display">
                   {APP_NAME_HI} ({APP_NAME_EN})
                 </h1>
                 <Badge variant="brand" size="sm">
                   DPI-Inspired Architecture (Prototype)
                 </Badge>
               </div>
-              <p className="text-xs font-bold text-indigoRural-700 mt-0.5">
+              <p className="text-xs font-bold text-stone-700 mt-0.5">
                 Formatted per RBI Priority Sector Lending (PSL) documentation guidelines • Prototype, not an official filing
               </p>
-              <p className="text-[10px] text-indigoRural-500">
+              <p className="text-[10px] text-stone-500">
                 Credit Readiness Appraisal Memo • Prototype for Bank Loan File Evaluation
               </p>
             </div>
           </div>
 
           <div className="text-left sm:text-right space-y-1 text-xs">
-            <div className="font-mono text-indigoRural-900 font-extrabold text-xs">
+            <div className="font-mono text-stone-900 font-extrabold text-xs">
               DOC REF: {d?.dossierNumber || 'SS-DOC-BAL-493587'}
             </div>
-            <div className="text-[11px] text-indigoRural-500">
+            <div className="text-[11px] text-stone-500">
               Issue Date: {d?.issueDate || (isDemo ? DEMO_DOSSIER.issueDate : new Date().toLocaleDateString('en-IN'))}
             </div>
             <Badge variant={d?.creditScore?.isUnrated || d?.creditScore?.score === null ? 'attention' : 'positive'} size="sm" dot>
@@ -313,13 +313,13 @@ export function BankDossierPage({ shop, isDemoMode, onBack }) {
         <WarliBorder className="w-full h-5 text-terracotta-400 opacity-60 my-1" />
 
         {/* Title of Document */}
-        <div className="text-center py-3 bg-paper-100 rounded-xl border border-paper-300">
-          <h2 className="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-indigoRural-900 font-display">
+        <div className="text-center py-3 bg-[#FAF8F5] rounded-xl border border-stone-300">
+          <h2 className="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-stone-900 font-display">
             {d?.creditScore?.isUnrated || d?.creditScore?.score === null 
               ? 'Provisional Micro-Enterprise Statement & Registration Dossier' 
               : 'Micro-Enterprise Financial Statement & Credit Readiness Certificate'}
           </h2>
-          <p className="text-[11px] text-indigoRural-500 mt-0.5">
+          <p className="text-[11px] text-stone-500 mt-0.5">
             {d?.creditScore?.isUnrated || d?.creditScore?.score === null
               ? 'अनंतिम सूक्ष्म उद्यम विवरण एवं पंजीकरण डॉसियर (Provisional Bank File)'
               : 'सूक्ष्म उद्यम वित्तीय विवरण एवं ऋण पात्रता प्रमाण-पत्र (For Bank Branch Loan File)'}
@@ -328,75 +328,75 @@ export function BankDossierPage({ shop, isDemoMode, onBack }) {
 
         {/* 1. Borrower & Enterprise Profile */}
         <div className="space-y-2">
-          <h3 className="text-xs font-black text-indigoRural-900 uppercase tracking-wider border-b border-paper-200 pb-1">
+          <h3 className="text-xs font-black text-stone-900 uppercase tracking-wider border-b border-stone-200 pb-1">
             1. Enterprise Identification (उद्यम पहचान विवरण)
           </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3 text-xs bg-paper-50 p-3 sm:p-4 rounded-xl border border-paper-200">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3 text-xs bg-stone-50 p-3 sm:p-4 rounded-xl border border-stone-200">
             <div className="min-w-0">
-              <span className="text-indigoRural-400 block text-[10px] font-semibold">Enterprise Name:</span>
-              <strong className="text-indigoRural-900 truncate block">{shopName}</strong>
+              <span className="text-stone-400 block text-[10px] font-semibold">Enterprise Name:</span>
+              <strong className="text-stone-900 truncate block">{shopName}</strong>
             </div>
             <div>
-              <span className="text-indigoRural-400 block text-[10px] font-semibold">Proprietor:</span>
-              <strong className="text-indigoRural-900">{ownerName}</strong>
+              <span className="text-stone-400 block text-[10px] font-semibold">Proprietor:</span>
+              <strong className="text-stone-900">{ownerName}</strong>
             </div>
             <div>
-              <span className="text-indigoRural-400 block text-[10px] font-semibold">Trade Category:</span>
-              <strong className="text-indigoRural-900">{tradeName}</strong>
+              <span className="text-stone-400 block text-[10px] font-semibold">Trade Category:</span>
+              <strong className="text-stone-900">{tradeName}</strong>
             </div>
             <div>
-              <span className="text-indigoRural-400 block text-[10px] font-semibold">Location:</span>
-              <strong className="text-indigoRural-900">{locationText}</strong>
+              <span className="text-stone-400 block text-[10px] font-semibold">Location:</span>
+              <strong className="text-stone-900">{locationText}</strong>
             </div>
             <div>
-              <span className="text-indigoRural-400 block text-[10px] font-semibold">Business Vintage:</span>
-              <strong className="text-indigoRural-900">{vintageYears} Years (Established)</strong>
+              <span className="text-stone-400 block text-[10px] font-semibold">Business Vintage:</span>
+              <strong className="text-stone-900">{vintageYears} Years (Established)</strong>
             </div>
             <div>
-              <span className="text-indigoRural-400 block text-[10px] font-semibold">Existing Bank:</span>
-              <strong className="text-indigoRural-900">{bankAccount}</strong>
+              <span className="text-stone-400 block text-[10px] font-semibold">Existing Bank:</span>
+              <strong className="text-stone-900">{bankAccount}</strong>
             </div>
           </div>
         </div>
 
         {/* 2. Alternative Credit Rating Certificate */}
         <div className="space-y-2">
-          <h3 className="text-xs font-black text-indigoRural-900 uppercase tracking-wider border-b border-paper-200 pb-1">
+          <h3 className="text-xs font-black text-stone-900 uppercase tracking-wider border-b border-stone-200 pb-1">
             2. Alternative Credit Evaluation (वैकल्पिक क्रेडिट मूल्यांकन)
           </h3>
-          <div className="bg-gradient-to-br from-forestRural-50 via-white to-paper-50 p-5 rounded-xl border border-forestRural-200 shadow-2xs flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="bg-gradient-to-br from-emerald-50 via-white to-paper-50 p-5 rounded-xl border border-emerald-200 shadow-2xs flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="space-y-1 text-center sm:text-left">
-              <span className="text-xs font-bold text-indigoRural-600 block">{APP_CREDIT_SCORE_NAME_EN}:</span>
+              <span className="text-xs font-bold text-stone-600 block">{APP_CREDIT_SCORE_NAME_EN}:</span>
               <div className="flex items-baseline gap-2 justify-center sm:justify-start">
-                <span className="text-3xl sm:text-4xl font-black text-forestRural-800 font-display tracking-tight tabular-nums">
+                <span className="text-3xl sm:text-4xl font-black text-emerald-800 font-display tracking-tight tabular-nums">
                   {creditScore}
                 </span>
-                <span className="text-xs text-indigoRural-400 font-bold">/ 850</span>
+                <span className="text-xs text-stone-400 font-bold">/ 850</span>
                 <Badge variant="positive" size="sm">
                   {ratingBadge}
                 </Badge>
               </div>
-              <p className="text-[11px] text-forestRural-800 font-semibold">
+              <p className="text-[11px] text-emerald-800 font-semibold">
                 Classified as Prime Micro-Borrower under rural Priority Sector Lending.
               </p>
             </div>
 
             <div className="grid grid-cols-2 gap-2 text-[10px] sm:text-[11px] shrink-0 w-full sm:w-auto">
-              <div className="p-2.5 bg-white rounded-lg border border-forestRural-200 shadow-2xs">
-                <span className="text-indigoRural-400 block text-[10px] font-semibold">Logging Discipline</span>
-                <strong className="text-forestRural-800 font-bold">96% Regularity</strong>
+              <div className="p-2.5 bg-white rounded-lg border border-emerald-200 shadow-2xs">
+                <span className="text-stone-400 block text-[10px] font-semibold">Logging Discipline</span>
+                <strong className="text-emerald-800 font-bold">96% Regularity</strong>
               </div>
-              <div className="p-2.5 bg-white rounded-lg border border-forestRural-200 shadow-2xs">
-                <span className="text-indigoRural-400 block text-[10px] font-semibold">Revenue Stability</span>
-                <strong className="text-forestRural-800 font-bold">92% Coverage</strong>
+              <div className="p-2.5 bg-white rounded-lg border border-emerald-200 shadow-2xs">
+                <span className="text-stone-400 block text-[10px] font-semibold">Revenue Stability</span>
+                <strong className="text-emerald-800 font-bold">92% Coverage</strong>
               </div>
-              <div className="p-2.5 bg-white rounded-lg border border-forestRural-200 shadow-2xs">
-                <span className="text-indigoRural-400 block text-[10px] font-semibold">Udhaar Recovery</span>
-                <strong className="text-forestRural-800 font-bold">82% Verified</strong>
+              <div className="p-2.5 bg-white rounded-lg border border-emerald-200 shadow-2xs">
+                <span className="text-stone-400 block text-[10px] font-semibold">Udhaar Recovery</span>
+                <strong className="text-emerald-800 font-bold">82% Verified</strong>
               </div>
-              <div className="p-2.5 bg-white rounded-lg border border-forestRural-200 shadow-2xs">
-                <span className="text-indigoRural-400 block text-[10px] font-semibold">Digital Adoption</span>
-                <strong className="text-forestRural-800 font-bold">{digitalShare}</strong>
+              <div className="p-2.5 bg-white rounded-lg border border-emerald-200 shadow-2xs">
+                <span className="text-stone-400 block text-[10px] font-semibold">Digital Adoption</span>
+                <strong className="text-emerald-800 font-bold">{digitalShare}</strong>
               </div>
             </div>
           </div>
@@ -404,30 +404,30 @@ export function BankDossierPage({ shop, isDemoMode, onBack }) {
 
         {/* 3. 90-Day Cash Flow Audit */}
         <div className="space-y-2">
-          <h3 className="text-xs font-black text-indigoRural-900 uppercase tracking-wider border-b border-paper-200 pb-1">
+          <h3 className="text-xs font-black text-stone-900 uppercase tracking-wider border-b border-stone-200 pb-1">
             3. Verified Cash Flow & Turnover Audit (90-Day Operating History)
           </h3>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 text-xs">
-            <div className="p-2.5 sm:p-3.5 bg-paper-50 rounded-xl border border-paper-200 min-w-0">
-              <span className="text-indigoRural-400 text-[9px] sm:text-[10px] font-semibold block truncate">Gross 90-Day Sales:</span>
-              <strong className="text-sm sm:text-base text-indigoRural-900 font-black tabular-nums block truncate">
+            <div className="p-2.5 sm:p-3.5 bg-stone-50 rounded-xl border border-stone-200 min-w-0">
+              <span className="text-stone-400 text-[9px] sm:text-[10px] font-semibold block truncate">Gross 90-Day Sales:</span>
+              <strong className="text-sm sm:text-base text-stone-900 font-black tabular-nums block truncate">
                 {grossSales !== null ? `₹${Number(grossSales).toLocaleString('en-IN')}` : '—'}
               </strong>
             </div>
-            <div className="p-2.5 sm:p-3.5 bg-paper-50 rounded-xl border border-paper-200 min-w-0">
-              <span className="text-indigoRural-400 text-[9px] sm:text-[10px] font-semibold block truncate">Cost of Goods & Rent:</span>
-              <strong className="text-sm sm:text-base text-indigoRural-900 font-black tabular-nums block truncate">
+            <div className="p-2.5 sm:p-3.5 bg-stone-50 rounded-xl border border-stone-200 min-w-0">
+              <span className="text-stone-400 text-[9px] sm:text-[10px] font-semibold block truncate">Cost of Goods & Rent:</span>
+              <strong className="text-sm sm:text-base text-stone-900 font-black tabular-nums block truncate">
                 {totalExpenses !== null ? `₹${Number(totalExpenses).toLocaleString('en-IN')}` : '—'}
               </strong>
             </div>
-            <div className="p-2.5 sm:p-3.5 bg-paper-50 rounded-xl border border-paper-200 min-w-0">
-              <span className="text-indigoRural-400 text-[9px] sm:text-[10px] font-semibold block truncate">Net Operating Surplus:</span>
-              <strong className="text-sm sm:text-base text-forestRural-700 font-black tabular-nums block truncate">
+            <div className="p-2.5 sm:p-3.5 bg-stone-50 rounded-xl border border-stone-200 min-w-0">
+              <span className="text-stone-400 text-[9px] sm:text-[10px] font-semibold block truncate">Net Operating Surplus:</span>
+              <strong className="text-sm sm:text-base text-emerald-700 font-black tabular-nums block truncate">
                 {operatingSurplus !== null ? `₹${Number(operatingSurplus).toLocaleString('en-IN')}` : '—'}
               </strong>
             </div>
-            <div className="p-2.5 sm:p-3.5 bg-paper-50 rounded-xl border border-paper-200 min-w-0">
-              <span className="text-indigoRural-400 text-[9px] sm:text-[10px] font-semibold block truncate">Monthly Debt Headroom:</span>
+            <div className="p-2.5 sm:p-3.5 bg-stone-50 rounded-xl border border-stone-200 min-w-0">
+              <span className="text-stone-400 text-[9px] sm:text-[10px] font-semibold block truncate">Monthly Debt Headroom:</span>
               <strong className="text-sm sm:text-base text-terracotta-700 font-black tabular-nums block truncate">
                 {debtHeadroom > 0 ? `₹${debtHeadroom.toLocaleString('en-IN')} / mo` : (isDemo ? '₹9,154 / mo' : '—')}
               </strong>
@@ -437,21 +437,21 @@ export function BankDossierPage({ shop, isDemoMode, onBack }) {
 
         {/* 4. Recommended Government Loan Schemes */}
         <div className="space-y-2">
-          <h3 className="text-xs font-black text-indigoRural-900 uppercase tracking-wider border-b border-paper-200 pb-1">
+          <h3 className="text-xs font-black text-stone-900 uppercase tracking-wider border-b border-stone-200 pb-1">
             4. Recommended Priority Sector Schemes for Branch Sanction
           </h3>
           <div className="space-y-2 text-xs">
             {schemesList.map((sch, i) => (
-              <div key={i} className="p-3.5 rounded-xl bg-paper-50 border border-paper-200 flex items-start justify-between gap-3">
+              <div key={i} className="p-3.5 rounded-xl bg-stone-50 border border-stone-200 flex items-start justify-between gap-3">
                 <div>
                   <div className="flex items-center gap-2">
-                    <strong className="text-indigoRural-900 font-extrabold">{sch.name}</strong>
+                    <strong className="text-stone-900 font-extrabold">{sch.name}</strong>
                     <Badge variant="positive" size="sm">
                       {sch.matchScore}% Compatibility
                     </Badge>
                   </div>
-                  <p className="text-[11px] text-indigoRural-500 mt-1">
-                    Limit: <strong className="text-indigoRural-800">{sch.maxAmount}</strong> • Interest: <strong className="text-indigoRural-800">{sch.interestRate}</strong> • Security: <strong className="text-indigoRural-800">{sch.collateral}</strong>
+                  <p className="text-[11px] text-stone-500 mt-1">
+                    Limit: <strong className="text-stone-800">{sch.maxAmount}</strong> • Interest: <strong className="text-stone-800">{sch.interestRate}</strong> • Security: <strong className="text-stone-800">{sch.collateral}</strong>
                   </p>
                 </div>
                 <Badge variant="brand" size="sm" className="shrink-0">
@@ -463,28 +463,28 @@ export function BankDossierPage({ shop, isDemoMode, onBack }) {
         </div>
 
         {/* 5. Official Verification Stamp & Signature Block */}
-        <div className="pt-6 border-t border-paper-200 grid grid-cols-1 sm:grid-cols-2 gap-6 text-xs">
+        <div className="pt-6 border-t border-stone-200 grid grid-cols-1 sm:grid-cols-2 gap-6 text-xs">
           <div className="space-y-1">
-            <div className="flex items-center gap-2 text-forestRural-700 font-bold">
-              <ShieldCheck className="w-5 h-5 text-forestRural-600" />
+            <div className="flex items-center gap-2 text-emerald-700 font-bold">
+              <ShieldCheck className="w-5 h-5 text-emerald-600" />
               <span>Digital Audit Authenticity Seal</span>
             </div>
-            <p className="text-[10px] text-indigoRural-400 leading-relaxed">
+            <p className="text-[10px] text-stone-400 leading-relaxed">
               Certified that the cash flow and alternative credit metrics stated above are compiled from daily tamper-evident bahi-khata logs recorded on the SaakhSetu platform.
             </p>
           </div>
 
           <div className="sm:text-right space-y-4">
-            <div className="inline-block text-center border-t border-paper-300 pt-1.5 px-6">
-              <p className="font-extrabold text-indigoRural-900 text-xs">{ownerName}</p>
-              <p className="text-[10px] text-indigoRural-400">Proprietor Signature / अंगूठा निशान</p>
+            <div className="inline-block text-center border-t border-stone-300 pt-1.5 px-6">
+              <p className="font-extrabold text-stone-900 text-xs">{ownerName}</p>
+              <p className="text-[10px] text-stone-400">Proprietor Signature / अंगूठा निशान</p>
             </div>
           </div>
         </div>
 
         {/* SIH Prototype Disclaimer */}
-        <div className="pt-3 border-t border-paper-200 text-center">
-          <p className="text-[10px] text-indigoRural-400 font-medium">
+        <div className="pt-3 border-t border-stone-200 text-center">
+          <p className="text-[10px] text-stone-400 font-medium">
             Smart India Hackathon 2026 Prototype • Formatted per RBI Priority Sector Lending (PSL) documentation guidelines • Not an official government filing or certificate.
           </p>
         </div>
@@ -493,8 +493,8 @@ export function BankDossierPage({ shop, isDemoMode, onBack }) {
 
       {/* Signature Compiling Ledger Animation Overlay */}
       {downloadingPdf && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ledgerInk/70 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-paper-50 rounded-3xl p-6 border-2 border-ochre-400/40 shadow-2xl max-w-sm w-full">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-950/70 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-stone-50 rounded-3xl p-6 border-2 border-amber-400/40 shadow-2xl max-w-sm w-full">
             <DossierCompileAnimation 
               stageText={language === 'hi' ? 'खाता पृष्ठ संकलित हो रहे हैं...' : 'Compiling Ledger Folios...'}
               subtext={language === 'hi' ? 'बैंक-मानक PSL डॉसियर तैयार किया जा रहा है' : 'Assembling Bank-Ready PSL Dossier Packet'}

@@ -11,10 +11,9 @@ import {
   Menu, 
   X, 
   ShieldCheck, 
-  Zap,
-  MapPin,
-  ArrowRightLeft,
-  LogOut
+  MapPin, 
+  ArrowRightLeft, 
+  LogOut 
 } from 'lucide-react';
 import { useTranslation } from '../i18n/LanguageContext';
 import { api } from '../utils/api';
@@ -22,10 +21,25 @@ import { Badge, Button } from './ui';
 import { SyncStatusBadge } from './SyncStatusBadge';
 import { APP_NAME_EN, APP_NAME_HI, APP_ADVISOR_NAME_EN, APP_ADVISOR_NAME_HI } from '../config/brand';
 
-export function Navbar({ activeTab, setActiveTab, currentShop, isDemoMode, onReloadDemo, onStartDemoTour, onSwitchToDemo, onSwitchToRegister, onLogout }) {
-  const { t, language, toggleLanguage } = useTranslation();
+export function Navbar({ 
+  activeTab, 
+  setActiveTab, 
+  currentShop, 
+  isDemoMode, 
+  onReloadDemo, 
+  onStartDemoTour, 
+  onSwitchToDemo, 
+  onSwitchToRegister, 
+  onLogout 
+}) {
+  const { language, toggleLanguage } = useTranslation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [resetting, setResetting] = useState(false);
+
+  // If on landing/onboarding, OnboardingPage provides its own dedicated masthead
+  if (activeTab === 'onboarding' || !currentShop) {
+    return null;
+  }
 
   const navItems = [
     { id: 'dashboard', label: language === 'hi' ? 'डैशबोर्ड' : 'Overview', icon: Store },
@@ -48,103 +62,50 @@ export function Navbar({ activeTab, setActiveTab, currentShop, isDemoMode, onRel
     }
   };
 
-  const isLanding = activeTab === 'onboarding' || !currentShop;
-
-  if (isLanding) {
-    return (
-      <header className="sticky top-0 z-50 w-full backdrop-blur-2xl bg-white/95 border-b border-paper-300/90 shadow-2xs transition-all">
-        {/* Tri-Color Micro-Rule */}
-        <div className="h-[3px] w-full bg-gradient-to-r from-terracotta-500 via-paper-200 to-forestRural-600" />
-
-        <div className="max-w-7xl xl:max-w-[1440px] mx-auto px-4 sm:px-6">
-          <div className="flex items-center justify-between h-16">
-            
-            {/* Brand Wordmark */}
-            <div 
-              onClick={() => setActiveTab('onboarding')}
-              className="flex items-center gap-3 cursor-pointer select-none group"
-            >
-              <div className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-terracotta-600 flex items-center justify-center text-white shadow-2xs group-hover:bg-terracotta-700 transition-all shrink-0">
-                <BookOpen className="w-4 h-4 sm:w-5 sm:h-5 text-paper-100 transition-transform duration-200 group-hover:scale-105" />
-              </div>
-
-              <div className="flex items-baseline gap-2">
-                <span className="font-black text-base sm:text-lg tracking-tight text-indigoRural-900 font-display">
-                  {APP_NAME_HI}
-                </span>
-                <span className="text-xs font-bold text-indigoRural-500 hidden sm:inline font-sans">
-                  {APP_NAME_EN}
-                </span>
-              </div>
-            </div>
-
-            {/* Right Action: Language Toggle */}
-            <div className="flex items-center gap-2">
-              <Button
-                onClick={toggleLanguage}
-                variant="outline"
-                size="sm"
-                icon={Globe}
-                className="!px-3 !py-1.5 font-bold"
-                aria-label="Toggle language"
-              >
-                <span>{language === 'hi' ? 'HI / हिन्दी' : 'EN / English'}</span>
-              </Button>
-            </div>
-
-          </div>
-        </div>
-      </header>
-    );
-  }
-
-  const udyamNumber = currentShop?.udyam_number || (currentShop?.id ? `UDYAM-${(currentShop.state || 'IN').substring(0, 2).toUpperCase()}-DEMO` : '');
+  const udyamNumber = currentShop?.udyam_number || (currentShop?.id ? `UDYAM-${(currentShop.state || 'IN').substring(0, 2).toUpperCase()}-0092478` : '');
 
   return (
-    <header className="sticky top-0 z-50 w-full backdrop-blur-2xl bg-white/95 border-b border-paper-300/90 shadow-2xs transition-all">
-      {/* Tri-Color Micro-Rule */}
-      <div className="h-[3px] w-full bg-gradient-to-r from-terracotta-500 via-paper-200 to-forestRural-600" />
-
+    <header className="sticky top-0 z-40 w-full backdrop-blur-2xl bg-[#FAF8F5]/85 border-b border-stone-200/70 shadow-2xs transition-all">
       <div className="max-w-7xl xl:max-w-[1440px] mx-auto px-3 sm:px-6">
         <div className="flex items-center justify-between h-16 gap-2 sm:gap-4">
           
-          {/* Brand Mark: Rural Micro-Enterprise Ledger */}
+          {/* Brand Mark & Active Shop Lockup */}
           <div 
             onClick={() => setActiveTab('dashboard')}
-            className="flex items-center gap-2 sm:gap-3 cursor-pointer select-none group min-w-0 flex-1 sm:flex-initial"
+            className="flex items-center gap-2.5 sm:gap-3 cursor-pointer select-none group min-w-0 flex-1 sm:flex-initial"
           >
-            {/* Folk / Bahi-Khata Geometric Mark */}
-            <div className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-terracotta-600 flex items-center justify-center text-white shadow-2xs group-hover:bg-terracotta-700 transition-all shrink-0">
-              <BookOpen className="w-4 h-4 sm:w-5 sm:h-5 text-paper-100 transition-transform duration-200 group-hover:scale-105" />
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-stone-900 flex items-center justify-center text-white shadow-2xs group-hover:bg-stone-800 transition-all shrink-0 font-serif font-black text-base">
+              स
             </div>
 
             <div className="flex flex-col min-w-0">
               <div className="flex items-center gap-1.5 sm:gap-2 leading-tight">
-                <span className="font-black text-sm sm:text-lg tracking-tight text-indigoRural-900 font-display truncate">
+                <span className="font-serif font-black text-sm sm:text-base tracking-tight text-stone-900 truncate">
                   {APP_NAME_HI}
                 </span>
-                <span className="text-xs font-bold text-indigoRural-500 hidden sm:inline">
+                <span className="text-xs font-bold text-stone-400 hidden sm:inline font-sans">
                   {APP_NAME_EN}
                 </span>
-                {/* Mode Badge */}
+
                 {isDemoMode ? (
-                  <Badge variant="attention" size="sm" className="px-1.5 py-0 text-[10px] shrink-0">
-                    DEMO DATA
-                  </Badge>
-                ) : currentShop ? (
-                  <Badge variant="positive" size="sm" className="px-1.5 py-0 text-[10px] shrink-0">
+                  <span className="px-1.5 py-0.5 text-[9px] font-bold rounded-full bg-amber-50 text-amber-800 border border-amber-200 shrink-0">
+                    DEMO
+                  </span>
+                ) : (
+                  <span className="px-1.5 py-0.5 text-[9px] font-bold rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 shrink-0">
                     LIVE
-                  </Badge>
-                ) : null}
+                  </span>
+                )}
               </div>
-              <div className="text-[10px] font-semibold text-indigoRural-500 flex items-center gap-1.5 mt-0.5 min-w-0">
-                <span className="font-bold text-indigoRural-800 truncate max-w-[110px] xs:max-w-[150px] sm:max-w-none">
+
+              <div className="text-[10px] font-semibold text-stone-500 flex items-center gap-1.5 mt-0.5 min-w-0">
+                <span className="font-bold text-stone-800 truncate max-w-[110px] xs:max-w-[150px] sm:max-w-none">
                   {currentShop?.name || (language === 'hi' ? 'दुकान' : 'Store')}
                 </span>
                 {udyamNumber && (
                   <>
-                    <span className="text-paper-400 shrink-0">•</span>
-                    <span className="text-indigoRural-600 font-mono truncate text-[9px] sm:text-[10px] max-w-[90px] sm:max-w-none">
+                    <span className="text-stone-300 shrink-0">•</span>
+                    <span className="font-mono truncate text-[9px] sm:text-[10px] max-w-[90px] sm:max-w-none text-stone-500">
                       {udyamNumber}
                     </span>
                   </>
@@ -153,8 +114,8 @@ export function Navbar({ activeTab, setActiveTab, currentShop, isDemoMode, onRel
             </div>
           </div>
 
-          {/* Desktop Navigation: Segmented Controls */}
-          <nav className="hidden lg:flex items-center p-1 rounded-xl bg-paper-200/80 border border-paper-300 shadow-2xs">
+          {/* Desktop Navigation: Apple-Style Segmented Bar */}
+          <nav className="hidden lg:flex items-center p-1 rounded-xl bg-stone-200/60 border border-stone-300/60 shadow-2xs">
             {navItems.map(item => {
               const Icon = item.icon;
               const isActive = activeTab === item.id;
@@ -164,19 +125,20 @@ export function Navbar({ activeTab, setActiveTab, currentShop, isDemoMode, onRel
                   onClick={() => setActiveTab(item.id)}
                   title={item.label}
                   aria-label={item.label}
-                  className={`relative flex items-center gap-1.5 xl:gap-2 px-2.5 xl:px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-150 cursor-pointer ${
+                  className={`relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-150 cursor-pointer ${
                     isActive 
-                      ? 'bg-white text-indigoRural-950 shadow-2xs scale-[1.02]' 
-                      : 'text-indigoRural-600 hover:text-indigoRural-900 hover:bg-white/60'
+                      ? 'bg-white text-stone-950 shadow-2xs scale-[1.01]' 
+                      : 'text-stone-600 hover:text-stone-900 hover:bg-white/40'
                   }`}
                 >
                   <Icon className={`w-3.5 h-3.5 ${
                     item.isAi 
-                      ? 'text-terracotta-600' 
-                      : isActive ? 'text-terracotta-600' : 'text-indigoRural-500'
+                      ? 'text-amber-600' 
+                      : isActive ? 'text-stone-900' : 'text-stone-500'
                   }`} />
+                  <span>{item.label}</span>
                   {item.isAi && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-terracotta-600" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
                   )}
                 </button>
               );
@@ -185,88 +147,86 @@ export function Navbar({ activeTab, setActiveTab, currentShop, isDemoMode, onRel
 
           {/* Right Action Controls */}
           <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-            {/* Real-time DPI / PWA Sync & Connectivity Badge */}
+            
+            {/* Real-time Sync Badge */}
             <SyncStatusBadge />
             
-            {/* Live Guided Demo Button */}
+            {/* Live Tour Button */}
             {isDemoMode && (
-              <Button
+              <button
+                type="button"
                 onClick={onStartDemoTour}
-                variant="primary"
-                size="sm"
-                icon={Sparkles}
-                className="shadow-2xs !p-1.5 sm:!px-3 sm:!py-1.5"
+                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200/80 shadow-2xs transition-all cursor-pointer"
               >
+                <Sparkles className="w-3.5 h-3.5 text-amber-600" />
                 <span className="hidden sm:inline">{language === 'hi' ? 'लाइव टूर' : 'Live Tour'}</span>
-              </Button>
+              </button>
             )}
 
-            {/* Mode Switch Pill */}
+            {/* Mode Switch Button */}
             {isDemoMode ? (
-              <Button
+              <button
+                type="button"
                 onClick={onSwitchToRegister}
-                variant="secondary"
-                size="sm"
-                icon={ArrowRightLeft}
-                className="hidden sm:inline-flex"
+                className="hidden sm:inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold bg-white hover:bg-stone-50 text-stone-800 border border-stone-200 shadow-2xs transition-all cursor-pointer"
               >
-                <span>{language === 'hi' ? 'असली पंजीकरण' : 'Real Registration'}</span>
-              </Button>
+                <ArrowRightLeft className="w-3.5 h-3.5 text-stone-500" />
+                <span>{language === 'hi' ? 'असली खाता' : 'Real Account'}</span>
+              </button>
             ) : currentShop && (
-              <Button
+              <button
+                type="button"
                 onClick={onSwitchToDemo}
-                variant="secondary"
-                size="sm"
-                icon={ArrowRightLeft}
-                className="hidden sm:inline-flex"
+                className="hidden sm:inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold bg-white hover:bg-stone-50 text-stone-800 border border-stone-200 shadow-2xs transition-all cursor-pointer"
               >
+                <ShieldCheck className="w-3.5 h-3.5 text-amber-600" />
                 <span>{language === 'hi' ? 'जज डेमो' : 'Judge Demo'}</span>
-              </Button>
+              </button>
             )}
 
-            {/* Quick Demo Reset Pill (only when in demo mode) */}
+            {/* Quick Demo Reset (Demo Mode only) */}
             {isDemoMode && (
-              <Button
+              <button
+                type="button"
                 onClick={handleResetDemo}
                 disabled={resetting}
-                variant="secondary"
-                size="sm"
-                icon={RotateCcw}
-                className="hidden sm:inline-flex"
+                className="hidden sm:inline-flex items-center gap-1 px-2 py-1.5 rounded-xl text-xs font-bold text-stone-600 hover:text-stone-900 bg-white border border-stone-200 shadow-2xs transition-all cursor-pointer"
+                title={language === 'hi' ? 'डेमो डेटा रीसेट करें' : 'Reset demo store to day 1'}
               >
+                <RotateCcw className={`w-3.5 h-3.5 ${resetting ? 'animate-spin' : ''}`} />
                 <span>{resetting ? '...' : (language === 'hi' ? 'रीसेट' : 'Reset')}</span>
-              </Button>
+              </button>
             )}
 
-            {/* Language Switcher Pill */}
-            <Button
-              onClick={toggleLanguage}
-              variant="outline"
-              size="sm"
-              icon={Globe}
-              className="!px-2 sm:!px-3"
-            >
-              <span>{language === 'hi' ? 'HI' : 'EN'}</span>
-            </Button>
+            {/* Language Switcher */}
+            <div className="inline-flex p-0.5 rounded-full bg-stone-200/60 border border-stone-300/60 text-[11px] font-bold">
+              <button
+                type="button"
+                onClick={toggleLanguage}
+                className="px-2 py-0.5 rounded-full bg-white text-stone-900 shadow-2xs cursor-pointer"
+              >
+                {language === 'hi' ? 'हिन्दी' : 'EN'}
+              </button>
+            </div>
 
             {/* Log Out Button */}
             {currentShop && (
-              <Button
+              <button
+                type="button"
                 onClick={onLogout}
-                variant="outline"
-                size="sm"
-                icon={LogOut}
-                className="hidden sm:inline-flex !text-terracotta-700 hover:!text-terracotta-900 !border-terracotta-200 hover:!bg-terracotta-50 shadow-2xs font-extrabold"
-                title={language === 'hi' ? 'दुकान से लॉग आउट करें' : 'Log out from active session'}
+                className="hidden sm:inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold text-red-700 hover:text-red-900 bg-red-50/70 hover:bg-red-100/70 border border-red-200/70 shadow-2xs transition-all cursor-pointer"
+                title={language === 'hi' ? 'लॉग आउट' : 'Log out'}
               >
-                <span>{language === 'hi' ? 'लॉग आउट' : 'Log Out'}</span>
-              </Button>
+                <LogOut className="w-3.5 h-3.5" />
+                <span>{language === 'hi' ? 'लॉग आउट' : 'Exit'}</span>
+              </button>
             )}
 
             {/* Mobile Menu Toggle */}
             <button
+              type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden p-1.5 sm:p-2 rounded-xl text-indigoRural-700 hover:bg-paper-200 transition cursor-pointer"
+              className="lg:hidden p-1.5 rounded-xl text-stone-700 hover:bg-stone-200/60 transition cursor-pointer"
               aria-label="Toggle navigation menu"
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -279,8 +239,8 @@ export function Navbar({ activeTab, setActiveTab, currentShop, isDemoMode, onRel
 
       {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
-        <div className="lg:hidden border-t border-paper-300 bg-white/95 backdrop-blur-2xl p-4 space-y-2 animate-fadeIn shadow-lg">
-          <div className="grid grid-cols-2 gap-2 pb-3 border-b border-paper-200">
+        <div className="lg:hidden border-t border-stone-200/80 bg-white/95 backdrop-blur-2xl p-4 space-y-3 animate-fadeIn shadow-lg">
+          <div className="grid grid-cols-2 gap-2 pb-3 border-b border-stone-100">
             {navItems.map(item => {
               const Icon = item.icon;
               const isActive = activeTab === item.id;
@@ -293,8 +253,8 @@ export function Navbar({ activeTab, setActiveTab, currentShop, isDemoMode, onRel
                   }}
                   className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-bold transition cursor-pointer ${
                     isActive 
-                      ? 'bg-terracotta-600 text-white shadow-2xs' 
-                      : 'bg-paper-50 text-indigoRural-800 hover:bg-paper-100'
+                      ? 'bg-stone-900 text-white shadow-2xs' 
+                      : 'bg-stone-50 text-stone-800 hover:bg-stone-100'
                   }`}
                 >
                   <Icon className="w-4 h-4" />
@@ -304,19 +264,19 @@ export function Navbar({ activeTab, setActiveTab, currentShop, isDemoMode, onRel
             })}
           </div>
 
-          <div className="flex items-center justify-between pt-2 text-xs border-t border-paper-100">
-            <span className="text-indigoRural-500 font-medium flex items-center gap-1">
-              <MapPin className="w-3 h-3 text-indigoRural-400 shrink-0" />
+          <div className="flex items-center justify-between pt-1 text-xs">
+            <span className="text-stone-500 font-medium flex items-center gap-1">
+              <MapPin className="w-3.5 h-3.5 text-stone-400 shrink-0" />
               <span>{currentShop?.village || '—'}, {currentShop?.district || '—'}</span>
             </span>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               {isDemoMode ? (
                 <button
                   onClick={() => {
                     onSwitchToRegister?.();
                     setMobileMenuOpen(false);
                   }}
-                  className="text-xs font-bold text-terracotta-700 hover:underline cursor-pointer"
+                  className="text-xs font-bold text-stone-700 hover:underline cursor-pointer"
                 >
                   {language === 'hi' ? 'असली पंजीकरण' : 'Real Registration'}
                 </button>
@@ -326,7 +286,7 @@ export function Navbar({ activeTab, setActiveTab, currentShop, isDemoMode, onRel
                     onSwitchToDemo?.();
                     setMobileMenuOpen(false);
                   }}
-                  className="text-xs font-bold text-terracotta-700 hover:underline cursor-pointer"
+                  className="text-xs font-bold text-amber-800 hover:underline cursor-pointer"
                 >
                   {language === 'hi' ? 'जज डेमो' : 'Judge Demo'}
                 </button>
@@ -338,10 +298,10 @@ export function Navbar({ activeTab, setActiveTab, currentShop, isDemoMode, onRel
                     onLogout?.();
                     setMobileMenuOpen(false);
                   }}
-                  className="flex items-center gap-1 text-xs font-black text-terracotta-700 hover:text-terracotta-900 bg-terracotta-50 px-2 py-1 rounded-md border border-terracotta-200 cursor-pointer"
+                  className="flex items-center gap-1 text-xs font-bold text-red-700 bg-red-50 px-2.5 py-1 rounded-lg border border-red-200 cursor-pointer"
                 >
                   <LogOut className="w-3 h-3" />
-                  <span>{language === 'hi' ? 'लॉग आउट' : 'Log Out'}</span>
+                  <span>{language === 'hi' ? 'लॉग आउट' : 'Exit'}</span>
                 </button>
               )}
             </div>

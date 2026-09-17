@@ -399,16 +399,18 @@ export default function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-paper-50 flex flex-col items-center justify-center p-6 text-ledgerInk font-sans">
-        <div className="w-10 h-10 border-3 border-ochre-200 border-t-turmeric rounded-full animate-spin mb-4" />
-        <span className="font-serif text-xl font-bold tracking-tight text-ledgerInk">{APP_NAME_HI} ({APP_NAME_EN})</span>
-        <span className="text-xs text-ledgerInk/65 mt-1 font-medium">{APP_TAGLINE_HI}</span>
+      <div className="min-h-screen bg-[#FAF8F5] flex flex-col items-center justify-center p-6 text-stone-900 font-sans">
+        <div className="w-11 h-11 rounded-2xl bg-stone-900 text-white flex items-center justify-center font-serif font-black text-xl shadow-apple-card mb-4 animate-pulse">
+          स
+        </div>
+        <span className="font-serif text-xl font-black tracking-tight text-stone-900">{APP_NAME_HI} • {APP_NAME_EN}</span>
+        <span className="text-xs text-stone-500 mt-1 font-medium">{APP_TAGLINE_HI}</span>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen w-full max-w-full overflow-x-hidden relative paper-canvas flex flex-col font-sans text-ledgerInk selection:bg-turmeric-100 selection:text-ledgerInk antialiased">
+    <div className="min-h-screen w-full max-w-full overflow-x-hidden relative paper-canvas flex flex-col font-sans text-stone-900 selection:bg-amber-100 selection:text-amber-900 antialiased">
       
       {/* Top Navbar */}
       <Navbar 
@@ -424,7 +426,7 @@ export default function App() {
       />
 
       {/* Main Page Container */}
-      <main className={`flex-1 w-full min-w-0 ${activeTab === 'onboarding' ? 'p-0 pb-16 sm:pb-24' : 'max-w-7xl xl:max-w-[1440px] mx-auto px-3 sm:px-6 pt-3 sm:pt-4 pb-28 sm:pb-32 lg:pb-10'}`}>
+      <main className={`flex-1 w-full min-w-0 ${activeTab === 'onboarding' ? 'p-0 pb-0' : 'max-w-7xl xl:max-w-[1440px] mx-auto px-3 sm:px-6 pt-3 sm:pt-5 pb-28 sm:pb-32 lg:pb-12'}`}>
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}
@@ -578,28 +580,28 @@ export default function App() {
         />
       )}
 
-      {/* Rural Footer (SIH 2026 Prototype) */}
-      <footer className="print:hidden border-t border-ochre-200/80 bg-paper/90 backdrop-blur-md py-7 px-4 text-center text-xs text-ledgerInk/75 pb-28 sm:pb-24">
+      {/* Clean Institutional Prototype Footer */}
+      <footer className="print:hidden border-t border-stone-200/80 bg-[#FAF8F5]/90 backdrop-blur-md py-8 px-4 text-center text-xs text-stone-600 pb-28 sm:pb-24">
         <div className="max-w-4xl mx-auto space-y-2">
           <div className="flex items-center justify-center gap-2 flex-wrap">
-            <span className="font-bold text-ledgerInk font-serif text-sm">{APP_NAME_HI} ({APP_NAME_EN}) — Prototype</span>
-            <span className="text-ochre-400">•</span>
-            <span className="text-[10px] bg-ledgerInk text-paper font-bold px-2.5 py-0.5 rounded-full">
-              DPI-Inspired Architecture (Prototype)
+            <span className="font-bold text-stone-900 font-serif text-sm">{APP_NAME_HI} ({APP_NAME_EN}) — Prototype</span>
+            <span className="text-stone-300">•</span>
+            <span className="text-[10px] bg-stone-900 text-white font-bold px-2.5 py-0.5 rounded-full">
+              DPI Sovereign Architecture
             </span>
-            <span className="text-ochre-400">•</span>
-            <span className="text-[10px] bg-forestRural-50 text-forestRural-800 font-bold px-2 py-0.5 rounded-full border border-forestRural-200">
-              PSL-Format Aligned (Demo)
+            <span className="text-stone-300">•</span>
+            <span className="text-[10px] bg-emerald-50 text-emerald-800 font-bold px-2.5 py-0.5 rounded-full border border-emerald-200">
+              RBI Priority Sector Lending (PSL) Aligned
             </span>
           </div>
-          <p className="text-[11px] text-ledgerInk/65 max-w-2xl mx-auto leading-relaxed">
-            National Micro-Enterprise Credit & Seasonal Advisory Engine. A prototype built for Smart India Hackathon 2026, referencing RBI's Priority Sector Lending (PSL) documentation format. Not an official government service.
+          <p className="text-[11px] text-stone-500 max-w-2xl mx-auto leading-relaxed">
+            National Micro-Enterprise Credit & Seasonal Demand Radar. A sovereign micro-enterprise prototype built for Smart India Hackathon 2026, referencing Nayak Committee & RBI Priority Sector Lending norms. Not an official government service.
           </p>
           <div className="flex items-center justify-center gap-1.5 pt-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-marginRule" />
-            <span className="w-1.5 h-1.5 rounded-full bg-ochre-400" />
-            <span className="w-1.5 h-1.5 rounded-full bg-forestRural-600" />
-            <span className="text-[10px] text-ledgerInk/55 font-semibold ml-1">Built for 65M+ Indian Micro-Entrepreneurs</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-red-600" />
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
+            <span className="text-[10px] text-stone-400 font-medium ml-1">Engineered for 63M+ Indian Micro-Enterprises</span>
           </div>
         </div>
       </footer>

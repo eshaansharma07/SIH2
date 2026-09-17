@@ -52,47 +52,47 @@ export function PublicPayPage() {
   };
 
   return (
-    <div className="min-h-screen bg-paper-100 flex flex-col justify-between py-6 px-4 font-sans text-indigoRural-900">
+    <div className="min-h-screen bg-[#FAF8F5] flex flex-col justify-between py-6 px-4 font-sans text-stone-900">
       {/* Top Header */}
       <header className="max-w-md mx-auto w-full text-center space-y-1">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-forestRural-50 border border-forestRural-200 text-forestRural-800 text-xs font-bold shadow-2xs">
-          <ShieldCheck className="w-3.5 h-3.5 text-forestRural-600" />
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold shadow-2xs">
+          <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
           <span>Verified Merchant Payment Portal • साख सेतु</span>
         </div>
       </header>
 
       {/* Main Payment Card */}
       <main className="max-w-md mx-auto w-full my-4">
-        <div className="bg-white rounded-3xl p-6 sm:p-8 border border-paper-300 shadow-elevation-2 space-y-6 text-center">
+        <div className="bg-white rounded-3xl p-6 sm:p-8 border border-stone-300 shadow-elevation-2 space-y-6 text-center">
           
           {/* Shop Header */}
-          <div className="space-y-1.5 border-b border-paper-200 pb-4">
-            <div className="w-12 h-12 rounded-2xl bg-terracotta-50 border border-terracotta-200 text-terracotta-700 flex items-center justify-center mx-auto shadow-2xs">
+          <div className="space-y-1.5 border-b border-stone-200 pb-4">
+            <div className="w-12 h-12 rounded-2xl bg-stone-100 border border-stone-200 text-stone-900 flex items-center justify-center mx-auto shadow-apple-card">
               <Store className="w-6 h-6" />
             </div>
-            <h1 className="text-xl sm:text-2xl font-black text-indigoRural-900 font-display">
+            <h1 className="text-xl sm:text-2xl font-black text-stone-900 font-display">
               {effectiveShopName}
             </h1>
             {customerName && (
-              <p className="text-xs font-semibold text-indigoRural-500">
-                खाता बकाया निपटान • <strong className="text-indigoRural-800">{customerName}</strong>
+              <p className="text-xs font-semibold text-stone-500">
+                खाता बकाया निपटान • <strong className="text-stone-800">{customerName}</strong>
               </p>
             )}
           </div>
 
           {/* Amount Display */}
-          <div className="bg-paper-50 rounded-2xl p-4 border border-paper-200 space-y-1">
-            <span className="text-[10px] font-bold text-indigoRural-400 uppercase tracking-wider block">
+          <div className="bg-stone-50 rounded-2xl p-4 border border-stone-200 space-y-1">
+            <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block">
               भुगतान राशि (Amount to Pay)
             </span>
-            <div className="text-3xl sm:text-4xl font-black text-forestRural-800 tabular-nums font-display">
+            <div className="text-3xl sm:text-4xl font-black text-emerald-800 tabular-nums font-display">
               {numAmount > 0 ? `₹${numAmount.toLocaleString('en-IN')}` : 'Any Amount'}
             </div>
           </div>
 
           {/* Scannable High-Contrast UPI QR Code */}
           <div className="space-y-3">
-            <div className="p-4 bg-white rounded-2xl border-2 border-indigoRural-900 inline-block shadow-sm">
+            <div className="p-4 bg-white rounded-2xl border-2 border-stone-900 inline-block shadow-sm">
               <QRCodeSVG
                 value={upiPaymentUri}
                 size={220}
@@ -108,7 +108,7 @@ export function PublicPayPage() {
                 }}
               />
             </div>
-            <p className="text-[11px] text-indigoRural-500 font-medium">
+            <p className="text-[11px] text-stone-500 font-medium">
               किसी भी UPI ऐप (GPay, PhonePe, Paytm, BHIM) से QR कोड स्कैन करें
             </p>
           </div>
@@ -117,7 +117,7 @@ export function PublicPayPage() {
           <div className="space-y-2 pt-2">
             <a
               href={upiPaymentUri}
-              className="w-full py-3 px-4 rounded-xl bg-forestRural-600 hover:bg-forestRural-700 active:scale-98 text-white font-extrabold text-sm flex items-center justify-center gap-2 shadow-sm transition"
+              className="w-full py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-98 text-white font-extrabold text-sm flex items-center justify-center gap-2 shadow-sm transition"
             >
               <Smartphone className="w-4 h-4" />
               <span>UPI ऐप से सीधे भुगतान करें (Tap to Pay)</span>
@@ -128,15 +128,15 @@ export function PublicPayPage() {
             <button
               type="button"
               onClick={handleCopyUpi}
-              className="w-full py-2.5 px-3 rounded-xl bg-paper-100 hover:bg-paper-200 text-indigoRural-700 font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer border border-paper-300/80"
+              className="w-full py-2.5 px-3 rounded-xl bg-[#FAF8F5] hover:bg-stone-100 text-stone-700 font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer border border-stone-300/80"
             >
-              {copied ? <Check className="w-3.5 h-3.5 text-forestRural-700" /> : <Copy className="w-3.5 h-3.5 text-indigoRural-500" />}
+              {copied ? <Check className="w-3.5 h-3.5 text-emerald-700" /> : <Copy className="w-3.5 h-3.5 text-stone-500" />}
               <span>{copied ? 'UPI ID कॉपी हो गया!' : `UPI ID: ${effectiveUpi}`}</span>
             </button>
           </div>
 
           {/* Security & Authenticity Note */}
-          <div className="pt-2 border-t border-paper-200 text-[10px] text-indigoRural-400 space-y-0.5">
+          <div className="pt-2 border-t border-stone-200 text-[10px] text-stone-400 space-y-0.5">
             <p>100% सुरक्षित एवं प्रत्यक्ष बैंक खाता अंतरण (Direct-to-Merchant Settlement)</p>
             <p className="font-semibold">Powered by SaakhSetu • ग्रामीण डिजिटल बही-खाता</p>
           </div>
@@ -145,7 +145,7 @@ export function PublicPayPage() {
       </main>
 
       {/* Footer */}
-      <footer className="max-w-md mx-auto w-full text-center text-[10px] text-indigoRural-400">
+      <footer className="max-w-md mx-auto w-full text-center text-[10px] text-stone-400">
         साख सेतु (SaakhSetu) • Smart India Hackathon 2026
       </footer>
     </div>

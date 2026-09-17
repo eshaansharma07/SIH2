@@ -40,7 +40,6 @@ import {
 } from 'recharts';
 import { api } from '../utils/api';
 import { useTranslation } from '../i18n/LanguageContext';
-import { WarliBorder } from '../components/WarliMotif';
 import { Card, Badge, SectionHeader, Button } from '../components/ui';
 import { RegisterCustomerModal } from '../components/RegisterCustomerModal';
 import { WhatsAppReminderModal } from '../components/WhatsAppReminderModal';
@@ -56,21 +55,21 @@ function CustomChartTooltip({ active, payload, label }) {
     const surplus = income - expense;
 
     return (
-      <div className="bg-paper-50 border border-paper-300 p-3 rounded-xl shadow-card text-xs space-y-1.5 min-w-[160px]">
-        <span className="font-extrabold text-indigoRural-900 block pb-1 border-b border-paper-200">
+      <div className="bg-stone-50 border border-stone-200 p-3 rounded-xl shadow-card text-xs space-y-1.5 min-w-[160px]">
+        <span className="font-extrabold text-stone-900 block pb-1 border-b border-stone-200/80">
           {label}
         </span>
-        <div className="flex justify-between items-center text-forestRural-700 font-semibold">
+        <div className="flex justify-between items-center text-emerald-700 font-semibold">
           <span>Recorded Sales:</span>
           <strong className="font-extrabold tabular-nums">₹{income.toLocaleString('en-IN')}</strong>
         </div>
-        <div className="flex justify-between items-center text-terracotta-700 font-semibold">
+        <div className="flex justify-between items-center text-amber-700 font-semibold">
           <span>Expenses:</span>
           <strong className="font-extrabold tabular-nums">₹{expense.toLocaleString('en-IN')}</strong>
         </div>
-        <div className="flex justify-between items-center text-indigoRural-800 font-bold pt-1 border-t border-paper-200">
+        <div className="flex justify-between items-center text-stone-800 font-bold pt-1 border-t border-stone-200/80">
           <span>Net Surplus:</span>
-          <strong className="font-extrabold tabular-nums text-forestRural-700">₹{surplus.toLocaleString('en-IN')}</strong>
+          <strong className="font-extrabold tabular-nums text-emerald-700">₹{surplus.toLocaleString('en-IN')}</strong>
         </div>
       </div>
     );
@@ -408,17 +407,17 @@ export function CashFlowPage({
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2.5">
-              <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-indigoRural-900 font-display">
+              <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-stone-900 font-display">
                 {language === 'hi' ? 'डिजिटल बही-खाता' : 'Bahi-Khata Ledger'}
               </h1>
               <Badge variant="neutral" size="sm">
                 {transactions.length} Verified Entries
               </Badge>
             </div>
-            <p className="text-xs text-indigoRural-500 mt-1 flex items-center gap-2">
+            <p className="text-xs text-stone-500 mt-1 flex items-center gap-2">
               <span>{language === 'hi' ? 'सटीक दैनिक आय-व्यय एवं ग्राहक उधारी खाता' : 'Daily sales, inventory outlays, and customer credit ledger'}</span>
-              <span className="text-paper-400">•</span>
-              <span className="text-forestRural-700 font-semibold text-[11px]">● DPI Tamper-Evident</span>
+              <span className="text-stone-300">•</span>
+              <span className="text-emerald-700 font-semibold text-[11px]">● DPI Tamper-Evident</span>
             </p>
           </div>
 
@@ -428,7 +427,7 @@ export function CashFlowPage({
               variant="secondary"
               size="sm"
               icon={Mic}
-              className="!border-terracotta-300 hover:!bg-terracotta-50 !text-terracotta-800 font-extrabold shadow-2xs"
+              className="!border-amber-300 hover:!bg-amber-50 !text-amber-800 font-extrabold shadow-2xs"
               title={language === 'hi' ? 'बोलकर बही-खाता दर्ज करें (हिन्दी/English)' : 'Voice Bahi-Khata Input (Hindi/English)'}
             >
               <span>{language === 'hi' ? 'बोलकर लिखें' : 'Voice Input'}</span>
@@ -453,62 +452,60 @@ export function CashFlowPage({
           </div>
         </div>
 
-        {/* Warli Folk Art Border */}
-        <WarliBorder className="w-full h-5 sm:h-6 text-terracotta-400 opacity-60" />
-      </div>
+        </div>
 
       {/* 2. Top Summary KPI Cards */}
       <div className="space-y-2">
         {justUpdated && (
-          <div className="flex items-center gap-1.5 text-xs text-forestRural-700 font-extrabold px-1 animate-fadeIn">
-            <CheckCircle2 className="w-3.5 h-3.5 text-forestRural-600 shrink-0" />
+          <div className="flex items-center gap-1.5 text-xs text-emerald-700 font-extrabold px-1 animate-fadeIn">
+            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
             <span>Bahi-Khata updated instantly (+0ms)</span>
           </div>
         )}
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
           <Card padding="sm" className="sm:p-5">
-            <span className="text-[9px] sm:text-[10px] font-bold text-indigoRural-400 uppercase tracking-widest block mb-1">
+            <span className="text-[9px] sm:text-[10px] font-bold text-stone-400 uppercase tracking-widest block mb-1">
               {language === 'hi' ? 'कुल बिक्री' : 'Recorded Sales'}
             </span>
-            <div className="text-xl sm:text-3xl font-black text-indigoRural-900 tabular-nums tracking-tight font-display truncate">
+            <div className="text-xl sm:text-3xl font-black text-stone-900 tabular-nums tracking-tight font-display truncate">
               {totalIncomeVal !== undefined && totalIncomeVal !== null ? `₹${totalIncomeVal.toLocaleString('en-IN')}` : '—'}
             </div>
-            <span className="text-[10px] sm:text-[11px] font-semibold text-indigoRural-500 mt-1 block truncate">
+            <span className="text-[10px] sm:text-[11px] font-semibold text-stone-500 mt-1 block truncate">
               {summary?.activeDaysCount ? `${summary.activeDaysCount} days verified` : 'Audited ledger'}
             </span>
           </Card>
 
           <Card padding="sm" className="sm:p-5">
-            <span className="text-[9px] sm:text-[10px] font-bold text-indigoRural-400 uppercase tracking-widest block mb-1">
+            <span className="text-[9px] sm:text-[10px] font-bold text-stone-400 uppercase tracking-widest block mb-1">
               {language === 'hi' ? 'माल खरीद + खर्च' : 'Stock & Expenses'}
             </span>
-            <div className="text-xl sm:text-3xl font-black text-indigoRural-900 tabular-nums tracking-tight font-display truncate">
+            <div className="text-xl sm:text-3xl font-black text-stone-900 tabular-nums tracking-tight font-display truncate">
               {totalExpenseVal !== undefined && totalExpenseVal !== null ? `₹${totalExpenseVal.toLocaleString('en-IN')}` : '—'}
             </div>
-            <span className="text-[10px] sm:text-[11px] font-semibold text-indigoRural-500 mt-1 block truncate">Inventory & bills</span>
+            <span className="text-[10px] sm:text-[11px] font-semibold text-stone-500 mt-1 block truncate">Inventory & bills</span>
           </Card>
 
           <Card padding="sm" className="sm:p-5">
-            <span className="text-[9px] sm:text-[10px] font-bold text-indigoRural-400 uppercase tracking-widest block mb-1">
+            <span className="text-[9px] sm:text-[10px] font-bold text-stone-400 uppercase tracking-widest block mb-1">
               {language === 'hi' ? 'शुद्ध बचत / लाभ' : 'Net Operating Surplus'}
             </span>
-            <div className="text-xl sm:text-3xl font-black text-forestRural-700 tabular-nums tracking-tight font-display truncate">
+            <div className="text-xl sm:text-3xl font-black text-emerald-700 tabular-nums tracking-tight font-display truncate">
               {netSurplusVal !== undefined && netSurplusVal !== null ? `₹${netSurplusVal.toLocaleString('en-IN')}` : '—'}
             </div>
-            <span className="text-[10px] sm:text-[11px] font-semibold text-forestRural-700 mt-1 block truncate">
+            <span className="text-[10px] sm:text-[11px] font-semibold text-emerald-700 mt-1 block truncate">
               {marginPct ? `+${marginPct}% margin` : 'Audited margin'}
             </span>
           </Card>
 
           <Card padding="sm" className="sm:p-5">
-            <span className="text-[9px] sm:text-[10px] font-bold text-indigoRural-400 uppercase tracking-widest block mb-1">
+            <span className="text-[9px] sm:text-[10px] font-bold text-stone-400 uppercase tracking-widest block mb-1">
               {language === 'hi' ? 'बकाया ग्राहक उधार' : 'Pending Udhaar Book'}
             </span>
-            <div className="text-xl sm:text-3xl font-black text-ochre-600 tabular-nums tracking-tight font-display truncate">
+            <div className="text-xl sm:text-3xl font-black text-amber-600 tabular-nums tracking-tight font-display truncate">
               {pendingUdhaarVal !== undefined && pendingUdhaarVal !== null ? `₹${pendingUdhaarVal.toLocaleString('en-IN')}` : '—'}
             </div>
-            <span className="text-[10px] sm:text-[11px] font-semibold text-ochre-700 mt-1 block truncate">
+            <span className="text-[10px] sm:text-[11px] font-semibold text-amber-700 mt-1 block truncate">
               {udhaarLedger.length > 0 ? `${udhaarLedger.length} active khata` : 'Managed credit'}
             </span>
           </Card>
@@ -572,7 +569,7 @@ export function CashFlowPage({
                   verticalAlign="top" 
                   align="right"
                   wrapperStyle={{ paddingBottom: '12px', fontSize: '11px', fontWeight: 700 }}
-                  formatter={(val) => <span className="text-indigoRural-800 font-bold">{val}</span>}
+                  formatter={(val) => <span className="text-stone-800 font-bold">{val}</span>}
                 />
 
                 <Area 
@@ -598,8 +595,8 @@ export function CashFlowPage({
           </div>
 
           {/* Supplementary Per-Month Detail Cards */}
-          <div className="space-y-2 pt-4 border-t border-paper-200">
-            <span className="text-[11px] font-bold text-indigoRural-400 uppercase tracking-wider block">
+          <div className="space-y-2 pt-4 border-t border-stone-200/80">
+            <span className="text-[11px] font-bold text-stone-400 uppercase tracking-wider block">
               {language === 'hi' ? 'मासिक विश्लेषण विवरण' : 'Monthly Performance Breakdown'}
             </span>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -613,14 +610,14 @@ export function CashFlowPage({
                     key={m.month}
                     className={`p-3.5 rounded-xl border transition-colors ${
                       isDip 
-                        ? 'bg-paper-100 border-indigoRural-200' 
+                        ? 'bg-stone-100 border-indigoRural-200' 
                         : isSpike 
-                        ? 'bg-ochre-50/70 border-ochre-300/80' 
-                        : 'bg-white border-paper-300/80'
+                        ? 'bg-amber-50/70 border-amber-200/80' 
+                        : 'bg-white border-stone-200/80'
                     }`}
                   >
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-bold text-indigoRural-900">{m.label || m.month}</span>
+                      <span className="text-xs font-bold text-stone-900">{m.label || m.month}</span>
                       <Badge 
                         variant={isDip ? 'neutral' : isSpike ? 'attention' : 'positive'} 
                         size="sm"
@@ -631,20 +628,20 @@ export function CashFlowPage({
 
                     <div className="space-y-1.5 text-xs">
                       <div className="flex justify-between items-baseline">
-                        <span className="text-indigoRural-400 text-[10px] font-bold uppercase">Sales</span>
-                        <strong className="text-indigoRural-900 font-extrabold tabular-nums">₹{m.income?.toLocaleString('en-IN')}</strong>
+                        <span className="text-stone-400 text-[10px] font-bold uppercase">Sales</span>
+                        <strong className="text-stone-900 font-extrabold tabular-nums">₹{m.income?.toLocaleString('en-IN')}</strong>
                       </div>
-                      <div className="w-full bg-paper-200 h-1.5 rounded-full overflow-hidden">
+                      <div className="w-full bg-stone-200/80 h-1.5 rounded-full overflow-hidden">
                         <div 
                           className={`h-full rounded-full ${
-                            isDip ? 'bg-indigoRural-500' : isSpike ? 'bg-ochre-500' : 'bg-forestRural-600'
+                            isDip ? 'bg-stone-500' : isSpike ? 'bg-amber-500' : 'bg-emerald-600'
                           }`}
                           style={{ width: `${dynamicPct}%` }}
                         />
                       </div>
-                      <div className="flex justify-between items-baseline text-[10px] text-indigoRural-500 pt-0.5">
+                      <div className="flex justify-between items-baseline text-[10px] text-stone-500 pt-0.5">
                         <span>Surplus</span>
-                        <span className="font-bold text-forestRural-700 tabular-nums">₹{m.profit?.toLocaleString('en-IN')}</span>
+                        <span className="font-bold text-emerald-700 tabular-nums">₹{m.profit?.toLocaleString('en-IN')}</span>
                       </div>
                     </div>
                   </div>
@@ -656,10 +653,10 @@ export function CashFlowPage({
       ) : (
         <Card padding="lg" className="text-center py-8 space-y-2">
           <TrendingUp className="w-8 h-8 text-indigoRural-300 mx-auto" />
-          <h3 className="font-bold text-sm text-indigoRural-800">
+          <h3 className="font-bold text-sm text-stone-800">
             {language === 'hi' ? 'मौसमी नकदी प्रवाह चार्ट (माह-वार)' : 'Seasonal Cash Flow Trend Chart'}
           </h3>
-          <p className="text-xs text-indigoRural-500 max-w-md mx-auto">
+          <p className="text-xs text-stone-500 max-w-md mx-auto">
             {language === 'hi' 
               ? 'जैसे-जैसे आप दैनिक लेन-देन दर्ज करेंगे, आपका मासिक बिक्री और लागत का समय-श्रृंखला ग्राफ यहाँ स्वतः तैयार होगा।' 
               : 'As you record transactions over multiple weeks, your monthly gross revenue and inventory replenishment trends will graph here automatically.'}
@@ -669,14 +666,14 @@ export function CashFlowPage({
 
       {/* WhatsApp Simulated Toast */}
       {reminderToast && (
-        <div className="bg-forestRural-50 border border-forestRural-300 p-4 rounded-2xl shadow-card flex items-start gap-3 animate-fadeIn">
-          <MessageCircle className="w-5 h-5 text-forestRural-700 shrink-0 mt-0.5" />
+        <div className="bg-emerald-50 border border-forestRural-300 p-4 rounded-2xl shadow-card flex items-start gap-3 animate-fadeIn">
+          <MessageCircle className="w-5 h-5 text-emerald-700 shrink-0 mt-0.5" />
           <div className="space-y-1 text-xs">
             <span className="font-bold text-forestRural-900 flex items-center gap-1.5">
-              <Share2 className="w-3.5 h-3.5 text-forestRural-700" />
+              <Share2 className="w-3.5 h-3.5 text-emerald-700" />
               <span>WhatsApp Payment Reminder Sent to {reminderToast.name}:</span>
             </span>
-            <p className="text-forestRural-800 bg-white p-2.5 rounded-xl border border-forestRural-200 font-mono">
+            <p className="text-emerald-800 bg-white p-2.5 rounded-xl border border-emerald-200 font-mono">
               "{reminderToast.message}"
             </p>
           </div>
@@ -687,14 +684,14 @@ export function CashFlowPage({
       <Card padding="none" className="overflow-hidden">
         
         {/* Segment Tabs */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 border-b border-paper-200 bg-paper-50/70 gap-3">
-          <div className="grid grid-cols-2 sm:flex gap-1 p-1 bg-paper-200/80 rounded-xl w-full sm:w-auto">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 border-b border-stone-200/80 bg-stone-50/70 gap-3">
+          <div className="grid grid-cols-2 sm:flex gap-1 p-1 bg-stone-200/80/80 rounded-xl w-full sm:w-auto">
             <button
               onClick={() => setActiveTab('all')}
               className={`px-2.5 sm:px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                 activeTab === 'all' 
-                  ? 'bg-white text-indigoRural-900 shadow-2xs' 
-                  : 'text-indigoRural-600 hover:text-indigoRural-900'
+                  ? 'bg-white text-stone-900 shadow-2xs' 
+                  : 'text-stone-600 hover:text-stone-900'
               }`}
             >
               <FileText className="w-3.5 h-3.5 shrink-0" />
@@ -704,8 +701,8 @@ export function CashFlowPage({
               onClick={() => setActiveTab('udhaar')}
               className={`px-2.5 sm:px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                 activeTab === 'udhaar' 
-                  ? 'bg-white text-indigoRural-900 shadow-2xs' 
-                  : 'text-indigoRural-600 hover:text-indigoRural-900'
+                  ? 'bg-white text-stone-900 shadow-2xs' 
+                  : 'text-stone-600 hover:text-stone-900'
               }`}
             >
               <BookOpen className="w-3.5 h-3.5 shrink-0" />
@@ -727,8 +724,8 @@ export function CashFlowPage({
                   onClick={() => setFilterType(t)}
                   className={`px-3 py-1 rounded-lg font-bold text-xs transition cursor-pointer ${
                     filterType === t 
-                      ? 'bg-indigoRural-900 text-white' 
-                      : 'bg-white text-indigoRural-600 border border-paper-300 hover:bg-paper-100'
+                      ? 'bg-stone-900 text-white' 
+                      : 'bg-white text-stone-600 border border-stone-200 hover:bg-stone-100'
                   }`}
                 >
                   {t === '' ? 'All' : t === 'income' ? 'Sales' : t === 'expense' ? 'Costs' : 'Udhaar'}
@@ -740,28 +737,28 @@ export function CashFlowPage({
 
         {/* Tab 1: All Transactions Feed */}
         {activeTab === 'all' && (
-          <div className="divide-y divide-paper-200 max-h-[500px] overflow-y-auto">
+          <div className="divide-y divide-stone-200/80 max-h-[500px] overflow-y-auto">
             {loading ? (
               <div className="p-4 space-y-3">
                 {[1, 2, 3, 4].map(i => (
-                  <div key={i} className="flex items-center justify-between p-3.5 rounded-xl border border-paper-200 animate-shimmer">
+                  <div key={i} className="flex items-center justify-between p-3.5 rounded-xl border border-stone-200/80 animate-shimmer">
                     <div className="space-y-2 w-1/2">
-                      <div className="h-3.5 bg-paper-300/70 rounded-md w-3/5" />
-                      <div className="h-2.5 bg-paper-200 rounded-md w-2/5" />
+                      <div className="h-3.5 bg-stone-200/70 rounded-md w-3/5" />
+                      <div className="h-2.5 bg-stone-200/80 rounded-md w-2/5" />
                     </div>
-                    <div className="h-5 bg-paper-300/70 rounded-md w-20" />
+                    <div className="h-5 bg-stone-200/70 rounded-md w-20" />
                   </div>
                 ))}
               </div>
             ) : transactions.length === 0 ? (
               <div className="p-12 text-center space-y-3">
-                <div className="w-12 h-12 mx-auto rounded-2xl bg-paper-100 flex items-center justify-center text-indigoRural-400">
+                <div className="w-12 h-12 mx-auto rounded-2xl bg-stone-100 flex items-center justify-center text-stone-400">
                   <BookOpen className="w-6 h-6" />
                 </div>
-                <h4 className="font-bold text-sm text-indigoRural-800">
+                <h4 className="font-bold text-sm text-stone-800">
                   {language === 'hi' ? 'अभी कोई लेनदेन दर्ज नहीं है' : 'No Transactions Recorded Yet'}
                 </h4>
-                <p className="text-xs text-indigoRural-500 max-w-sm mx-auto">
+                <p className="text-xs text-stone-500 max-w-sm mx-auto">
                   {language === 'hi' 
                     ? 'अपनी दुकान की पहली दैनिक बिक्री या खर्च दर्ज करने के लिए नीचे बटन दबाएं।' 
                     : 'Tap the button below to record your first daily counter sale, stock purchase, or customer credit.'}
@@ -779,26 +776,26 @@ export function CashFlowPage({
                 const isUdhaarGiven = tx.type === 'udhaar_given';
 
                 return (
-                  <div key={tx.id} className="p-4 hover:bg-paper-50 transition flex items-center justify-between gap-4">
+                  <div key={tx.id} className="p-4 hover:bg-stone-50 transition flex items-center justify-between gap-4">
                     
                     <div className="flex items-center gap-3.5">
                       <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm shrink-0 ${
-                        isIncome ? 'bg-forestRural-50 text-forestRural-700 border border-forestRural-200' :
-                        isExpense ? 'bg-terracotta-50 text-terracotta-700 border border-terracotta-200' :
-                        isUdhaarGiven ? 'bg-ochre-50 text-ochre-700 border border-ochre-200' :
-                        'bg-paper-100 text-indigoRural-700 border border-paper-300'
+                        isIncome ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
+                        isExpense ? 'bg-amber-50 text-amber-700 border border-amber-200' :
+                        isUdhaarGiven ? 'bg-amber-50 text-amber-700 border border-amber-200' :
+                        'bg-stone-100 text-stone-700 border border-stone-200'
                       }`}>
                         {isIncome ? '↓' : isExpense ? '↑' : '⏱'}
                       </div>
 
                       <div className="space-y-0.5">
                         <div className="flex items-center gap-2">
-                          <span className="font-extrabold text-sm text-indigoRural-900">{tx.category}</span>
-                          <span className="text-[10px] font-extrabold px-1.5 py-0.2 rounded-md bg-paper-200 text-indigoRural-700 uppercase">
+                          <span className="font-extrabold text-sm text-stone-900">{tx.category}</span>
+                          <span className="text-[10px] font-extrabold px-1.5 py-0.2 rounded-md bg-stone-200/80 text-stone-700 uppercase">
                             {tx.payment_mode}
                           </span>
                         </div>
-                        <p className="text-xs text-indigoRural-500 font-medium">
+                        <p className="text-xs text-stone-500 font-medium">
                           {tx.customer_vendor_name ? `${tx.customer_vendor_name} • ` : ''}
                           {tx.date}
                         </p>
@@ -808,11 +805,11 @@ export function CashFlowPage({
                     <div className="flex items-center gap-2.5">
                       <div className="text-right">
                         <div className={`text-base font-black tabular-nums ${
-                          isIncome || tx.type === 'udhaar_repaid' ? 'text-forestRural-700' : 'text-indigoRural-900'
+                          isIncome || tx.type === 'udhaar_repaid' ? 'text-emerald-700' : 'text-stone-900'
                         }`}>
                           {isIncome || tx.type === 'udhaar_repaid' ? '+' : '-'}₹{Number(tx.amount || 0).toLocaleString('en-IN')}
                         </div>
-                        <span className="text-[10px] text-indigoRural-400 capitalize font-medium">
+                        <span className="text-[10px] text-stone-400 capitalize font-medium">
                           {tx.type.replace('_', ' ')}
                         </span>
                       </div>
@@ -822,7 +819,7 @@ export function CashFlowPage({
                         onClick={() => handleDeleteTransaction(tx.id)}
                         disabled={deletingId === tx.id}
                         title={language === 'hi' ? 'लेन-देन हटाएं' : 'Delete transaction'}
-                        className="p-1.5 sm:p-2 rounded-xl text-paper-400 hover:text-terracotta-600 hover:bg-terracotta-50 border border-transparent hover:border-terracotta-200 transition active:scale-95 cursor-pointer disabled:opacity-40 shrink-0"
+                        className="p-1.5 sm:p-2 rounded-xl text-stone-300 hover:text-amber-600 hover:bg-amber-50 border border-transparent hover:border-amber-200 transition active:scale-95 cursor-pointer disabled:opacity-40 shrink-0"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -839,28 +836,28 @@ export function CashFlowPage({
         {activeTab === 'udhaar' && (
           <div>
             {/* Top Toolbar for Customer Udhaar Book */}
-            <div className="p-3.5 bg-paper-100/70 border-b border-paper-200 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 text-xs">
+            <div className="p-3.5 bg-stone-100/70 border-b border-stone-200/80 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 text-xs">
               
               {/* Search Box */}
               <div className="relative flex-1 max-w-sm">
-                <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-indigoRural-400" />
+                <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
                 <input
                   type="text"
                   value={customerSearchQuery}
                   onChange={(e) => setCustomerSearchQuery(e.target.value)}
                   placeholder={language === 'hi' ? 'ग्राहक का नाम, फोन या गाँव खोजें...' : 'Search by name, phone or village...'}
-                  className="w-full pl-8 pr-3 py-2 bg-white border border-paper-300 rounded-xl text-xs font-semibold text-indigoRural-900 focus:outline-none focus:ring-2 focus:ring-terracotta-500 placeholder:text-paper-400"
+                  className="w-full pl-8 pr-3 py-2 bg-white border border-stone-200 rounded-xl text-xs font-semibold text-stone-900 focus:outline-none focus:ring-2 focus:ring-amber-500 placeholder:text-stone-300"
                 />
               </div>
 
               {/* Filter Pills & Register Button */}
               <div className="flex items-center gap-2 flex-wrap">
-                <div className="flex items-center gap-1 bg-paper-200/80 p-1 rounded-xl">
+                <div className="flex items-center gap-1 bg-stone-200/80/80 p-1 rounded-xl">
                   <button
                     type="button"
                     onClick={() => setCustomerFilter('all')}
                     className={`px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
-                      customerFilter === 'all' ? 'bg-white text-indigoRural-900 shadow-2xs' : 'text-indigoRural-600 hover:text-indigoRural-900'
+                      customerFilter === 'all' ? 'bg-white text-stone-900 shadow-2xs' : 'text-stone-600 hover:text-stone-900'
                     }`}
                   >
                     {language === 'hi' ? 'सभी' : 'All'} ({udhaarLedger.length})
@@ -869,7 +866,7 @@ export function CashFlowPage({
                     type="button"
                     onClick={() => setCustomerFilter('owing')}
                     className={`px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
-                      customerFilter === 'owing' ? 'bg-white text-indigoRural-900 shadow-2xs' : 'text-indigoRural-600 hover:text-indigoRural-900'
+                      customerFilter === 'owing' ? 'bg-white text-stone-900 shadow-2xs' : 'text-stone-600 hover:text-stone-900'
                     }`}
                   >
                     {language === 'hi' ? 'बकायादार' : 'With Balance'}
@@ -878,7 +875,7 @@ export function CashFlowPage({
                     type="button"
                     onClick={() => setCustomerFilter('near_limit')}
                     className={`px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
-                      customerFilter === 'near_limit' ? 'bg-white text-indigoRural-900 shadow-2xs' : 'text-indigoRural-600 hover:text-indigoRural-900'
+                      customerFilter === 'near_limit' ? 'bg-white text-stone-900 shadow-2xs' : 'text-stone-600 hover:text-stone-900'
                     }`}
                   >
                     {language === 'hi' ? 'सीमा अलर्ट' : 'Near Limit'}
@@ -898,7 +895,7 @@ export function CashFlowPage({
             </div>
 
             {/* Customers List */}
-            <div className="divide-y divide-paper-200 max-h-[550px] overflow-y-auto">
+            <div className="divide-y divide-stone-200/80 max-h-[550px] overflow-y-auto">
               {(() => {
                 const filtered = udhaarLedger.filter(cust => {
                   const q = customerSearchQuery.trim().toLowerCase();
@@ -922,13 +919,13 @@ export function CashFlowPage({
                 if (filtered.length === 0) {
                   return (
                     <div className="p-12 text-center space-y-3">
-                      <div className="w-12 h-12 mx-auto rounded-2xl bg-paper-100 flex items-center justify-center text-indigoRural-400">
+                      <div className="w-12 h-12 mx-auto rounded-2xl bg-stone-100 flex items-center justify-center text-stone-400">
                         <Users className="w-6 h-6" />
                       </div>
-                      <h4 className="font-bold text-sm text-indigoRural-800">
+                      <h4 className="font-bold text-sm text-stone-800">
                         {language === 'hi' ? 'कोई ग्राहक खाता नहीं मिला' : 'No Customer Accounts Found'}
                       </h4>
-                      <p className="text-xs text-indigoRural-500 max-w-sm mx-auto">
+                      <p className="text-xs text-stone-500 max-w-sm mx-auto">
                         {language === 'hi'
                           ? 'नया ग्राहक पंजीकृत करें और 1-क्लिक व्हाट्सएप तगादा संदेश भेजें।'
                           : 'Register a customer to track credit limits and send 1-click WhatsApp reminders.'}
@@ -955,37 +952,37 @@ export function CashFlowPage({
                   const isOverLimit = balance > limit;
 
                   return (
-                    <div key={idx} className="p-4 hover:bg-paper-50 transition flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div key={idx} className="p-4 hover:bg-stone-50 transition flex flex-col md:flex-row md:items-center justify-between gap-4">
                       
                       {/* Left: Avatar & Identity */}
                       <div className="flex items-start sm:items-center gap-3.5 min-w-[240px]">
                         <div className={`w-11 h-11 rounded-2xl flex items-center justify-center font-extrabold text-sm shrink-0 border ${
-                          isOverLimit ? 'bg-terracotta-100 text-terracotta-700 border-terracotta-300' :
-                          isNearLimit ? 'bg-ochre-100 text-ochre-800 border-ochre-300' :
-                          'bg-paper-100 text-indigoRural-800 border-paper-300'
+                          isOverLimit ? 'bg-amber-100 text-amber-700 border-amber-300' :
+                          isNearLimit ? 'bg-amber-100 text-amber-800 border-amber-200' :
+                          'bg-stone-100 text-stone-800 border-stone-200'
                         }`}>
                           {cust.customerName.charAt(0)}
                         </div>
 
                         <div className="space-y-0.5">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className="font-black text-sm text-indigoRural-900">{cust.customerName}</span>
+                            <span className="font-black text-sm text-stone-900">{cust.customerName}</span>
                             {cust.isRegistered ? (
-                              <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-md bg-forestRural-100 text-forestRural-800 border border-forestRural-200">
+                              <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-md bg-emerald-100 text-emerald-800 border border-emerald-200">
                                 {language === 'hi' ? 'पंजीकृत' : 'Verified'}
                               </span>
                             ) : (
-                              <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-md bg-paper-200 text-indigoRural-600">
+                              <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-md bg-stone-200/80 text-stone-600">
                                 {language === 'hi' ? 'बही-खाता' : 'Ledger'}
                               </span>
                             )}
                           </div>
 
-                          <div className="flex items-center gap-3 text-xs text-indigoRural-500 font-semibold flex-wrap">
+                          <div className="flex items-center gap-3 text-xs text-stone-500 font-semibold flex-wrap">
                             {cust.phone ? (
                               <a 
                                 href={`tel:${cust.phone}`}
-                                className="flex items-center gap-1 text-forestRural-700 hover:underline"
+                                className="flex items-center gap-1 text-emerald-700 hover:underline"
                               >
                                 <PhoneCall className="w-3 h-3" />
                                 <span>+91 {cust.phone.replace(/^91/, '')}</span>
@@ -994,7 +991,7 @@ export function CashFlowPage({
                               <button
                                 type="button"
                                 onClick={() => setSelectedWhatsAppCustomer(cust)}
-                                className="text-terracotta-600 hover:text-terracotta-800 text-[11px] font-bold underline cursor-pointer"
+                                className="text-amber-600 hover:text-amber-800 text-[11px] font-bold underline cursor-pointer"
                                 title={language === 'hi' ? 'फोन नंबर जोड़ें' : 'Add customer phone'}
                               >
                                 {language === 'hi' ? '+ फोन नंबर जोड़ें' : '+ Add phone'}
@@ -1002,8 +999,8 @@ export function CashFlowPage({
                             )}
 
                             {cust.village && (
-                              <span className="flex items-center gap-1 text-indigoRural-600">
-                                <MapPin className="w-3 h-3 text-ochre-600" />
+                              <span className="flex items-center gap-1 text-stone-600">
+                                <MapPin className="w-3 h-3 text-amber-600" />
                                 <span>{cust.village}</span>
                               </span>
                             )}
@@ -1014,26 +1011,26 @@ export function CashFlowPage({
                       {/* Center: Credit Limit Utilization Bar */}
                       <div className="flex-1 max-w-xs space-y-1">
                         <div className="flex justify-between text-[11px] font-bold">
-                          <span className="text-indigoRural-600">
+                          <span className="text-stone-600">
                             {language === 'hi' ? 'उधार सीमा उपयोग' : 'Credit Limit Used'}
                           </span>
-                          <span className={`${isOverLimit ? 'text-terracotta-700' : isNearLimit ? 'text-ochre-700' : 'text-indigoRural-700'}`}>
+                          <span className={`${isOverLimit ? 'text-amber-700' : isNearLimit ? 'text-amber-700' : 'text-stone-700'}`}>
                             ₹{balance.toLocaleString('en-IN')} / ₹{limit.toLocaleString('en-IN')} ({usagePercent}%)
                           </span>
                         </div>
-                        <div className="w-full h-2 bg-paper-200 rounded-full overflow-hidden">
+                        <div className="w-full h-2 bg-stone-200/80 rounded-full overflow-hidden">
                           <div
                             className={`h-full rounded-full transition-all ${
-                              isOverLimit ? 'bg-terracotta-600' :
-                              isNearLimit ? 'bg-ochre-500' :
-                              'bg-forestRural-600'
+                              isOverLimit ? 'bg-amber-600' :
+                              isNearLimit ? 'bg-amber-500' :
+                              'bg-emerald-600'
                             }`}
                             style={{ width: `${Math.min(100, usagePercent)}%` }}
                           />
                         </div>
                         {isNearLimit && (
-                          <div className="flex items-center gap-1 text-[10px] font-bold text-ochre-700">
-                            <AlertTriangle className="w-3 h-3 text-ochre-600 shrink-0" />
+                          <div className="flex items-center gap-1 text-[10px] font-bold text-amber-700">
+                            <AlertTriangle className="w-3 h-3 text-amber-600 shrink-0" />
                             <span>{language === 'hi' ? 'उधार सीमा 80% से अधिक है' : 'Approaching credit limit threshold'}</span>
                           </div>
                         )}
@@ -1043,13 +1040,13 @@ export function CashFlowPage({
                       <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0">
                         <div className="text-right">
                           <div className={`text-base font-black tabular-nums ${
-                            balance > 0 ? 'text-terracotta-700' : 'text-forestRural-700'
+                            balance > 0 ? 'text-amber-700' : 'text-emerald-700'
                           }`}>
                             ₹{balance.toLocaleString('en-IN')}
                           </div>
-                          <div className="text-[10px] text-indigoRural-400 font-medium">
+                          <div className="text-[10px] text-stone-400 font-medium">
                             {cust.lastReminderSent ? (
-                              <span className="text-forestRural-700 font-bold">
+                              <span className="text-emerald-700 font-bold">
                                 ✓ {language === 'hi' ? 'तगादा भेजा गया' : 'Reminder Sent'}
                               </span>
                             ) : cust.lastDate ? (

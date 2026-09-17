@@ -102,7 +102,7 @@ export function InteractiveDemoTour({
       highlightTextEn: "Score: 785 / 850 (Prime Bankable) • +15 Points Simulator Boost with Udhaar Recovery",
       highlightTextHi: "स्कोर: 785 / 850 (अति उत्कृष्ट) • उधार वसूली से +15 अंक का तुरंत लाइव सिम्युलेटर उछाल",
       icon: TrendingUp,
-      color: "from-indigo-600 to-forestRural-600",
+      color: "from-indigo-600 to-emerald-600",
       action: () => {
         setActiveTab('credit');
       }
@@ -118,7 +118,7 @@ export function InteractiveDemoTour({
       highlightTextEn: "Top Match: PM MUDRA Shishu & Kishor (Zero Collateral) • UP ODOP (93% Match)",
       highlightTextHi: "शीर्ष मिलान: पीएम मुद्रा योजना (बिना किसी गारंटी के) • यूपी ओडीओपी मार्जिन मनी (93% मैच)",
       icon: Landmark,
-      color: "from-forestRural-600 to-terracotta-600",
+      color: "from-emerald-600 to-terracotta-600",
       action: () => {
         setActiveTab('schemes');
       }
@@ -242,29 +242,29 @@ export function InteractiveDemoTour({
 
   return (
     <div className="fixed inset-x-0 bottom-4 z-50 px-4 max-w-4xl mx-auto animate-slideUp">
-      <div className="bg-ledgerInk/95 text-paper backdrop-blur-2xl rounded-3xl border border-ochre-400/30 shadow-2xl p-4 sm:p-5 relative overflow-hidden ring-1 ring-ochre-400/20">
+      <div className="bg-stone-950/95 text-paper backdrop-blur-2xl rounded-3xl border border-amber-400/30 shadow-2xl p-4 sm:p-5 relative overflow-hidden ring-1 ring-amber-400/20">
         
         {/* Animated Background Shimmer */}
-        <div className="absolute inset-0 bg-gradient-to-r from-ledgerInk via-ledgerInk/90 to-ledgerInk/95 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-r from-stone-950 via-stone-950/90 to-stone-950/95 pointer-events-none" />
 
         {/* Progress Bar Top */}
-        <div className="absolute top-0 left-0 right-0 h-1 bg-ledgerInk/60">
+        <div className="absolute top-0 left-0 right-0 h-1 bg-stone-950/60">
           <div 
-            className="h-full bg-gradient-to-r from-turmeric via-ochre-400 to-forestRural-400 transition-all duration-100 ease-linear"
+            className="h-full bg-gradient-to-r from-amber-500 via-amber-400 to-emerald-400 transition-all duration-100 ease-linear"
             style={{ width: `${progress}%` }}
           />
         </div>
 
         {/* Header Strip */}
-        <div className="relative z-10 flex items-center justify-between gap-3 pb-2.5 border-b border-ochre-400/20">
+        <div className="relative z-10 flex items-center justify-between gap-3 pb-2.5 border-b border-amber-400/20">
           <div className="flex items-center gap-2.5">
             <span className="flex h-2.5 w-2.5 relative">
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-turmeric"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
             </span>
-            <span className="text-[11px] font-bold tracking-tight text-turmeric-200 bg-ochre-400/20 px-2.5 py-0.5 rounded-full border border-ochre-400/30">
+            <span className="text-[11px] font-bold tracking-tight text-amber-200 bg-amber-400/20 px-2.5 py-0.5 rounded-full border border-amber-400/30">
               {currentStepData.badge}
             </span>
-            <span className="hidden sm:inline text-xs text-paper-200/60 font-medium">
+            <span className="hidden sm:inline text-xs text-stone-200/60 font-medium">
               | Smart India Hackathon 2026 Prototype • PSL Documentation Format
             </span>
           </div>
@@ -276,8 +276,8 @@ export function InteractiveDemoTour({
               title={speechEnabled ? "Mute Voice Narration" : "Enable AI Voice Narration"}
               className={`p-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 border transition ${
                 speechEnabled 
-                  ? 'bg-turmeric text-ledgerInk border-turmeric-400 shadow-sm' 
-                  : 'bg-paper/10 text-paper-200 border-paper/15 hover:bg-paper/20'
+                  ? 'bg-amber-500 text-stone-950 border-amber-400 shadow-sm' 
+                  : 'bg-white/10 text-stone-200 border-white/15 hover:bg-white/20'
               }`}
             >
               {speechEnabled ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
@@ -290,7 +290,7 @@ export function InteractiveDemoTour({
                 if (window.speechSynthesis) window.speechSynthesis.cancel();
                 onClose();
               }}
-              className="p-1.5 bg-paper/10 hover:bg-paper/20 rounded-xl text-paper-200 hover:text-paper transition border border-paper/15"
+              className="p-1.5 bg-paper/10 hover:bg-paper/20 rounded-xl text-stone-200 hover:text-paper transition border border-paper/15"
             >
               <X className="w-4 h-4" />
             </button>
@@ -300,19 +300,19 @@ export function InteractiveDemoTour({
         {/* Center Content & Dynamic Narration */}
         <div className="relative z-10 py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div className="flex items-start gap-3.5">
-            <div className="shrink-0 w-10 h-10 rounded-2xl bg-paper/10 border border-ochre-400/20 flex items-center justify-center text-turmeric-300 shadow-xs">
+            <div className="shrink-0 w-10 h-10 rounded-2xl bg-white/10 border border-amber-400/20 flex items-center justify-center text-amber-300 shadow-xs">
               <currentStepData.icon className="w-5 h-5" />
             </div>
 
             <div className="space-y-1">
-              <h3 className="text-sm sm:text-base font-bold text-paper flex items-center gap-2 tracking-tight font-serif">
+              <h3 className="text-sm sm:text-base font-bold text-white flex items-center gap-2 tracking-tight font-serif">
                 <span>{language === 'hi' ? currentStepData.titleHi : currentStepData.titleEn}</span>
               </h3>
-              <p className="text-xs text-paper-200/80 leading-relaxed max-w-2xl font-normal font-sans">
+              <p className="text-xs text-stone-200/80 leading-relaxed max-w-2xl font-normal font-sans">
                 {language === 'hi' ? currentStepData.narrationHi : currentStepData.narrationEn}
               </p>
               <div className="pt-1">
-                <span className="inline-block text-[11px] font-semibold text-turmeric-200 bg-ochre-400/20 px-2.5 py-0.5 rounded-full border border-ochre-400/30">
+                <span className="inline-block text-[11px] font-semibold text-amber-200 bg-amber-400/20 px-2.5 py-0.5 rounded-full border border-amber-400/30">
                   {language === 'hi' ? currentStepData.highlightTextHi : currentStepData.highlightTextEn}
                 </span>
               </div>
@@ -321,7 +321,7 @@ export function InteractiveDemoTour({
         </div>
 
         {/* Bottom Control Bar */}
-        <div className="relative z-10 pt-2.5 border-t border-ochre-400/20 flex items-center justify-between gap-2">
+        <div className="relative z-10 pt-2.5 border-t border-amber-400/20 flex items-center justify-between gap-2">
           
           {/* Step Selector Dots */}
           <div className="flex items-center gap-1.5">
@@ -331,49 +331,40 @@ export function InteractiveDemoTour({
                 onClick={() => setCurrentStep(idx)}
                 className={`h-1.5 rounded-full transition-all ${
                   idx === currentStep 
-                    ? 'w-6 bg-turmeric' 
+                    ? 'w-6 bg-amber-500' 
                     : idx < currentStep 
-                    ? 'w-1.5 bg-ochre-400/50' 
-                    : 'w-1.5 bg-paper/20'
+                    ? 'w-1.5 bg-amber-400/50' 
+                    : 'w-1.5 bg-white/20'
                 }`}
               />
             ))}
           </div>
 
-          {/* Navigation Buttons */}
+          {/* Action Buttons */}
           <div className="flex items-center gap-1.5">
-            
-            {/* Prev */}
+            <button
+              onClick={() => setIsPlaying(!isPlaying)}
+              className="p-1.5 bg-white/10 hover:bg-white/20 rounded-xl text-stone-200 transition border border-white/15 cursor-pointer"
+              title={isPlaying ? "Pause Tour" : "Play Tour"}
+            >
+              {isPlaying ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+            </button>
+
             <button
               onClick={handlePrev}
               disabled={currentStep === 0}
-              className={`p-2 rounded-xl border text-xs font-semibold transition ${
-                currentStep === 0 
-                  ? 'bg-paper/5 text-paper/30 border-transparent cursor-not-allowed' 
-                  : 'bg-paper/10 text-paper border-paper/15 hover:bg-paper/20'
-              }`}
+              className="p-1.5 bg-white/10 hover:bg-white/20 disabled:opacity-30 rounded-xl text-stone-200 transition border border-white/15 cursor-pointer"
             >
               <SkipBack className="w-3.5 h-3.5" />
             </button>
 
-            {/* Play/Pause */}
-            <button
-              onClick={() => setIsPlaying(!isPlaying)}
-              className="px-3.5 py-1.5 bg-paper hover:bg-paper-100 text-ledgerInk rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-sm active:scale-95 transition"
-            >
-              {isPlaying ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5 fill-current" />}
-              <span>{isPlaying ? 'Pause' : 'Play'}</span>
-            </button>
-
-            {/* Next */}
             <button
               onClick={handleNext}
-              className="px-4 py-1.5 bg-turmeric hover:bg-turmeric-600 text-ledgerInk rounded-xl font-bold text-xs flex items-center gap-1 shadow-sm active:scale-95 transition"
+              className="px-4 py-1.5 bg-amber-500 hover:bg-amber-600 text-stone-950 rounded-xl font-bold text-xs flex items-center gap-1 shadow-sm active:scale-95 transition"
             >
-              <span>{currentStep === demoSteps.length - 1 ? 'Restart' : 'Next'}</span>
-              <SkipForward className="w-3.5 h-3.5" />
+              <span>{currentStep === demoSteps.length - 1 ? 'Restart Tour' : 'Next Step'}</span>
+              <ArrowRight className="w-3.5 h-3.5" />
             </button>
-
           </div>
 
         </div>

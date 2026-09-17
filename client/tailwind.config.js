@@ -7,8 +7,31 @@ export default {
   theme: {
     extend: {
       colors: {
+        canvas: '#FAF8F5',
         ledgerInk: '#1E2A4A',
         marginRule: '#B23A2E',
+        vermillion: {
+          DEFAULT: '#B91C1C',
+          50: '#FEF2F2',
+          100: '#FEE2E2',
+          600: '#DC2626',
+          700: '#B91C1C',
+          800: '#991B1B',
+        },
+        reserveGreen: {
+          DEFAULT: '#15803D',
+          50: '#F0FDF4',
+          100: '#DCFCE7',
+          600: '#16A34A',
+          700: '#15803D',
+          800: '#166534',
+        },
+        ink: {
+          primary: '#1C1917',
+          secondary: '#57534E',
+          tertiary: '#78716C',
+          quaternary: '#A8A29E',
+        },
         turmeric: {
           DEFAULT: '#D97706',
           50: '#FFFBEB',
@@ -81,13 +104,17 @@ export default {
       },
       fontFamily: {
         serif: ['"Fraunces"', 'Georgia', 'serif'],
-        sans: ['"IBM Plex Sans"', '"Inter"', '"Noto Sans Devanagari"', 'system-ui', '-apple-system', 'sans-serif'],
+        sans: ['"Plus Jakarta Sans"', '"Inter"', '"Noto Sans Devanagari"', 'system-ui', '-apple-system', 'sans-serif'],
         display: ['"Fraunces"', '"Noto Sans Devanagari"', 'Georgia', 'serif'],
-        hindi: ['"Noto Sans Devanagari"', '"Inter"', 'system-ui', '-apple-system', 'sans-serif'],
+        hindi: ['"Noto Sans Devanagari"', '"Plus Jakarta Sans"', 'system-ui', '-apple-system', 'sans-serif'],
         devanagari: ['"Noto Sans Devanagari"', 'sans-serif'],
-        body: ['"IBM Plex Sans"', '"Inter"', 'sans-serif'],
+        body: ['"Plus Jakarta Sans"', '"Inter"', 'sans-serif'],
       },
       boxShadow: {
+        'apple-card': '0 1px 3px 0 rgba(0, 0, 0, 0.03), 0 8px 24px -4px rgba(44, 25, 18, 0.04)',
+        'apple-elevated': '0 2px 6px 0 rgba(0, 0, 0, 0.03), 0 16px 36px -6px rgba(44, 25, 18, 0.06)',
+        'apple-floating': '0 24px 50px -12px rgba(28, 25, 23, 0.14), 0 6px 16px -4px rgba(28, 25, 23, 0.05)',
+        'apple-glass': '0 8px 32px 0 rgba(28, 25, 23, 0.06)',
         'card': '0 1px 3px 0 rgba(44, 25, 18, 0.05), 0 1px 2px -1px rgba(44, 25, 18, 0.05)',
         'card-hover': '0 12px 24px -4px rgba(44, 25, 18, 0.08), 0 4px 6px -2px rgba(44, 25, 18, 0.04)',
         'elevation-1': '0 4px 20px -4px rgba(180, 83, 9, 0.09), 0 2px 6px -2px rgba(180, 83, 9, 0.04)',
