@@ -4,14 +4,7 @@
 ### *"Your Rural Micro-Enterprise Companion & Credit Structuring Engine"*
 **Smart India Hackathon (SIH 2026) — Problem Statement 26091**
 
-[![Vercel Deployment](https://img.shields.io/badge/Live_Production-vyapaar--saathi--nine.vercel.app-000000.svg?logo=vercel)](https://vyapaar-saathi-nine.vercel.app)
-[![Tests Passing](https://img.shields.io/badge/Node_Test_Suite-11%2F11_Passing-forestgreen.svg)](https://nodejs.org/)
-[![React 18](https://img.shields.io/badge/Frontend-React_18_%2B_TailwindCSS-C15324.svg)](https://reactjs.org/)
-[![Recharts](https://img.shields.io/badge/Charts-Recharts_Time--Series-D97706.svg)](https://recharts.org/)
-[![Node.js](https://img.shields.io/badge/Backend-Node.js_%2B_Express-339933.svg)](https://nodejs.org/)
-[![SQLite](https://img.shields.io/badge/Database-SQLite_WAL-003B57.svg)](https://www.sqlite.org/)
-[![Google Gemini API](https://img.shields.io/badge/AI_Engine-Gemini_2.5_Flash-4285F4.svg)](https://aistudio.google.com/)
-[![RBI PSL Compliant](https://img.shields.io/badge/Framework-RBI_Priority_Sector_Lending-1E293B.svg)](https://rbi.org.in/)
+
 
 <p align="center">
   <em>An AI-powered, DPI-aligned sovereign micro-enterprise ledger, hyper-local demand forecasting radar, and transparent 4-pillar alternative credit underwriting engine for India's 63+ million rural micro-entrepreneurs.</em>

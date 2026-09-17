@@ -135,11 +135,7 @@ export function Navbar({ activeTab, setActiveTab, currentShop, isDemoMode, onRel
                   <Badge variant="positive" size="sm" className="px-1.5 py-0 text-[10px] shrink-0">
                     LIVE
                   </Badge>
-                ) : (
-                  <Badge variant="brand" size="sm" className="px-1.5 py-0 text-[10px] shrink-0">
-                    DPI Stack
-                  </Badge>
-                )}
+                ) : null}
               </div>
               <div className="text-[10px] font-semibold text-indigoRural-500 flex items-center gap-1.5 mt-0.5 min-w-0">
                 <span className="font-bold text-indigoRural-800 truncate max-w-[110px] xs:max-w-[150px] sm:max-w-none">
@@ -166,6 +162,8 @@ export function Navbar({ activeTab, setActiveTab, currentShop, isDemoMode, onRel
                 <button
                   key={item.id}
                   onClick={() => setActiveTab(item.id)}
+                  title={item.label}
+                  aria-label={item.label}
                   className={`relative flex items-center gap-1.5 xl:gap-2 px-2.5 xl:px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-150 cursor-pointer ${
                     isActive 
                       ? 'bg-white text-indigoRural-950 shadow-2xs scale-[1.02]' 
@@ -177,7 +175,6 @@ export function Navbar({ activeTab, setActiveTab, currentShop, isDemoMode, onRel
                       ? 'text-terracotta-600' 
                       : isActive ? 'text-terracotta-600' : 'text-indigoRural-500'
                   }`} />
-                  <span>{item.label}</span>
                   {item.isAi && (
                     <span className="w-1.5 h-1.5 rounded-full bg-terracotta-600" />
                   )}
