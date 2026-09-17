@@ -22,7 +22,7 @@ import { Badge, Button } from './ui';
 import { SyncStatusBadge } from './SyncStatusBadge';
 
 export function Navbar({ activeTab, setActiveTab, currentShop, isDemoMode, onReloadDemo, onStartDemoTour, onSwitchToDemo, onSwitchToRegister, onLogout }) {
-  const { t, language, toggleLanguage } = useTranslation();
+  const { t, language, toggleLanguage, currentLang } = useTranslation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [resetting, setResetting] = useState(false);
 
@@ -193,7 +193,7 @@ export function Navbar({ activeTab, setActiveTab, currentShop, isDemoMode, onRel
               icon={Globe}
               className="!px-2 sm:!px-3"
             >
-              <span>{language === 'hi' ? 'HI' : 'EN'}</span>
+              <span>{currentLang.label}</span>
             </Button>
 
             {/* Log Out Button */}

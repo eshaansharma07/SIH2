@@ -1,8 +1,19 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import en from './en.json';
 import hi from './hi.json';
+import ta from './ta.json';
+import te from './te.json';
+import pa from './pa.json';
 
-const translations = { en, hi };
+const translations = { en, hi, ta, te, pa };
+
+export const LANGUAGES = [
+  { code: 'en', label: 'EN', nativeLabel: 'English' },
+  { code: 'hi', label: 'HI', nativeLabel: 'हिंदी' },
+  { code: 'ta', label: 'TA', nativeLabel: 'தமிழ்' },
+  { code: 'te', label: 'TE', nativeLabel: 'తెలుగు' },
+  { code: 'pa', label: 'PA', nativeLabel: 'ਪੰਜਾਬੀ' },
+];
 
 const LanguageContext = createContext();
 
@@ -39,11 +50,16 @@ export function LanguageProvider({ children }) {
   };
 
   const toggleLanguage = () => {
-    setLanguage(prev => (prev === 'en' ? 'hi' : 'en'));
+    const codes = LANGUAGES.map(l => l.code);
+    const currentIndex = codes.indexOf(language);
+    const nextIndex = (currentIndex + 1) % codes.length;
+    setLanguage(codes[nextIndex]);
   };
 
+  const currentLang = LANGUAGES.find(l => l.code === language) || LANGUAGES[0];
+
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, toggleLanguage, t }}>
+    <LanguageContext.Provider value={{ language, setLanguage, toggleLanguage, t, currentLang, LANGUAGES }}>
       {children}
     </LanguageContext.Provider>
   );
