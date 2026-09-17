@@ -143,6 +143,16 @@ export function Navbar({
                 </button>
               );
             })}
+            <div className="h-4 w-[1px] bg-stone-300 mx-1" />
+            <button
+              type="button"
+              onClick={() => setActiveTab('onboarding')}
+              title={language === 'hi' ? 'शोकेस लैंडिंग पेज देखें' : 'View Showcase Landing Page'}
+              className="relative flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold text-amber-900 bg-amber-100/70 hover:bg-amber-200/80 transition-all duration-150 cursor-pointer shadow-2xs"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-amber-700" />
+              <span>{language === 'hi' ? 'शोकेस' : 'Showcase'}</span>
+            </button>
           </nav>
 
           {/* Right Action Controls */}
@@ -262,6 +272,16 @@ export function Navbar({
                 </button>
               );
             })}
+            <button
+              onClick={() => {
+                setActiveTab('onboarding');
+                setMobileMenuOpen(false);
+              }}
+              className="col-span-2 flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-bold bg-amber-100/80 text-amber-900 hover:bg-amber-200/90 transition cursor-pointer shadow-2xs"
+            >
+              <Sparkles className="w-4 h-4 text-amber-700" />
+              <span>{language === 'hi' ? '✨ शोकेस लैंडिंग पेज देखें' : '✨ View Showcase Landing'}</span>
+            </button>
           </div>
 
           <div className="flex items-center justify-between pt-1 text-xs">
