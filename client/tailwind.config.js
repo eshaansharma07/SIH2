@@ -7,7 +7,23 @@ export default {
   theme: {
     extend: {
       colors: {
+        ledgerInk: '#1E2A4A',
+        marginRule: '#B23A2E',
+        turmeric: {
+          DEFAULT: '#D97706',
+          50: '#FFFBEB',
+          100: '#FEF3C7',
+          200: '#FDE68A',
+          300: '#FCD34D',
+          400: '#F59E0B',
+          500: '#D97706',
+          600: '#B45309',
+          700: '#92400E',
+          800: '#78350F',
+          900: '#451A03',
+        },
         paper: {
+          DEFAULT: '#F5EFE3',
           50: '#FDFBF7',
           100: '#FAF7F2',
           200: '#F4EFE6',
@@ -64,9 +80,12 @@ export default {
         }
       },
       fontFamily: {
-        sans: ['"Inter"', '"Noto Sans Devanagari"', 'system-ui', '-apple-system', 'sans-serif'],
-        display: ['"Inter"', '"Noto Sans Devanagari"', 'system-ui', '-apple-system', 'sans-serif'],
+        serif: ['"Fraunces"', 'Georgia', 'serif'],
+        sans: ['"IBM Plex Sans"', '"Inter"', '"Noto Sans Devanagari"', 'system-ui', '-apple-system', 'sans-serif'],
+        display: ['"Fraunces"', '"Noto Sans Devanagari"', 'Georgia', 'serif'],
         hindi: ['"Noto Sans Devanagari"', '"Inter"', 'system-ui', '-apple-system', 'sans-serif'],
+        devanagari: ['"Noto Sans Devanagari"', 'sans-serif'],
+        body: ['"IBM Plex Sans"', '"Inter"', 'sans-serif'],
       },
       boxShadow: {
         'card': '0 1px 3px 0 rgba(44, 25, 18, 0.05), 0 1px 2px -1px rgba(44, 25, 18, 0.05)',

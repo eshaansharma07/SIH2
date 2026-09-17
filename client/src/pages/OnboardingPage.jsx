@@ -30,9 +30,50 @@ import { INDIAN_STATES_AND_UTS, findStandardState } from '../data/indianStates';
 import { useTranslation } from '../i18n/LanguageContext';
 import { Card, Badge, Button, PageTitle, SectionHeading, FieldLabel, HelperText } from '../components/ui';
 
+// Easing hook for sequential number counting (ink-fill animation)
+function useAnimatedCounter(targetValue, durationMs = 800, delayMs = 0, shouldReduce = false) {
+  const [count, setCount] = useState(shouldReduce ? targetValue : 0);
+
+  useEffect(() => {
+    if (shouldReduce) {
+      setCount(targetValue);
+      return;
+    }
+
+    let startTimestamp = null;
+    let animationFrameId = null;
+    let timeoutId = setTimeout(() => {
+      const step = (timestamp) => {
+        if (!startTimestamp) startTimestamp = timestamp;
+        const elapsed = timestamp - startTimestamp;
+        const progress = Math.min(elapsed / durationMs, 1);
+        // Quartic ease-out: starts fast, lands softly like ink drying
+        const ease = 1 - Math.pow(1 - progress, 4);
+        setCount(Math.round(ease * targetValue));
+        if (progress < 1) {
+          animationFrameId = requestAnimationFrame(step);
+        }
+      };
+      animationFrameId = requestAnimationFrame(step);
+    }, delayMs);
+
+    return () => {
+      clearTimeout(timeoutId);
+      if (animationFrameId) cancelAnimationFrame(animationFrameId);
+    };
+  }, [targetValue, durationMs, delayMs, shouldReduce]);
+
+  return count;
+}
+
 export function OnboardingPage({ onComplete, onSelectDemo }) {
   const { language } = useTranslation();
   const shouldReduceMotion = useReducedMotion();
+
+  // Ruled-line sequential stat counters
+  const animatedScore = useAnimatedCounter(785, 800, 100, shouldReduceMotion);
+  const animatedDays = useAnimatedCounter(120, 800, 300, shouldReduceMotion);
+  const animatedSchemes = useAnimatedCounter(6, 800, 500, shouldReduceMotion);
   
   const [authMode, setAuthMode] = useState('login'); // 'login' | 'register'
   const [loginPhone, setLoginPhone] = useState('');
@@ -221,19 +262,163 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
   };
 
   return (
-    <motion.div 
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-      className="min-h-[88vh] py-6 px-4 max-w-4xl mx-auto flex flex-col justify-center"
-    >
-      
-      {/* 1. Dedicated SIH Evaluator / Judge Demo Card (Elevation 3) */}
+    <div className="min-h-screen flex flex-col bg-paper-100">
+      {/* ========================================================
+          HERO: THE OPEN LEDGER BOOK (BAHI-KHATA)
+          ======================================================== */}
+      <section className="w-full bg-ledgerInk text-white py-8 sm:py-14 md:py-18 px-3 sm:px-6 relative overflow-hidden">
+        {/* Subtle decorative background texture/lighting */}
+        <div className="absolute inset-0 opacity-10 pointer-events-none bg-[radial-gradient(#F5EFE3_1px,transparent_1px)] [background-size:24px_24px]" />
+
+        {/* The Open Page */}
+        <div className="relative z-10 max-w-3xl xl:max-w-4xl mx-auto bg-[#F5EFE3] text-indigoRural-950 rounded-2xl sm:rounded-3xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.6),0_0_0_1px_rgba(0,0,0,0.06)] border border-[#E3D9C6] overflow-hidden flex flex-row">
+
+          {/* Left Margin Folio Gutter */}
+          <div className="w-10 sm:w-14 md:w-16 bg-[#EDE5D4]/80 shrink-0 border-r-2 sm:border-r-[2.5px] border-marginRule py-6 sm:py-8 flex flex-col items-center justify-between select-none">
+            <div 
+              style={{ writingMode: 'vertical-rl' }}
+              className="text-[10px] sm:text-xs font-mono font-bold tracking-widest text-marginRule/80 rotate-180"
+            >
+              {language === 'hi' ? 'बही-खाता' : 'BAHI-KHATA'}
+            </div>
+            <div className="w-1.5 h-1.5 rounded-full bg-marginRule/40 my-4" />
+            <div 
+              style={{ writingMode: 'vertical-rl' }}
+              className="text-[9px] sm:text-[11px] font-mono font-bold tracking-wider text-indigoRural-700/60 rotate-180"
+            >
+              २०२६ • 2026
+            </div>
+          </div>
+
+          {/* Right Indented Writing Area */}
+          <div className="flex-1 p-5 sm:p-8 md:p-10 space-y-6 sm:space-y-7">
+            {/* Ledger Header Line */}
+            <div className="flex items-center justify-between border-b border-[#D8CEBA] pb-2 text-[11px] sm:text-xs font-mono text-indigoRural-700/75">
+              <span>{language === 'hi' ? 'खाता पृष्ठ सं. ०१' : 'Folio No. 01'}</span>
+              <span>{language === 'hi' ? 'श्री गणेशाय नमः • संवत् २०८२' : 'Date: 2026-27 • Registered MSME Ledger'}</span>
+            </div>
+
+            {/* Typography Section */}
+            <div className="space-y-2">
+              <h1 className="font-hindi font-black text-ledgerInk text-xl sm:text-2xl md:text-3xl lg:text-[34px] leading-tight tracking-tight">
+                {language === 'hi' ? 'हर उधार, हर बिक्री — अब बैंक-योग्य साख' : 'Every Udhaar, Every Sale — Turned into Bank Credit'}
+              </h1>
+              <div className="font-serif font-black text-2xl sm:text-3xl md:text-4xl text-ledgerInk tracking-tight">
+                Vyapaar Saathi
+              </div>
+              <p className="font-serif italic font-semibold text-terracotta-800 text-base sm:text-lg md:text-xl">
+                {language === 'hi' 
+                  ? 'आपका दैनिक बही-खाता, अब ऐसा क्रेडिट स्कोर जिसे बैंक तुरंत पहचानें।' 
+                  : 'Your daily bahi-khata, turned into a credit score banks understand.'}
+              </p>
+            </div>
+
+            <p className="font-sans text-xs sm:text-sm md:text-[15px] text-indigoRural-900/85 leading-relaxed max-w-2xl">
+              {language === 'hi'
+                ? 'कागज़ी पर्चियों और डायरी में लिखा उधार अब बेकार नहीं जाएगा। व्यापार साथी आपकी रोज़ की नकद व उधारी प्रविष्टियों को बैंक-स्वीकृत अल्टरनेटिव क्रेडिट स्कोर (300-850) और सरकारी ऋण पात्रता में बदलता है — बिना CIBIL या ITR की बाध्यता के।'
+                : 'Pencil-written ledger pages are no longer invisible to lenders. Vyapaar Saathi converts your everyday cash & credit entries into an RBI-aligned alternative credit score and unlocks matched collateral-free MSME loans without requiring formal ITR.'}
+            </p>
+
+            {/* 3 Ruled-line Stats sitting directly on paper rulings */}
+            <div className="pt-2">
+              {/* Stat 1 */}
+              <div className="border-b border-[#D8CEBA] py-3 flex flex-col sm:flex-row sm:items-baseline justify-between gap-1 sm:gap-4">
+                <div className="flex items-baseline gap-2">
+                  <span className="font-mono text-[11px] sm:text-xs text-indigoRural-600/80 font-bold shrink-0">
+                    {language === 'hi' ? '(क) मद १' : 'Item 1.'}
+                  </span>
+                  <div className="flex items-baseline gap-1">
+                    <span className="font-serif font-black text-2xl sm:text-3xl md:text-[32px] text-turmeric tracking-tight">
+                      {animatedScore}
+                    </span>
+                    <span className="font-serif font-bold text-xs sm:text-sm text-indigoRural-700/70">/ 850</span>
+                  </div>
+                </div>
+                <div className="text-xs sm:text-sm font-sans font-medium text-indigoRural-900/90 sm:text-right">
+                  {language === 'hi' 
+                    ? 'नमूना बैंक-मान्य क्रेडिट स्कोर (Prime PSL Tier-1)' 
+                    : 'Sample credit score banks approve (Prime PSL Tier-1)'}
+                </div>
+              </div>
+
+              {/* Stat 2 */}
+              <div className="border-b border-[#D8CEBA] py-3 flex flex-col sm:flex-row sm:items-baseline justify-between gap-1 sm:gap-4">
+                <div className="flex items-baseline gap-2">
+                  <span className="font-mono text-[11px] sm:text-xs text-indigoRural-600/80 font-bold shrink-0">
+                    {language === 'hi' ? '(ख) मद २' : 'Item 2.'}
+                  </span>
+                  <span className="font-serif font-black text-2xl sm:text-3xl md:text-[32px] text-ledgerInk tracking-tight">
+                    {animatedDays} {language === 'hi' ? 'दिन' : 'Days'}
+                  </span>
+                </div>
+                <div className="text-xs sm:text-sm font-sans font-medium text-indigoRural-900/90 sm:text-right">
+                  {language === 'hi' 
+                    ? 'दैनिक बही-खाता ऑपरेटिंग एवं नकद प्रवाह इतिहास' 
+                    : 'Daily audited ledger operating history'}
+                </div>
+              </div>
+
+              {/* Stat 3 */}
+              <div className="border-b border-[#D8CEBA] py-3 flex flex-col sm:flex-row sm:items-baseline justify-between gap-1 sm:gap-4">
+                <div className="flex items-baseline gap-2">
+                  <span className="font-mono text-[11px] sm:text-xs text-indigoRural-600/80 font-bold shrink-0">
+                    {language === 'hi' ? '(ग) मद ३' : 'Item 3.'}
+                  </span>
+                  <span className="font-serif font-black text-2xl sm:text-3xl md:text-[32px] text-ledgerInk tracking-tight">
+                    {animatedSchemes} {language === 'hi' ? 'योजनाएं' : 'Schemes'}
+                  </span>
+                </div>
+                <div className="text-xs sm:text-sm font-sans font-medium text-indigoRural-900/90 sm:text-right">
+                  {language === 'hi' 
+                    ? 'बिना गारंटी सरकारी ऋण योजनाएं (मुद्रा, स्वनिधि, राज्य)' 
+                    : 'Pre-matched collateral-free statutory schemes'}
+                </div>
+              </div>
+            </div>
+
+            {/* Action Row */}
+            <div className="pt-3 flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
+              <button
+                type="button"
+                onClick={() => {
+                  setAuthMode('register');
+                  const el = document.getElementById('auth-section');
+                  if (el) el.scrollIntoView({ behavior: 'smooth' });
+                }}
+                className="w-full sm:w-auto inline-flex items-center justify-center bg-turmeric hover:bg-ochre-600 active:scale-[0.98] text-white font-sans font-bold text-sm sm:text-base px-7 py-3.5 rounded-xl shadow-md cursor-pointer transition-all focus-visible:ring-4 focus-visible:ring-turmeric/40 focus-visible:outline-none"
+              >
+                {language === 'hi' ? 'अपनी दुकान जोड़ें' : 'Add Your Shop'}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  const el = document.getElementById('judge-demo-card');
+                  if (el) el.scrollIntoView({ behavior: 'smooth' });
+                }}
+                className="text-xs sm:text-sm font-sans font-semibold text-ledgerInk hover:text-turmeric underline underline-offset-4 decoration-ledgerInk/30 hover:decoration-turmeric transition-colors cursor-pointer text-left"
+              >
+                {language === 'hi' ? 'या जज डेमो मोड देखें (Ramesh Kirana)' : 'Or launch SIH Evaluator Demo (Ramesh Kirana)'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Below Hero: Judge Demo + Auth Forms */}
       <motion.div 
-        variants={itemVariants}
-        whileHover={shouldReduceMotion ? {} : { y: -2, transition: { duration: 0.2 } }}
-        className="saathi-pass text-white p-6 sm:p-8 relative overflow-hidden mb-6 rounded-3xl border border-ochre-400/30 shadow-elevation-2"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        className="w-full max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-12 space-y-6"
       >
+        {/* 1. Dedicated SIH Evaluator / Judge Demo Card (Elevation 3) */}
+        <motion.div 
+          id="judge-demo-card"
+          variants={itemVariants}
+          whileHover={shouldReduceMotion ? {} : { y: -2, transition: { duration: 0.2 } }}
+          className="saathi-pass text-white p-6 sm:p-8 relative overflow-hidden mb-6 rounded-3xl border border-ochre-400/30 shadow-elevation-2"
+        >
         <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div className="space-y-2.5 max-w-xl">
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-ochre-400/20 text-ochre-200 rounded-full text-xs font-bold border border-ochre-300/30">
@@ -279,7 +464,7 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
       <WarliBorder className="w-full h-5 text-terracotta-400 opacity-60 my-2" />
 
       {/* 2. Auth Mode Segmented Pill Switcher (Login vs New Registration) */}
-      <motion.div variants={itemVariants} className="flex justify-center my-4">
+      <motion.div id="auth-section" variants={itemVariants} className="flex justify-center my-4">
         <div className="inline-flex p-1 bg-paper-200/90 rounded-2xl border border-paper-300 shadow-2xs">
           <button
             type="button"
@@ -740,6 +925,7 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
         </motion.div>
       )}
 
-    </motion.div>
+      </motion.div>
+    </div>
   );
 }

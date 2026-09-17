@@ -421,7 +421,7 @@ export default function App() {
       />
 
       {/* Main Page Container */}
-      <main className="flex-1 max-w-7xl xl:max-w-[1440px] w-full min-w-0 mx-auto px-3 sm:px-6 pt-3 sm:pt-4 pb-28 sm:pb-32 lg:pb-10">
+      <main className={`flex-1 w-full min-w-0 ${activeTab === 'onboarding' ? 'p-0 pb-16 sm:pb-24' : 'max-w-7xl xl:max-w-[1440px] mx-auto px-3 sm:px-6 pt-3 sm:pt-4 pb-28 sm:pb-32 lg:pb-10'}`}>
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}
@@ -566,12 +566,14 @@ export default function App() {
       )}
 
       {/* Mobile Thumb Action Dock */}
-      <FloatingThumbDock 
-        activeTab={activeTab}
-        setActiveTab={changeTab}
-        onOpenKeypad={() => setKeypadOpen(true)}
-        creditScore={creditData?.totalScore || null}
-      />
+      {currentShop && activeTab !== 'onboarding' && (
+        <FloatingThumbDock 
+          activeTab={activeTab}
+          setActiveTab={changeTab}
+          onOpenKeypad={() => setKeypadOpen(true)}
+          creditScore={creditData?.totalScore || null}
+        />
+      )}
 
       {/* Rural Footer (SIH 2026 Prototype) */}
       <footer className="print:hidden border-t border-paper-300 bg-white/80 backdrop-blur-md py-7 px-4 text-center text-xs text-indigoRural-600 pb-28 sm:pb-24">

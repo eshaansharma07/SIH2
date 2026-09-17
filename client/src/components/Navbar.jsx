@@ -47,6 +47,56 @@ export function Navbar({ activeTab, setActiveTab, currentShop, isDemoMode, onRel
     }
   };
 
+  const isLanding = activeTab === 'onboarding' || !currentShop;
+
+  if (isLanding) {
+    return (
+      <header className="sticky top-0 z-50 w-full backdrop-blur-2xl bg-white/95 border-b border-paper-300/90 shadow-2xs transition-all">
+        {/* Tri-Color Micro-Rule */}
+        <div className="h-[3px] w-full bg-gradient-to-r from-terracotta-500 via-paper-200 to-forestRural-600" />
+
+        <div className="max-w-7xl xl:max-w-[1440px] mx-auto px-4 sm:px-6">
+          <div className="flex items-center justify-between h-16">
+            
+            {/* Brand Wordmark */}
+            <div 
+              onClick={() => setActiveTab('onboarding')}
+              className="flex items-center gap-3 cursor-pointer select-none group"
+            >
+              <div className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-terracotta-600 flex items-center justify-center text-white shadow-2xs group-hover:bg-terracotta-700 transition-all shrink-0">
+                <BookOpen className="w-4 h-4 sm:w-5 sm:h-5 text-paper-100 transition-transform duration-200 group-hover:scale-105" />
+              </div>
+
+              <div className="flex items-baseline gap-2">
+                <span className="font-black text-base sm:text-lg tracking-tight text-indigoRural-900 font-display">
+                  व्यापार साथी
+                </span>
+                <span className="text-xs font-bold text-indigoRural-500 hidden sm:inline font-sans">
+                  Vyapaar Saathi
+                </span>
+              </div>
+            </div>
+
+            {/* Right Action: Language Toggle */}
+            <div className="flex items-center gap-2">
+              <Button
+                onClick={toggleLanguage}
+                variant="outline"
+                size="sm"
+                icon={Globe}
+                className="!px-3 !py-1.5 font-bold"
+                aria-label="Toggle language"
+              >
+                <span>{language === 'hi' ? 'HI / हिन्दी' : 'EN / English'}</span>
+              </Button>
+            </div>
+
+          </div>
+        </div>
+      </header>
+    );
+  }
+
   const udyamNumber = currentShop?.udyam_number || (currentShop?.id ? `UDYAM-${(currentShop.state || 'IN').substring(0, 2).toUpperCase()}-DEMO` : '');
 
   return (
