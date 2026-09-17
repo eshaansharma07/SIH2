@@ -27,13 +27,22 @@ export function Navbar({ activeTab, setActiveTab, currentShop, isDemoMode, onRel
   const [resetting, setResetting] = useState(false);
 
   const navItems = [
-    { id: 'dashboard', label: language === 'hi' ? 'डैशबोर्ड' : 'Overview', icon: Store },
-    { id: 'cashflow', label: language === 'hi' ? 'बही-खाता' : 'Bahi-Khata', icon: BookOpen },
-    { id: 'credit', label: language === 'hi' ? 'क्रेडिट स्कोर' : 'Credit Score', icon: TrendingUp },
-    { id: 'schemes', label: language === 'hi' ? 'सरकारी योजनाएं' : 'Schemes', icon: Landmark },
-    { id: 'advisor', label: language === 'hi' ? 'साथी AI' : 'Saathi AI', icon: Sparkles, isAi: true },
-    { id: 'dossier', label: language === 'hi' ? 'बैंक फाइल' : 'Bank Dossier', icon: FileText }
+    { id: 'dashboard', label: t('nav.dashboard', 'Overview'), icon: Store },
+    { id: 'cashflow', label: t('nav.cashflow', 'Bahi-Khata'), icon: BookOpen },
+    { id: 'credit', label: t('nav.credit', 'Credit Score'), icon: TrendingUp },
+    { id: 'schemes', label: t('nav.schemes', 'Schemes'), icon: Landmark },
+    { id: 'advisor', label: t('nav.advisor', 'Saathi AI'), icon: Sparkles, isAi: true },
+    { id: 'dossier', label: t('nav.dossier', 'Bank Dossier'), icon: FileText }
   ];
+
+  const NAV_STRINGS = {
+    en: { liveTour: 'Live Tour', realReg: 'Real Registration', judgeDemo: 'Judge Demo', reset: 'Reset', logOut: 'Log Out', store: 'Store', logOutTitle: 'Log out from active session' },
+    hi: { liveTour: 'लाइव टूर', realReg: 'असली पंजीकरण', judgeDemo: 'जज डेमो', reset: 'रीसेट', logOut: 'लॉग आउट', store: 'दुकान', logOutTitle: 'दुकान से लॉग आउट करें' },
+    ta: { liveTour: 'நேரடி சுற்றுப்பயணம்', realReg: 'உண்மையான பதிவு', judgeDemo: 'நடுவர் டெமோ', reset: 'மீட்டமை', logOut: 'வெளியேறு', store: 'கடை', logOutTitle: 'கணக்கிலிருந்து வெளியேறு' },
+    te: { liveTour: 'లైవ్ టూర్', realReg: 'నిజమైన నమోదు', judgeDemo: 'జడ్జి డెమో', reset: 'రీసెట్', logOut: 'లాగ్ అవుట్', store: 'దుకాణం', logOutTitle: 'సెషన్ నుండి లాగ్ అవుట్ చేయండి' },
+    pa: { liveTour: 'ਲਾਇਵ ਟੂਰ', realReg: 'ਅਸਲ ਰਜਿਸਟ੍ਰੇਸ਼ਨ', judgeDemo: 'ਜੱਜ ਡੈਮੋ', reset: 'ਰੀਸੈਟ', logOut: 'ਲੌਗ ਆਊਟ', store: 'ਦੁਕਾਨ', logOutTitle: 'ਸੈਸ਼ਨ ਤੋਂ ਲੌਗ ਆਊਟ ਕਰੋ' }
+  };
+  const nui = NAV_STRINGS[language] || NAV_STRINGS.en;
 
   const handleResetDemo = async () => {
     setResetting(true);
@@ -88,7 +97,7 @@ export function Navbar({ activeTab, setActiveTab, currentShop, isDemoMode, onRel
               </div>
               <div className="text-[10px] font-semibold text-indigoRural-500 flex items-center gap-1.5 mt-0.5 min-w-0">
                 <span className="font-bold text-indigoRural-800 truncate max-w-[110px] xs:max-w-[150px] sm:max-w-none">
-                  {currentShop?.name || (language === 'hi' ? 'दुकान' : 'Store')}
+                  {currentShop?.name || nui.store}
                 </span>
                 {udyamNumber && (
                   <>
@@ -144,7 +153,7 @@ export function Navbar({ activeTab, setActiveTab, currentShop, isDemoMode, onRel
                 icon={Sparkles}
                 className="shadow-2xs !p-1.5 sm:!px-3 sm:!py-1.5"
               >
-                <span className="hidden sm:inline">{language === 'hi' ? 'लाइव टूर' : 'Live Tour'}</span>
+                <span className="hidden sm:inline">{nui.liveTour}</span>
               </Button>
             )}
 
@@ -157,7 +166,7 @@ export function Navbar({ activeTab, setActiveTab, currentShop, isDemoMode, onRel
                 icon={ArrowRightLeft}
                 className="hidden sm:inline-flex"
               >
-                <span>{language === 'hi' ? 'असली पंजीकरण' : 'Real Registration'}</span>
+                <span>{nui.realReg}</span>
               </Button>
             ) : currentShop && (
               <Button
@@ -167,7 +176,7 @@ export function Navbar({ activeTab, setActiveTab, currentShop, isDemoMode, onRel
                 icon={ArrowRightLeft}
                 className="hidden sm:inline-flex"
               >
-                <span>{language === 'hi' ? 'जज डेमो' : 'Judge Demo'}</span>
+                <span>{nui.judgeDemo}</span>
               </Button>
             )}
 
@@ -181,7 +190,7 @@ export function Navbar({ activeTab, setActiveTab, currentShop, isDemoMode, onRel
                 icon={RotateCcw}
                 className="hidden sm:inline-flex"
               >
-                <span>{resetting ? '...' : (language === 'hi' ? 'रीसेट' : 'Reset')}</span>
+                <span>{resetting ? '...' : nui.reset}</span>
               </Button>
             )}
 
@@ -204,9 +213,9 @@ export function Navbar({ activeTab, setActiveTab, currentShop, isDemoMode, onRel
                 size="sm"
                 icon={LogOut}
                 className="hidden sm:inline-flex !text-terracotta-700 hover:!text-terracotta-900 !border-terracotta-200 hover:!bg-terracotta-50 shadow-2xs font-extrabold"
-                title={language === 'hi' ? 'दुकान से लॉग आउट करें' : 'Log out from active session'}
+                title={nui.logOutTitle}
               >
-                <span>{language === 'hi' ? 'लॉग आउट' : 'Log Out'}</span>
+                <span>{nui.logOut}</span>
               </Button>
             )}
 
@@ -265,7 +274,7 @@ export function Navbar({ activeTab, setActiveTab, currentShop, isDemoMode, onRel
                   }}
                   className="text-xs font-bold text-terracotta-700 hover:underline cursor-pointer"
                 >
-                  {language === 'hi' ? 'असली पंजीकरण' : 'Real Registration'}
+                  {nui.realReg}
                 </button>
               ) : (
                 <button
@@ -275,7 +284,7 @@ export function Navbar({ activeTab, setActiveTab, currentShop, isDemoMode, onRel
                   }}
                   className="text-xs font-bold text-terracotta-700 hover:underline cursor-pointer"
                 >
-                  {language === 'hi' ? 'जज डेमो' : 'Judge Demo'}
+                  {nui.judgeDemo}
                 </button>
               )}
 
@@ -288,7 +297,7 @@ export function Navbar({ activeTab, setActiveTab, currentShop, isDemoMode, onRel
                   className="flex items-center gap-1 text-xs font-black text-terracotta-700 hover:text-terracotta-900 bg-terracotta-50 px-2 py-1 rounded-md border border-terracotta-200 cursor-pointer"
                 >
                   <LogOut className="w-3 h-3" />
-                  <span>{language === 'hi' ? 'लॉग आउट' : 'Log Out'}</span>
+                  <span>{nui.logOut}</span>
                 </button>
               )}
             </div>
