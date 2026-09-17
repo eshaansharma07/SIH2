@@ -25,7 +25,12 @@ import {
   Printer, 
   Download, 
   Mic, 
-  UserPlus
+  UserPlus,
+  Users,
+  Phone,
+  MapPin,
+  CalendarDays,
+  ExternalLink
 } from 'lucide-react';
 import { api } from '../utils/api';
 import { useTranslation } from '../i18n/LanguageContext';
@@ -33,6 +38,7 @@ import { RegisterCustomerModal } from '../components/RegisterCustomerModal';
 import { WhatsAppReminderModal } from '../components/WhatsAppReminderModal';
 import { VoiceInputDialog } from '../components/VoiceInputDialog';
 import { DEMO_TRANSACTIONS, DEMO_SUMMARY, DEMO_UDHAAR_LEDGER } from '../data/demoData';
+import { getCustomerDetails, cleanIndianPhone, maskIndianPhone } from '../utils/customerMatcher';
 
 export function CashFlowPage({ 
   shop, 
@@ -54,12 +60,18 @@ export function CashFlowPage({
   const [deletingId, setDeletingId] = useState(null);
 
   // Search & Filter State
-  const [selectedCategoryTab, setSelectedCategoryTab] = useState('all'); // 'all', 'sales', 'purchases', 'expenses', 'udhaar'
+  const [selectedCategoryTab, setSelectedCategoryTab] = useState('all'); // 'all', 'customers', 'sales', 'purchases', 'expenses', 'udhaar'
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
   const [paymentFilter, setPaymentFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [datePreset, setDatePreset] = useState('all'); // 'all', 'today', 'week', 'month'
+
+  // Customer Ledger State & Drawers
+  const [customerList, setCustomerList] = useState([]);
+  const [selectedCustomerDetail, setSelectedCustomerDetail] = useState(null);
+  const [customerTxFilter, setCustomerTxFilter] = useState('all');
+  const [customerTxSearch, setCustomerTxSearch] = useState('');
 
   // Modals & Drawers
   const [selectedTx, setSelectedTx] = useState(null); // Detail drawer
@@ -78,6 +90,9 @@ export function CashFlowPage({
       if (e.detail?.tab === 'udhaar') {
         setSelectedCategoryTab('udhaar');
         setTypeFilter('all');
+        setCurrentPage(1);
+      } else if (e.detail?.tab === 'customers') {
+        setSelectedCategoryTab('customers');
         setCurrentPage(1);
       }
     };
@@ -126,6 +141,7 @@ export function CashFlowPage({
         setLoading(false);
         setTransactions([]);
         setUdhaarLedger([]);
+        setCustomerList([]);
       }
       return;
     }
@@ -133,9 +149,10 @@ export function CashFlowPage({
     if (transactions.length === 0) setLoading(true);
 
     try {
-      const [txResult, udhResult] = await Promise.allSettled([
+      const [txResult, udhResult, custListResult] = await Promise.allSettled([
         api.getTransactions(targetShopId, '', 300),
-        api.getUdhaarLedger(targetShopId)
+        api.getUdhaarLedger(targetShopId),
+        api.getCustomers(targetShopId)
       ]);
 
       if (txResult.status === 'fulfilled' && txResult.value?.transactions?.length > 0) {
@@ -148,6 +165,10 @@ export function CashFlowPage({
         setUdhaarLedger(udhResult.value.customers);
       } else if (isDemo && udhaarLedger.length === 0) {
         setUdhaarLedger(DEMO_UDHAAR_LEDGER);
+      }
+
+      if (custListResult.status === 'fulfilled' && custListResult.value?.customers?.length > 0) {
+        setCustomerList(custListResult.value.customers);
       }
     } catch (err) {
       console.warn('Failed to load bahi-khata data:', err.message);
@@ -251,6 +272,196 @@ export function CashFlowPage({
       return true;
     });
   }, [transactions, selectedCategoryTab, typeFilter, paymentFilter, categoryFilter, datePreset, searchQuery]);
+
+  // Group and link ALL transactions to Customers Directory
+  const customerDirectory = useMemo(() => {
+    const map = new Map();
+
+    // 1. Seed with registered / known customers
+    const baseCustomers = (customerList.length > 0 ? customerList : udhaarLedger) || [];
+    baseCustomers.forEach(c => {
+      const details = getCustomerDetails(c);
+      if (!details.name) return;
+      const key = (details.id || details.name).toLowerCase();
+      map.set(key, {
+        ...details,
+        isRegistered: c.isRegistered ?? true,
+        transactions: []
+      });
+    });
+
+    // 2. Associate ALL transactions with customers
+    transactions.forEach(tx => {
+      const party = (tx.customer_vendor_name || '').trim();
+      const phone = cleanIndianPhone(tx.customer_phone);
+      const cId = tx.customer_id;
+
+      let matchedKey = null;
+
+      // A. By customer_id
+      if (cId) {
+        for (const [k, c] of map.entries()) {
+          if (c.id === cId) {
+            matchedKey = k;
+            break;
+          }
+        }
+      }
+
+      // B. By exact clean phone
+      if (!matchedKey && phone && phone.length === 10) {
+        for (const [k, c] of map.entries()) {
+          if (c.cleanPhone === phone) {
+            matchedKey = k;
+            break;
+          }
+        }
+      }
+
+      // C. By exact normalized name
+      if (!matchedKey && party) {
+        for (const [k, c] of map.entries()) {
+          if (c.name.trim().toLowerCase() === party.toLowerCase()) {
+            matchedKey = k;
+            break;
+          }
+        }
+      }
+
+      // D. Unregistered counterparty from ledger
+      if (!matchedKey && party && party !== 'Walk-in Customer' && party !== 'Walk-in Village Customers' && party !== 'Demo') {
+        const newKey = `party-${party.toLowerCase()}`;
+        map.set(newKey, {
+          id: newKey,
+          name: party,
+          phone: tx.customer_phone || '',
+          cleanPhone: phone,
+          village: '',
+          balanceOwed: 0,
+          txCount: 0,
+          udhaarStatus: 'No Pending Udhaar',
+          createdAt: tx.date,
+          isRegistered: false,
+          transactions: []
+        });
+        matchedKey = newKey;
+      }
+
+      if (matchedKey && map.has(matchedKey)) {
+        map.get(matchedKey).transactions.push(tx);
+      }
+    });
+
+    // 3. Compute live transaction count and udhaar status for each customer
+    const list = Array.from(map.values()).map(c => {
+      const txCount = Math.max(c.transactions.length, c.txCount || 0);
+      let udhaarGiven = 0;
+      let udhaarRepaid = 0;
+      c.transactions.forEach(t => {
+        if (t.type === 'udhaar_given') udhaarGiven += Number(t.amount || 0);
+        else if (t.type === 'udhaar_repaid') udhaarRepaid += Number(t.amount || 0);
+      });
+      const balanceOwed = Math.max(0, (c.balanceOwed || 0), (udhaarGiven - udhaarRepaid));
+      const udhaarStatus = balanceOwed > 0 ? 'Udhaar Active' : 'No Pending Udhaar';
+
+      // Sort customer's transactions by date descending
+      c.transactions.sort((a, b) => new Date(b.date || b.created_at || 0) - new Date(a.date || a.created_at || 0));
+
+      let customerSince = c.createdAt;
+      if (!customerSince && c.transactions.length > 0) {
+        customerSince = c.transactions[c.transactions.length - 1].date;
+      }
+
+      return {
+        ...c,
+        txCount,
+        balanceOwed,
+        udhaarStatus,
+        customerSince: customerSince || 'Active customer'
+      };
+    });
+
+    return list.sort((a, b) => {
+      if (b.txCount !== a.txCount) return b.txCount - a.txCount;
+      return b.balanceOwed - a.balanceOwed;
+    });
+  }, [customerList, udhaarLedger, transactions]);
+
+  // Real-time filtered customers list
+  const filteredCustomers = useMemo(() => {
+    if (!searchQuery.trim()) return customerDirectory;
+    const q = searchQuery.toLowerCase().trim();
+    const cleanQ = q.replace(/\D/g, '');
+    return customerDirectory.filter(c => {
+      const matchName = c.name && c.name.toLowerCase().includes(q);
+      const matchPhone = cleanQ && c.cleanPhone && c.cleanPhone.includes(cleanQ);
+      const matchVillage = c.village && c.village.toLowerCase().includes(q);
+      return matchName || matchPhone || matchVillage;
+    });
+  }, [customerDirectory, searchQuery]);
+
+  // Open customer detail drawer from a transaction row
+  const handleOpenCustomerByTx = (tx) => {
+    const party = (tx.customer_vendor_name || '').trim();
+    const phone = cleanIndianPhone(tx.customer_phone);
+    const cId = tx.customer_id;
+
+    let found = null;
+    if (cId) found = customerDirectory.find(c => c.id === cId);
+    if (!found && phone) found = customerDirectory.find(c => c.cleanPhone === phone);
+    if (!found && party) found = customerDirectory.find(c => c.name.trim().toLowerCase() === party.toLowerCase());
+
+    if (found) {
+      setSelectedCustomerDetail(found);
+    } else if (party) {
+      setSelectedCustomerDetail({
+        id: `party-${party.toLowerCase()}`,
+        name: party,
+        phone: tx.customer_phone || '',
+        cleanPhone: phone,
+        village: '',
+        customerSince: tx.date || 'Active',
+        txCount: 1,
+        udhaarStatus: tx.type === 'udhaar_given' ? 'Udhaar Active' : 'No Pending Udhaar',
+        transactions: [tx]
+      });
+    }
+    setCustomerTxFilter('all');
+    setCustomerTxSearch('');
+  };
+
+  // Transactions filtered inside the customer detail drawer
+  const drawerTransactions = useMemo(() => {
+    if (!selectedCustomerDetail) return [];
+    const cust = selectedCustomerDetail;
+    const cleanPhone = cust.cleanPhone;
+    const custName = (cust.name || '').trim().toLowerCase();
+    const cId = cust.id;
+
+    const matched = transactions.filter(t => {
+      if (cId && t.customer_id === cId) return true;
+      if (cleanPhone && cleanIndianPhone(t.customer_phone) === cleanPhone) return true;
+      if (custName && (t.customer_vendor_name || '').trim().toLowerCase() === custName) return true;
+      return false;
+    });
+
+    return matched.filter(t => {
+      if (customerTxFilter !== 'all') {
+        if ((customerTxFilter === 'sales' || customerTxFilter === 'income') && t.type !== 'income') return false;
+        if ((customerTxFilter === 'purchases' || customerTxFilter === 'expenses' || customerTxFilter === 'expense') && t.type !== 'expense') return false;
+        if (customerTxFilter === 'udhaar_given' && t.type !== 'udhaar_given') return false;
+        if (customerTxFilter === 'udhaar_repaid' && t.type !== 'udhaar_repaid') return false;
+      }
+      if (customerTxSearch.trim()) {
+        const q = customerTxSearch.toLowerCase();
+        const matchNote = (t.notes || '').toLowerCase().includes(q);
+        const matchCat = (t.category || '').toLowerCase().includes(q);
+        const matchAmt = String(t.amount || '').includes(q);
+        if (!matchNote && !matchCat && !matchAmt) return false;
+      }
+      return true;
+    });
+  }, [selectedCustomerDetail, transactions, customerTxFilter, customerTxSearch]);
 
   // Pagination calculation
   const totalPages = Math.max(1, Math.ceil(filteredTransactions.length / pageSize));
@@ -464,6 +675,27 @@ export function CashFlowPage({
           </p>
         </button>
 
+        {/* Customers */}
+        <button
+          type="button"
+          onClick={() => { setSelectedCategoryTab('customers'); }}
+          className={`flex-1 min-w-[135px] p-3.5 rounded-2xl border text-left transition-all duration-150 cursor-pointer ${
+            selectedCategoryTab === 'customers'
+              ? 'bg-[#0F3E2E] text-white border-[#0F3E2E] shadow-sm'
+              : 'bg-white/95 text-stone-800 border-stone-200/80 hover:border-stone-300 hover:bg-white'
+          }`}
+        >
+          <div className="flex items-center gap-2 mb-1">
+            <Users className={`w-4 h-4 ${selectedCategoryTab === 'customers' ? 'text-white' : 'text-emerald-700'}`} />
+            <span className="font-serif font-bold text-xs">
+              {language === 'hi' ? 'ग्राहक खाता' : 'Customers'}
+            </span>
+          </div>
+          <p className={`text-[10px] ${selectedCategoryTab === 'customers' ? 'text-emerald-200' : 'text-stone-500'}`}>
+            Party accounts & ledger
+          </p>
+        </button>
+
         {/* Sales */}
         <button
           type="button"
@@ -607,7 +839,11 @@ export function CashFlowPage({
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search transactions (e.g. Amul, Ramu, ₹500...)"
+            placeholder={
+              selectedCategoryTab === 'customers'
+                ? "Search customers by name, phone, or village..."
+                : "Search transactions (e.g. Amul, Ramu, ₹500...)"
+            }
             className="w-full pl-9.5 pr-4 py-2 bg-transparent text-xs text-stone-900 placeholder:text-stone-400 focus:outline-none"
           />
           {searchQuery && (
@@ -622,84 +858,254 @@ export function CashFlowPage({
 
         {/* Filters Group */}
         <div className="flex items-center gap-2 flex-wrap shrink-0">
-          
-          {/* Date Range Selector */}
-          <div className="relative">
-            <select
-              value={datePreset}
-              onChange={(e) => setDatePreset(e.target.value)}
-              className="appearance-none bg-[#FAF8F5] border border-stone-200 rounded-xl px-3 py-1.5 pr-7 text-xs font-semibold text-stone-700 hover:border-stone-300 focus:outline-none focus:border-[#0F3E2E] cursor-pointer"
+          {selectedCategoryTab === 'customers' ? (
+            <button
+              type="button"
+              onClick={() => setIsRegisterCustomerOpen(true)}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#0F3E2E] hover:bg-[#165640] text-white font-bold text-xs shadow-2xs hover:shadow-md transition-all cursor-pointer shrink-0"
             >
-              <option value="all">📅 All Dates</option>
-              <option value="today">Today</option>
-              <option value="week">Past 7 Days</option>
-              <option value="month">Past 30 Days</option>
-            </select>
-          </div>
+              <UserPlus className="w-4 h-4" />
+              <span>{language === 'hi' ? '+ नया ग्राहक' : '+ Add Customer'}</span>
+            </button>
+          ) : (
+            <>
+              {/* Date Range Selector */}
+              <div className="relative">
+                <select
+                  value={datePreset}
+                  onChange={(e) => setDatePreset(e.target.value)}
+                  className="appearance-none bg-[#FAF8F5] border border-stone-200 rounded-xl px-3 py-1.5 pr-7 text-xs font-semibold text-stone-700 hover:border-stone-300 focus:outline-none focus:border-[#0F3E2E] cursor-pointer"
+                >
+                  <option value="all">📅 All Dates</option>
+                  <option value="today">Today</option>
+                  <option value="week">Past 7 Days</option>
+                  <option value="month">Past 30 Days</option>
+                </select>
+              </div>
 
-          {/* Type Dropdown Filter */}
-          <div className="relative">
-            <select
-              value={typeFilter}
-              onChange={(e) => setTypeFilter(e.target.value)}
-              className="appearance-none bg-[#FAF8F5] border border-stone-200 rounded-xl px-3 py-1.5 pr-7 text-xs font-semibold text-stone-700 hover:border-stone-300 focus:outline-none focus:border-[#0F3E2E] cursor-pointer"
-            >
-              <option value="all">Type: All</option>
-              <option value="income">Sale (Income)</option>
-              <option value="expense">Purchase / Expense</option>
-              <option value="udhaar_given">Udhaar Given</option>
-              <option value="udhaar_repaid">Udhaar Repaid</option>
-            </select>
-          </div>
+              {/* Type Dropdown Filter */}
+              <div className="relative">
+                <select
+                  value={typeFilter}
+                  onChange={(e) => setTypeFilter(e.target.value)}
+                  className="appearance-none bg-[#FAF8F5] border border-stone-200 rounded-xl px-3 py-1.5 pr-7 text-xs font-semibold text-stone-700 hover:border-stone-300 focus:outline-none focus:border-[#0F3E2E] cursor-pointer"
+                >
+                  <option value="all">Type: All</option>
+                  <option value="income">Sale (Income)</option>
+                  <option value="expense">Purchase / Expense</option>
+                  <option value="udhaar_given">Udhaar Given</option>
+                  <option value="udhaar_repaid">Udhaar Repaid</option>
+                </select>
+              </div>
 
-          {/* Payment Mode Filter */}
-          <div className="relative">
-            <select
-              value={paymentFilter}
-              onChange={(e) => setPaymentFilter(e.target.value)}
-              className="appearance-none bg-[#FAF8F5] border border-stone-200 rounded-xl px-3 py-1.5 pr-7 text-xs font-semibold text-stone-700 hover:border-stone-300 focus:outline-none focus:border-[#0F3E2E] cursor-pointer"
-            >
-              <option value="all">Payment Mode: All</option>
-              <option value="cash">Cash</option>
-              <option value="upi">UPI</option>
-              <option value="khata">Udhaar / Khata</option>
-            </select>
-          </div>
+              {/* Payment Mode Filter */}
+              <div className="relative">
+                <select
+                  value={paymentFilter}
+                  onChange={(e) => setPaymentFilter(e.target.value)}
+                  className="appearance-none bg-[#FAF8F5] border border-stone-200 rounded-xl px-3 py-1.5 pr-7 text-xs font-semibold text-stone-700 hover:border-stone-300 focus:outline-none focus:border-[#0F3E2E] cursor-pointer"
+                >
+                  <option value="all">Payment Mode: All</option>
+                  <option value="cash">Cash</option>
+                  <option value="upi">UPI</option>
+                  <option value="khata">Udhaar / Khata</option>
+                </select>
+              </div>
 
-          {/* Category Filter */}
-          {availableCategories.length > 0 && (
-            <div className="relative hidden xl:block">
-              <select
-                value={categoryFilter}
-                onChange={(e) => setCategoryFilter(e.target.value)}
-                className="appearance-none bg-[#FAF8F5] border border-stone-200 rounded-xl px-3 py-1.5 pr-7 text-xs font-semibold text-stone-700 hover:border-stone-300 focus:outline-none focus:border-[#0F3E2E] cursor-pointer"
+              {/* Category Filter */}
+              {availableCategories.length > 0 && (
+                <div className="relative hidden xl:block">
+                  <select
+                    value={categoryFilter}
+                    onChange={(e) => setCategoryFilter(e.target.value)}
+                    className="appearance-none bg-[#FAF8F5] border border-stone-200 rounded-xl px-3 py-1.5 pr-7 text-xs font-semibold text-stone-700 hover:border-stone-300 focus:outline-none focus:border-[#0F3E2E] cursor-pointer"
+                  >
+                    <option value="all">Category: All</option>
+                    {availableCategories.map(cat => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Primary CTA: + Record Transaction */}
+              <button
+                type="button"
+                onClick={onOpenKeypad}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#0F3E2E] hover:bg-[#165640] text-white font-bold text-xs shadow-2xs hover:shadow-md transition-all cursor-pointer shrink-0"
               >
-                <option value="all">Category: All</option>
-                {availableCategories.map(cat => (
-                  <option key={cat} value={cat}>{cat}</option>
-                ))}
-              </select>
-            </div>
+                <Plus className="w-4 h-4" />
+                <span>Record Transaction</span>
+              </button>
+            </>
           )}
-
-          {/* Primary CTA: + Record Transaction */}
-          <button
-            type="button"
-            onClick={onOpenKeypad}
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#0F3E2E] hover:bg-[#165640] text-white font-bold text-xs shadow-2xs hover:shadow-md transition-all cursor-pointer shrink-0"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Record Transaction</span>
-          </button>
         </div>
       </section>
 
       {/* 4. MAIN CONTENT AREA: TABLE (LEFT 8 COLS) + SIDEBAR ACTIONS (RIGHT 4 COLS) */}
       <section className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         
-        {/* LEFT 8/9 COLS: MAIN TRANSACTION TABLE */}
+        {/* LEFT 8/9 COLS: MAIN TRANSACTION TABLE OR CUSTOMER DIRECTORY */}
         <div className="lg:col-span-8 xl:col-span-9 space-y-4">
-          <div className="rounded-2xl bg-white border border-stone-200/90 overflow-hidden shadow-2xs">
+          {selectedCategoryTab === 'customers' ? (
+            <div className="rounded-2xl bg-white border border-stone-200/90 overflow-hidden shadow-2xs">
+              {/* Customer List Header */}
+              <div className="p-4 sm:p-5 border-b border-stone-200/80 bg-[#FAF8F5]/60 flex items-center justify-between flex-wrap gap-3">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <Users className="w-4 h-4 text-[#0F3E2E]" />
+                    <h3 className="font-serif font-bold text-sm text-stone-900">
+                      {language === 'hi' ? 'ग्राहक एवं पार्टी खाता' : 'Customer & Party Directory'}
+                    </h3>
+                  </div>
+                  <p className="text-[11px] text-stone-500 mt-0.5">
+                    {filteredCustomers.length} {filteredCustomers.length === 1 ? 'customer record' : 'customer records'} • Select any customer to view their full ledger
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setIsRegisterCustomerOpen(true)}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#0F3E2E] hover:bg-[#165640] text-white font-bold text-xs shadow-2xs hover:shadow-md transition-all cursor-pointer"
+                >
+                  <UserPlus className="w-3.5 h-3.5" />
+                  <span>{language === 'hi' ? '+ नया ग्राहक' : '+ Add Customer'}</span>
+                </button>
+              </div>
+
+              {/* Customers Table */}
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr className="border-b border-stone-200/80 bg-[#FAF8F5]/40 text-stone-500 font-serif">
+                      <th className="py-3 px-3.5 sm:px-4 font-bold">Customer Name</th>
+                      <th className="py-3 px-3 sm:px-4 font-bold">Phone Number</th>
+                      <th className="py-3 px-3 sm:px-4 font-bold text-center">Transactions</th>
+                      <th className="py-3 px-3 sm:px-4 font-bold text-center">Udhaar Status</th>
+                      <th className="py-3 px-3 sm:px-4 font-bold text-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-stone-100">
+                    {filteredCustomers.length > 0 ? (
+                      filteredCustomers.map((cust) => {
+                        const initial = (cust.name || 'C').charAt(0).toUpperCase();
+                        const isUdhaarActive = cust.udhaarStatus === 'Udhaar Active';
+
+                        return (
+                          <tr
+                            key={cust.id || cust.name}
+                            onClick={() => {
+                              setSelectedCustomerDetail(cust);
+                              setCustomerTxFilter('all');
+                              setCustomerTxSearch('');
+                            }}
+                            className="hover:bg-[#FAF8F5] transition-colors cursor-pointer group"
+                          >
+                            {/* Name with Avatar */}
+                            <td className="py-3 px-3.5 sm:px-4">
+                              <div className="flex items-center gap-2.5">
+                                <div className="w-8 h-8 rounded-xl bg-[#0F3E2E] text-white flex items-center justify-center font-serif font-bold text-xs shrink-0 shadow-2xs">
+                                  {initial}
+                                </div>
+                                <div>
+                                  <div className="font-serif font-bold text-stone-900 group-hover:text-[#0F3E2E] transition-colors">
+                                    {cust.name}
+                                  </div>
+                                  {cust.village && (
+                                    <div className="text-[11px] text-stone-500 flex items-center gap-1">
+                                      <MapPin className="w-3 h-3 text-stone-400" />
+                                      <span>{cust.village}</span>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </td>
+
+                            {/* Phone */}
+                            <td className="py-3 px-3 sm:px-4 text-stone-600 font-mono text-[11px]">
+                              {cust.phone ? (
+                                <span className="inline-flex items-center gap-1 text-stone-700">
+                                  <Phone className="w-3 h-3 text-stone-400" />
+                                  {cust.phone}
+                                </span>
+                              ) : (
+                                <span className="text-stone-400 italic">No phone</span>
+                              )}
+                            </td>
+
+                            {/* Transactions Count */}
+                            <td className="py-3 px-3 sm:px-4 text-center">
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-stone-100 text-stone-700">
+                                {cust.txCount || cust.transactions?.length || 0} transactions
+                              </span>
+                            </td>
+
+                            {/* Udhaar Status */}
+                            <td className="py-3 px-3 sm:px-4 text-center">
+                              {isUdhaarActive ? (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                                  Udhaar Active
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-emerald-50 text-emerald-800 border border-emerald-200">
+                                  <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                                  No Pending Udhaar
+                                </span>
+                              )}
+                            </td>
+
+                            {/* Action */}
+                            <td className="py-3 px-3 sm:px-4 text-right">
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedCustomerDetail(cust);
+                                  setCustomerTxFilter('all');
+                                  setCustomerTxSearch('');
+                                }}
+                                className="inline-flex items-center gap-1 text-xs font-bold text-[#0F3E2E] group-hover:underline cursor-pointer"
+                              >
+                                <span>View Ledger</span>
+                                <ChevronRight className="w-3.5 h-3.5" />
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    ) : (
+                      <tr>
+                        <td colSpan={5} className="py-12 text-center text-stone-500">
+                          <div className="flex flex-col items-center justify-center space-y-2">
+                            <Users className="w-8 h-8 text-stone-300" />
+                            <div className="font-serif font-bold text-sm text-stone-800">
+                              No customers found
+                            </div>
+                            <p className="text-xs text-stone-400 max-w-xs">
+                              {searchQuery
+                                ? 'No customers match your search query.'
+                                : 'Customers will appear here automatically when you record transactions or register accounts.'}
+                            </p>
+                            {searchQuery && (
+                              <button
+                                type="button"
+                                onClick={() => setSearchQuery('')}
+                                className="mt-2 text-xs text-[#0F3E2E] font-bold underline cursor-pointer"
+                              >
+                                Clear Search
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ) : (
+            <div className="rounded-2xl bg-white border border-stone-200/90 overflow-hidden shadow-2xs">
             
             {/* Table Container */}
             <div className="overflow-x-auto">
@@ -751,7 +1157,18 @@ export function CashFlowPage({
 
                           {/* Party / Customer */}
                           <td className="py-3 px-3 sm:px-4 text-stone-600 max-w-[140px] truncate">
-                            {getPartyName(tx)}
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleOpenCustomerByTx(tx);
+                              }}
+                              className="text-left font-medium text-stone-700 hover:text-[#0F3E2E] hover:underline cursor-pointer transition-colors inline-flex items-center gap-1 group/party truncate max-w-full"
+                              title="Open customer ledger"
+                            >
+                              <span className="truncate">{getPartyName(tx)}</span>
+                              <ExternalLink className="w-3 h-3 opacity-0 group-hover/party:opacity-100 text-[#0F3E2E] shrink-0 transition-opacity" />
+                            </button>
                           </td>
 
                           {/* Date & Time */}
@@ -906,9 +1323,9 @@ export function CashFlowPage({
                 </button>
               </div>
             </div>
-
           </div>
-        </div>
+        )}
+      </div>
 
         {/* RIGHT 4/3 COLS: QUICK ACTIONS & HELP CARDS */}
         <div className="lg:col-span-4 xl:col-span-3 space-y-4">
@@ -1085,6 +1502,273 @@ export function CashFlowPage({
           </div>
         </div>
       </footer>
+
+      {/* CUSTOMER DETAIL DRAWER / LEDGER PANEL */}
+      {selectedCustomerDetail && (
+        <div className="fixed inset-0 z-50 overflow-hidden animate-in fade-in duration-200">
+          {/* Backdrop */}
+          <div 
+            className="fixed inset-0 bg-black/40 backdrop-blur-xs transition-opacity duration-200"
+            onClick={() => setSelectedCustomerDetail(null)}
+          />
+
+          {/* Slide-over Panel */}
+          <div className="fixed inset-y-0 right-0 max-w-xl w-full bg-[#FAF8F5] border-l border-stone-300 shadow-2xl z-50 flex flex-col animate-in slide-in-from-right duration-200">
+            {/* Drawer Header */}
+            <div className="p-4 sm:p-5 border-b border-stone-200 bg-white flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-[#0F3E2E] text-white flex items-center justify-center font-serif font-bold text-base shadow-2xs">
+                  {(selectedCustomerDetail.name || 'C').charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] uppercase tracking-wider font-bold text-stone-500">
+                      Customer Ledger
+                    </span>
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                      selectedCustomerDetail.udhaarStatus === 'Udhaar Active'
+                        ? 'bg-amber-100 text-amber-800'
+                        : 'bg-emerald-100 text-emerald-800'
+                    }`}>
+                      {selectedCustomerDetail.udhaarStatus}
+                    </span>
+                  </div>
+                  <h3 className="font-serif font-bold text-lg text-stone-900 leading-tight">
+                    {selectedCustomerDetail.name}
+                  </h3>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setSelectedCustomerDetail(null)}
+                className="p-2 rounded-xl text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors cursor-pointer"
+                title="Close drawer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Scrollable Content */}
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5">
+              {/* Profile Card */}
+              <div className="bg-white border border-stone-200/90 rounded-2xl p-4 shadow-2xs space-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                  {/* Phone */}
+                  <div className="flex items-center gap-2 text-stone-600">
+                    <Phone className="w-3.5 h-3.5 text-stone-400 shrink-0" />
+                    <span>Phone:</span>
+                    {selectedCustomerDetail.phone ? (
+                      <a 
+                        href={`tel:${selectedCustomerDetail.phone}`}
+                        className="font-mono font-bold text-stone-900 hover:text-[#0F3E2E] hover:underline"
+                      >
+                        {selectedCustomerDetail.phone}
+                      </a>
+                    ) : (
+                      <span className="text-stone-400 italic">Not recorded</span>
+                    )}
+                  </div>
+
+                  {/* Village / Area */}
+                  <div className="flex items-center gap-2 text-stone-600">
+                    <MapPin className="w-3.5 h-3.5 text-stone-400 shrink-0" />
+                    <span>Village/Area:</span>
+                    <span className="font-semibold text-stone-900">
+                      {selectedCustomerDetail.village || 'Local'}
+                    </span>
+                  </div>
+
+                  {/* Customer Since */}
+                  <div className="flex items-center gap-2 text-stone-600">
+                    <CalendarDays className="w-3.5 h-3.5 text-stone-400 shrink-0" />
+                    <span>Customer Since:</span>
+                    <span className="font-mono text-stone-800">
+                      {selectedCustomerDetail.customerSince ? formatDateTime(selectedCustomerDetail.customerSince).split(',')[0] : 'Active'}
+                    </span>
+                  </div>
+
+                  {/* Total Transactions */}
+                  <div className="flex items-center gap-2 text-stone-600">
+                    <FileText className="w-3.5 h-3.5 text-stone-400 shrink-0" />
+                    <span>Total Activity:</span>
+                    <span className="font-bold text-stone-900">
+                      {drawerTransactions.length} transactions
+                    </span>
+                  </div>
+                </div>
+
+                {/* Udhaar Balance Status & WhatsApp Reminder */}
+                <div className="pt-2 border-t border-stone-100 flex items-center justify-between flex-wrap gap-2">
+                  <div className="text-xs">
+                    <span className="text-stone-500">Khata / Udhaar Balance: </span>
+                    <span className={`font-serif font-black text-sm ${selectedCustomerDetail.balanceOwed > 0 ? 'text-amber-700' : 'text-emerald-700'}`}>
+                      {selectedCustomerDetail.balanceOwed > 0 ? `₹${Number(selectedCustomerDetail.balanceOwed).toLocaleString('en-IN')} pending` : '₹0 (Settled)'}
+                    </span>
+                  </div>
+
+                  {selectedCustomerDetail.phone && selectedCustomerDetail.balanceOwed > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setSelectedWhatsAppCustomer(selectedCustomerDetail)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-2xs transition-all cursor-pointer"
+                    >
+                      <MessageCircle className="w-3.5 h-3.5" />
+                      <span>WhatsApp Reminder</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Transactions History Header & Controls */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-serif font-bold text-sm text-stone-900">
+                    Transaction History
+                  </h4>
+                  <span className="text-xs text-stone-500">
+                    {drawerTransactions.length} {drawerTransactions.length === 1 ? 'record' : 'records'}
+                  </span>
+                </div>
+
+                {/* Search Within Customer History */}
+                <div className="relative">
+                  <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" />
+                  <input
+                    type="text"
+                    value={customerTxSearch}
+                    onChange={(e) => setCustomerTxSearch(e.target.value)}
+                    placeholder="Search notes, particulars, amount..."
+                    className="w-full pl-8.5 pr-4 py-2 bg-white border border-stone-200 rounded-xl text-xs text-stone-900 placeholder:text-stone-400 focus:outline-none focus:border-[#0F3E2E]"
+                  />
+                  {customerTxSearch && (
+                    <button
+                      onClick={() => setCustomerTxSearch('')}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-700"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  )}
+                </div>
+
+                {/* Filter Pills */}
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar text-xs">
+                  {[
+                    { id: 'all', label: 'All' },
+                    { id: 'sales', label: 'Sales' },
+                    { id: 'purchases', label: 'Purchases' },
+                    { id: 'expenses', label: 'Expenses' },
+                    { id: 'udhaar_given', label: 'Udhaar Given' },
+                    { id: 'udhaar_repaid', label: 'Udhaar Received' },
+                  ].map(tab => (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      onClick={() => setCustomerTxFilter(tab.id)}
+                      className={`px-3 py-1.5 rounded-xl font-medium whitespace-nowrap transition-all cursor-pointer ${
+                        customerTxFilter === tab.id
+                          ? 'bg-[#0F3E2E] text-white shadow-2xs'
+                          : 'bg-white border border-stone-200 text-stone-600 hover:bg-stone-50'
+                      }`}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Transaction List */}
+                <div className="space-y-2">
+                  {drawerTransactions.length > 0 ? (
+                    drawerTransactions.map(tx => {
+                      const meta = getTypeMeta(tx);
+                      const Icon = meta.icon;
+
+                      return (
+                        <div
+                          key={tx.id}
+                          onClick={() => setSelectedTx(tx)}
+                          className="p-3 bg-white border border-stone-200/80 hover:border-stone-300 rounded-xl flex items-center justify-between gap-3 hover:bg-[#FAF8F5] transition-all cursor-pointer group"
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center border shrink-0 ${meta.color}`}>
+                              <Icon className="w-4 h-4" />
+                            </div>
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className="font-serif font-bold text-xs text-stone-900 group-hover:text-[#0F3E2E] transition-colors truncate">
+                                  {formatParticulars(tx)}
+                                </span>
+                                {getPaymentBadge(tx.payment_mode)}
+                              </div>
+                              <div className="flex items-center gap-2 text-[10px] text-stone-500 font-mono mt-0.5">
+                                <span>{formatDateTime(tx.date)}</span>
+                                {tx.category && <span>• {tx.category}</span>}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="text-right shrink-0">
+                            <div className={`font-serif font-bold text-xs tabular-nums ${meta.amountColor}`}>
+                              {meta.sign} ₹{Number(tx.amount || 0).toLocaleString('en-IN')}
+                            </div>
+                            <span className="text-[10px] text-stone-400">View details →</span>
+                          </div>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <div className="py-10 text-center bg-white border border-stone-200/80 rounded-2xl p-6">
+                      <FileText className="w-8 h-8 text-stone-300 mx-auto mb-2" />
+                      <div className="font-serif font-bold text-xs text-stone-800">
+                        No transactions found
+                      </div>
+                      <p className="text-[11px] text-stone-400 mt-0.5">
+                        {customerTxSearch || customerTxFilter !== 'all'
+                          ? 'No records match your filter criteria.'
+                          : 'No recorded transactions for this customer yet.'}
+                      </p>
+                      {(customerTxSearch || customerTxFilter !== 'all') && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setCustomerTxFilter('all');
+                            setCustomerTxSearch('');
+                          }}
+                          className="mt-2 text-xs text-[#0F3E2E] font-bold underline cursor-pointer"
+                        >
+                          Reset Filters
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Drawer Footer */}
+            <div className="p-4 border-t border-stone-200 bg-white flex items-center justify-between gap-3 shrink-0">
+              <button
+                type="button"
+                onClick={() => setSelectedCustomerDetail(null)}
+                className="px-4 py-2 rounded-xl border border-stone-200 text-stone-700 hover:bg-stone-50 text-xs font-bold transition-colors cursor-pointer"
+              >
+                Close
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  onOpenKeypad();
+                }}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#0F3E2E] hover:bg-[#165640] text-white font-bold text-xs shadow-2xs hover:shadow-md transition-all cursor-pointer"
+              >
+                <Plus className="w-4 h-4" />
+                <span>+ Record Transaction</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* TRANSACTION DETAILS MODAL / SIDE DRAWER */}
       {selectedTx && (

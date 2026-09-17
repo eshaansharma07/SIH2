@@ -38,17 +38,50 @@ export function maskIndianPhone(phone) {
 
 // Extracts standard fields from customer object or string
 export function getCustomerDetails(c) {
-  if (!c) return { id: '', name: '', phone: '', cleanPhone: '', village: '', balanceOwed: 0 };
+  if (!c) return { id: '', name: '', phone: '', cleanPhone: '', village: '', balanceOwed: 0, txCount: 0, udhaarStatus: 'No Pending Udhaar', createdAt: null, notes: '', creditLimit: 5000 };
   if (typeof c === 'string') {
-    return { id: '', name: c, phone: '', cleanPhone: '', village: '', balanceOwed: 0 };
+    return { id: '', name: c, phone: '', cleanPhone: '', village: '', balanceOwed: 0, txCount: 0, udhaarStatus: 'No Pending Udhaar', createdAt: null, notes: '', creditLimit: 5000 };
   }
   const name = c.name || c.customerName || c.customer_vendor_name || '';
   const rawPhone = c.phone || c.customerPhone || c.customer_phone || '';
   const cleanPhone = cleanIndianPhone(rawPhone);
   const village = c.village || c.village_address || '';
-  const balanceOwed = Number(c.balanceOwed ?? c.balance_owed ?? c.totalGiven ?? 0);
+  const balanceOwed = Number(c.balanceOwed ?? c.balance_owed ?? 0);
   const id = c.id || c.customerId || '';
-  return { id, name, phone: rawPhone, cleanPhone, village, balanceOwed, raw: c };
+  const txCount = Number(c.txCount ?? c.totalTransactions ?? (Array.isArray(c.history) ? c.history.length : 0));
+  const udhaarStatus = balanceOwed > 0 ? 'Udhaar Active' : 'No Pending Udhaar';
+  const createdAt = c.created_at || c.createdAt || c.customerSince || null;
+  const notes = c.notes || '';
+  const creditLimit = Number(c.credit_limit ?? c.creditLimit ?? 5000);
+
+  return { 
+    id, 
+    name, 
+    phone: rawPhone, 
+    cleanPhone, 
+    village, 
+    balanceOwed, 
+    txCount,
+    udhaarStatus,
+    createdAt,
+    notes,
+    creditLimit,
+    raw: c 
+  };
+}
+
+// Find customer by exact 10-digit clean phone
+export function findCustomerByPhone(phone, customerList = []) {
+  if (!phone || !customerList || customerList.length === 0) return null;
+  const clean = cleanIndianPhone(phone);
+  if (clean.length < 10) return null;
+  for (const item of customerList) {
+    const details = getCustomerDetails(item);
+    if (details.cleanPhone === clean) {
+      return details;
+    }
+  }
+  return null;
 }
 
 /**
