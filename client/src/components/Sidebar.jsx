@@ -35,7 +35,7 @@ export function Sidebar({
     },
     { 
       id: 'cashflow', 
-      label: language === 'hi' ? 'लेन-देन' : 'Transactions', 
+      label: language === 'hi' ? 'बही-खाता' : 'Bahi-Khata', 
       icon: Receipt,
       filter: 'all'
     },
@@ -54,7 +54,7 @@ export function Sidebar({
     },
     { 
       id: 'credit', 
-      label: language === 'hi' ? 'क्रेडिट इनसाइट्स' : 'Credit Insights', 
+      label: language === 'hi' ? 'क्रेडिट स्कोर' : 'Credit Score', 
       icon: TrendingUp 
     },
     { 
@@ -64,7 +64,7 @@ export function Sidebar({
     },
     { 
       id: 'dossier', 
-      label: language === 'hi' ? 'रिपोर्ट्स' : 'Reports', 
+      label: language === 'hi' ? 'बैंक डॉसियर' : 'Bank Dossier', 
       icon: FileText 
     }
   ];

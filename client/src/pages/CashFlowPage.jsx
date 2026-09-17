@@ -1,81 +1,38 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
-  PlusCircle, 
-  BookOpen, 
-  Users, 
+  ShoppingCart, 
   ArrowDownRight, 
   ArrowUpRight, 
+  IndianRupee, 
+  FileText, 
+  BarChart3, 
+  Plus, 
+  Search, 
   Calendar, 
   Filter, 
+  MoreHorizontal, 
+  ChevronRight, 
+  ChevronLeft, 
+  Clock, 
+  Trash2, 
+  Lightbulb, 
+  Sprout, 
+  X, 
+  ArrowRight, 
+  CheckCircle2, 
+  MessageCircle, 
   Share2, 
-  Check, 
-  Smartphone, 
-  Banknote, 
-  MessageCircle,
-  Clock,
-  ArrowRight,
-  TrendingUp,
-  BarChart3,
-  CheckCircle2,
-  FileText,
-  Trash2,
-  UserPlus,
-  Search,
-  PhoneCall,
-  MapPin,
-  AlertTriangle,
-  ShoppingBag,
-  Mic,
-  Volume2
+  Printer, 
+  Download, 
+  Mic, 
+  UserPlus
 } from 'lucide-react';
-import { 
-  ResponsiveContainer, 
-  AreaChart, 
-  Area, 
-  XAxis, 
-  YAxis, 
-  Tooltip, 
-  CartesianGrid, 
-  Legend 
-} from 'recharts';
 import { api } from '../utils/api';
 import { useTranslation } from '../i18n/LanguageContext';
-import { Card, Badge, SectionHeader, Button } from '../components/ui';
 import { RegisterCustomerModal } from '../components/RegisterCustomerModal';
 import { WhatsAppReminderModal } from '../components/WhatsAppReminderModal';
 import { VoiceInputDialog } from '../components/VoiceInputDialog';
-import { AudioReadAloudButton } from '../components/AudioReadAloudButton';
 import { DEMO_TRANSACTIONS, DEMO_SUMMARY, DEMO_UDHAAR_LEDGER } from '../data/demoData';
-
-// Custom Chart Tooltip using warm paper aesthetic
-function CustomChartTooltip({ active, payload, label }) {
-  if (active && payload && payload.length) {
-    const income = payload.find(p => p.dataKey === 'income')?.value || 0;
-    const expense = payload.find(p => p.dataKey === 'expense')?.value || 0;
-    const surplus = income - expense;
-
-    return (
-      <div className="bg-stone-50 border border-stone-200 p-3 rounded-xl shadow-card text-xs space-y-1.5 min-w-[160px]">
-        <span className="font-extrabold text-stone-900 block pb-1 border-b border-stone-200/80">
-          {label}
-        </span>
-        <div className="flex justify-between items-center text-emerald-700 font-semibold">
-          <span>Recorded Sales:</span>
-          <strong className="font-extrabold tabular-nums">₹{income.toLocaleString('en-IN')}</strong>
-        </div>
-        <div className="flex justify-between items-center text-amber-700 font-semibold">
-          <span>Expenses:</span>
-          <strong className="font-extrabold tabular-nums">₹{expense.toLocaleString('en-IN')}</strong>
-        </div>
-        <div className="flex justify-between items-center text-stone-800 font-bold pt-1 border-t border-stone-200/80">
-          <span>Net Surplus:</span>
-          <strong className="font-extrabold tabular-nums text-emerald-700">₹{surplus.toLocaleString('en-IN')}</strong>
-        </div>
-      </div>
-    );
-  }
-  return null;
-}
 
 export function CashFlowPage({ 
   shop, 
@@ -90,29 +47,54 @@ export function CashFlowPage({
   const { t, language } = useTranslation();
   const isDemo = Boolean(isDemoMode || shop?.is_demo === 1 || shop?.id === 'ramesh-kirana');
 
-  const [activeTab, setActiveTab] = useState('all'); // 'all' or 'udhaar'
+  // Core transaction state
   const [transactions, setTransactions] = useState(() => (isDemo ? DEMO_TRANSACTIONS : []));
   const [udhaarLedger, setUdhaarLedger] = useState(() => (isDemo ? DEMO_UDHAAR_LEDGER : []));
-  const [summary, setSummary] = useState(() => (isDemo ? (summaryData || DEMO_SUMMARY) : (summaryData || null)));
-  const [filterType, setFilterType] = useState('');
   const [loading, setLoading] = useState(false);
-  const [reminderToast, setReminderToast] = useState(null);
-  const [justUpdated, setJustUpdated] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
+
+  // Search & Filter State
+  const [selectedCategoryTab, setSelectedCategoryTab] = useState('all'); // 'all', 'sales', 'purchases', 'expenses', 'udhaar'
+  const [searchQuery, setSearchQuery] = useState('');
+  const [typeFilter, setTypeFilter] = useState('all');
+  const [paymentFilter, setPaymentFilter] = useState('all');
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [datePreset, setDatePreset] = useState('all'); // 'all', 'today', 'week', 'month'
+
+  // Modals & Drawers
+  const [selectedTx, setSelectedTx] = useState(null); // Detail drawer
   const [isRegisterCustomerOpen, setIsRegisterCustomerOpen] = useState(false);
   const [selectedWhatsAppCustomer, setSelectedWhatsAppCustomer] = useState(null);
-  const [customerSearchQuery, setCustomerSearchQuery] = useState('');
-  const [customerFilter, setCustomerFilter] = useState('all'); // 'all', 'owing', 'near_limit'
   const [isVoiceOpen, setIsVoiceOpen] = useState(false);
+  const [moreActionsOpen, setMoreActionsOpen] = useState(false);
 
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 6;
+
+  // Custom event listeners for external navigation (from Overview Bento cards or Sidebar)
   useEffect(() => {
     const handleSwitch = (e) => {
-      if (e.detail?.tab) setActiveTab(e.detail.tab);
+      if (e.detail?.tab === 'udhaar') {
+        setSelectedCategoryTab('udhaar');
+        setTypeFilter('all');
+        setCurrentPage(1);
+      }
     };
     const handleFilter = (e) => {
       if (e.detail?.filter !== undefined) {
-        setFilterType(e.detail.filter);
-        setActiveTab('all');
+        const f = e.detail.filter;
+        if (f === 'income') {
+          setSelectedCategoryTab('sales');
+          setTypeFilter('income');
+        } else if (f === 'expense') {
+          setSelectedCategoryTab('expenses');
+          setTypeFilter('expense');
+        } else {
+          setSelectedCategoryTab('all');
+          setTypeFilter('all');
+        }
+        setCurrentPage(1);
       }
     };
     window.addEventListener('saakhsetu:switch-tab', handleSwitch);
@@ -123,161 +105,19 @@ export function CashFlowPage({
     };
   }, []);
 
-  const handleDeleteTransaction = async (txId) => {
-    const confirmMsg = language === 'hi'
-      ? 'क्या आप इस लेन-देन को हटाना चाहते हैं?'
-      : 'Are you sure you want to delete this transaction?';
-    if (!window.confirm(confirmMsg)) return;
+  // Fetch real data on mount or shop/refresh change
+  useEffect(() => {
+    loadData();
+  }, [shop?.id, isDemo, refreshKey]);
 
-    setDeletingId(txId);
-    const txToDelete = transactions.find(t => t.id === txId);
-
-    // Optimistically remove from state immediately
-    setTransactions(prev => prev.filter(t => t.id !== txId));
-
-    if (txToDelete) {
-      setSummary(prev => {
-        if (!prev) return prev;
-        const amt = Number(txToDelete.amount) || 0;
-        let newIncome = prev.totalIncome || 0;
-        let newExpense = prev.totalExpense || 0;
-        let newUdhaarGiven = prev.totalUdhaarGiven || 0;
-        let newUdhaarRepaid = prev.totalUdhaarRepaid || 0;
-
-        if (txToDelete.type === 'income') newIncome = Math.max(0, newIncome - amt);
-        else if (txToDelete.type === 'expense') newExpense = Math.max(0, newExpense - amt);
-        else if (txToDelete.type === 'udhaar_given') newUdhaarGiven = Math.max(0, newUdhaarGiven - amt);
-        else if (txToDelete.type === 'udhaar_repaid') newUdhaarRepaid = Math.max(0, newUdhaarRepaid - amt);
-
-        return {
-          ...prev,
-          totalIncome: Math.round(newIncome),
-          totalExpense: Math.round(newExpense),
-          netSurplus: Math.round(newIncome - newExpense),
-          totalUdhaarGiven: Math.round(newUdhaarGiven),
-          totalUdhaarRepaid: Math.round(newUdhaarRepaid),
-          pendingUdhaar: Math.max(0, Math.round(newUdhaarGiven - newUdhaarRepaid)),
-          totalTransactions: Math.max(0, (prev.totalTransactions || 1) - 1)
-        };
-      });
-    }
-
-    try {
-      await api.deleteTransaction(txId, shop?.id);
-    } catch (err) {
-      console.warn('Delete transaction API warning:', err.message);
-    } finally {
-      setDeletingId(null);
-    }
-  };
-
-  // 1. Instant 0ms Optimistic Update when a new transaction is logged
+  // Optimistic update when a new transaction is logged
   useEffect(() => {
     if (!latestTx) return;
-
-    setJustUpdated(true);
-    const timer = setTimeout(() => setJustUpdated(false), 2500);
-
-    // Prepend transaction to list
     setTransactions(prev => {
       if (prev.some(t => t.id === latestTx.id)) return prev;
       return [latestTx, ...prev];
     });
-
-    // Instantly recompute 4 KPI Summary Cards
-    setSummary(prev => {
-      if (!prev) return prev;
-      const amt = Number(latestTx.amount) || 0;
-      let newIncome = prev.totalIncome || 0;
-      let newExpense = prev.totalExpense || 0;
-      let newUdhaarGiven = prev.totalUdhaarGiven || 0;
-      let newUdhaarRepaid = prev.totalUdhaarRepaid || 0;
-      let newCash = prev.cashIncome || 0;
-      let newUpi = prev.upiIncome || 0;
-
-      if (latestTx.type === 'income') {
-        newIncome += amt;
-        if (latestTx.payment_mode === 'cash') newCash += amt;
-        if (latestTx.payment_mode === 'upi') newUpi += amt;
-      } else if (latestTx.type === 'expense') {
-        newExpense += amt;
-      } else if (latestTx.type === 'udhaar_given') {
-        newUdhaarGiven += amt;
-      } else if (latestTx.type === 'udhaar_repaid') {
-        newUdhaarRepaid += amt;
-        newIncome += amt;
-        if (latestTx.payment_mode === 'upi') newUpi += amt;
-        else newCash += amt;
-      }
-
-      const newSurplus = newIncome - newExpense;
-      const newPending = Math.max(0, newUdhaarGiven - newUdhaarRepaid);
-      const newDigitalShare = newIncome > 0 ? Math.round((newUpi / newIncome) * 100) : 0;
-
-      const txMonth = (latestTx.date || new Date().toISOString()).substring(0, 7);
-      let updatedTrend = prev.monthlyTrend ? [...prev.monthlyTrend] : [];
-      const mIdx = updatedTrend.findIndex(m => m.month === txMonth);
-      if (mIdx >= 0) {
-        const m = { ...updatedTrend[mIdx] };
-        if (latestTx.type === 'income') m.income += amt;
-        else if (latestTx.type === 'expense') m.expense += amt;
-        m.profit = m.income - m.expense;
-        updatedTrend[mIdx] = m;
-      }
-
-      return {
-        ...prev,
-        totalIncome: Math.round(newIncome),
-        totalExpense: Math.round(newExpense),
-        netSurplus: Math.round(newSurplus),
-        pendingUdhaar: Math.round(newPending),
-        totalUdhaarGiven: Math.round(newUdhaarGiven),
-        totalUdhaarRepaid: Math.round(newUdhaarRepaid),
-        cashIncome: Math.round(newCash),
-        upiIncome: Math.round(newUpi),
-        digitalSharePct: newDigitalShare,
-        monthlyTrend: updatedTrend
-      };
-    });
-
-    if (latestTx.type === 'udhaar_given' || latestTx.type === 'udhaar_repaid') {
-      const custName = latestTx.customer_vendor_name || 'Village Customer';
-      setUdhaarLedger(prev => {
-        const list = [...prev];
-        const idx = list.findIndex(c => c.customerName?.toLowerCase() === custName.toLowerCase());
-        const amt = Number(latestTx.amount) || 0;
-        if (idx >= 0) {
-          const c = { ...list[idx] };
-          if (latestTx.type === 'udhaar_given') c.totalGiven += amt;
-          else c.totalRepaid += amt;
-          c.balanceOwed = Math.max(0, c.totalGiven - c.totalRepaid);
-          c.lastDate = latestTx.date;
-          list[idx] = c;
-        } else {
-          list.push({
-            customerName: custName,
-            totalGiven: latestTx.type === 'udhaar_given' ? amt : 0,
-            totalRepaid: latestTx.type === 'udhaar_repaid' ? amt : 0,
-            balanceOwed: latestTx.type === 'udhaar_given' ? amt : 0,
-            lastDate: latestTx.date,
-            history: []
-          });
-        }
-        return list.sort((a, b) => b.balanceOwed - a.balanceOwed);
-      });
-    }
-
-    return () => clearTimeout(timer);
   }, [latestTx]);
-
-  useEffect(() => {
-    if (isDemo && transactions.length === 0) {
-      setTransactions(DEMO_TRANSACTIONS);
-      setSummary(prev => prev || summaryData || DEMO_SUMMARY);
-      setUdhaarLedger(prev => prev.length > 0 ? prev : DEMO_UDHAAR_LEDGER);
-    }
-    loadData();
-  }, [shop?.id, isDemo, refreshKey, filterType]);
 
   const loadData = async () => {
     const targetShopId = shop?.id || (isDemo ? 'ramesh-kirana' : null);
@@ -286,845 +126,1087 @@ export function CashFlowPage({
         setLoading(false);
         setTransactions([]);
         setUdhaarLedger([]);
-        setSummary(null);
       }
       return;
     }
 
-    // Only show full loading spinner if we don't have any transactions to display yet
-    if (transactions.length === 0) {
-      setLoading(true);
-    }
+    if (transactions.length === 0) setLoading(true);
 
     try {
-      const [txResult, sumResult, udhResult] = await Promise.allSettled([
-        api.getTransactions(targetShopId, filterType, 120),
-        api.getTransactionSummary(targetShopId),
+      const [txResult, udhResult] = await Promise.allSettled([
+        api.getTransactions(targetShopId, '', 300),
         api.getUdhaarLedger(targetShopId)
       ]);
 
-      // 1. Transactions
       if (txResult.status === 'fulfilled' && txResult.value?.transactions?.length > 0) {
-        const serverTxs = txResult.value.transactions;
-        setTransactions(prev => {
-          const serverMap = new Map(serverTxs.map(t => [t.id, t]));
-          const merged = [...serverTxs];
-          for (const localTx of prev) {
-            if (!serverMap.has(localTx.id)) {
-              merged.unshift(localTx);
-            }
-          }
-          return merged;
-        });
+        setTransactions(txResult.value.transactions);
       } else if (isDemo && transactions.length === 0) {
         setTransactions(DEMO_TRANSACTIONS);
       }
 
-      // 2. Summary
-      if (sumResult.status === 'fulfilled' && sumResult.value?.summary) {
-        const s = sumResult.value.summary;
-        setSummary(prev => {
-          if (!prev) return s;
-          const higherIncome = Math.max(prev.totalIncome || 0, s.totalIncome || 0);
-          const higherExpense = Math.max(prev.totalExpense || 0, s.totalExpense || 0);
-          return {
-            ...s,
-            totalIncome: higherIncome,
-            totalExpense: higherExpense,
-            netSurplus: higherIncome - higherExpense,
-            pendingUdhaar: s.pendingUdhaar !== undefined ? s.pendingUdhaar : prev.pendingUdhaar,
-            totalUdhaarGiven: Math.max(prev.totalUdhaarGiven || 0, s.totalUdhaarGiven || 0),
-            totalUdhaarRepaid: Math.max(prev.totalUdhaarRepaid || 0, s.totalUdhaarRepaid || 0)
-          };
-        });
-      } else if (isDemo && !summary) {
-        setSummary(summaryData || DEMO_SUMMARY);
-      }
-
-      // 3. Udhaar Ledger
-      if (udhResult.status === 'fulfilled' && udhResult.value?.ledger?.length > 0) {
-        setUdhaarLedger(udhResult.value.ledger);
+      if (udhResult.status === 'fulfilled' && udhResult.value?.customers?.length > 0) {
+        setUdhaarLedger(udhResult.value.customers);
       } else if (isDemo && udhaarLedger.length === 0) {
         setUdhaarLedger(DEMO_UDHAAR_LEDGER);
       }
     } catch (err) {
-      console.error('Error loading cash flow data:', err);
-      if (isDemo) {
-        setTransactions(prev => prev.length > 0 ? prev : DEMO_TRANSACTIONS);
-        setSummary(prev => prev || summaryData || DEMO_SUMMARY);
-        setUdhaarLedger(prev => prev.length > 0 ? prev : DEMO_UDHAAR_LEDGER);
-      }
+      console.warn('Failed to load bahi-khata data:', err.message);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSimulateReminder = (customer) => {
-    const shopDisplayName = shop?.name || (language === 'hi' ? 'हमारी दुकान' : 'our store');
-    const msg = language === 'hi'
-      ? `नमस्ते ${customer.customerName} जी, ${shopDisplayName} पर आपका ₹${customer.balanceOwed} का किराना हिसाब बाकी है। सुविधा अनुसार भुगतान करें। धन्यवाद!`
-      : `Namaste ${customer.customerName}, your grocery khata balance at ${shopDisplayName} is ₹${customer.balanceOwed}. Please settle when convenient. Thank you!`;
+  const handleDeleteTransaction = async (txId) => {
+    const confirmMsg = language === 'hi'
+      ? 'क्या आप इस लेन-देन को हटाना चाहते हैं?'
+      : 'Are you sure you want to delete this transaction?';
+    if (!window.confirm(confirmMsg)) return;
 
-    const rawPhone = customer?.phone || customer?.customer_phone || customer?.cleanPhone || '';
-    const cleanPhone = String(rawPhone).replace(/\D/g, '').replace(/^91/, '').slice(-10);
+    setDeletingId(txId);
+    setTransactions(prev => prev.filter(t => t.id !== txId));
+    if (selectedTx?.id === txId) setSelectedTx(null);
 
-    if (cleanPhone && cleanPhone.length === 10) {
-      const waUrl = `https://wa.me/91${cleanPhone}?text=${encodeURIComponent(msg)}`;
-      window.open(waUrl, '_blank', 'noopener,noreferrer');
-
-      // Record reminder sent timestamp on server if customer has an id
-      const custId = customer.customerId || customer.id;
-      if (custId && !String(custId).startsWith('unregistered-')) {
-        api.recordReminderSent(custId).catch(() => {});
-      }
-
-      setReminderToast({ 
-        name: customer.customerName, 
-        message: language === 'hi' 
-          ? `✓ व्हाट्सएप खुल गया (+91 ${cleanPhone})` 
-          : `✓ WhatsApp reminder launched for +91 ${cleanPhone}` 
-      });
-      setTimeout(() => setReminderToast(null), 4000);
-    } else {
-      // Fallback: Copy to clipboard and open reminder modal to add phone / view UPI QR
-      navigator.clipboard?.writeText?.(msg);
-      setSelectedWhatsAppCustomer(customer);
-      setReminderToast({ 
-        name: customer.customerName, 
-        message: language === 'hi' 
-          ? 'फोन नंबर उपलब्ध नहीं - संदेश कॉपी हुआ। कृपया फोन नंबर दर्ज करें।' 
-          : 'Phone missing - reminder copied to clipboard. Please add customer phone.' 
-      });
-      setTimeout(() => setReminderToast(null), 4000);
+    try {
+      await api.deleteTransaction(txId, shop?.id);
+    } catch (err) {
+      console.warn('Delete transaction error:', err.message);
+    } finally {
+      setDeletingId(null);
     }
   };
 
-  // Dynamic calculations for seasonal trends
-  const monthlyTrend = summary?.monthlyTrend || [];
-  const avgIncome = monthlyTrend.length > 0 
-    ? monthlyTrend.reduce((sum, item) => sum + (item.income || 0), 0) / monthlyTrend.length 
-    : 0;
-  const maxIncome = monthlyTrend.length > 0 
-    ? Math.max(...monthlyTrend.map(item => item.income || 0), 1) 
-    : 1;
+  // Extract unique categories for the filter dropdown
+  const availableCategories = useMemo(() => {
+    const set = new Set();
+    transactions.forEach(t => {
+      if (t.category) set.add(t.category);
+    });
+    return Array.from(set).sort();
+  }, [transactions]);
 
-  const totalIncomeVal = summary?.totalIncome;
-  const totalExpenseVal = summary?.totalExpense;
-  const netSurplusVal = summary?.netSurplus;
-  const pendingUdhaarVal = summary?.pendingUdhaar;
+  // Filtered transactions computation
+  const filteredTransactions = useMemo(() => {
+    return transactions.filter(tx => {
+      // 1. Category Tab Filter
+      if (selectedCategoryTab === 'sales') {
+        if (tx.type !== 'income') return false;
+      } else if (selectedCategoryTab === 'purchases') {
+        if (tx.type !== 'expense') return false;
+      } else if (selectedCategoryTab === 'expenses') {
+        if (tx.type !== 'expense') return false;
+      } else if (selectedCategoryTab === 'udhaar') {
+        if (tx.type !== 'udhaar_given' && tx.type !== 'udhaar_repaid') return false;
+      }
 
-  const marginPct = (totalIncomeVal && netSurplusVal !== undefined && totalIncomeVal > 0)
-    ? ((netSurplusVal / totalIncomeVal) * 100).toFixed(1)
-    : null;
+      // 2. Type Dropdown Filter
+      if (typeFilter !== 'all' && tx.type !== typeFilter) {
+        return false;
+      }
+
+      // 3. Payment Mode Dropdown Filter
+      if (paymentFilter !== 'all') {
+        const mode = (tx.payment_mode || '').toLowerCase();
+        if (paymentFilter === 'cash' && mode !== 'cash') return false;
+        if (paymentFilter === 'upi' && mode !== 'upi') return false;
+        if (paymentFilter === 'khata' && mode !== 'khata' && mode !== 'udhaar') return false;
+      }
+
+      // 4. Category Dropdown Filter
+      if (categoryFilter !== 'all' && tx.category !== categoryFilter) {
+        return false;
+      }
+
+      // 5. Date Preset Filter
+      if (datePreset !== 'all') {
+        const txDate = new Date(tx.date || Date.now());
+        const now = new Date();
+        if (datePreset === 'today') {
+          if (txDate.toDateString() !== now.toDateString()) return false;
+        } else if (datePreset === 'week') {
+          const diffDays = (now - txDate) / (1000 * 60 * 60 * 24);
+          if (diffDays > 7) return false;
+        } else if (datePreset === 'month') {
+          const diffDays = (now - txDate) / (1000 * 60 * 60 * 24);
+          if (diffDays > 30) return false;
+        }
+      }
+
+      // 6. Search Query (Particulars, Party, Amount, Category)
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase().trim();
+        const particulars = (tx.notes || '').toLowerCase();
+        const party = (tx.customer_vendor_name || '').toLowerCase();
+        const cat = (tx.category || '').toLowerCase();
+        const amt = String(tx.amount || '');
+        if (
+          !particulars.includes(q) &&
+          !party.includes(q) &&
+          !cat.includes(q) &&
+          !amt.includes(q)
+        ) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }, [transactions, selectedCategoryTab, typeFilter, paymentFilter, categoryFilter, datePreset, searchQuery]);
+
+  // Pagination calculation
+  const totalPages = Math.max(1, Math.ceil(filteredTransactions.length / pageSize));
+  const paginatedTransactions = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredTransactions.slice(start, start + pageSize);
+  }, [filteredTransactions, currentPage, pageSize]);
+
+  // Reset to page 1 on filter change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedCategoryTab, typeFilter, paymentFilter, categoryFilter, datePreset, searchQuery]);
+
+  // Formatting helpers
+  const formatDateTime = (dateStr) => {
+    if (!dateStr) return '—';
+    try {
+      const d = new Date(dateStr);
+      return d.toLocaleDateString('en-IN', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      });
+    } catch (_) {
+      return dateStr;
+    }
+  };
+
+  const formatParticulars = (tx) => {
+    if (tx.notes && tx.notes.trim()) return tx.notes;
+    if (tx.type === 'income') return 'Counter Sales';
+    if (tx.type === 'expense') return 'Stock / Supplies';
+    if (tx.type === 'udhaar_given') return 'Groceries on Khata';
+    if (tx.type === 'udhaar_repaid') return 'Previous Balance Settlement';
+    return tx.category || 'General';
+  };
+
+  const getPartyName = (tx) => {
+    if (tx.customer_vendor_name && tx.customer_vendor_name.trim()) {
+      return tx.customer_vendor_name;
+    }
+    if (tx.type === 'income') return 'Walk-in Customer';
+    if (tx.type === 'expense') return 'Local Wholesale Distributor';
+    return 'Village Customer';
+  };
+
+  const getTypeMeta = (tx) => {
+    switch (tx.type) {
+      case 'income':
+        return {
+          label: 'Sale',
+          labelHi: 'बिक्री',
+          icon: ShoppingCart,
+          color: 'text-emerald-700 bg-emerald-50 border-emerald-200/80',
+          sign: '+',
+          amountColor: 'text-emerald-800'
+        };
+      case 'expense':
+        return {
+          label: 'Purchase / Expense',
+          labelHi: 'खरीद / खर्च',
+          icon: ArrowDownRight,
+          color: 'text-stone-700 bg-stone-100 border-stone-200',
+          sign: '-',
+          amountColor: 'text-stone-900'
+        };
+      case 'udhaar_given':
+        return {
+          label: 'Udhaar Given',
+          labelHi: 'उधार दिया',
+          icon: IndianRupee,
+          color: 'text-amber-700 bg-amber-50 border-amber-200/80',
+          sign: '—',
+          amountColor: 'text-amber-800'
+        };
+      case 'udhaar_repaid':
+        return {
+          label: 'Udhaar Received',
+          labelHi: 'उधार मिला',
+          icon: ArrowDownRight,
+          color: 'text-sky-700 bg-sky-50 border-sky-200/80',
+          sign: '+',
+          amountColor: 'text-sky-800'
+        };
+      default:
+        return {
+          label: 'Record',
+          labelHi: 'रिकॉर्ड',
+          icon: FileText,
+          color: 'text-stone-600 bg-stone-50 border-stone-200',
+          sign: '',
+          amountColor: 'text-stone-800'
+        };
+    }
+  };
+
+  const getPaymentBadge = (mode) => {
+    const m = (mode || 'cash').toLowerCase();
+    if (m === 'upi') {
+      return (
+        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#E8F0FE] text-[#1A73E8] border border-[#D2E3FC]">
+          UPI
+        </span>
+      );
+    }
+    if (m === 'khata' || m === 'udhaar') {
+      return (
+        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#FCE8E6] text-[#C5221F] border border-[#FAD2CF]">
+          Udhaar
+        </span>
+      );
+    }
+    return (
+      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#E6F4EA] text-[#137333] border border-[#CEEAD6]">
+        Cash
+      </span>
+    );
+  };
+
+  // Export CSV helper
+  const handleExportCSV = () => {
+    try {
+      const headers = ['Type', 'Particulars', 'Party', 'Amount', 'Date', 'Payment Mode', 'Category'];
+      const rows = filteredTransactions.map(t => [
+        t.type,
+        `"${(t.notes || '').replace(/"/g, '""')}"`,
+        `"${(t.customer_vendor_name || '').replace(/"/g, '""')}"`,
+        t.amount,
+        t.date,
+        t.payment_mode || 'cash',
+        t.category || 'General'
+      ]);
+      const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement('a');
+      link.setAttribute('href', encodedUri);
+      link.setAttribute('download', `SaakhSetu_BahiKhata_${new Date().toISOString().slice(0, 10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      console.error('CSV export failed:', err);
+    }
+  };
 
   return (
-    <div className="space-y-6 pb-12 animate-fadeIn">
+    <div className="w-full space-y-6 animate-in fade-in duration-300">
       
-      {/* 1. Header Banner with Warli Folk Art Border */}
-      <div className="space-y-2">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2.5">
-              <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-stone-900 font-display">
-                {language === 'hi' ? 'डिजिटल बही-खाता' : 'Bahi-Khata Ledger'}
-              </h1>
-              <Badge variant="neutral" size="sm">
-                {transactions.length} Verified Entries
-              </Badge>
-            </div>
-            <p className="text-xs text-stone-500 mt-1 flex items-center gap-2">
-              <span>{language === 'hi' ? 'सटीक दैनिक आय-व्यय एवं ग्राहक उधारी खाता' : 'Daily sales, inventory outlays, and customer credit ledger'}</span>
-              <span className="text-stone-300">•</span>
-              <span className="text-emerald-700 font-semibold text-[11px]">● DPI Tamper-Evident</span>
+      {/* 1. BAHI-KHATA HERO SECTION (Exact Reference Style) */}
+      <section className="w-full relative rounded-3xl bg-[#FAF7F2] border border-[#EFE9DF] p-6 sm:p-7 overflow-hidden shadow-2xs">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+          
+          {/* Left Hero Typography */}
+          <div className="lg:col-span-6 space-y-2 z-10">
+            <h1 className="font-serif font-black text-3xl sm:text-4xl text-stone-900 tracking-tight leading-none">
+              Bahi-Khata
+            </h1>
+
+            <p className="font-sans font-bold text-stone-800 text-sm sm:text-base leading-snug">
+              {language === 'hi'
+                ? 'हर लेन-देन, एक बेहतर कल की तरफ।'
+                : 'Har len-den, ek behtar kal ki taraf.'
+              }
+            </p>
+
+            <p className="text-stone-600 text-xs sm:text-sm leading-relaxed max-w-md">
+              {language === 'hi'
+                ? 'अपने दैनिक लेन-देन दर्ज करें, उधार प्रबंधित करें, स्टॉक गतिविधि ट्रैक करें और अपने व्यापार को व्यवस्थित रखें।'
+                : 'Record your daily transactions, manage udhaar, track inventory movement, and keep your business organised.'
+              }
             </p>
           </div>
 
-          <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
-            <Button
-              onClick={() => setIsVoiceOpen(true)}
-              variant="secondary"
-              size="sm"
-              icon={Mic}
-              className="!border-amber-300 hover:!bg-amber-50 !text-amber-800 font-extrabold shadow-2xs"
-              title={language === 'hi' ? 'बोलकर बही-खाता दर्ज करें (हिन्दी/English)' : 'Voice Bahi-Khata Input (Hindi/English)'}
-            >
-              <span>{language === 'hi' ? 'बोलकर लिखें' : 'Voice Input'}</span>
-            </Button>
-            <Button
-              onClick={onOpenWholesale}
-              variant="forest"
-              size="sm"
-              icon={ShoppingBag}
-            >
-              <span>{language === 'hi' ? 'ONDC थोक भाव' : 'ONDC Wholesale'}</span>
-            </Button>
-            <Button
-              onClick={onOpenKeypad}
-              variant="primary"
-              size="sm"
-              icon={PlusCircle}
-              className="sm:!text-sm sm:!px-4 sm:!py-2.5 shadow-sm"
-            >
-              <span>{language === 'hi' ? 'नया लेन-देन दर्ज करें' : '+ Record Transaction'}</span>
-            </Button>
+          {/* Right Visual: Shopkeeper writing in ledger + Handwritten quote */}
+          <div className="lg:col-span-6 relative flex items-center justify-end overflow-hidden select-none pointer-events-none">
+            <div className="relative w-full max-w-[530px] rounded-2xl overflow-hidden">
+              <img 
+                src="/images/bahi-khata-hero-full-2x.png" 
+                alt="Chhote hisaab, badi tasveer banate hain" 
+                className="w-full h-auto object-contain"
+              />
+            </div>
           </div>
-        </div>
 
         </div>
+      </section>
 
-      {/* 2. Top Summary KPI Cards */}
-      <div className="space-y-2">
-        {justUpdated && (
-          <div className="flex items-center gap-1.5 text-xs text-emerald-700 font-extrabold px-1 animate-fadeIn">
-            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-            <span>Bahi-Khata updated instantly (+0ms)</span>
+      {/* 2. HORIZONTAL TRANSACTION CATEGORY SELECTOR */}
+      <section className="flex items-center gap-3 overflow-x-auto pb-1 no-scrollbar">
+        {/* All Transactions */}
+        <button
+          type="button"
+          onClick={() => { setSelectedCategoryTab('all'); setTypeFilter('all'); }}
+          className={`flex-1 min-w-[145px] p-3.5 rounded-2xl border text-left transition-all duration-150 cursor-pointer ${
+            selectedCategoryTab === 'all'
+              ? 'bg-[#0F3E2E] text-white border-[#0F3E2E] shadow-sm'
+              : 'bg-white/95 text-stone-800 border-stone-200/80 hover:border-stone-300 hover:bg-white'
+          }`}
+        >
+          <div className="flex items-center gap-2 mb-1">
+            <FileText className={`w-4 h-4 ${selectedCategoryTab === 'all' ? 'text-white' : 'text-stone-500'}`} />
+            <span className="font-serif font-bold text-xs">
+              {language === 'hi' ? 'सभी लेन-देन' : 'All Transactions'}
+            </span>
           </div>
-        )}
-
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
-          <Card padding="sm" className="sm:p-5">
-            <span className="text-[9px] sm:text-[10px] font-bold text-stone-400 uppercase tracking-widest block mb-1">
-              {language === 'hi' ? 'कुल बिक्री' : 'Recorded Sales'}
-            </span>
-            <div className="text-xl sm:text-3xl font-black text-stone-900 tabular-nums tracking-tight font-display truncate">
-              {totalIncomeVal !== undefined && totalIncomeVal !== null ? `₹${totalIncomeVal.toLocaleString('en-IN')}` : '—'}
-            </div>
-            <span className="text-[10px] sm:text-[11px] font-semibold text-stone-500 mt-1 block truncate">
-              {summary?.activeDaysCount ? `${summary.activeDaysCount} days verified` : 'Audited ledger'}
-            </span>
-          </Card>
-
-          <Card padding="sm" className="sm:p-5">
-            <span className="text-[9px] sm:text-[10px] font-bold text-stone-400 uppercase tracking-widest block mb-1">
-              {language === 'hi' ? 'माल खरीद + खर्च' : 'Stock & Expenses'}
-            </span>
-            <div className="text-xl sm:text-3xl font-black text-stone-900 tabular-nums tracking-tight font-display truncate">
-              {totalExpenseVal !== undefined && totalExpenseVal !== null ? `₹${totalExpenseVal.toLocaleString('en-IN')}` : '—'}
-            </div>
-            <span className="text-[10px] sm:text-[11px] font-semibold text-stone-500 mt-1 block truncate">Inventory & bills</span>
-          </Card>
-
-          <Card padding="sm" className="sm:p-5">
-            <span className="text-[9px] sm:text-[10px] font-bold text-stone-400 uppercase tracking-widest block mb-1">
-              {language === 'hi' ? 'शुद्ध बचत / लाभ' : 'Net Operating Surplus'}
-            </span>
-            <div className="text-xl sm:text-3xl font-black text-emerald-700 tabular-nums tracking-tight font-display truncate">
-              {netSurplusVal !== undefined && netSurplusVal !== null ? `₹${netSurplusVal.toLocaleString('en-IN')}` : '—'}
-            </div>
-            <span className="text-[10px] sm:text-[11px] font-semibold text-emerald-700 mt-1 block truncate">
-              {marginPct ? `+${marginPct}% margin` : 'Audited margin'}
-            </span>
-          </Card>
-
-          <Card padding="sm" className="sm:p-5">
-            <span className="text-[9px] sm:text-[10px] font-bold text-stone-400 uppercase tracking-widest block mb-1">
-              {language === 'hi' ? 'बकाया ग्राहक उधार' : 'Pending Udhaar Book'}
-            </span>
-            <div className="text-xl sm:text-3xl font-black text-amber-600 tabular-nums tracking-tight font-display truncate">
-              {pendingUdhaarVal !== undefined && pendingUdhaarVal !== null ? `₹${pendingUdhaarVal.toLocaleString('en-IN')}` : '—'}
-            </div>
-            <span className="text-[10px] sm:text-[11px] font-semibold text-amber-700 mt-1 block truncate">
-              {udhaarLedger.length > 0 ? `${udhaarLedger.length} active khata` : 'Managed credit'}
-            </span>
-          </Card>
-        </div>
-      </div>
-
-      {/* 3. Recharts Real Seasonal Cash Flow Chart */}
-      {monthlyTrend.length > 0 ? (
-        <Card variant="hero" padding="lg" className="space-y-5">
-          <SectionHeader
-            icon={TrendingUp}
-            iconColor="terracotta"
-            title={language === 'hi' ? 'मौसमी नकदी प्रवाह रुझान (Seasonal Trend)' : 'Seasonal Cash Flow Trend'}
-            subtitle={language === 'hi' ? 'वास्तविक समय-श्रृंखला ग्राफ: मासिक बिक्री एवं लागत' : 'Audited time-series: gross sales vs operating stock outlays over time'}
-            action={
-              <div className="flex items-center gap-2">
-                <AudioReadAloudButton
-                  size="sm"
-                  textHi={`मौसमी रुझान: दर्ज बिक्री ${summary?.totalIncome ? Number(summary.totalIncome).toLocaleString('en-IN') : 0} रुपये, खर्च ${summary?.totalExpense ? Number(summary.totalExpense).toLocaleString('en-IN') : 0} रुपये, शुद्ध बचत ${summary?.netSurplus ? Number(summary.netSurplus).toLocaleString('en-IN') : 0} रुपये।`}
-                  textEn={`Seasonal trend: Gross sales ₹${summary?.totalIncome || 0}, expenses ₹${summary?.totalExpense || 0}, net surplus ₹${summary?.netSurplus || 0}.`}
-                />
-                <Badge variant="positive" size="sm" dot>
-                  {monthlyTrend.length} Months Computed
-                </Badge>
-              </div>
-            }
-          />
-
-          {/* Recharts Area Chart Container */}
-          <div className="h-64 sm:h-72 w-full pt-2">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={monthlyTrend} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <defs>
-                  {/* ForestRural Gradient for Recorded Sales */}
-                  <linearGradient id="incomeGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#1E523A" stopOpacity={0.28} />
-                    <stop offset="95%" stopColor="#1E523A" stopOpacity={0.0} />
-                  </linearGradient>
-                  {/* Terracotta Gradient for Expenses */}
-                  <linearGradient id="expenseGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#C15324" stopOpacity={0.22} />
-                    <stop offset="95%" stopColor="#C15324" stopOpacity={0.0} />
-                  </linearGradient>
-                </defs>
-
-                <CartesianGrid strokeDasharray="3 3" stroke="#ECE4D4" vertical={false} />
-                <XAxis 
-                  dataKey="label" 
-                  tick={{ fontSize: 11, fill: '#7C6E5A', fontWeight: 600 }}
-                  axisLine={{ stroke: '#DFD3BE' }}
-                  tickLine={false}
-                />
-                <YAxis 
-                  tick={{ fontSize: 10, fill: '#7C6E5A', fontWeight: 600 }}
-                  axisLine={false}
-                  tickLine={false}
-                  tickFormatter={(val) => `₹${(val / 1000).toFixed(0)}k`}
-                />
-                <Tooltip content={<CustomChartTooltip />} />
-                <Legend 
-                  verticalAlign="top" 
-                  align="right"
-                  wrapperStyle={{ paddingBottom: '12px', fontSize: '11px', fontWeight: 700 }}
-                  formatter={(val) => <span className="text-stone-800 font-bold">{val}</span>}
-                />
-
-                <Area 
-                  type="monotone" 
-                  dataKey="income" 
-                  name={language === 'hi' ? 'बिक्री (Sales)' : 'Recorded Sales'} 
-                  stroke="#1E523A" 
-                  strokeWidth={2.5}
-                  fillOpacity={1} 
-                  fill="url(#incomeGrad)" 
-                />
-                <Area 
-                  type="monotone" 
-                  dataKey="expense" 
-                  name={language === 'hi' ? 'खर्च (Expenses)' : 'Stock & Expenses'} 
-                  stroke="#C15324" 
-                  strokeWidth={2}
-                  fillOpacity={1} 
-                  fill="url(#expenseGrad)" 
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-
-          {/* Supplementary Per-Month Detail Cards */}
-          <div className="space-y-2 pt-4 border-t border-stone-200/80">
-            <span className="text-[11px] font-bold text-stone-400 uppercase tracking-wider block">
-              {language === 'hi' ? 'मासिक विश्लेषण विवरण' : 'Monthly Performance Breakdown'}
-            </span>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-              {monthlyTrend.map((m) => {
-                const isDip = avgIncome > 0 && m.income < avgIncome * 0.85;
-                const isSpike = avgIncome > 0 && m.income > avgIncome * 1.15;
-                const dynamicPct = Math.min(100, Math.round(((m.income || 0) / maxIncome) * 100));
-                
-                return (
-                  <div 
-                    key={m.month}
-                    className={`p-3.5 rounded-xl border transition-colors ${
-                      isDip 
-                        ? 'bg-stone-100 border-indigoRural-200' 
-                        : isSpike 
-                        ? 'bg-amber-50/70 border-amber-200/80' 
-                        : 'bg-white border-stone-200/80'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-bold text-stone-900">{m.label || m.month}</span>
-                      <Badge 
-                        variant={isDip ? 'neutral' : isSpike ? 'attention' : 'positive'} 
-                        size="sm"
-                      >
-                        {isDip ? 'Monsoon Dip' : isSpike ? 'Pre-Festival Surge' : 'Baseline'}
-                      </Badge>
-                    </div>
-
-                    <div className="space-y-1.5 text-xs">
-                      <div className="flex justify-between items-baseline">
-                        <span className="text-stone-400 text-[10px] font-bold uppercase">Sales</span>
-                        <strong className="text-stone-900 font-extrabold tabular-nums">₹{m.income?.toLocaleString('en-IN')}</strong>
-                      </div>
-                      <div className="w-full bg-stone-200/80 h-1.5 rounded-full overflow-hidden">
-                        <div 
-                          className={`h-full rounded-full ${
-                            isDip ? 'bg-stone-500' : isSpike ? 'bg-amber-500' : 'bg-emerald-600'
-                          }`}
-                          style={{ width: `${dynamicPct}%` }}
-                        />
-                      </div>
-                      <div className="flex justify-between items-baseline text-[10px] text-stone-500 pt-0.5">
-                        <span>Surplus</span>
-                        <span className="font-bold text-emerald-700 tabular-nums">₹{m.profit?.toLocaleString('en-IN')}</span>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </Card>
-      ) : (
-        <Card padding="lg" className="text-center py-8 space-y-2">
-          <TrendingUp className="w-8 h-8 text-indigoRural-300 mx-auto" />
-          <h3 className="font-bold text-sm text-stone-800">
-            {language === 'hi' ? 'मौसमी नकदी प्रवाह चार्ट (माह-वार)' : 'Seasonal Cash Flow Trend Chart'}
-          </h3>
-          <p className="text-xs text-stone-500 max-w-md mx-auto">
-            {language === 'hi' 
-              ? 'जैसे-जैसे आप दैनिक लेन-देन दर्ज करेंगे, आपका मासिक बिक्री और लागत का समय-श्रृंखला ग्राफ यहाँ स्वतः तैयार होगा।' 
-              : 'As you record transactions over multiple weeks, your monthly gross revenue and inventory replenishment trends will graph here automatically.'}
+          <p className={`text-[10px] ${selectedCategoryTab === 'all' ? 'text-emerald-200' : 'text-stone-500'}`}>
+            View every record
           </p>
-        </Card>
-      )}
+        </button>
 
-      {/* WhatsApp Simulated Toast */}
-      {reminderToast && (
-        <div className="bg-emerald-50 border border-forestRural-300 p-4 rounded-2xl shadow-card flex items-start gap-3 animate-fadeIn">
-          <MessageCircle className="w-5 h-5 text-emerald-700 shrink-0 mt-0.5" />
-          <div className="space-y-1 text-xs">
-            <span className="font-bold text-forestRural-900 flex items-center gap-1.5">
-              <Share2 className="w-3.5 h-3.5 text-emerald-700" />
-              <span>WhatsApp Payment Reminder Sent to {reminderToast.name}:</span>
+        {/* Sales */}
+        <button
+          type="button"
+          onClick={() => { setSelectedCategoryTab('sales'); setTypeFilter('income'); }}
+          className={`flex-1 min-w-[130px] p-3.5 rounded-2xl border text-left transition-all duration-150 cursor-pointer ${
+            selectedCategoryTab === 'sales'
+              ? 'bg-[#0F3E2E] text-white border-[#0F3E2E] shadow-sm'
+              : 'bg-white/95 text-stone-800 border-stone-200/80 hover:border-stone-300 hover:bg-white'
+          }`}
+        >
+          <div className="flex items-center gap-2 mb-1">
+            <ShoppingCart className={`w-4 h-4 ${selectedCategoryTab === 'sales' ? 'text-white' : 'text-emerald-700'}`} />
+            <span className="font-serif font-bold text-xs">
+              {language === 'hi' ? 'बिक्री' : 'Sales'}
             </span>
-            <p className="text-emerald-800 bg-white p-2.5 rounded-xl border border-emerald-200 font-mono">
-              "{reminderToast.message}"
-            </p>
           </div>
-        </div>
-      )}
+          <p className={`text-[10px] ${selectedCategoryTab === 'sales' ? 'text-emerald-200' : 'text-stone-500'}`}>
+            Money in
+          </p>
+        </button>
 
-      {/* 4. Transaction Stream & Customer Udhaar Book */}
-      <Card padding="none" className="overflow-hidden">
-        
-        {/* Segment Tabs */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 border-b border-stone-200/80 bg-stone-50/70 gap-3">
-          <div className="grid grid-cols-2 sm:flex gap-1 p-1 bg-stone-200/80/80 rounded-xl w-full sm:w-auto">
-            <button
-              onClick={() => setActiveTab('all')}
-              className={`px-2.5 sm:px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                activeTab === 'all' 
-                  ? 'bg-white text-stone-900 shadow-2xs' 
-                  : 'text-stone-600 hover:text-stone-900'
-              }`}
-            >
-              <FileText className="w-3.5 h-3.5 shrink-0" />
-              <span className="truncate">All ({transactions.length})</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('udhaar')}
-              className={`px-2.5 sm:px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                activeTab === 'udhaar' 
-                  ? 'bg-white text-stone-900 shadow-2xs' 
-                  : 'text-stone-600 hover:text-stone-900'
-              }`}
-            >
-              <BookOpen className="w-3.5 h-3.5 shrink-0" />
-              <span className="truncate">Udhaar Book</span>
-              {pendingUdhaarVal !== undefined && pendingUdhaarVal !== null && (
-                <Badge variant="attention" size="sm" className="hidden xs:inline-flex text-[10px] py-0 px-1 shrink-0">
-                  ₹{pendingUdhaarVal.toLocaleString('en-IN')}
-                </Badge>
-              )}
-            </button>
+        {/* Purchases */}
+        <button
+          type="button"
+          onClick={() => { setSelectedCategoryTab('purchases'); setTypeFilter('expense'); }}
+          className={`flex-1 min-w-[130px] p-3.5 rounded-2xl border text-left transition-all duration-150 cursor-pointer ${
+            selectedCategoryTab === 'purchases'
+              ? 'bg-[#0F3E2E] text-white border-[#0F3E2E] shadow-sm'
+              : 'bg-white/95 text-stone-800 border-stone-200/80 hover:border-stone-300 hover:bg-white'
+          }`}
+        >
+          <div className="flex items-center gap-2 mb-1">
+            <ArrowDownRight className={`w-4 h-4 ${selectedCategoryTab === 'purchases' ? 'text-white' : 'text-indigo-600'}`} />
+            <span className="font-serif font-bold text-xs">
+              {language === 'hi' ? 'खरीद' : 'Purchases'}
+            </span>
           </div>
+          <p className={`text-[10px] ${selectedCategoryTab === 'purchases' ? 'text-emerald-200' : 'text-stone-500'}`}>
+            Money out
+          </p>
+        </button>
 
-          {/* Quick Filter Pills for Tab 1 */}
-          {activeTab === 'all' && (
-            <div className="flex items-center gap-1.5 text-xs flex-wrap">
-              {['', 'income', 'expense', 'udhaar_given'].map(t => (
-                <button
-                  key={t}
-                  onClick={() => setFilterType(t)}
-                  className={`px-3 py-1 rounded-lg font-bold text-xs transition cursor-pointer ${
-                    filterType === t 
-                      ? 'bg-stone-900 text-white' 
-                      : 'bg-white text-stone-600 border border-stone-200 hover:bg-stone-100'
-                  }`}
-                >
-                  {t === '' ? 'All' : t === 'income' ? 'Sales' : t === 'expense' ? 'Costs' : 'Udhaar'}
-                </button>
-              ))}
+        {/* Expenses */}
+        <button
+          type="button"
+          onClick={() => { setSelectedCategoryTab('expenses'); setTypeFilter('expense'); }}
+          className={`flex-1 min-w-[130px] p-3.5 rounded-2xl border text-left transition-all duration-150 cursor-pointer ${
+            selectedCategoryTab === 'expenses'
+              ? 'bg-[#0F3E2E] text-white border-[#0F3E2E] shadow-sm'
+              : 'bg-white/95 text-stone-800 border-stone-200/80 hover:border-stone-300 hover:bg-white'
+          }`}
+        >
+          <div className="flex items-center gap-2 mb-1">
+            <BarChart3 className={`w-4 h-4 ${selectedCategoryTab === 'expenses' ? 'text-white' : 'text-teal-600'}`} />
+            <span className="font-serif font-bold text-xs">
+              {language === 'hi' ? 'खर्च' : 'Expenses'}
+            </span>
+          </div>
+          <p className={`text-[10px] ${selectedCategoryTab === 'expenses' ? 'text-emerald-200' : 'text-stone-500'}`}>
+            Business costs
+          </p>
+        </button>
+
+        {/* Udhaar */}
+        <button
+          type="button"
+          onClick={() => { setSelectedCategoryTab('udhaar'); setTypeFilter('all'); }}
+          className={`flex-1 min-w-[130px] p-3.5 rounded-2xl border text-left transition-all duration-150 cursor-pointer ${
+            selectedCategoryTab === 'udhaar'
+              ? 'bg-[#0F3E2E] text-white border-[#0F3E2E] shadow-sm'
+              : 'bg-white/95 text-stone-800 border-stone-200/80 hover:border-stone-300 hover:bg-white'
+          }`}
+        >
+          <div className="flex items-center gap-2 mb-1">
+            <IndianRupee className={`w-4 h-4 ${selectedCategoryTab === 'udhaar' ? 'text-white' : 'text-amber-600'}`} />
+            <span className="font-serif font-bold text-xs">
+              {language === 'hi' ? 'उधार' : 'Udhaar'}
+            </span>
+          </div>
+          <p className={`text-[10px] ${selectedCategoryTab === 'udhaar' ? 'text-emerald-200' : 'text-stone-500'}`}>
+            Given & received
+          </p>
+        </button>
+
+        {/* More Actions Dropdown */}
+        <div className="relative shrink-0">
+          <button
+            type="button"
+            onClick={() => setMoreActionsOpen(!moreActionsOpen)}
+            className="p-3.5 px-4 rounded-2xl border border-stone-200/80 bg-white/95 text-stone-700 hover:text-stone-950 hover:bg-white flex items-center gap-1.5 text-xs font-semibold cursor-pointer shadow-2xs"
+          >
+            <span>More Actions</span>
+            <ChevronRight className={`w-3.5 h-3.5 transition-transform ${moreActionsOpen ? 'rotate-90' : ''}`} />
+          </button>
+
+          {moreActionsOpen && (
+            <div className="absolute right-0 mt-2 w-52 bg-white border border-stone-200 rounded-2xl p-1.5 shadow-xl z-30 space-y-1 text-xs">
+              <button
+                type="button"
+                onClick={() => { setIsRegisterCustomerOpen(true); setMoreActionsOpen(false); }}
+                className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-stone-700 hover:bg-stone-100 hover:text-stone-950 text-left transition-colors cursor-pointer"
+              >
+                <UserPlus className="w-4 h-4 text-emerald-700" />
+                <span>Add Customer Account</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => { setIsVoiceOpen(true); setMoreActionsOpen(false); }}
+                className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-stone-700 hover:bg-stone-100 hover:text-stone-950 text-left transition-colors cursor-pointer"
+              >
+                <Mic className="w-4 h-4 text-amber-600" />
+                <span>Voice Khata Entry</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => { handleExportCSV(); setMoreActionsOpen(false); }}
+                className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-stone-700 hover:bg-stone-100 hover:text-stone-950 text-left transition-colors cursor-pointer"
+              >
+                <Download className="w-4 h-4 text-stone-500" />
+                <span>Export CSV Ledger</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => { window.print(); setMoreActionsOpen(false); }}
+                className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-stone-700 hover:bg-stone-100 hover:text-stone-950 text-left transition-colors cursor-pointer"
+              >
+                <Printer className="w-4 h-4 text-stone-500" />
+                <span>Print Ledger</span>
+              </button>
             </div>
           )}
         </div>
+      </section>
 
-        {/* Tab 1: All Transactions Feed */}
-        {activeTab === 'all' && (
-          <div className="divide-y divide-stone-200/80 max-h-[500px] overflow-y-auto">
-            {loading ? (
-              <div className="p-4 space-y-3">
-                {[1, 2, 3, 4].map(i => (
-                  <div key={i} className="flex items-center justify-between p-3.5 rounded-xl border border-stone-200/80 animate-shimmer">
-                    <div className="space-y-2 w-1/2">
-                      <div className="h-3.5 bg-stone-200/70 rounded-md w-3/5" />
-                      <div className="h-2.5 bg-stone-200/80 rounded-md w-2/5" />
-                    </div>
-                    <div className="h-5 bg-stone-200/70 rounded-md w-20" />
-                  </div>
+      {/* 3. SEARCH & FILTER TOOLBAR */}
+      <section className="w-full flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 bg-white/90 border border-stone-200/80 p-2.5 sm:p-3 rounded-2xl shadow-2xs">
+        {/* Search Input */}
+        <div className="relative flex-1 min-w-[220px]">
+          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search transactions (e.g. Amul, Ramu, ₹500...)"
+            className="w-full pl-9.5 pr-4 py-2 bg-transparent text-xs text-stone-900 placeholder:text-stone-400 focus:outline-none"
+          />
+          {searchQuery && (
+            <button 
+              onClick={() => setSearchQuery('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-700 p-0.5"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+
+        {/* Filters Group */}
+        <div className="flex items-center gap-2 flex-wrap shrink-0">
+          
+          {/* Date Range Selector */}
+          <div className="relative">
+            <select
+              value={datePreset}
+              onChange={(e) => setDatePreset(e.target.value)}
+              className="appearance-none bg-[#FAF8F5] border border-stone-200 rounded-xl px-3 py-1.5 pr-7 text-xs font-semibold text-stone-700 hover:border-stone-300 focus:outline-none focus:border-[#0F3E2E] cursor-pointer"
+            >
+              <option value="all">📅 All Dates</option>
+              <option value="today">Today</option>
+              <option value="week">Past 7 Days</option>
+              <option value="month">Past 30 Days</option>
+            </select>
+          </div>
+
+          {/* Type Dropdown Filter */}
+          <div className="relative">
+            <select
+              value={typeFilter}
+              onChange={(e) => setTypeFilter(e.target.value)}
+              className="appearance-none bg-[#FAF8F5] border border-stone-200 rounded-xl px-3 py-1.5 pr-7 text-xs font-semibold text-stone-700 hover:border-stone-300 focus:outline-none focus:border-[#0F3E2E] cursor-pointer"
+            >
+              <option value="all">Type: All</option>
+              <option value="income">Sale (Income)</option>
+              <option value="expense">Purchase / Expense</option>
+              <option value="udhaar_given">Udhaar Given</option>
+              <option value="udhaar_repaid">Udhaar Repaid</option>
+            </select>
+          </div>
+
+          {/* Payment Mode Filter */}
+          <div className="relative">
+            <select
+              value={paymentFilter}
+              onChange={(e) => setPaymentFilter(e.target.value)}
+              className="appearance-none bg-[#FAF8F5] border border-stone-200 rounded-xl px-3 py-1.5 pr-7 text-xs font-semibold text-stone-700 hover:border-stone-300 focus:outline-none focus:border-[#0F3E2E] cursor-pointer"
+            >
+              <option value="all">Payment Mode: All</option>
+              <option value="cash">Cash</option>
+              <option value="upi">UPI</option>
+              <option value="khata">Udhaar / Khata</option>
+            </select>
+          </div>
+
+          {/* Category Filter */}
+          {availableCategories.length > 0 && (
+            <div className="relative hidden xl:block">
+              <select
+                value={categoryFilter}
+                onChange={(e) => setCategoryFilter(e.target.value)}
+                className="appearance-none bg-[#FAF8F5] border border-stone-200 rounded-xl px-3 py-1.5 pr-7 text-xs font-semibold text-stone-700 hover:border-stone-300 focus:outline-none focus:border-[#0F3E2E] cursor-pointer"
+              >
+                <option value="all">Category: All</option>
+                {availableCategories.map(cat => (
+                  <option key={cat} value={cat}>{cat}</option>
                 ))}
-              </div>
-            ) : transactions.length === 0 ? (
-              <div className="p-12 text-center space-y-3">
-                <div className="w-12 h-12 mx-auto rounded-2xl bg-stone-100 flex items-center justify-center text-stone-400">
-                  <BookOpen className="w-6 h-6" />
-                </div>
-                <h4 className="font-bold text-sm text-stone-800">
-                  {language === 'hi' ? 'अभी कोई लेनदेन दर्ज नहीं है' : 'No Transactions Recorded Yet'}
-                </h4>
-                <p className="text-xs text-stone-500 max-w-sm mx-auto">
-                  {language === 'hi' 
-                    ? 'अपनी दुकान की पहली दैनिक बिक्री या खर्च दर्ज करने के लिए नीचे बटन दबाएं।' 
-                    : 'Tap the button below to record your first daily counter sale, stock purchase, or customer credit.'}
-                </p>
-                <div className="pt-2">
-                  <Button onClick={onOpenKeypad} variant="dark" size="sm" icon={PlusCircle}>
-                    <span>{language === 'hi' ? 'पहला लेनदेन दर्ज करें' : '+ Record First Transaction'}</span>
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              transactions.map(tx => {
-                const isIncome = tx.type === 'income';
-                const isExpense = tx.type === 'expense';
-                const isUdhaarGiven = tx.type === 'udhaar_given';
+              </select>
+            </div>
+          )}
 
-                return (
-                  <div key={tx.id} className="p-4 hover:bg-stone-50 transition flex items-center justify-between gap-4">
-                    
-                    <div className="flex items-center gap-3.5">
-                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm shrink-0 ${
-                        isIncome ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
-                        isExpense ? 'bg-amber-50 text-amber-700 border border-amber-200' :
-                        isUdhaarGiven ? 'bg-amber-50 text-amber-700 border border-amber-200' :
-                        'bg-stone-100 text-stone-700 border border-stone-200'
-                      }`}>
-                        {isIncome ? '↓' : isExpense ? '↑' : '⏱'}
-                      </div>
+          {/* Primary CTA: + Record Transaction */}
+          <button
+            type="button"
+            onClick={onOpenKeypad}
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#0F3E2E] hover:bg-[#165640] text-white font-bold text-xs shadow-2xs hover:shadow-md transition-all cursor-pointer shrink-0"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Record Transaction</span>
+          </button>
+        </div>
+      </section>
 
-                      <div className="space-y-0.5">
-                        <div className="flex items-center gap-2">
-                          <span className="font-extrabold text-sm text-stone-900">{tx.category}</span>
-                          <span className="text-[10px] font-extrabold px-1.5 py-0.2 rounded-md bg-stone-200/80 text-stone-700 uppercase">
-                            {tx.payment_mode}
-                          </span>
+      {/* 4. MAIN CONTENT AREA: TABLE (LEFT 8 COLS) + SIDEBAR ACTIONS (RIGHT 4 COLS) */}
+      <section className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        {/* LEFT 8/9 COLS: MAIN TRANSACTION TABLE */}
+        <div className="lg:col-span-8 xl:col-span-9 space-y-4">
+          <div className="rounded-2xl bg-white border border-stone-200/90 overflow-hidden shadow-2xs">
+            
+            {/* Table Container */}
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse text-xs">
+                
+                {/* Table Header */}
+                <thead>
+                  <tr className="border-b border-stone-200/80 bg-[#FAF8F5]/60 text-stone-500 font-serif">
+                    <th className="py-3 px-3.5 sm:px-4 font-bold">Type</th>
+                    <th className="py-3 px-3 sm:px-4 font-bold">Particulars</th>
+                    <th className="py-3 px-3 sm:px-4 font-bold">Party / Customer</th>
+                    <th className="py-3 px-3 sm:px-4 font-bold">Date & Time</th>
+                    <th className="py-3 px-2 sm:px-3 font-bold text-center">Payment Mode</th>
+                    <th className="py-3 px-3 sm:px-4 font-bold">Category</th>
+                    <th className="py-3 px-3 sm:px-4 font-bold text-right">Amount</th>
+                    <th className="py-3 px-2 font-bold text-center">Actions</th>
+                  </tr>
+                </thead>
+
+                {/* Table Body */}
+                <tbody className="divide-y divide-stone-100">
+                  {paginatedTransactions.length > 0 ? (
+                    paginatedTransactions.map((tx) => {
+                      const meta = getTypeMeta(tx);
+                      const Icon = meta.icon;
+
+                      return (
+                        <tr
+                          key={tx.id}
+                          onClick={() => setSelectedTx(tx)}
+                          className="hover:bg-[#FAF8F5] transition-colors cursor-pointer group"
+                        >
+                          {/* Type with Context Icon */}
+                          <td className="py-3 px-3.5 sm:px-4 whitespace-nowrap">
+                            <div className="flex items-center gap-2">
+                              <div className={`w-7 h-7 rounded-lg flex items-center justify-center border shrink-0 ${meta.color}`}>
+                                <Icon className="w-3.5 h-3.5" />
+                              </div>
+                              <span className="font-serif font-bold text-stone-900 group-hover:text-[#0F3E2E] transition-colors">
+                                {meta.label}
+                              </span>
+                            </div>
+                          </td>
+
+                          {/* Particulars / Item Description */}
+                          <td className="py-3 px-3 sm:px-4 font-medium text-stone-800 max-w-[160px] truncate">
+                            {formatParticulars(tx)}
+                          </td>
+
+                          {/* Party / Customer */}
+                          <td className="py-3 px-3 sm:px-4 text-stone-600 max-w-[140px] truncate">
+                            {getPartyName(tx)}
+                          </td>
+
+                          {/* Date & Time */}
+                          <td className="py-3 px-3 sm:px-4 whitespace-nowrap text-stone-500 font-mono text-[11px]">
+                            {formatDateTime(tx.date)}
+                          </td>
+
+                          {/* Payment Mode Badge */}
+                          <td className="py-3 px-2 sm:px-3 text-center whitespace-nowrap">
+                            {getPaymentBadge(tx.payment_mode)}
+                          </td>
+
+                          {/* Category */}
+                          <td className="py-3 px-3 sm:px-4 text-stone-600 whitespace-nowrap">
+                            {tx.category || 'General'}
+                          </td>
+
+                          {/* Amount */}
+                          <td className={`py-3 px-3 sm:px-4 text-right font-bold tabular-nums whitespace-nowrap ${meta.amountColor}`}>
+                            {meta.sign} ₹{Number(tx.amount || 0).toLocaleString('en-IN')}
+                          </td>
+
+                          {/* Actions */}
+                          <td className="py-3 px-2 text-center whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                            <button
+                              type="button"
+                              onClick={() => setSelectedTx(tx)}
+                              className="p-1.5 rounded-lg text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors"
+                              title="View details"
+                            >
+                              <MoreHorizontal className="w-4 h-4" />
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  ) : (
+                    <tr>
+                      <td colSpan={8} className="py-12 text-center text-stone-500">
+                        <div className="flex flex-col items-center justify-center space-y-2">
+                          <FileText className="w-8 h-8 text-stone-300" />
+                          <div className="font-serif font-bold text-sm text-stone-800">
+                            {language === 'hi' ? 'कोई लेन-देन नहीं मिला' : 'No transactions found'}
+                          </div>
+                          <p className="text-xs text-stone-400 max-w-xs">
+                            {searchQuery || typeFilter !== 'all' || paymentFilter !== 'all'
+                              ? 'Try adjusting your search query or reset the filters above.'
+                              : 'Log your first sale or expense using the "+ Record Transaction" button.'
+                            }
+                          </p>
+                          {(searchQuery || typeFilter !== 'all' || paymentFilter !== 'all' || categoryFilter !== 'all') && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSearchQuery('');
+                                setTypeFilter('all');
+                                setPaymentFilter('all');
+                                setCategoryFilter('all');
+                                setDatePreset('all');
+                                setSelectedCategoryTab('all');
+                              }}
+                              className="mt-2 text-xs text-[#0F3E2E] font-bold underline"
+                            >
+                              Reset All Filters
+                            </button>
+                          )}
                         </div>
-                        <p className="text-xs text-stone-500 font-medium">
-                          {tx.customer_vendor_name ? `${tx.customer_vendor_name} • ` : ''}
-                          {tx.date}
-                        </p>
-                      </div>
-                    </div>
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
 
-                    <div className="flex items-center gap-2.5">
-                      <div className="text-right">
-                        <div className={`text-base font-black tabular-nums ${
-                          isIncome || tx.type === 'udhaar_repaid' ? 'text-emerald-700' : 'text-stone-900'
-                        }`}>
-                          {isIncome || tx.type === 'udhaar_repaid' ? '+' : '-'}₹{Number(tx.amount || 0).toLocaleString('en-IN')}
-                        </div>
-                        <span className="text-[10px] text-stone-400 capitalize font-medium">
-                          {tx.type.replace('_', ' ')}
-                        </span>
-                      </div>
+            {/* Pagination Controls */}
+            <div className="p-3 sm:p-3.5 border-t border-stone-200/80 bg-[#FAF8F5]/50 flex items-center justify-between flex-wrap gap-2 text-xs text-stone-600">
+              <span className="font-medium text-stone-500">
+                Showing{' '}
+                <strong className="text-stone-900 font-bold">
+                  {filteredTransactions.length > 0 ? (currentPage - 1) * pageSize + 1 : 0}
+                </strong>
+                –
+                <strong className="text-stone-900 font-bold">
+                  {Math.min(currentPage * pageSize, filteredTransactions.length)}
+                </strong>{' '}
+                of <strong className="text-stone-900 font-bold">{filteredTransactions.length}</strong> transactions
+              </span>
 
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteTransaction(tx.id)}
-                        disabled={deletingId === tx.id}
-                        title={language === 'hi' ? 'लेन-देन हटाएं' : 'Delete transaction'}
-                        className="p-1.5 sm:p-2 rounded-xl text-stone-300 hover:text-amber-600 hover:bg-amber-50 border border-transparent hover:border-amber-200 transition active:scale-95 cursor-pointer disabled:opacity-40 shrink-0"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-
-                  </div>
-                );
-              })
-            )}
-          </div>
-        )}
-
-        {/* Tab 2: Customer Udhaar Khata */}
-        {activeTab === 'udhaar' && (
-          <div>
-            {/* Top Toolbar for Customer Udhaar Book */}
-            <div className="p-3.5 bg-stone-100/70 border-b border-stone-200/80 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 text-xs">
-              
-              {/* Search Box */}
-              <div className="relative flex-1 max-w-sm">
-                <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
-                <input
-                  type="text"
-                  value={customerSearchQuery}
-                  onChange={(e) => setCustomerSearchQuery(e.target.value)}
-                  placeholder={language === 'hi' ? 'ग्राहक का नाम, फोन या गाँव खोजें...' : 'Search by name, phone or village...'}
-                  className="w-full pl-8 pr-3 py-2 bg-white border border-stone-200 rounded-xl text-xs font-semibold text-stone-900 focus:outline-none focus:ring-2 focus:ring-amber-500 placeholder:text-stone-300"
-                />
-              </div>
-
-              {/* Filter Pills & Register Button */}
-              <div className="flex items-center gap-2 flex-wrap">
-                <div className="flex items-center gap-1 bg-stone-200/80/80 p-1 rounded-xl">
-                  <button
-                    type="button"
-                    onClick={() => setCustomerFilter('all')}
-                    className={`px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
-                      customerFilter === 'all' ? 'bg-white text-stone-900 shadow-2xs' : 'text-stone-600 hover:text-stone-900'
-                    }`}
-                  >
-                    {language === 'hi' ? 'सभी' : 'All'} ({udhaarLedger.length})
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setCustomerFilter('owing')}
-                    className={`px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
-                      customerFilter === 'owing' ? 'bg-white text-stone-900 shadow-2xs' : 'text-stone-600 hover:text-stone-900'
-                    }`}
-                  >
-                    {language === 'hi' ? 'बकायादार' : 'With Balance'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setCustomerFilter('near_limit')}
-                    className={`px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
-                      customerFilter === 'near_limit' ? 'bg-white text-stone-900 shadow-2xs' : 'text-stone-600 hover:text-stone-900'
-                    }`}
-                  >
-                    {language === 'hi' ? 'सीमा अलर्ट' : 'Near Limit'}
-                  </button>
-                </div>
-
-                <Button
-                  onClick={() => setIsRegisterCustomerOpen(true)}
-                  variant="primary"
-                  size="sm"
-                  icon={UserPlus}
+              {/* Pagination Buttons */}
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  disabled={currentPage <= 1}
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  className="p-1.5 rounded-lg border border-stone-200 bg-white hover:bg-stone-50 disabled:opacity-40 disabled:hover:bg-white text-stone-700 transition-all cursor-pointer"
+                  title="Previous page"
                 >
-                  <span>{language === 'hi' ? '+ नया ग्राहक जोड़ें' : '+ Add Customer'}</span>
-                </Button>
+                  <ChevronLeft className="w-3.5 h-3.5" />
+                </button>
+
+                {Array.from({ length: Math.min(5, totalPages) }).map((_, i) => {
+                  let pageNum = i + 1;
+                  if (totalPages > 5 && currentPage > 3) {
+                    pageNum = currentPage - 3 + i;
+                    if (pageNum > totalPages) pageNum = totalPages - (4 - i);
+                  }
+
+                  const isActive = currentPage === pageNum;
+
+                  return (
+                    <button
+                      key={pageNum}
+                      type="button"
+                      onClick={() => setCurrentPage(pageNum)}
+                      className={`w-7 h-7 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                        isActive
+                          ? 'bg-[#0F3E2E] text-white'
+                          : 'bg-white border border-stone-200 text-stone-700 hover:bg-stone-50'
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+
+                {totalPages > 5 && currentPage < totalPages - 2 && (
+                  <span className="px-1 text-stone-400">...</span>
+                )}
+
+                {totalPages > 5 && (
+                  <button
+                    type="button"
+                    onClick={() => setCurrentPage(totalPages)}
+                    className={`w-7 h-7 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      currentPage === totalPages
+                        ? 'bg-[#0F3E2E] text-white'
+                        : 'bg-white border border-stone-200 text-stone-700 hover:bg-stone-50'
+                    }`}
+                  >
+                    {totalPages}
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  disabled={currentPage >= totalPages}
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  className="p-1.5 rounded-lg border border-stone-200 bg-white hover:bg-stone-50 disabled:opacity-40 disabled:hover:bg-white text-stone-700 transition-all cursor-pointer"
+                  title="Next page"
+                >
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
               </div>
-
-            </div>
-
-            {/* Customers List */}
-            <div className="divide-y divide-stone-200/80 max-h-[550px] overflow-y-auto">
-              {(() => {
-                const filtered = udhaarLedger.filter(cust => {
-                  const q = customerSearchQuery.trim().toLowerCase();
-                  const matchesQuery = !q || 
-                    (cust.customerName && cust.customerName.toLowerCase().includes(q)) ||
-                    (cust.phone && cust.phone.includes(q)) ||
-                    (cust.village && cust.village.toLowerCase().includes(q));
-
-                  if (!matchesQuery) return false;
-
-                  if (customerFilter === 'owing') {
-                    return (cust.balanceOwed || 0) > 0;
-                  }
-                  if (customerFilter === 'near_limit') {
-                    const limit = cust.creditLimit || 5000;
-                    return (cust.balanceOwed || 0) >= 0.8 * limit;
-                  }
-                  return true;
-                });
-
-                if (filtered.length === 0) {
-                  return (
-                    <div className="p-12 text-center space-y-3">
-                      <div className="w-12 h-12 mx-auto rounded-2xl bg-stone-100 flex items-center justify-center text-stone-400">
-                        <Users className="w-6 h-6" />
-                      </div>
-                      <h4 className="font-bold text-sm text-stone-800">
-                        {language === 'hi' ? 'कोई ग्राहक खाता नहीं मिला' : 'No Customer Accounts Found'}
-                      </h4>
-                      <p className="text-xs text-stone-500 max-w-sm mx-auto">
-                        {language === 'hi'
-                          ? 'नया ग्राहक पंजीकृत करें और 1-क्लिक व्हाट्सएप तगादा संदेश भेजें।'
-                          : 'Register a customer to track credit limits and send 1-click WhatsApp reminders.'}
-                      </p>
-                      <div className="pt-1">
-                        <Button
-                          onClick={() => setIsRegisterCustomerOpen(true)}
-                          variant="dark"
-                          size="sm"
-                          icon={UserPlus}
-                        >
-                          <span>{language === 'hi' ? '+ पहला ग्राहक जोड़ें' : '+ Register First Customer'}</span>
-                        </Button>
-                      </div>
-                    </div>
-                  );
-                }
-
-                return filtered.map((cust, idx) => {
-                  const limit = cust.creditLimit || 5000;
-                  const balance = cust.balanceOwed || 0;
-                  const usagePercent = Math.min(100, Math.round((balance / limit) * 100));
-                  const isNearLimit = usagePercent >= 80;
-                  const isOverLimit = balance > limit;
-
-                  return (
-                    <div key={idx} className="p-4 hover:bg-stone-50 transition flex flex-col md:flex-row md:items-center justify-between gap-4">
-                      
-                      {/* Left: Avatar & Identity */}
-                      <div className="flex items-start sm:items-center gap-3.5 min-w-[240px]">
-                        <div className={`w-11 h-11 rounded-2xl flex items-center justify-center font-extrabold text-sm shrink-0 border ${
-                          isOverLimit ? 'bg-amber-100 text-amber-700 border-amber-300' :
-                          isNearLimit ? 'bg-amber-100 text-amber-800 border-amber-200' :
-                          'bg-stone-100 text-stone-800 border-stone-200'
-                        }`}>
-                          {cust.customerName.charAt(0)}
-                        </div>
-
-                        <div className="space-y-0.5">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="font-black text-sm text-stone-900">{cust.customerName}</span>
-                            {cust.isRegistered ? (
-                              <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-md bg-emerald-100 text-emerald-800 border border-emerald-200">
-                                {language === 'hi' ? 'पंजीकृत' : 'Verified'}
-                              </span>
-                            ) : (
-                              <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-md bg-stone-200/80 text-stone-600">
-                                {language === 'hi' ? 'बही-खाता' : 'Ledger'}
-                              </span>
-                            )}
-                          </div>
-
-                          <div className="flex items-center gap-3 text-xs text-stone-500 font-semibold flex-wrap">
-                            {cust.phone ? (
-                              <a 
-                                href={`tel:${cust.phone}`}
-                                className="flex items-center gap-1 text-emerald-700 hover:underline"
-                              >
-                                <PhoneCall className="w-3 h-3" />
-                                <span>+91 {cust.phone.replace(/^91/, '')}</span>
-                              </a>
-                            ) : (
-                              <button
-                                type="button"
-                                onClick={() => setSelectedWhatsAppCustomer(cust)}
-                                className="text-amber-600 hover:text-amber-800 text-[11px] font-bold underline cursor-pointer"
-                                title={language === 'hi' ? 'फोन नंबर जोड़ें' : 'Add customer phone'}
-                              >
-                                {language === 'hi' ? '+ फोन नंबर जोड़ें' : '+ Add phone'}
-                              </button>
-                            )}
-
-                            {cust.village && (
-                              <span className="flex items-center gap-1 text-stone-600">
-                                <MapPin className="w-3 h-3 text-amber-600" />
-                                <span>{cust.village}</span>
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Center: Credit Limit Utilization Bar */}
-                      <div className="flex-1 max-w-xs space-y-1">
-                        <div className="flex justify-between text-[11px] font-bold">
-                          <span className="text-stone-600">
-                            {language === 'hi' ? 'उधार सीमा उपयोग' : 'Credit Limit Used'}
-                          </span>
-                          <span className={`${isOverLimit ? 'text-amber-700' : isNearLimit ? 'text-amber-700' : 'text-stone-700'}`}>
-                            ₹{balance.toLocaleString('en-IN')} / ₹{limit.toLocaleString('en-IN')} ({usagePercent}%)
-                          </span>
-                        </div>
-                        <div className="w-full h-2 bg-stone-200/80 rounded-full overflow-hidden">
-                          <div
-                            className={`h-full rounded-full transition-all ${
-                              isOverLimit ? 'bg-amber-600' :
-                              isNearLimit ? 'bg-amber-500' :
-                              'bg-emerald-600'
-                            }`}
-                            style={{ width: `${Math.min(100, usagePercent)}%` }}
-                          />
-                        </div>
-                        {isNearLimit && (
-                          <div className="flex items-center gap-1 text-[10px] font-bold text-amber-700">
-                            <AlertTriangle className="w-3 h-3 text-amber-600 shrink-0" />
-                            <span>{language === 'hi' ? 'उधार सीमा 80% से अधिक है' : 'Approaching credit limit threshold'}</span>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Right: Balance & Actions */}
-                      <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0">
-                        <div className="text-right">
-                          <div className={`text-base font-black tabular-nums ${
-                            balance > 0 ? 'text-amber-700' : 'text-emerald-700'
-                          }`}>
-                            ₹{balance.toLocaleString('en-IN')}
-                          </div>
-                          <div className="text-[10px] text-stone-400 font-medium">
-                            {cust.lastReminderSent ? (
-                              <span className="text-emerald-700 font-bold">
-                                ✓ {language === 'hi' ? 'तगादा भेजा गया' : 'Reminder Sent'}
-                              </span>
-                            ) : cust.lastDate ? (
-                              <span>{language === 'hi' ? 'अंतिम:' : 'Active:'} {cust.lastDate}</span>
-                            ) : (
-                              <span>{language === 'hi' ? 'नया खाता' : 'New Khata'}</span>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* WhatsApp Action Button */}
-                        <button
-                          type="button"
-                          onClick={() => handleSimulateReminder(cust)}
-                          className="px-3.5 py-2 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] active:scale-95 text-white font-extrabold text-xs flex items-center gap-1.5 shadow-xs transition cursor-pointer"
-                          title={language === 'hi' ? 'व्हाट्सएप तगादा भेजें' : 'Send WhatsApp Reminder'}
-                        >
-                          <MessageCircle className="w-3.5 h-3.5 fill-current" />
-                          <span>WhatsApp</span>
-                        </button>
-                      </div>
-
-                    </div>
-                  );
-                });
-              })()}
             </div>
 
           </div>
-        )}
+        </div>
 
-      </Card>
+        {/* RIGHT 4/3 COLS: QUICK ACTIONS & HELP CARDS */}
+        <div className="lg:col-span-4 xl:col-span-3 space-y-4">
+          
+          {/* Quick Actions Panel */}
+          <div className="rounded-2xl bg-white border border-stone-200/90 p-4 sm:p-5 shadow-2xs space-y-3">
+            <h3 className="font-serif font-bold text-sm text-stone-900 pb-1 border-b border-stone-100">
+              Quick Actions
+            </h3>
+
+            <div className="space-y-1.5">
+              {/* Record Sale */}
+              <button
+                type="button"
+                onClick={onOpenKeypad}
+                className="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-[#FAF8F5] border border-transparent hover:border-stone-200 text-xs font-medium text-stone-800 transition-all group cursor-pointer"
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center">
+                    <ShoppingCart className="w-3.5 h-3.5" />
+                  </div>
+                  <span>Record Sale</span>
+                </div>
+                <ChevronRight className="w-4 h-4 text-stone-400 group-hover:text-stone-800 group-hover:translate-x-0.5 transition-all" />
+              </button>
+
+              {/* Record Purchase */}
+              <button
+                type="button"
+                onClick={onOpenKeypad}
+                className="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-[#FAF8F5] border border-transparent hover:border-stone-200 text-xs font-medium text-stone-800 transition-all group cursor-pointer"
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-700 flex items-center justify-center">
+                    <FileText className="w-3.5 h-3.5" />
+                  </div>
+                  <span>Record Purchase</span>
+                </div>
+                <ChevronRight className="w-4 h-4 text-stone-400 group-hover:text-stone-800 group-hover:translate-x-0.5 transition-all" />
+              </button>
+
+              {/* Add Expense */}
+              <button
+                type="button"
+                onClick={onOpenKeypad}
+                className="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-[#FAF8F5] border border-transparent hover:border-stone-200 text-xs font-medium text-stone-800 transition-all group cursor-pointer"
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-lg bg-teal-50 text-teal-700 flex items-center justify-center">
+                    <BarChart3 className="w-3.5 h-3.5" />
+                  </div>
+                  <span>Add Expense</span>
+                </div>
+                <ChevronRight className="w-4 h-4 text-stone-400 group-hover:text-stone-800 group-hover:translate-x-0.5 transition-all" />
+              </button>
+
+              {/* Manage Udhaar */}
+              <button
+                type="button"
+                onClick={() => { setSelectedCategoryTab('udhaar'); setTypeFilter('all'); }}
+                className="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-[#FAF8F5] border border-transparent hover:border-stone-200 text-xs font-medium text-stone-800 transition-all group cursor-pointer"
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-lg bg-amber-50 text-amber-700 flex items-center justify-center">
+                    <IndianRupee className="w-3.5 h-3.5" />
+                  </div>
+                  <span>Manage Udhaar</span>
+                </div>
+                <ChevronRight className="w-4 h-4 text-stone-400 group-hover:text-stone-800 group-hover:translate-x-0.5 transition-all" />
+              </button>
+            </div>
+          </div>
+
+          {/* Need Help? Card */}
+          <div className="rounded-2xl bg-white border border-stone-200/90 p-4 sm:p-5 shadow-2xs space-y-2">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-amber-100/80 text-amber-700 flex items-center justify-center">
+                <Lightbulb className="w-3.5 h-3.5" />
+              </div>
+              <h4 className="font-serif font-bold text-xs text-stone-900">Need Help?</h4>
+            </div>
+            <p className="text-[11px] text-stone-500 leading-relaxed">
+              Learn how to manage your Bahi-Khata efficiently.
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                alert("Watch Guide: Record daily entries via voice or keypad. Regular logging directly enhances your RBI Priority Sector Lending alternative credit score!");
+              }}
+              className="mt-1 text-xs font-bold text-[#0F3E2E] hover:text-emerald-900 inline-flex items-center gap-1 cursor-pointer"
+            >
+              <span>Watch Guide</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          {/* Khata Saaf, Mann Saaf Card */}
+          <div className="rounded-2xl bg-[#EEF5F0] border border-[#D5E7DB] p-4 sm:p-5 shadow-2xs flex items-center gap-3.5">
+            <div className="w-9 h-9 rounded-xl bg-[#0F3E2E] text-white flex items-center justify-center shrink-0">
+              <Sprout className="w-5 h-5 text-emerald-300" />
+            </div>
+            <div>
+              <h4 className="font-serif font-bold text-xs text-[#0F3E2E] leading-tight">
+                Khata saaf, mann saaf.
+              </h4>
+              <p className="text-[10px] text-emerald-800/80 mt-0.5 font-medium">
+                Digital hisaab, behtar kal.
+              </p>
+            </div>
+          </div>
+
+        </div>
+
+      </section>
+
+      {/* 5. LOWER INFORMATION BANNER (Keep Your Records Updated) */}
+      <section className="w-full relative rounded-3xl bg-[#FAF7F2] border border-[#EFE9DF] p-6 sm:p-7 overflow-hidden shadow-2xs flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="flex items-start gap-3.5 z-10">
+          <div className="w-10 h-10 rounded-xl bg-emerald-100/80 text-emerald-800 flex items-center justify-center shrink-0 mt-0.5">
+            <Sprout className="w-5 h-5 text-emerald-700" />
+          </div>
+          <div>
+            <h3 className="font-serif font-bold text-base text-stone-900 leading-tight">
+              Keep Your Records Updated
+            </h3>
+            <p className="text-xs text-stone-600 mt-1 max-w-xl leading-relaxed">
+              A well-maintained Bahi-Khata helps you build credit, access government schemes, and grow your business.
+            </p>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => {
+            window.dispatchEvent(new CustomEvent('saakhsetu:switch-tab', { detail: { tab: 'schemes' } }));
+            // Also trigger navigation via location or App state
+            const btn = document.querySelector('button[title*="Schemes"], button[title*="योजनाएं"]');
+            if (btn) btn.click();
+          }}
+          className="px-5 py-2.5 rounded-xl bg-[#0F3E2E] hover:bg-[#165640] text-white font-bold text-xs shadow-2xs hover:shadow-md transition-all cursor-pointer whitespace-nowrap z-10 shrink-0"
+        >
+          Explore Schemes →
+        </button>
+
+        {/* Decorative Rural Trees Illustration Backdrop */}
+        <div className="absolute right-0 bottom-0 top-0 opacity-15 pointer-events-none overflow-hidden select-none">
+          <img 
+            src="/images/rural-landscape.png" 
+            alt="Rural Backdrop" 
+            className="h-full w-auto object-cover object-right"
+          />
+        </div>
+      </section>
+
+      {/* 6. CLEAN FOOTER */}
+      <footer className="pt-3 pb-8 border-t border-stone-200/70 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-stone-500">
+        <div className="flex items-center gap-2 text-center sm:text-left flex-wrap">
+          <span className="font-bold text-stone-800">© 2026 SaakhSetu</span>
+          <span className="text-stone-300">•</span>
+          <span>Bridging Businesses to Credit</span>
+          <span className="text-stone-300">•</span>
+          <span className="font-semibold text-emerald-800">Built for Bharat</span>
+        </div>
+
+        <div className="flex items-center gap-4 text-[11px] font-medium text-stone-600">
+          <a href="#privacy" className="hover:text-stone-900 transition-colors">Privacy</a>
+          <a href="#terms" className="hover:text-stone-900 transition-colors">Terms</a>
+          <a href="#contact" className="hover:text-stone-900 transition-colors">Contact</a>
+          <span className="text-stone-300">|</span>
+          <div className="flex items-center gap-2 text-stone-500 font-bold">
+            <span>in</span>
+            <span>𝕏</span>
+            <span>▶</span>
+          </div>
+        </div>
+      </footer>
+
+      {/* TRANSACTION DETAILS MODAL / SIDE DRAWER */}
+      {selectedTx && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-in fade-in duration-150">
+          <div className="bg-[#FAF8F5] border border-stone-200 rounded-3xl max-w-md w-full p-6 shadow-2xl relative space-y-4">
+            
+            {/* Header */}
+            <div className="flex items-center justify-between pb-3 border-b border-stone-200">
+              <div className="flex items-center gap-2.5">
+                <div className={`w-8 h-8 rounded-xl flex items-center justify-center border ${getTypeMeta(selectedTx).color}`}>
+                  {React.createElement(getTypeMeta(selectedTx).icon, { className: 'w-4 h-4' })}
+                </div>
+                <div>
+                  <span className="text-[10px] uppercase tracking-wider font-bold text-stone-500">
+                    Transaction Details
+                  </span>
+                  <h3 className="font-serif font-bold text-base text-stone-900 leading-tight">
+                    {getTypeMeta(selectedTx).label}
+                  </h3>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setSelectedTx(null)}
+                className="p-1.5 rounded-xl text-stone-400 hover:text-stone-700 hover:bg-stone-200/60"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Amount Banner */}
+            <div className="p-4 rounded-2xl bg-white border border-stone-200/80 text-center space-y-0.5">
+              <span className="text-[10px] text-stone-500 font-medium">Transaction Amount</span>
+              <div className={`text-2xl sm:text-3xl font-serif font-black ${getTypeMeta(selectedTx).amountColor}`}>
+                ₹{Number(selectedTx.amount || 0).toLocaleString('en-IN')}
+              </div>
+              <div className="pt-1">
+                {getPaymentBadge(selectedTx.payment_mode)}
+              </div>
+            </div>
+
+            {/* Details Fields */}
+            <div className="space-y-2.5 text-xs">
+              <div className="flex justify-between py-1.5 border-b border-stone-100">
+                <span className="text-stone-500">Particulars:</span>
+                <span className="font-bold text-stone-900 text-right">{formatParticulars(selectedTx)}</span>
+              </div>
+              <div className="flex justify-between py-1.5 border-b border-stone-100">
+                <span className="text-stone-500">Party / Customer:</span>
+                <span className="font-bold text-stone-900 text-right">{getPartyName(selectedTx)}</span>
+              </div>
+              <div className="flex justify-between py-1.5 border-b border-stone-100">
+                <span className="text-stone-500">Date & Time:</span>
+                <span className="font-mono text-stone-800 text-right">{formatDateTime(selectedTx.date)}</span>
+              </div>
+              <div className="flex justify-between py-1.5 border-b border-stone-100">
+                <span className="text-stone-500">Category:</span>
+                <span className="font-semibold text-stone-800 text-right">{selectedTx.category || 'General'}</span>
+              </div>
+              {selectedTx.customer_phone && (
+                <div className="flex justify-between py-1.5 border-b border-stone-100">
+                  <span className="text-stone-500">Phone:</span>
+                  <span className="font-mono text-stone-800 text-right">{selectedTx.customer_phone}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Actions */}
+            <div className="pt-2 flex items-center justify-between gap-2">
+              <button
+                type="button"
+                disabled={deletingId === selectedTx.id}
+                onClick={() => handleDeleteTransaction(selectedTx.id)}
+                className="px-4 py-2.5 rounded-xl border border-red-200 text-red-700 hover:bg-red-50 text-xs font-bold inline-flex items-center gap-1.5 transition-colors cursor-pointer"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>{deletingId === selectedTx.id ? 'Deleting...' : 'Delete'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setSelectedTx(null)}
+                className="px-5 py-2.5 rounded-xl bg-[#0F3E2E] hover:bg-[#165640] text-white text-xs font-bold transition-all cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
 
       {/* Customer Registration Modal */}
       <RegisterCustomerModal
         isOpen={isRegisterCustomerOpen}
         onClose={() => setIsRegisterCustomerOpen(false)}
         shopId={shop?.id}
-        onCustomerRegistered={() => loadData()}
+        onCustomerRegistered={(newCust) => {
+          setUdhaarLedger(prev => [newCust, ...prev]);
+        }}
       />
 
-      {/* WhatsApp Payment Reminder Modal */}
+      {/* WhatsApp Reminder Modal */}
       <WhatsAppReminderModal
         isOpen={Boolean(selectedWhatsAppCustomer)}
         onClose={() => setSelectedWhatsAppCustomer(null)}
         customer={selectedWhatsAppCustomer}
         shop={shop}
-        onReminderSent={() => loadData()}
+        onReminderSent={() => {
+          setSelectedWhatsAppCustomer(null);
+        }}
       />
 
-      {/* Voice Bahi-Khata Input Dialog */}
+      {/* Voice Bahi-Khata Dialog */}
       <VoiceInputDialog
         isOpen={isVoiceOpen}
         onClose={() => setIsVoiceOpen(false)}
         shopId={shop?.id}
-        existingCustomers={udhaarLedger}
         onTransactionSaved={(newTx) => {
-          setTransactions(prev => [newTx, ...prev]);
-          loadData();
           onTransactionSaved?.(newTx);
+          setTransactions(prev => [newTx, ...prev]);
         }}
       />
 
