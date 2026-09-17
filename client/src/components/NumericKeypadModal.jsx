@@ -1,8 +1,17 @@
-import React, { useState } from 'react';
-import { X, Check, Delete, ArrowRight, User, Tag, Calendar, Banknote, ShieldCheck, Smartphone, AlertCircle, Phone, Mic } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Check, Delete, ArrowRight, User, Tag, Calendar, Banknote, ShieldCheck, Smartphone, AlertCircle, Phone, Mic, Loader2 } from 'lucide-react';
 import { api } from '../utils/api';
 import { useTranslation } from '../i18n/LanguageContext';
 import { Badge, Button } from './ui';
+import { 
+  findMatchingCustomer, 
+  searchCustomerSuggestions, 
+  maskIndianPhone, 
+  cleanIndianPhone,
+  getCustomerDetails,
+  getCachedCustomers, 
+  setCachedCustomers 
+} from '../utils/customerMatcher';
 
 export function NumericKeypadModal({ isOpen, onClose, onTransactionSaved, shopId, onOpenVoice }) {
   const { t, language } = useTranslation();
@@ -12,24 +21,92 @@ export function NumericKeypadModal({ isOpen, onClose, onTransactionSaved, shopId
   const [category, setCategory] = useState('Daily Counter Sales');
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
-  const [customerList, setCustomerList] = useState([]);
+  const [customerList, setCustomerList] = useState(() => getCachedCustomers(shopId));
+  const [isFetchingCustomers, setIsFetchingCustomers] = useState(false);
+  const [isPhoneLocked, setIsPhoneLocked] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [loading, setLoading] = useState(false);
   const [successToast, setSuccessToast] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
-  // Fetch shop customers for quick selection
-  React.useEffect(() => {
+  // Fetch shop customers for quick selection & live search (resilient with local cache)
+  useEffect(() => {
     if (!isOpen || !shopId) return;
+
+    // Load instantly from synchronous cache
+    const cached = getCachedCustomers(shopId);
+    if (cached && cached.length > 0) {
+      setCustomerList(cached);
+    } else {
+      setIsFetchingCustomers(true);
+    }
+
+    let isMounted = true;
     api.getCustomers(shopId)
       .then(res => {
+        if (!isMounted) return;
         if (res?.customers && Array.isArray(res.customers)) {
           setCustomerList(res.customers);
+          setCachedCustomers(shopId, res.customers);
         }
       })
-      .catch(() => {});
+      .catch((err) => {
+        console.warn('Could not refresh customers from server:', err?.message);
+      })
+      .finally(() => {
+        if (isMounted) setIsFetchingCustomers(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, [isOpen, shopId]);
 
   if (!isOpen) return null;
+
+  const customerSuggestions = searchCustomerSuggestions(customerName, customerList, 6);
+
+  const handleSelectCustomer = (customer) => {
+    const details = getCustomerDetails(customer);
+    const name = details.name;
+    const phone = details.cleanPhone;
+
+    setCustomerName(name);
+    setSelectedCustomer(details);
+    setShowSuggestions(false);
+
+    if (phone) {
+      setCustomerPhone(phone);
+      setIsPhoneLocked(true);
+    } else {
+      setCustomerPhone('');
+      setIsPhoneLocked(false);
+    }
+    setErrorMessage('');
+  };
+
+  const handleCustomerNameChange = (e) => {
+    const val = e.target.value;
+    setCustomerName(val);
+    setShowSuggestions(true);
+
+    const match = findMatchingCustomer(val, customerList);
+    if (match && match.name.toLowerCase() === val.trim().toLowerCase()) {
+      setSelectedCustomer(match);
+      if (match.cleanPhone) {
+        setCustomerPhone(match.cleanPhone);
+        setIsPhoneLocked(true);
+      }
+    } else if (isPhoneLocked) {
+      setSelectedCustomer(null);
+      setIsPhoneLocked(false);
+    }
+  };
+
+  const handleUnlockPhone = () => {
+    setIsPhoneLocked(false);
+  };
 
   const handleKeyPress = (char) => {
     if (amountStr.length >= 7) return;
@@ -112,6 +189,9 @@ export function NumericKeypadModal({ isOpen, onClose, onTransactionSaved, shopId
         setAmountStr('');
         setCustomerName('');
         setCustomerPhone('');
+        setIsPhoneLocked(false);
+        setSelectedCustomer(null);
+        setShowSuggestions(false);
         setErrorMessage('');
         onClose();
       }, 500);
@@ -124,6 +204,9 @@ export function NumericKeypadModal({ isOpen, onClose, onTransactionSaved, shopId
         setAmountStr('');
         setCustomerName('');
         setCustomerPhone('');
+        setIsPhoneLocked(false);
+        setSelectedCustomer(null);
+        setShowSuggestions(false);
         setErrorMessage('');
         onClose();
       }, 500);
@@ -295,37 +378,145 @@ export function NumericKeypadModal({ isOpen, onClose, onTransactionSaved, shopId
                 </button>
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="text-[10px] font-bold text-indigoRural-700 block mb-0.5">
-                    {language === 'hi' ? 'ग्राहक का नाम' : 'Customer'} {type === 'udhaar_given' && <span className="text-terracotta-600">*</span>}
-                  </label>
-                  <input
-                    type="text"
-                    value={customerName}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      setCustomerName(val);
-                      const match = customerList.find(c => (c.name || '').toLowerCase() === val.toLowerCase());
-                      if (match && match.phone) setCustomerPhone(match.phone.replace(/\D/g, '').slice(-10));
-                    }}
-                    placeholder={language === 'hi' ? 'उदा: मास्टरजी' : 'e.g. Masterji'}
-                    className="w-full px-2.5 py-1.5 bg-white border border-paper-300 rounded-lg text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-terracotta-500 text-indigoRural-900"
-                  />
+              {/* Customer Input Row with Relative Dropdown Wrapper */}
+              <div className="relative">
+                <div className="grid grid-cols-2 gap-2">
+                  {/* Customer Name with Live Search */}
+                  <div>
+                    <label className="text-[10px] font-bold text-indigoRural-700 flex items-center justify-between mb-0.5">
+                      <span>
+                        {language === 'hi' ? 'ग्राहक का नाम' : 'Customer'}
+                        {type === 'udhaar_given' && <span className="text-terracotta-600 font-black ml-0.5">*</span>}
+                      </span>
+                      {selectedCustomer && (
+                        <span className="text-[9px] font-semibold text-forestRural-700 truncate max-w-[65px]">
+                          ✓ {language === 'hi' ? 'पहचाना गया' : 'Matched'}
+                        </span>
+                      )}
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={customerName}
+                        onChange={handleCustomerNameChange}
+                        onFocus={() => setShowSuggestions(true)}
+                        placeholder={
+                          isFetchingCustomers && customerList.length === 0
+                            ? (language === 'hi' ? 'लोड हो रहा है...' : 'Loading...')
+                            : (language === 'hi' ? 'उदा: मास्टरजी' : 'e.g. Masterji')
+                        }
+                        className="w-full px-2.5 py-1.5 pr-6 bg-white border border-paper-300 rounded-lg text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-terracotta-500 text-indigoRural-900 h-[34px]"
+                      />
+                      {isFetchingCustomers && customerList.length === 0 && (
+                        <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-indigoRural-400">
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Customer Phone (Locked On-File vs Required Editable) */}
+                  <div>
+                    <label className="text-[10px] font-bold text-indigoRural-700 flex items-center justify-between mb-0.5">
+                      <span>
+                        {language === 'hi' ? 'मोबाइल' : 'Mobile'}
+                        {!isPhoneLocked && type === 'udhaar_given' && (
+                          <span className="text-terracotta-600 font-black ml-0.5">*</span>
+                        )}
+                      </span>
+                      {isPhoneLocked ? (
+                        <span className="text-[9px] font-extrabold text-forestRural-700 bg-forestRural-100 px-1 py-0.2 rounded">
+                          {language === 'hi' ? 'मौजूदा ग्राहक' : 'On File'}
+                        </span>
+                      ) : type === 'udhaar_given' ? (
+                        <span className="text-[9px] font-extrabold text-ochre-700">
+                          {language === 'hi' ? 'नया ग्राहक' : 'New'}
+                        </span>
+                      ) : null}
+                    </label>
+
+                    {isPhoneLocked && customerPhone ? (
+                      <div className="flex items-center justify-between px-2 py-1.5 bg-forestRural-50 border border-forestRural-200 rounded-lg text-xs h-[34px]">
+                        <div className="flex items-center gap-1 text-forestRural-800 font-bold truncate">
+                          <ShieldCheck className="w-3.5 h-3.5 text-forestRural-600 shrink-0" />
+                          <span className="font-mono text-indigoRural-950 font-extrabold text-[11px] truncate">
+                            {language === 'hi' ? 'दर्ज: ' : 'On file: '}{maskIndianPhone(customerPhone)}
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={handleUnlockPhone}
+                          className="text-[10px] font-bold text-terracotta-700 hover:text-terracotta-900 underline ml-1 cursor-pointer shrink-0"
+                          title={language === 'hi' ? 'नंबर बदलें' : 'Change number'}
+                        >
+                          {language === 'hi' ? 'बदलें' : 'Change'}
+                        </button>
+                      </div>
+                    ) : (
+                      <input
+                        type="tel"
+                        maxLength={10}
+                        value={customerPhone}
+                        onChange={(e) => {
+                          setCustomerPhone(e.target.value.replace(/\D/g, ''));
+                          setIsPhoneLocked(false);
+                        }}
+                        placeholder="9876543210"
+                        className="w-full px-2.5 py-1.5 bg-white border border-paper-300 rounded-lg text-xs font-mono font-bold focus:outline-none focus:ring-2 focus:ring-terracotta-500 text-indigoRural-900 h-[34px]"
+                      />
+                    )}
+                  </div>
                 </div>
-                <div>
-                  <label className="text-[10px] font-bold text-indigoRural-700 block mb-0.5">
-                    {language === 'hi' ? 'मोबाइल (+91)' : 'Mobile (+91)'} {type === 'udhaar_given' && <span className="text-terracotta-600 font-black">*</span>}
-                  </label>
-                  <input
-                    type="tel"
-                    maxLength={10}
-                    value={customerPhone}
-                    onChange={(e) => setCustomerPhone(e.target.value.replace(/\D/g, ''))}
-                    placeholder="9876543210"
-                    className="w-full px-2.5 py-1.5 bg-white border border-paper-300 rounded-lg text-xs font-mono font-bold focus:outline-none focus:ring-2 focus:ring-terracotta-500 text-indigoRural-900"
-                  />
-                </div>
+
+                {/* Real Live-Search Suggestion List Dropdown */}
+                {showSuggestions && customerName.trim().length > 0 && customerSuggestions.length > 0 && (!selectedCustomer || selectedCustomer.name !== customerName) && (
+                  <div className="absolute left-0 right-0 top-full mt-1.5 bg-white border border-paper-300 rounded-xl shadow-xl z-40 max-h-48 overflow-y-auto divide-y divide-paper-200 animate-fadeIn">
+                    <div className="px-3 py-1.5 bg-paper-100 text-[10px] font-bold text-indigoRural-600 flex items-center justify-between">
+                      <span>{language === 'hi' ? 'मौजूदा ग्राहक सुझाव (चुनने पर फ़ोन स्वतः जुड़ेगा):' : 'Matching Customers (Tap to auto-fill & lock phone):'}</span>
+                      <button 
+                        type="button" 
+                        onMouseDown={(e) => { e.preventDefault(); setShowSuggestions(false); }}
+                        className="text-indigoRural-400 hover:text-indigoRural-700 p-0.5"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                    {customerSuggestions.map((cust, idx) => (
+                      <button
+                        key={cust.id || cust.name || idx}
+                        type="button"
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          handleSelectCustomer(cust);
+                        }}
+                        className="w-full px-3 py-2 text-left hover:bg-paper-100 transition flex items-center justify-between gap-2 cursor-pointer group"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <div className="text-xs font-bold text-indigoRural-900 group-hover:text-terracotta-700 truncate">
+                            {cust.name}
+                          </div>
+                          <div className="text-[10px] text-indigoRural-600 truncate flex items-center gap-1.5 mt-0.5">
+                            {cust.cleanPhone ? (
+                              <span className="font-mono text-forestRural-700 font-bold">
+                                📞 On file: {maskIndianPhone(cust.cleanPhone)}
+                              </span>
+                            ) : (
+                              <span className="text-amber-700 italic">
+                                {language === 'hi' ? 'फ़ोन दर्ज नहीं है' : 'No phone saved'}
+                              </span>
+                            )}
+                            {cust.village && <span className="text-indigoRural-400">• {cust.village}</span>}
+                          </div>
+                        </div>
+                        {cust.balanceOwed > 0 && (
+                          <span className="text-[10px] font-black text-terracotta-700 bg-terracotta-50 px-1.5 py-0.5 rounded border border-terracotta-200 shrink-0">
+                            {language === 'hi' ? 'बकाया' : 'Due'}: ₹{cust.balanceOwed}
+                          </span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Category Selector for Udhaar */}
@@ -344,24 +535,29 @@ export function NumericKeypadModal({ isOpen, onClose, onTransactionSaved, shopId
                 </select>
               </div>
 
+              {/* Quick Suggestion Pills */}
               <div className="flex gap-1 overflow-x-auto py-0.5">
-                {(customerList.length > 0 ? customerList : commonVillageCustomers.map(n => ({ name: n, phone: '' }))).slice(0, 6).map(c => {
-                  const name = c.name;
+                {(customerList.length > 0 ? customerList : commonVillageCustomers.map(n => ({ name: n, phone: '' }))).slice(0, 6).map((c, i) => {
+                  const details = getCustomerDetails(c);
+                  const name = details.name;
+                  const isSelected = customerName === name;
                   return (
                     <button
-                      key={name}
+                      key={details.id || name || i}
                       type="button"
-                      onClick={() => {
-                        setCustomerName(name);
-                        if (c.phone) setCustomerPhone(c.phone.replace(/\D/g, '').slice(-10));
-                      }}
-                      className={`text-[10px] font-bold px-2 py-0.5 rounded-md whitespace-nowrap border transition cursor-pointer ${
-                        customerName === name
+                      onClick={() => handleSelectCustomer(c)}
+                      className={`text-[10px] font-bold px-2 py-0.5 rounded-md whitespace-nowrap border transition cursor-pointer flex items-center gap-1 ${
+                        isSelected
                           ? 'bg-terracotta-600 text-white border-terracotta-600'
                           : 'bg-white hover:bg-paper-100 text-indigoRural-700 border-paper-300'
                       }`}
                     >
-                      {name.split(' ')[0]}
+                      <span>{name.split(' ')[0]}</span>
+                      {details.cleanPhone && (
+                        <span className={`text-[8px] font-mono ${isSelected ? 'text-white/80' : 'text-forestRural-700'}`}>
+                          ✓
+                        </span>
+                      )}
                     </button>
                   );
                 })}
