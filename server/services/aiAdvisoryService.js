@@ -84,7 +84,7 @@ According to your verified transactional ledger:
     keywords: ['loan', 'लोन', 'ऋण', 'मुद्रा', 'mudra', 'योजना', 'bank', 'बैंक', 'फ्रीजर', 'freezer', 'fridge', 'उपकरण'],
     responseHi: (ctx) => `हाँ ${ctx.ownerName} जी, आपको अपनी दुकान के लिए बिल्कुल बैंक लोन मिलेगा! 🏛️
 
-पारंपरिक बैंक अक्सर सिबिल न होने पर मना कर देते हैं, लेकिन व्यापार साथी पर **${ctx.location}** में आपकी **${ctx.tradeCategory}** का ट्रैक रिकॉर्ड ठोस है:
+पारंपरिक बैंक अक्सर सिबिल न होने पर मना कर देते हैं, लेकिन साख सेतु पर **${ctx.location}** में आपकी **${ctx.tradeCategory}** का ट्रैक रिकॉर्ड ठोस है:
 - **संचालन अवधि**: ${ctx.monthsInOperation} महीने (4 वर्ष) से निरंतर व्यापार
 - **पिछले 30 दिनों की बिक्री**: ₹${ctx.last30DaysSummary.totalSales.toLocaleString('en-IN')} (${ctx.last30DaysSummary.momGrowthRate}% मासिक वृद्धि दर)
 - **वैकल्पिक क्रेडिट स्कोर**: **${ctx.creditScore} / 850** (${ctx.creditRating})
@@ -297,7 +297,7 @@ export async function generateAdvisoryResponse(shopId, userQuestion) {
           ? 'Respond in clear, professional, warm Indian English tailored for rural micro-entrepreneurs.' 
           : 'Respond in respectful, friendly Hindi (using आप, राम-राम/नमस्ते) with common trade terms (स्टॉक, नकदी, मुनाफा, लोन).';
 
-        const systemInstruction = `You are "Vyapaar Saathi" (व्यापार साथी), a warm, trusted, wise rural business advisor for Indian micro-entrepreneurs.
+        const systemInstruction = `You are "Setu AI" (सेतु AI) in SaakhSetu (साख सेतु), a warm, trusted, wise rural business advisor for Indian micro-entrepreneurs.
 ${languageInstruction}
 Never use robotic AI jargon, sterile corporate language, or generic advice like "consider stocking more inventory".
 

@@ -12,7 +12,7 @@ export class ErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, errorInfo) {
-    console.error('Vyapaar Saathi UI Error:', error, errorInfo);
+    console.error('SaakhSetu UI Error:', error, errorInfo);
   }
 
   render() {
@@ -24,7 +24,7 @@ export class ErrorBoundary extends React.Component {
               <AlertTriangle className="w-6 h-6 text-terracotta-600" />
             </div>
             <h2 className="text-lg font-bold text-stone-900">
-              व्यापार साथी (Vyapaar Saathi)
+              साख सेतु (SaakhSetu)
             </h2>
             <p className="text-xs text-stone-600 leading-relaxed">
               पेज लोड करने में एक समस्या आई है। कृपया नीचे दिए गए बटन से पुनः लोड करें।

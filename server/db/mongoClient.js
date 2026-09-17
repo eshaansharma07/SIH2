@@ -57,7 +57,7 @@ async function ensureIndexesAndMigrations(db) {
       { 
         $set: { 
           version: 2, 
-          name: 'Vyapaar Saathi Production Schema v2',
+          name: 'SaakhSetu Production Schema v2',
           updatedAt: new Date().toISOString() 
         } 
       },

@@ -1,7 +1,7 @@
 import React from 'react';
 
 /**
- * Canonical Card component for Vyapaar Saathi
+ * Canonical Card component for SaakhSetu
  * Consistent border-radius (rounded-2xl for normal, rounded-3xl for hero),
  * warm paper palette border and subtle authentic shadow.
  *

@@ -557,12 +557,12 @@ export function CashFlowPage({
                 <CartesianGrid strokeDasharray="3 3" stroke="#ECE4D4" vertical={false} />
                 <XAxis 
                   dataKey="label" 
-                  tick={{ fontSize: 11, fill: '#64748B', fontWeight: 600 }}
+                  tick={{ fontSize: 11, fill: '#7C6E5A', fontWeight: 600 }}
                   axisLine={{ stroke: '#DFD3BE' }}
                   tickLine={false}
                 />
                 <YAxis 
-                  tick={{ fontSize: 10, fill: '#64748B', fontWeight: 600 }}
+                  tick={{ fontSize: 10, fill: '#7C6E5A', fontWeight: 600 }}
                   axisLine={false}
                   tickLine={false}
                   tickFormatter={(val) => `₹${(val / 1000).toFixed(0)}k`}

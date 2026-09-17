@@ -1,7 +1,7 @@
 import React from 'react';
 
 /**
- * Canonical Button component for Vyapaar Saathi
+ * Canonical Button component for SaakhSetu
  * Variants:
  * - 'primary': Terracotta solid button for main call-to-actions
  * - 'secondary': Paper/neutral button for secondary actions

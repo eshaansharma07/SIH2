@@ -16,6 +16,7 @@ import { api } from '../utils/api';
 import { useTranslation } from '../i18n/LanguageContext';
 import { WarliBorder } from '../components/WarliMotif';
 import { Card, Badge, SectionHeader, Button } from '../components/ui';
+import { APP_ADVISOR_NAME_EN, APP_ADVISOR_NAME_HI } from '../config/brand';
 
 export function AdvisorChatPage({ shop, creditData, summaryData, initialPrompt = '', onPromptUsed }) {
   const { t, language } = useTranslation();
@@ -59,8 +60,8 @@ export function AdvisorChatPage({ shop, creditData, summaryData, initialPrompt =
           {
             role: 'assistant',
             content: language === 'hi' 
-              ? `राम राम ${shop?.owner_name || 'दुकानदार'} जी! 🙏\n\nमैं आपका साथी AI सलाहकार हूँ। मैंने आपकी दुकान (${shop?.name || 'दुकान'}) के बही-खाते और ${shop?.district || 'क्षेत्र'} के आगामी त्योहारी कैलेंडर का विश्लेषण कर लिया है।\n\nमुझसे कुछ भी पूछें — जैसे कि त्योहार पर कितना माल स्टॉक करना है, ग्राहकों का उधार कैसे समेटना है, या नया उपकरण लेने के लिए कौन सा मुद्रा लोन उपयुक्त है!`
-              : `Namaste ${shop?.owner_name || 'Partner'}! 🙏\n\nI am your Saathi AI Advisor. I have synchronized with your store (${shop?.name || 'Your Store'}) and the upcoming seasonal demand in ${shop?.district || 'your area'}.\n\nAsk me anything about seasonal inventory planning, managing udhaar recovery, or applying for a statutory MSME loan!`
+              ? `राम राम ${shop?.owner_name || 'दुकानदार'} जी! 🙏\n\nमैं आपका सेतु AI सलाहकार हूँ। मैंने आपकी दुकान (${shop?.name || 'दुकान'}) के बही-खाते और ${shop?.district || 'क्षेत्र'} के आगामी त्योहारी कैलेंडर का विश्लेषण कर लिया है।\n\nमुझसे कुछ भी पूछें — जैसे कि त्योहार पर कितना माल स्टॉक करना है, ग्राहकों का उधार कैसे समेटना है, या नया उपकरण लेने के लिए कौन सा मुद्रा लोन उपयुक्त है!`
+              : `Namaste ${shop?.owner_name || 'Partner'}! 🙏\n\nI am your Setu AI Advisor. I have synchronized with your store (${shop?.name || 'Your Store'}) and the upcoming seasonal demand in ${shop?.district || 'your area'}.\n\nAsk me anything about seasonal inventory planning, managing udhaar recovery, or applying for a statutory MSME loan!`
           }
         ]);
       }
@@ -135,7 +136,7 @@ export function AdvisorChatPage({ shop, creditData, summaryData, initialPrompt =
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-base font-black text-indigoRural-900 tracking-tight font-display">
-                  {language === 'hi' ? 'साथी AI' : 'Saathi AI'}
+                  {language === 'hi' ? APP_ADVISOR_NAME_HI : APP_ADVISOR_NAME_EN}
                 </h1>
                 <Badge variant="brand" size="sm">
                   Gemini Grounded

@@ -3,6 +3,7 @@ import { X, Check, Delete, ArrowRight, User, Tag, Calendar, Banknote, ShieldChec
 import { api } from '../utils/api';
 import { useTranslation } from '../i18n/LanguageContext';
 import { Badge, Button } from './ui';
+import RubberStamp from './RubberStamp';
 import { 
   findMatchingCustomer, 
   searchCustomerSuggestions, 
@@ -28,6 +29,7 @@ export function NumericKeypadModal({ isOpen, onClose, onTransactionSaved, shopId
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [loading, setLoading] = useState(false);
   const [successToast, setSuccessToast] = useState(false);
+  const [showStamp, setShowStamp] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
   // Fetch shop customers for quick selection & live search (resilient with local cache)
@@ -183,24 +185,11 @@ export function NumericKeypadModal({ isOpen, onClose, onTransactionSaved, shopId
 
       setSuccessToast(true);
       onTransactionSaved?.(finalTx);
-
-      setTimeout(() => {
-        setSuccessToast(false);
-        setAmountStr('');
-        setCustomerName('');
-        setCustomerPhone('');
-        setIsPhoneLocked(false);
-        setSelectedCustomer(null);
-        setShowSuggestions(false);
-        setErrorMessage('');
-        onClose();
-      }, 500);
-    } catch (err) {
-      console.warn('Offline / network error, applying optimistic save:', err.message);
-      onTransactionSaved?.(localTx);
+      setShowStamp(true);
       setSuccessToast(true);
       setTimeout(() => {
         setSuccessToast(false);
+        setShowStamp(false);
         setAmountStr('');
         setCustomerName('');
         setCustomerPhone('');
@@ -209,7 +198,24 @@ export function NumericKeypadModal({ isOpen, onClose, onTransactionSaved, shopId
         setShowSuggestions(false);
         setErrorMessage('');
         onClose();
-      }, 500);
+      }, 750);
+    } catch (err) {
+      console.warn('Offline / network error, applying optimistic save:', err.message);
+      onTransactionSaved?.(localTx);
+      setShowStamp(true);
+      setSuccessToast(true);
+      setTimeout(() => {
+        setSuccessToast(false);
+        setShowStamp(false);
+        setAmountStr('');
+        setCustomerName('');
+        setCustomerPhone('');
+        setIsPhoneLocked(false);
+        setSelectedCustomer(null);
+        setShowSuggestions(false);
+        setErrorMessage('');
+        onClose();
+      }, 750);
     } finally {
       setLoading(false);
     }
@@ -647,6 +653,17 @@ export function NumericKeypadModal({ isOpen, onClose, onTransactionSaved, shopId
         </div>
 
       </div>
+
+      {showStamp && (
+        <RubberStamp 
+          text={
+            type === 'income' ? 'जमा • RECORDED' :
+            type === 'expense' ? 'खर्च • RECORDED' :
+            type === 'udhaar_given' ? 'उधार • RECORDED' : 'वसूली • RECORDED'
+          }
+          subtext="साख सेतु बही-खाता"
+        />
+      )}
     </div>
   );
 }

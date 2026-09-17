@@ -28,6 +28,7 @@ import { WarliBorder } from '../components/WarliMotif';
 import { api } from '../utils/api';
 import { INDIAN_STATES_AND_UTS, findStandardState } from '../data/indianStates';
 import { useTranslation } from '../i18n/LanguageContext';
+import { APP_NAME_EN, APP_NAME_HI, APP_TAGLINE_EN, APP_TAGLINE_HI } from '../config/brand';
 import { Card, Badge, Button, PageTitle, SectionHeading, FieldLabel, HelperText } from '../components/ui';
 
 // Easing hook for sequential number counting (ink-fill animation)
@@ -304,19 +305,17 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
                 {language === 'hi' ? 'हर उधार, हर बिक्री — अब बैंक-योग्य साख' : 'Every Udhaar, Every Sale — Turned into Bank Credit'}
               </h1>
               <div className="font-serif font-black text-2xl sm:text-3xl md:text-4xl text-ledgerInk tracking-tight">
-                Vyapaar Saathi
+                {language === 'hi' ? APP_NAME_HI : APP_NAME_EN}
               </div>
               <p className="font-serif italic font-semibold text-terracotta-800 text-base sm:text-lg md:text-xl">
-                {language === 'hi' 
-                  ? 'आपका दैनिक बही-खाता, अब ऐसा क्रेडिट स्कोर जिसे बैंक तुरंत पहचानें।' 
-                  : 'Your daily bahi-khata, turned into a credit score banks understand.'}
+                {language === 'hi' ? APP_TAGLINE_HI : APP_TAGLINE_EN}
               </p>
             </div>
 
             <p className="font-sans text-xs sm:text-sm md:text-[15px] text-indigoRural-900/85 leading-relaxed max-w-2xl">
               {language === 'hi'
-                ? 'कागज़ी पर्चियों और डायरी में लिखा उधार अब बेकार नहीं जाएगा। व्यापार साथी आपकी रोज़ की नकद व उधारी प्रविष्टियों को बैंक-स्वीकृत अल्टरनेटिव क्रेडिट स्कोर (300-850) और सरकारी ऋण पात्रता में बदलता है — बिना CIBIL या ITR की बाध्यता के।'
-                : 'Pencil-written ledger pages are no longer invisible to lenders. Vyapaar Saathi converts your everyday cash & credit entries into an RBI-aligned alternative credit score and unlocks matched collateral-free MSME loans without requiring formal ITR.'}
+                ? 'कागज़ी पर्चियों और डायरी में लिखा उधार अब बेकार नहीं जाएगा। साख सेतु आपकी रोज़ की नकद व उधारी प्रविष्टियों को बैंक-स्वीकृत अल्टरनेटिव क्रेडिट स्कोर (300-850) और सरकारी ऋण पात्रता में बदलता है — बिना CIBIL या ITR की बाध्यता के।'
+                : 'Pencil-written ledger pages are no longer invisible to lenders. SaakhSetu converts your everyday cash & credit entries into an RBI-aligned alternative credit score and unlocks matched collateral-free MSME loans without requiring formal ITR.'}
             </p>
 
             {/* 3 Ruled-line Stats sitting directly on paper rulings */}

@@ -10,9 +10,9 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['diya.svg'],
       manifest: {
-        name: 'व्यापार साथी — Vyapaar Saathi',
-        short_name: 'VyapaarSaathi',
-        description: 'Non-CIBIL Credit Appraisal & Offline Bahi-Khata for Rural Micro-Enterprises',
+        name: 'साख सेतु — SaakhSetu',
+        short_name: 'SaakhSetu',
+        description: 'Your ledger, bridged to credit — Non-CIBIL Credit Appraisal & Bahi-Khata for Rural Micro-Enterprises',
         theme_color: '#C2410C',
         background_color: '#FAF7F2',
         display: 'standalone',

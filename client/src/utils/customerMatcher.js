@@ -1,7 +1,7 @@
 /**
  * customerMatcher.js
  * Unified customer lookup, live search suggestions, and phone management
- * for Vyapaar Saathi Bahi-Khata transaction recording.
+ * for SaakhSetu Bahi-Khata transaction recording.
  */
 
 import { DEMO_UDHAAR_LEDGER } from '../data/demoData.js';

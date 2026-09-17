@@ -17,6 +17,8 @@ import { SaathiAvatar } from '../components/SaathiAvatar';
 import { WarliBorder } from '../components/WarliMotif';
 import { Card, Badge, Button } from '../components/ui';
 import { DEMO_DOSSIER } from '../data/demoData';
+import DossierCompileAnimation from '../components/DossierCompileAnimation';
+import { APP_NAME_EN, APP_NAME_HI, APP_CREDIT_SCORE_NAME_EN } from '../config/brand';
 
 export function BankDossierPage({ shop, isDemoMode, onBack }) {
   const { language } = useTranslation();
@@ -83,9 +85,9 @@ export function BankDossierPage({ shop, isDemoMode, onBack }) {
       const scoreData = scoreRes || d?.creditEvaluation || DEMO_DOSSIER.creditEvaluation;
 
       // Generate dynamic verification QR Code linking to live CAM verification endpoint
-      const baseUrl = typeof window !== 'undefined' && window.location.origin.includes('localhost')
-        ? 'https://vyapaar-saathi-nine.vercel.app'
-        : (typeof window !== 'undefined' ? window.location.origin : 'https://vyapaar-saathi-nine.vercel.app');
+      const baseUrl = typeof window !== 'undefined' && !window.location.origin.includes('localhost')
+        ? window.location.origin
+        : 'https://saakhsetu.vercel.app';
       const verificationUrl = `${baseUrl}/api/credit-score/${activeShopId}/cam`;
       
       const qrCodeDataUrl = await QRCode.toDataURL(verificationUrl, {
@@ -119,7 +121,7 @@ export function BankDossierPage({ shop, isDemoMode, onBack }) {
             scoreData,
             qrCodeDataUrl,
             generatedAt: new Date().toISOString(),
-            documentId: d?.dossierNumber || `VS-CAM-${(effectiveShop.state || 'IN').substring(0, 2).toUpperCase()}-${Date.now().toString().slice(-6)}`
+            documentId: d?.dossierNumber || `SS-CAM-${(effectiveShop.state || 'IN').substring(0, 2).toUpperCase()}-${Date.now().toString().slice(-6)}`
           }}
         />
       );
@@ -128,7 +130,7 @@ export function BankDossierPage({ shop, isDemoMode, onBack }) {
       const url = URL.createObjectURL(blob);
       const downloadAnchor = document.createElement('a');
       downloadAnchor.href = url;
-      downloadAnchor.download = `Vyapaar_Saathi_Bank_Dossier_${activeShopId}_${new Date().toISOString().slice(0, 10)}.pdf`;
+      downloadAnchor.download = `SaakhSetu_Bank_Dossier_${activeShopId}_${new Date().toISOString().slice(0, 10)}.pdf`;
       document.body.appendChild(downloadAnchor);
       downloadAnchor.click();
       downloadAnchor.remove();
@@ -279,7 +281,7 @@ export function BankDossierPage({ shop, isDemoMode, onBack }) {
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-xl sm:text-2xl font-black text-indigoRural-900 tracking-tight font-display">
-                  व्यापार साथी (Vyapaar Saathi)
+                  {APP_NAME_HI} ({APP_NAME_EN})
                 </h1>
                 <Badge variant="brand" size="sm">
                   DPI-Inspired Architecture (Prototype)
@@ -296,7 +298,7 @@ export function BankDossierPage({ shop, isDemoMode, onBack }) {
 
           <div className="text-left sm:text-right space-y-1 text-xs">
             <div className="font-mono text-indigoRural-900 font-extrabold text-xs">
-              DOC REF: {d?.dossierNumber || 'VS-DOC-BAL-493587'}
+              DOC REF: {d?.dossierNumber || 'SS-DOC-BAL-493587'}
             </div>
             <div className="text-[11px] text-indigoRural-500">
               Issue Date: {d?.issueDate || (isDemo ? DEMO_DOSSIER.issueDate : new Date().toLocaleDateString('en-IN'))}
@@ -364,7 +366,7 @@ export function BankDossierPage({ shop, isDemoMode, onBack }) {
           </h3>
           <div className="bg-gradient-to-br from-forestRural-50 via-white to-paper-50 p-5 rounded-xl border border-forestRural-200 shadow-2xs flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="space-y-1 text-center sm:text-left">
-              <span className="text-xs font-bold text-indigoRural-600 block">Vyapaar Saathi Alternative Credit Score:</span>
+              <span className="text-xs font-bold text-indigoRural-600 block">{APP_CREDIT_SCORE_NAME_EN}:</span>
               <div className="flex items-baseline gap-2 justify-center sm:justify-start">
                 <span className="text-3xl sm:text-4xl font-black text-forestRural-800 font-display tracking-tight tabular-nums">
                   {creditScore}
@@ -468,7 +470,7 @@ export function BankDossierPage({ shop, isDemoMode, onBack }) {
               <span>Digital Audit Authenticity Seal</span>
             </div>
             <p className="text-[10px] text-indigoRural-400 leading-relaxed">
-              Certified that the cash flow and alternative credit metrics stated above are compiled from daily tamper-evident bahi-khata logs recorded on the Vyapaar Saathi platform.
+              Certified that the cash flow and alternative credit metrics stated above are compiled from daily tamper-evident bahi-khata logs recorded on the SaakhSetu platform.
             </p>
           </div>
 
@@ -488,6 +490,18 @@ export function BankDossierPage({ shop, isDemoMode, onBack }) {
         </div>
 
       </div>
+
+      {/* Signature Compiling Ledger Animation Overlay */}
+      {downloadingPdf && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ledgerInk/70 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-paper-50 rounded-3xl p-6 border-2 border-ochre-400/40 shadow-2xl max-w-sm w-full">
+            <DossierCompileAnimation 
+              stageText={language === 'hi' ? 'खाता पृष्ठ संकलित हो रहे हैं...' : 'Compiling Ledger Folios...'}
+              subtext={language === 'hi' ? 'बैंक-मानक PSL डॉसियर तैयार किया जा रहा है' : 'Assembling Bank-Ready PSL Dossier Packet'}
+            />
+          </div>
+        </div>
+      )}
 
     </div>
   );

@@ -22,6 +22,7 @@ import { WarliBorder } from '../components/WarliMotif';
 import { Card, Badge, SectionHeader, Button } from '../components/ui';
 import { AudioReadAloudButton } from '../components/AudioReadAloudButton';
 import { motion, useReducedMotion } from 'framer-motion';
+import { APP_ADVISOR_NAME_EN, APP_ADVISOR_NAME_HI } from '../config/brand';
 
 export function DashboardPage({ 
   shop, 
@@ -393,7 +394,7 @@ export function DashboardPage({
               icon={Sparkles}
               className="w-full justify-center !py-2.5"
             >
-              <span className="truncate">{language === 'hi' ? 'साथी AI' : 'Saathi AI'}</span>
+              <span className="truncate">{language === 'hi' ? APP_ADVISOR_NAME_HI : APP_ADVISOR_NAME_EN}</span>
             </Button>
             <Button
               onClick={onOpenWholesale}
@@ -740,7 +741,7 @@ export function DashboardPage({
 
       </div>
 
-      {/* 4. Saathi AI Suggestion Prompts */}
+      {/* 4. Setu AI Suggestion Prompts */}
       <Card variant="accent" padding="md" className="space-y-2.5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -748,7 +749,7 @@ export function DashboardPage({
               <Sparkles className="w-3 h-3 text-ochre-200" />
             </div>
             <span className="text-[11px] font-black text-indigoRural-900 uppercase tracking-wider font-display">
-              {language === 'hi' ? 'साथी AI से तुरंत पूछें' : 'Saathi AI Intelligence Prompts'}
+              {language === 'hi' ? `${APP_ADVISOR_NAME_HI} से तुरंत पूछें` : `${APP_ADVISOR_NAME_EN} Intelligence Prompts`}
             </span>
           </div>
           <Button
@@ -758,7 +759,7 @@ export function DashboardPage({
             icon={ArrowRight}
             iconPosition="right"
           >
-            <span>{language === 'hi' ? 'साथी AI खोलें' : 'Open Saathi AI'}</span>
+            <span>{language === 'hi' ? `${APP_ADVISOR_NAME_HI} खोलें` : `Open ${APP_ADVISOR_NAME_EN}`}</span>
           </Button>
         </div>
 

@@ -17,6 +17,7 @@ import { api } from '../utils/api';
 import { useTranslation } from '../i18n/LanguageContext';
 import { WarliBorder } from '../components/WarliMotif';
 import { Card, Badge, SectionHeader, Button } from '../components/ui';
+import { motion, useReducedMotion } from 'framer-motion';
 
 export function SchemeMatcherPage({ shop, creditData, onNavigateTab }) {
   const { t, language } = useTranslation();
@@ -27,6 +28,7 @@ export function SchemeMatcherPage({ shop, creditData, onNavigateTab }) {
   const [categoryFilter, setCategoryFilter] = useState('');
   const [loading, setLoading] = useState(true);
   const [expandedSchemeId, setExpandedSchemeId] = useState('mudra-kishor');
+  const shouldReduceMotion = useReducedMotion();
 
   useEffect(() => {
     loadSchemes();
@@ -160,18 +162,23 @@ export function SchemeMatcherPage({ shop, creditData, onNavigateTab }) {
               </Badge>
             </div>
 
-            {matchedData?.schemes?.filter(s => s.scope !== 'state' && s.isEligible).map((scheme) => {
+            {matchedData?.schemes?.filter(s => s.scope !== 'state' && s.isEligible).map((scheme, idx) => {
               const isExpanded = expandedSchemeId === scheme.id;
               const isHighMatch = scheme.matchScore >= 90;
 
               return (
-                <Card 
+                <motion.div
                   key={scheme.id}
-                  padding="none"
-                  className={`overflow-hidden transition-all ${
-                    isExpanded ? 'ring-2 ring-terracotta-400 border-terracotta-300' : ''
-                  }`}
+                  initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 12, scale: 0.98 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ duration: shouldReduceMotion ? 0.05 : 0.3, delay: shouldReduceMotion ? 0 : idx * 0.06 }}
                 >
+                  <Card 
+                    padding="none"
+                    className={`overflow-hidden transition-all ${
+                      isExpanded ? 'ring-2 ring-terracotta-400 border-terracotta-300' : ''
+                    }`}
+                  >
                   {/* Scheme Summary Header */}
                   <div 
                     onClick={() => setExpandedSchemeId(isExpanded ? null : scheme.id)}
@@ -258,7 +265,8 @@ export function SchemeMatcherPage({ shop, creditData, onNavigateTab }) {
                     </div>
                   )}
                 </Card>
-              );
+              </motion.div>
+            );
             })}
           </div>
 
@@ -279,18 +287,23 @@ export function SchemeMatcherPage({ shop, creditData, onNavigateTab }) {
             </div>
 
             {matchedData?.schemes?.filter(s => s.scope === 'state' && s.isEligible).length > 0 ? (
-              matchedData.schemes.filter(s => s.scope === 'state' && s.isEligible).map((scheme) => {
+              matchedData.schemes.filter(s => s.scope === 'state' && s.isEligible).map((scheme, idx) => {
                 const isExpanded = expandedSchemeId === scheme.id;
                 const isHighMatch = scheme.matchScore >= 90;
 
                 return (
-                  <Card 
+                  <motion.div
                     key={scheme.id}
-                    padding="none"
-                    className={`overflow-hidden transition-all border-forestRural-200 ${
-                      isExpanded ? 'ring-2 ring-forestRural-500 border-forestRural-400' : ''
-                    }`}
+                    initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 12, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    transition={{ duration: shouldReduceMotion ? 0.05 : 0.3, delay: shouldReduceMotion ? 0 : 0.2 + idx * 0.06 }}
                   >
+                    <Card 
+                      padding="none"
+                      className={`overflow-hidden transition-all border-forestRural-200 ${
+                        isExpanded ? 'ring-2 ring-forestRural-500 border-forestRural-400' : ''
+                      }`}
+                    >
                     {/* Scheme Summary Header */}
                     <div 
                       onClick={() => setExpandedSchemeId(isExpanded ? null : scheme.id)}
@@ -380,7 +393,8 @@ export function SchemeMatcherPage({ shop, creditData, onNavigateTab }) {
                       </div>
                     )}
                   </Card>
-                );
+                </motion.div>
+              );
               })
             ) : (
               <div className="p-5 bg-amber-50/70 border border-amber-200 rounded-2xl text-xs text-amber-900 space-y-2 shadow-2xs">

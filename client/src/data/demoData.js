@@ -2190,10 +2190,10 @@ export const DEMO_UDHAAR_LEDGER = [
 ];
 
 export const DEMO_DOSSIER = {
-  "dossierNumber": "VS-DOC-BAL-493587",
+  "dossierNumber": "SS-DOC-BAL-493587",
   "issueDate": "16 September 2026",
   "validity": "Valid for 90 days from date of issue",
-  "issuingPlatform": "Vyapaar Saathi — Alternative Credit & Financial Structuring Platform",
+  "issuingPlatform": "SaakhSetu — Alternative Credit & Financial Structuring Platform",
   "pslClassification": "Micro-Enterprise (Trading / Services) — Eligible for RBI PSL 7.5% Sub-target",
   "endorsedFor": "Priority Sector Lending (PSL) Micro-Enterprise Credit Appraisal (Nayak Committee Cash-Flow Method)",
   "shop": {
@@ -2406,7 +2406,7 @@ export const DEMO_DOSSIER = {
       "whyQualifies": [
         "Operating for 4 years proves vintage stability",
         "Monthly turnover (₹54,000) covers Kishor debt servicing",
-        "Vyapaar Saathi Alternative Credit Score (753) indicates prime debt repayment"
+        "SaakhSetu Alternative Credit Score (753) indicates prime debt repayment"
       ]
     },
     {

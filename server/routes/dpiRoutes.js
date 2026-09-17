@@ -45,7 +45,7 @@ router.post('/account-aggregator/consent', (req, res) => {
         customerVpa: customerVpa || 'merchant@upi',
         fiTypes,
         purpose,
-        dataConsumer: 'Vyapaar Saathi Underwriting Engine (PSL-Format Aligned Demo)',
+        dataConsumer: 'SaakhSetu Underwriting Engine (PSL-Format Aligned Demo)',
         frequency: { unit: 'MONTH', value: 1 }
       },
       mockDataDisclosure: DPI_DISCLOSURES.accountAggregator

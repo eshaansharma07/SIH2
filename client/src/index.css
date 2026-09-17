@@ -92,7 +92,8 @@
     radial-gradient(circle at 50% 95%, rgba(39, 103, 73, 0.028) 0%, transparent 45%);
 }
 
-/* Vyapaar Saathi Canonical Card */
+/* SaakhSetu Canonical Card */
+.setu-card,
 .saathi-card {
   background: #FFFFFF;
   border: 1px solid rgba(223, 211, 190, 0.75);
@@ -104,6 +105,7 @@
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+.setu-card:hover,
 .saathi-card:hover {
   border-color: rgba(193, 83, 36, 0.3);
   box-shadow: 
@@ -112,7 +114,8 @@
     inset 0 1px 0 0 rgba(255, 255, 255, 1);
 }
 
-/* Saathi Hero Card */
+/* SaakhSetu Hero Card */
+.setu-hero-card,
 .saathi-hero-card {
   background: #FFFFFF;
   border: 1px solid rgba(223, 211, 190, 0.9);
@@ -123,9 +126,10 @@
     inset 0 1px 0 0 rgba(255, 255, 255, 1);
 }
 
-/* Physical Saathi Pass (National MSME Smart Credential) */
+/* Physical Setu Pass (National MSME Smart Credential) */
+.setu-pass,
 .saathi-pass {
-  background: radial-gradient(120% 120% at 85% 15%, rgba(26, 39, 66, 0.96) 0%, #0C1322 100%);
+  background: radial-gradient(120% 120% at 85% 15%, rgba(30, 42, 74, 0.96) 0%, #0F172A 100%);
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 1.75rem;
   box-shadow: 
@@ -164,6 +168,7 @@
 }
 
 /* Form Input & Textarea Craft */
+.setu-input,
 .saathi-input {
   background-color: #FDFBF7;
   border: 1.5px solid #ECE4D4;
@@ -171,6 +176,7 @@
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+.setu-input:focus,
 .saathi-input:focus {
   background-color: #FFFFFF;
   border-color: #C15324;
@@ -179,6 +185,7 @@
 }
 
 /* Custom Range Slider Track with Terracotta Fill */
+input[type="range"].setu-slider,
 input[type="range"].saathi-slider {
   -webkit-appearance: none;
   appearance: none;
@@ -190,6 +197,7 @@ input[type="range"].saathi-slider {
   transition: opacity 0.2s;
 }
 
+input[type="range"].setu-slider::-webkit-slider-thumb,
 input[type="range"].saathi-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;

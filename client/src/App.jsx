@@ -5,7 +5,8 @@ import { FloatingThumbDock } from './components/FloatingThumbDock';
 import { WarliBorder } from './components/WarliMotif';
 import { api } from './utils/api';
 import { useTranslation } from './i18n/LanguageContext';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { APP_NAME_EN, APP_NAME_HI, APP_TAGLINE_HI } from './config/brand';
 
 // Lazy-loaded pages for reduced initial bundle and sub-second reloads
 const DashboardPage = lazy(() => import('./pages/DashboardPage').then(m => ({ default: m.DashboardPage })));
@@ -394,18 +395,20 @@ export default function App() {
     );
   }
 
+  const shouldReduceMotion = useReducedMotion();
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 text-slate-700 font-sans">
-        <div className="w-10 h-10 border-3 border-slate-200 border-t-indigo-600 rounded-full animate-spin mb-4" />
-        <span className="font-display text-lg font-black tracking-tight text-slate-900">व्यापार साथी (Vyapaar Saathi)</span>
-        <span className="text-xs text-slate-400 mt-1 font-medium">ग्रामीण बही-खाता एवं सलाहकार इंजन लोड हो रहा है...</span>
+      <div className="min-h-screen bg-paper-50 flex flex-col items-center justify-center p-6 text-ledgerInk font-sans">
+        <div className="w-10 h-10 border-3 border-ochre-200 border-t-turmeric rounded-full animate-spin mb-4" />
+        <span className="font-serif text-xl font-bold tracking-tight text-ledgerInk">{APP_NAME_HI} ({APP_NAME_EN})</span>
+        <span className="text-xs text-ledgerInk/65 mt-1 font-medium">{APP_TAGLINE_HI}</span>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen w-full max-w-full overflow-x-hidden relative paper-canvas flex flex-col font-sans text-indigoRural-950 selection:bg-terracotta-100 selection:text-terracotta-900 antialiased">
+    <div className="min-h-screen w-full max-w-full overflow-x-hidden relative paper-canvas flex flex-col font-sans text-ledgerInk selection:bg-turmeric-100 selection:text-ledgerInk antialiased">
       
       {/* Top Navbar */}
       <Navbar 
@@ -425,10 +428,10 @@ export default function App() {
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+            initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, x: 20 }}
+            animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, x: 0 }}
+            exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, x: -20 }}
+            transition={shouldReduceMotion ? { duration: 0.1 } : { duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
             className="w-full min-w-0"
           >
             <Suspense fallback={<PageSkeleton />}>
@@ -576,27 +579,27 @@ export default function App() {
       )}
 
       {/* Rural Footer (SIH 2026 Prototype) */}
-      <footer className="print:hidden border-t border-paper-300 bg-white/80 backdrop-blur-md py-7 px-4 text-center text-xs text-indigoRural-600 pb-28 sm:pb-24">
+      <footer className="print:hidden border-t border-ochre-200/80 bg-paper/90 backdrop-blur-md py-7 px-4 text-center text-xs text-ledgerInk/75 pb-28 sm:pb-24">
         <div className="max-w-4xl mx-auto space-y-2">
           <div className="flex items-center justify-center gap-2 flex-wrap">
-            <span className="font-black text-indigoRural-950 font-display text-sm">व्यापार साथी (Vyapaar Saathi) — Prototype</span>
-            <span className="text-paper-400">•</span>
-            <span className="text-[10px] bg-indigoRural-900 text-white font-bold px-2.5 py-0.5 rounded-full">
+            <span className="font-bold text-ledgerInk font-serif text-sm">{APP_NAME_HI} ({APP_NAME_EN}) — Prototype</span>
+            <span className="text-ochre-400">•</span>
+            <span className="text-[10px] bg-ledgerInk text-paper font-bold px-2.5 py-0.5 rounded-full">
               DPI-Inspired Architecture (Prototype)
             </span>
-            <span className="text-paper-400">•</span>
+            <span className="text-ochre-400">•</span>
             <span className="text-[10px] bg-forestRural-50 text-forestRural-800 font-bold px-2 py-0.5 rounded-full border border-forestRural-200">
               PSL-Format Aligned (Demo)
             </span>
           </div>
-          <p className="text-[11px] text-indigoRural-500 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-[11px] text-ledgerInk/65 max-w-2xl mx-auto leading-relaxed">
             National Micro-Enterprise Credit & Seasonal Advisory Engine. A prototype built for Smart India Hackathon 2026, referencing RBI's Priority Sector Lending (PSL) documentation format. Not an official government service.
           </p>
           <div className="flex items-center justify-center gap-1.5 pt-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-terracotta-500" />
-            <span className="w-1.5 h-1.5 rounded-full bg-paper-400" />
+            <span className="w-1.5 h-1.5 rounded-full bg-marginRule" />
+            <span className="w-1.5 h-1.5 rounded-full bg-ochre-400" />
             <span className="w-1.5 h-1.5 rounded-full bg-forestRural-600" />
-            <span className="text-[10px] text-indigoRural-400 font-semibold ml-1">Built for 65M+ Indian Micro-Entrepreneurs</span>
+            <span className="text-[10px] text-ledgerInk/55 font-semibold ml-1">Built for 65M+ Indian Micro-Entrepreneurs</span>
           </div>
         </div>
       </footer>

@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { useReducedMotion } from 'framer-motion';
 import { Badge } from './ui';
 
 /**
- * Authentic Folk & Health inspired Alternative Credit Score Dial
- * Renders a warm, high-contrast arc (300 to 850) with rural color tokens.
+ * Authentic Folk & Ledger-inspired Alternative Credit Score Dial
+ * Renders a warm, high-contrast arc (300 to 850) with rural/ledger color tokens.
+ * Features synchronized count-up sweep and turmeric leading edge marker.
  */
 export function CreditGauge({ 
   score = null, 
@@ -12,9 +14,43 @@ export function CreditGauge({
   ratingLabel = null, 
   compact = false 
 }) {
+  const shouldReduceMotion = useReducedMotion();
   const hasScore = score !== null && score !== undefined;
-  const clampedScore = hasScore ? Math.min(maxScore, Math.max(minScore, score)) : minScore;
-  const percentage = hasScore ? (clampedScore - minScore) / (maxScore - minScore) : 0;
+  const targetScore = hasScore ? Math.min(maxScore, Math.max(minScore, Math.round(score))) : minScore;
+  
+  // Animated score counter synchronized with sweep
+  const [animatedScore, setAnimatedScore] = useState(shouldReduceMotion ? targetScore : minScore);
+
+  useEffect(() => {
+    if (!hasScore || shouldReduceMotion) {
+      setAnimatedScore(targetScore);
+      return;
+    }
+
+    let startTimestamp = null;
+    const duration = 650; // ms
+    const initialScore = animatedScore;
+    const scoreDiff = targetScore - initialScore;
+
+    let frameId;
+    const step = (timestamp) => {
+      if (!startTimestamp) startTimestamp = timestamp;
+      const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+      // easeOutCubic
+      const ease = 1 - Math.pow(1 - progress, 3);
+      setAnimatedScore(Math.round(initialScore + scoreDiff * ease));
+
+      if (progress < 1) {
+        frameId = requestAnimationFrame(step);
+      }
+    };
+
+    frameId = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(frameId);
+  }, [targetScore, hasScore, shouldReduceMotion]);
+
+  const currentScoreForDisplay = shouldReduceMotion ? targetScore : animatedScore;
+  const percentage = hasScore ? (currentScoreForDisplay - minScore) / (maxScore - minScore) : 0;
   
   // Angle for 180-degree arc: -180deg (left) to 0deg (right)
   const angle = -180 + percentage * 180;
@@ -28,9 +64,9 @@ export function CreditGauge({
   const dotY = cy + radius * Math.sin(needleRad);
 
   const displayRating = ratingLabel || (
-    clampedScore >= 750 ? "Prime PSL Tier-1" :
-    clampedScore >= 650 ? "Good Bankable (Kishor)" :
-    clampedScore >= 550 ? "Moderate (Shishu)" :
+    targetScore >= 750 ? "Prime PSL Tier-1" :
+    targetScore >= 650 ? "Good Bankable (Kishor)" :
+    targetScore >= 550 ? "Moderate (Shishu)" :
     "Emerging Credit"
   );
 
@@ -44,14 +80,14 @@ export function CreditGauge({
           className="overflow-visible"
         >
           <defs>
-            <linearGradient id="saathiCreditGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <linearGradient id="setuCreditGrad" x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stopColor="#DE8361" />    {/* Terracotta */}
-              <stop offset="35%" stopColor="#F59E0B" />   {/* Ochre */}
+              <stop offset="35%" stopColor="#D97706" />   {/* Turmeric Ochre */}
               <stop offset="70%" stopColor="#276749" />   {/* ForestRural */}
-              <stop offset="100%" stopColor="#163E2C" />  {/* Deep ForestRural */}
+              <stop offset="100%" stopColor="#1E2A4A" />  {/* LedgerInk */}
             </linearGradient>
-            <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-              <feDropShadow dx="0" dy="0" stdDeviation="3" floodColor="#276749" floodOpacity="0.25"/>
+            <filter id="turmericGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="0" stdDeviation="3.5" floodColor="#D97706" floodOpacity="0.45"/>
             </filter>
           </defs>
 
@@ -69,49 +105,60 @@ export function CreditGauge({
             <path
               d={`M ${cx - radius} ${cy} A ${radius} ${radius} 0 0 1 ${cx + radius} ${cy}`}
               fill="none"
-              stroke="url(#saathiCreditGrad)"
+              stroke="url(#setuCreditGrad)"
               strokeWidth={compact ? "10" : "14"}
               strokeLinecap="round"
               strokeDasharray={`${radius * Math.PI}`}
               strokeDashoffset={`${radius * Math.PI * (1 - percentage)}`}
-              filter="url(#glow)"
-              className="transition-all duration-300 ease-out will-change-transform"
+              filter="url(#turmericGlow)"
+              className="transition-all duration-150 ease-out will-change-transform"
             />
           )}
 
-          {/* Active Dot Marker */}
+          {/* Turmeric Active Needle / Leading Edge Marker */}
           {hasScore && (
-            <circle 
-              cx={dotX} 
-              cy={dotY} 
-              r={compact ? "5" : "6"} 
-              fill="#FFFFFF" 
-              stroke="#1A2742"
-              strokeWidth="3"
-              className="transition-all duration-300 ease-out drop-shadow-md will-change-transform"
-            />
+            <g className="transition-all duration-150 ease-out will-change-transform">
+              {/* Outer Turmeric Ink Halo */}
+              <circle 
+                cx={dotX} 
+                cy={dotY} 
+                r={compact ? "7" : "8.5"} 
+                fill="#D97706" 
+                opacity="0.35"
+              />
+              {/* Core Solid Needle Point */}
+              <circle 
+                cx={dotX} 
+                cy={dotY} 
+                r={compact ? "4.5" : "5.5"} 
+                fill="#FAF7F2" 
+                stroke="#1E2A4A"
+                strokeWidth="2.5"
+                className="drop-shadow-sm"
+              />
+            </g>
           )}
 
-          {/* Scale Labels */}
-          <text x={cx - radius} y={cy + 16} fontSize="10" fontWeight="700" fill="#94A3B8" textAnchor="middle">300</text>
-          <text x={cx} y={cy - radius - 6} fontSize="9" fontWeight="700" fill="#94A3B8" textAnchor="middle">600</text>
-          <text x={cx + radius} y={cy + 16} fontSize="10" fontWeight="700" fill="#94A3B8" textAnchor="middle">850</text>
+          {/* Scale Labels in warm ledger tones (no slate) */}
+          <text x={cx - radius} y={cy + 16} fontSize="10" fontWeight="700" fill="#7C6E5A" textAnchor="middle" fontFamily="IBM Plex Sans, sans-serif">300</text>
+          <text x={cx} y={cy - radius - 6} fontSize="9" fontWeight="700" fill="#7C6E5A" textAnchor="middle" fontFamily="IBM Plex Sans, sans-serif">600</text>
+          <text x={cx + radius} y={cy + 16} fontSize="10" fontWeight="700" fill="#7C6E5A" textAnchor="middle" fontFamily="IBM Plex Sans, sans-serif">850</text>
         </svg>
       </div>
 
       {/* Score Number & Badge */}
       <div className="mt-0.5 flex flex-col items-center">
         <div className="flex items-baseline gap-1">
-          <span className={`${compact ? 'text-3xl' : 'text-4xl'} font-black text-indigoRural-900 tracking-tight tabular-nums font-display`}>
-            {hasScore ? clampedScore : '—'}
+          <span className={`${compact ? 'text-3xl' : 'text-4xl'} font-black text-ledgerInk tracking-tight tabular-nums font-serif`}>
+            {hasScore ? currentScoreForDisplay : '—'}
           </span>
-          <span className="text-xs font-semibold text-indigoRural-400">/ {maxScore}</span>
+          <span className="text-xs font-semibold text-ledgerInk/60 font-sans">/ {maxScore}</span>
         </div>
 
         <div className="mt-1">
           {hasScore ? (
             <Badge 
-              variant={clampedScore >= 750 ? 'positive' : clampedScore >= 650 ? 'brand' : clampedScore >= 550 ? 'attention' : 'neutral'}
+              variant={targetScore >= 750 ? 'positive' : targetScore >= 650 ? 'brand' : targetScore >= 550 ? 'attention' : 'neutral'}
               size="sm"
               dot
             >
@@ -127,3 +174,4 @@ export function CreditGauge({
     </div>
   );
 }
+export default CreditGauge;

@@ -1,7 +1,7 @@
 import React from 'react';
 
 /**
- * Typography Hierarchy Primitives for Vyapaar Saathi
+ * Typography Hierarchy Primitives for SaakhSetu
  * Distinct visual roles preventing hierarchy flattening:
  * - PageTitle: Largest, boldest font-display
  * - SectionHeading: Confident section divider

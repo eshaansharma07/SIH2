@@ -256,7 +256,7 @@ export function CreditScorePage({ shop, creditData, onNavigateTab }) {
               </h3>
               <p className="text-xs text-indigoRural-600 max-w-xs mx-auto leading-relaxed">
                 {creditData?.message || (language === 'hi' 
-                  ? 'व्यापार साथी पर अपना पहला हफ्ता पूरा करें (न्यूनतम 5 बिक्री और 3 दिन) ताकि 4-पिलर स्कोर जनरेट हो सके।'
+                  ? 'साख सेतु पर अपना पहला हफ्ता पूरा करें (न्यूनतम 5 बिक्री और 3 दिन) ताकि 4-पिलर स्कोर जनरेट हो सके।'
                   : 'Log your first week of transactions (minimum 5 sales across 3 days) to unlock your explainable PSL-aligned alternative credit score.')}
               </p>
               <div className="pt-2">

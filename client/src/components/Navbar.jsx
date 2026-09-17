@@ -20,6 +20,7 @@ import { useTranslation } from '../i18n/LanguageContext';
 import { api } from '../utils/api';
 import { Badge, Button } from './ui';
 import { SyncStatusBadge } from './SyncStatusBadge';
+import { APP_NAME_EN, APP_NAME_HI, APP_ADVISOR_NAME_EN, APP_ADVISOR_NAME_HI } from '../config/brand';
 
 export function Navbar({ activeTab, setActiveTab, currentShop, isDemoMode, onReloadDemo, onStartDemoTour, onSwitchToDemo, onSwitchToRegister, onLogout }) {
   const { t, language, toggleLanguage } = useTranslation();
@@ -31,7 +32,7 @@ export function Navbar({ activeTab, setActiveTab, currentShop, isDemoMode, onRel
     { id: 'cashflow', label: language === 'hi' ? 'बही-खाता' : 'Bahi-Khata', icon: BookOpen },
     { id: 'credit', label: language === 'hi' ? 'क्रेडिट स्कोर' : 'Credit Score', icon: TrendingUp },
     { id: 'schemes', label: language === 'hi' ? 'सरकारी योजनाएं' : 'Schemes', icon: Landmark },
-    { id: 'advisor', label: language === 'hi' ? 'साथी AI' : 'Saathi AI', icon: Sparkles, isAi: true },
+    { id: 'advisor', label: language === 'hi' ? APP_ADVISOR_NAME_HI : APP_ADVISOR_NAME_EN, icon: Sparkles, isAi: true },
     { id: 'dossier', label: language === 'hi' ? 'बैंक फाइल' : 'Bank Dossier', icon: FileText }
   ];
 
@@ -69,10 +70,10 @@ export function Navbar({ activeTab, setActiveTab, currentShop, isDemoMode, onRel
 
               <div className="flex items-baseline gap-2">
                 <span className="font-black text-base sm:text-lg tracking-tight text-indigoRural-900 font-display">
-                  व्यापार साथी
+                  {APP_NAME_HI}
                 </span>
                 <span className="text-xs font-bold text-indigoRural-500 hidden sm:inline font-sans">
-                  Vyapaar Saathi
+                  {APP_NAME_EN}
                 </span>
               </div>
             </div>
@@ -120,10 +121,10 @@ export function Navbar({ activeTab, setActiveTab, currentShop, isDemoMode, onRel
             <div className="flex flex-col min-w-0">
               <div className="flex items-center gap-1.5 sm:gap-2 leading-tight">
                 <span className="font-black text-sm sm:text-lg tracking-tight text-indigoRural-900 font-display truncate">
-                  व्यापार साथी
+                  {APP_NAME_HI}
                 </span>
                 <span className="text-xs font-bold text-indigoRural-500 hidden sm:inline">
-                  Vyapaar Saathi
+                  {APP_NAME_EN}
                 </span>
                 {/* Mode Badge */}
                 {isDemoMode ? (

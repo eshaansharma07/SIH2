@@ -38,7 +38,7 @@ function advisoryRateLimiter(req, res, next) {
   next();
 }
 
-// Chat with Vyapaar Saathi Advisor
+// Chat with Setu AI Advisor
 router.post('/chat', advisoryRateLimiter, async (req, res) => {
   try {
     const { shopId, question } = req.body;

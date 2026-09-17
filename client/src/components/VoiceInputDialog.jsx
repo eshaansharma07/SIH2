@@ -28,6 +28,7 @@ import {
 } from '../utils/voiceParser';
 import { speak, stopSpeech, isSpeechSupported } from '../utils/speechService';
 import { api } from '../utils/api';
+import RubberStamp from './RubberStamp';
 import { Badge, Button } from './ui';
 import { 
   findMatchingCustomer, 
@@ -468,7 +469,7 @@ export function VoiceInputDialog({
                 }}
                 className={`p-2 rounded-full border transition cursor-pointer ${
                   audioMuted 
-                    ? 'bg-paper-100 text-slate-400 border-paper-300 hover:bg-paper-200' 
+                    ? 'bg-paper-100 text-paper-400 border-paper-300 hover:bg-paper-200' 
                     : 'bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100'
                 }`}
                 title={audioMuted ? 'Unmute voice' : 'Mute spoken prompts'}
@@ -1058,10 +1059,10 @@ export function VoiceInputDialog({
               {/* Transcript & Status text */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5">
-                  <span className={`w-2 h-2 rounded-full ${isListening ? 'bg-terracotta-600 animate-ping' : isSpeakingState ? 'bg-indigo-600 animate-pulse' : 'bg-slate-400'}`} />
+                  <span className={`w-2 h-2 rounded-full ${isListening ? 'bg-terracotta-600 animate-ping' : isSpeakingState ? 'bg-turmeric animate-pulse' : 'bg-paper-300'}`} />
                   <span className="text-[10px] font-black uppercase tracking-wider text-indigoRural-600 font-display">
                     {isSpeakingState 
-                      ? (language === 'hi' ? 'साथी बोल रहा है...' : 'Saathi is speaking...')
+                      ? (language === 'hi' ? 'सेतु AI बोल रहा है...' : 'Setu AI is speaking...')
                       : isListening 
                       ? (language === 'hi' ? 'सुन रहा हूँ... बोलिए' : 'Listening... speak now')
                       : (language === 'hi' ? 'माइक पर टैप करके बोलें' : 'Tap mic to speak')}
@@ -1088,6 +1089,17 @@ export function VoiceInputDialog({
         </div>
 
       </div>
+
+      {saveSuccess && (
+        <RubberStamp 
+          text={
+            parsedData?.type === 'income' ? 'जमा • RECORDED' :
+            parsedData?.type === 'expense' ? 'खर्च • RECORDED' :
+            parsedData?.type === 'udhaar_given' ? 'उधार • RECORDED' : 'वसूली • RECORDED'
+          }
+          subtext="साख सेतु बही-खाता"
+        />
+      )}
     </div>
   );
 }
