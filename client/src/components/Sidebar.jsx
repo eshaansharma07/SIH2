@@ -177,9 +177,9 @@ export function Sidebar({
                   type="button"
                   onClick={() => handleItemClick(item)}
                   className={`
-                    w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs transition-all duration-150 text-left cursor-pointer
+                    w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs transition-all duration-200 text-left cursor-pointer
                     ${active 
-                      ? 'bg-[#E3EBE4] text-[#0F3E2E] font-bold shadow-2xs' 
+                      ? 'bg-[#E3EBE4] text-[#0F3E2E] font-bold shadow-2xs border-l-[3px] border-[#15803D]' 
                       : 'text-stone-700 hover:text-stone-950 hover:bg-[#EFEAE0] font-medium'
                     }
                   `}

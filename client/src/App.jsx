@@ -429,7 +429,7 @@ export default function App() {
         </main>
       ) : (
         /* Authenticated View: 2-Column Desktop Shell (Left Sidebar + Right Content Area) */
-        <div className="flex min-h-screen w-full">
+        <div className="flex min-h-screen w-full paper-canvas">
           {/* Left Sidebar */}
           <Sidebar 
             activeTab={activeTab}
@@ -440,8 +440,8 @@ export default function App() {
             onClose={() => setSidebarOpen(false)}
           />
 
-          {/* Right Main Area */}
-          <div className="flex-1 flex flex-col min-w-0 bg-[#FAF8F5]">
+          {/* Right Main Area with Ambient Parchment Light */}
+          <div className="flex-1 flex flex-col min-w-0 paper-canvas relative">
             {/* Top Navbar */}
             <Navbar 
               activeTab={activeTab} 

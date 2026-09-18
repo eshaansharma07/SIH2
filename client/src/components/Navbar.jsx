@@ -402,7 +402,9 @@ export function Navbar({
   const activeHoverItem = navItems.find(item => item.id === hoveredTab);
 
   return (
-    <header className="sticky top-0 z-30 w-full backdrop-blur-xl bg-[#FAF8F5]/92 border-b border-[#ECE5D8] transition-all select-none">
+    <header className="sticky top-0 z-30 w-full backdrop-blur-xl bg-[#FAF8F5]/94 border-b border-[#ECE5D8] shadow-[0_4px_24px_rgba(28,25,23,0.03)] transition-all select-none">
+      {/* Tri-Color / Terracotta Ambient Micro-Rule */}
+      <div className="h-[2.5px] w-full bg-gradient-to-r from-terracotta-600 via-amber-500 to-forestRural-600 opacity-85" />
       <div className="w-full px-4 sm:px-6">
         <div className="flex items-center justify-between h-15 sm:h-16 gap-3 relative">
           

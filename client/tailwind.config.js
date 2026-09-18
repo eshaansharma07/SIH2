@@ -103,11 +103,12 @@ export default {
         }
       },
       fontFamily: {
-        serif: ['"Fraunces"', 'Georgia', 'serif'],
+        serif: ['"Fraunces"', '"Noto Serif Devanagari"', '"Martel"', 'Georgia', 'serif'],
         sans: ['"Plus Jakarta Sans"', '"Inter"', '"Noto Sans Devanagari"', 'system-ui', '-apple-system', 'sans-serif'],
-        display: ['"Fraunces"', '"Noto Sans Devanagari"', 'Georgia', 'serif'],
-        hindi: ['"Noto Sans Devanagari"', '"Plus Jakarta Sans"', 'system-ui', '-apple-system', 'sans-serif'],
-        devanagari: ['"Noto Sans Devanagari"', 'sans-serif'],
+        display: ['"Fraunces"', '"Rozha One"', '"Martel"', '"Noto Serif Devanagari"', 'Georgia', 'serif'],
+        hindi: ['"Noto Serif Devanagari"', '"Noto Sans Devanagari"', '"Plus Jakarta Sans"', 'system-ui', '-apple-system', 'sans-serif'],
+        devanagari: ['"Noto Serif Devanagari"', '"Noto Sans Devanagari"', 'serif'],
+        numbers: ['"Outfit"', '"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
         body: ['"Plus Jakarta Sans"', '"Inter"', 'sans-serif'],
       },
       boxShadow: {
@@ -122,6 +123,11 @@ export default {
         'elevation-3': '0 20px 45px -10px rgba(30, 41, 59, 0.22), 0 8px 16px -4px rgba(30, 41, 59, 0.1)',
         'glass': '0 8px 32px 0 rgba(44, 25, 18, 0.06)',
         'saathi': '0 20px 40px -15px rgba(35, 51, 84, 0.2)',
+        'ambient-warm': '0 8px 32px -4px rgba(184, 74, 47, 0.10), 0 2px 8px -2px rgba(184, 74, 47, 0.05)',
+        'ambient-gold': '0 8px 32px -4px rgba(217, 119, 6, 0.12), 0 2px 8px -2px rgba(217, 119, 6, 0.06)',
+        'ambient-forest': '0 8px 32px -4px rgba(22, 101, 52, 0.10), 0 2px 8px -2px rgba(22, 101, 52, 0.05)',
+        'paper-lift': '0 1px 3px 0 rgba(44, 25, 18, 0.03), 0 10px 28px -4px rgba(44, 25, 18, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.95)',
+        'paper-lift-hover': '0 3px 10px 0 rgba(44, 25, 18, 0.05), 0 18px 38px -4px rgba(44, 25, 18, 0.09), inset 0 1px 0 rgba(255, 255, 255, 1)',
         'glow-forest': '0 0 24px rgba(30, 82, 58, 0.2)',
         'glow-terracotta': '0 0 24px rgba(167, 66, 24, 0.2)',
         'input-focus': '0 0 0 3px rgba(193, 83, 36, 0.14)',
