@@ -114,6 +114,17 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
     } catch (_) {}
   }, []);
 
+  // Listen for global open register modal event (e.g. from bottom-left Chatbot)
+  useEffect(() => {
+    const handler = () => {
+      setAuthMode('register');
+      setAuthError('');
+      setAuthModalOpen(true);
+    };
+    window.addEventListener('saakhsetu:open-register-modal', handler);
+    return () => window.removeEventListener('saakhsetu:open-register-modal', handler);
+  }, []);
+
   // Mega-menu hover handlers with 120ms debounce to prevent flicker
   const handleMouseEnter = (menuKey) => {
     if (megaTimeoutRef.current) clearTimeout(megaTimeoutRef.current);
@@ -168,7 +179,8 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
         owner_name: regOwnerName.trim() || regShopName.trim(),
         phone: cleanPhone,
         password: regPassword || '1234',
-        trade_name: regTradeType,
+        trade_type: regTradeType || 'kirana',
+        trade_name: regTradeType || 'Kirana & General Store',
         state: regState,
         district: regDistrict || 'Balrampur',
         village: regVillage || 'Utraula Dehat',

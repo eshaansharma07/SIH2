@@ -123,7 +123,9 @@ export const dataStore = {
         shopData.is_demo ? 1 : 0, shopData.is_udyam_verified ? 1 : 0, shopData.udyam_number || '',
         shopData.created_at || new Date().toISOString()
       );
-    } catch (_) {}
+    } catch (sqliteErr) {
+      console.warn('[DataStore] SQLite upsertShop error:', sqliteErr.message);
+    }
 
     return shopData;
   },

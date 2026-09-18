@@ -174,6 +174,18 @@ try {
 }
 
 try {
+  db.exec("ALTER TABLE shops ADD COLUMN is_udyam_verified INTEGER DEFAULT 0;");
+} catch (_) {
+  // Column already exists
+}
+
+try {
+  db.exec("ALTER TABLE shops ADD COLUMN udyam_number TEXT DEFAULT '';");
+} catch (_) {
+  // Column already exists
+}
+
+try {
   db.exec('ALTER TABLE transactions ADD COLUMN customer_phone TEXT;');
 } catch (_) {
   // Column already exists

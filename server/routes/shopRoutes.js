@@ -31,8 +31,8 @@ router.get('/current', async (req, res) => {
   }
 });
 
-// Setup new real shop profile (Onboarding — is_demo = 0)
-router.post('/setup', async (req, res) => {
+// Setup / Register new real shop profile (Onboarding — is_demo = 0)
+router.post(['/setup', '/register'], async (req, res) => {
   try {
     const {
       name,
@@ -54,11 +54,24 @@ router.post('/setup', async (req, res) => {
     if (!name || !name.trim()) {
       return res.status(400).json({ success: false, error: 'Shop name is required' });
     }
-    if (!owner_name || !owner_name.trim()) {
-      return res.status(400).json({ success: false, error: 'Owner name is required' });
-    }
-    if (!trade_type) {
-      return res.status(400).json({ success: false, error: 'Trade category is required' });
+
+    const finalTradeType = (trade_type && String(trade_type).trim()) || (trade_name && String(trade_name).trim()) || 'kirana';
+    const finalTradeName = (trade_name && String(trade_name).trim()) || finalTradeType || 'Kirana & General Store';
+    const finalOwnerName = (owner_name && String(owner_name).trim()) || name.trim();
+    const cleanPhone = phone ? String(phone).trim() : '';
+
+    // Check if an existing real shop has this phone number
+    if (cleanPhone) {
+      const digitsOnly = cleanPhone.replace(/\D/g, '');
+      const existing = await dataStore.findShopByPhoneOrId(cleanPhone, digitsOnly);
+      if (existing && existing.id !== 'ramesh-kirana') {
+        // Return existing shop or update details
+        return res.json({ 
+          success: true, 
+          shop: existing, 
+          message: 'Existing enterprise account found. Logged in successfully.' 
+        });
+      }
     }
 
     const id = `shop-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`;
@@ -67,17 +80,17 @@ router.post('/setup', async (req, res) => {
     const newShop = {
       id,
       name: name.trim(),
-      owner_name: owner_name.trim(),
-      trade_type,
-      trade_name: trade_name || 'Micro-Enterprise',
+      owner_name: finalOwnerName,
+      trade_type: finalTradeType,
+      trade_name: finalTradeName,
       village: village || 'Gram Panchayat',
       district: district || 'Balrampur',
       state: state || 'Uttar Pradesh',
-      vintage_years: Math.max(0, Number(vintage_years) || 0),
-      monthly_revenue: Math.max(0, Number(monthly_revenue) || 0),
+      vintage_years: Math.max(0, Number(vintage_years) || 1),
+      monthly_revenue: Math.max(0, Number(monthly_revenue) || 45000),
       ownership: ownership || 'rented',
-      bank_account_type: bank_account_type || 'savings',
-      phone: phone ? phone.trim() : '',
+      bank_account_type: bank_account_type || 'State Bank of India',
+      phone: cleanPhone,
       password: finalPassword,
       owner_category: owner_category || 'general',
       is_demo: 0,

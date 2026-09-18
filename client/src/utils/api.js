@@ -60,6 +60,14 @@ export const api = {
   // Shop profile
   getShopCurrent: (shopId = '') => request(`/shop/current${shopId ? `?shopId=${shopId}` : ''}`),
   setupShop: (data) => request('/shop/setup', { method: 'POST', body: JSON.stringify(data) }),
+  registerShop: (data) => {
+    const payload = {
+      ...data,
+      trade_type: data.trade_type || data.trade_name || 'kirana',
+      trade_name: data.trade_name || data.trade_type || 'Kirana & General Store',
+    };
+    return request('/shop/register', { method: 'POST', body: JSON.stringify(payload) });
+  },
   loginShop: (phone, password) => request('/shop/login', { method: 'POST', body: JSON.stringify({ phone, password }) }),
   resetDemoShop: () => request('/shop/reset-demo', { method: 'POST' }),
   updateShop: (id, data) => request(`/shop/${id}`, { method: 'PUT', body: JSON.stringify(data) }),

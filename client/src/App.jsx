@@ -547,15 +547,19 @@ export default function App() {
         </div>
       )}
 
-      {/* Floating Setu AI Pop-Up (Globally available across authenticated tabs) */}
-      {currentShop && activeTab !== 'onboarding' && (
-        <FloatingSetuAI 
-          currentShop={currentShop}
-          onNavigateTab={changeTab}
-          onOpenKeypad={handleOpenKeypad}
-          onOpenWholesale={() => setWholesaleModalOpen(true)}
-        />
-      )}
+      {/* Floating Setu AI Pop-Up (Minimizes to circle in bottom-left, assists with services & registration) */}
+      <FloatingSetuAI 
+        currentShop={currentShop}
+        onNavigateTab={changeTab}
+        onOpenKeypad={handleOpenKeypad}
+        onOpenWholesale={() => setWholesaleModalOpen(true)}
+        onOpenRegister={() => {
+          handleSwitchToRegister();
+          setTimeout(() => {
+            window.dispatchEvent(new CustomEvent('saakhsetu:open-register-modal'));
+          }, 150);
+        }}
+      />
 
       {/* Tactile Touch Numeric Keypad Modal */}
       <NumericKeypadModal
