@@ -61,8 +61,8 @@ export function FloatingThumbDock({
   const rightNavItems = [
     { 
       id: 'advisor', 
-      labelHi: 'साथी AI', 
-      labelEn: 'Saathi AI', 
+      labelHi: 'सेतु AI', 
+      labelEn: 'Setu AI', 
       icon: Sparkles,
       highlight: true
     },

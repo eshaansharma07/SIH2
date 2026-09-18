@@ -265,7 +265,7 @@ export function InteractiveDemoTour({
               {currentStepData.badge}
             </span>
             <span className="hidden sm:inline text-xs text-stone-200/60 font-medium">
-              | Priority Sector Lending (PSL) Documentation Format
+              | Live Guided Tour
             </span>
           </div>
 

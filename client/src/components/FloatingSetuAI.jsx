@@ -25,7 +25,8 @@ export function FloatingSetuAI({
   onNavigateTab, 
   onOpenKeypad, 
   onOpenWholesale,
-  onOpenRegister
+  onOpenRegister,
+  isDemoTourOpen = false
 }) {
   const { language } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
@@ -213,7 +214,9 @@ export function FloatingSetuAI({
   };
 
   return (
-    <div className="fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-50 select-none">
+    <div className={`fixed right-4 sm:right-6 z-50 select-none transition-all duration-300 ${
+      isDemoTourOpen ? 'bottom-32 sm:bottom-28' : 'bottom-20 sm:bottom-6'
+    }`}>
       {/* 1. Minimized Circle State (Bottom Right) */}
       {!isOpen && (
         <div className="relative group">

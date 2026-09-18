@@ -574,7 +574,7 @@ export default function App() {
         </div>
       )}
 
-      {/* Floating Setu AI Pop-Up (Minimizes to circle in bottom-left, assists with services & registration) */}
+      {/* Floating Setu AI Pop-Up (Minimizes to circle in bottom-right, assists with services & registration) */}
       <FloatingSetuAI 
         currentShop={currentShop}
         onNavigateTab={changeTab}
@@ -586,6 +586,7 @@ export default function App() {
             window.dispatchEvent(new CustomEvent('saakhsetu:open-register-modal'));
           }, 150);
         }}
+        isDemoTourOpen={demoTourOpen}
       />
 
       {/* Tactile Touch Numeric Keypad Modal */}

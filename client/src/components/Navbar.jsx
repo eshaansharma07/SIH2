@@ -408,24 +408,22 @@ export function Navbar({
       <div className="w-full px-4 sm:px-6">
         <div className="flex items-center justify-between h-15 sm:h-16 gap-3 relative">
           
-          {/* Left: Mobile Sidebar Hamburger + Brand (visible on mobile only) / Desktop spacer */}
-          <div className="flex items-center gap-2.5 lg:flex-1 lg:max-w-[280px] xl:max-w-[320px]">
-            <div className="flex items-center gap-2.5 lg:hidden">
-              <button
-                type="button"
-                onClick={onToggleSidebar}
-                className="p-2 rounded-xl text-stone-700 hover:text-stone-900 hover:bg-stone-200/60 transition-colors cursor-pointer"
-                aria-label="Open sidebar navigation"
-              >
-                <Menu className="w-5 h-5" />
-              </button>
-              <span className="font-serif font-black text-sm text-[#0F3E2E]">व्यापार सेतु</span>
-            </div>
+          {/* Left: Mobile Sidebar Hamburger + Brand (visible on mobile only) */}
+          <div className="flex items-center gap-2.5 lg:hidden shrink-0">
+            <button
+              type="button"
+              onClick={onToggleSidebar}
+              className="p-2 rounded-xl text-stone-700 hover:text-stone-900 hover:bg-stone-200/60 transition-colors cursor-pointer"
+              aria-label="Open sidebar navigation"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+            <span className="font-serif font-black text-sm text-[#0F3E2E]">व्यापार सेतु</span>
           </div>
 
           {/* Center: Primary Navigation Tabs & Floating Interactive Mega-Menu */}
-          <div ref={navRef} className="hidden lg:flex items-center justify-center flex-1 mx-auto max-w-fit relative">
-            <nav className="flex items-center justify-center gap-1 xl:gap-1.5">
+          <div ref={navRef} className="hidden lg:flex items-center justify-start xl:justify-center flex-1 min-w-0 relative">
+            <nav className="flex items-center gap-1 xl:gap-1.5 flex-nowrap">
               {navItems.map(item => {
                 const Icon = item.icon;
                 const isActive = activeTab === item.id;
@@ -442,7 +440,7 @@ export function Navbar({
                     onMouseEnter={() => handleTabMouseEnter(item.id)}
                     onMouseLeave={handleTabMouseLeave}
                     className={`
-                      relative flex items-center gap-1.5 xl:gap-2 px-3 xl:px-3.5 py-2 text-xs transition-all duration-150 cursor-pointer select-none rounded-xl whitespace-nowrap
+                      relative flex items-center gap-1.5 xl:gap-2 px-2.5 xl:px-3 py-1.5 xl:py-2 text-xs transition-all duration-150 cursor-pointer select-none rounded-xl whitespace-nowrap shrink-0
                       ${isActive 
                         ? 'text-[#0F3E2E] font-bold bg-[#0F3E2E]/6 shadow-2xs' 
                         : isHovered
@@ -451,12 +449,12 @@ export function Navbar({
                       }
                     `}
                   >
-                    <Icon className={`w-3.5 h-3.5 transition-colors ${isActive ? 'text-[#0F3E2E] stroke-[2.25]' : 'text-stone-500'}`} />
+                    <Icon className={`w-3.5 h-3.5 shrink-0 transition-colors ${isActive ? 'text-[#0F3E2E] stroke-[2.25]' : 'text-stone-500'}`} />
                     <span>{item.label}</span>
 
                     {/* Subtle, Lightweight Active Underline Indicator */}
                     {isActive && (
-                      <span className="absolute bottom-1 left-3 right-3 h-[2px] bg-[#0F3E2E] rounded-full transition-all" />
+                      <span className="absolute bottom-1 left-2.5 right-2.5 xl:left-3 xl:right-3 h-[2px] bg-[#0F3E2E] rounded-full transition-all" />
                     )}
                   </button>
                 );
@@ -529,7 +527,7 @@ export function Navbar({
           </div>
 
           {/* Right: Action Controls (Notifications, Language, Profile) */}
-          <div className="flex items-center gap-2 sm:gap-3 shrink-0 ml-auto lg:ml-0 lg:flex-1 lg:max-w-[280px] xl:max-w-[320px] justify-end">
+          <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0 ml-auto justify-end">
             {/* Live Demo Tour Button */}
             <button
               type="button"
@@ -537,12 +535,12 @@ export function Navbar({
               className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-amber-100/90 hover:bg-amber-200/80 text-amber-950 text-xs font-bold border border-amber-300/80 shadow-2xs hover:shadow-xs transition-all cursor-pointer btn-tactile shrink-0"
               title={language === 'hi' ? 'लाइव डेमो टूर चलाएं' : 'Start Live Guided Demo'}
             >
-              <Sparkles className="w-3.5 h-3.5 text-amber-700 fill-amber-500/40" />
-              <span className="hidden sm:inline">{language === 'hi' ? 'लाइव टूर' : 'Demo Tour'}</span>
+              <Sparkles className="w-3.5 h-3.5 text-amber-700 fill-amber-500/40 shrink-0" />
+              <span className="hidden sm:inline lg:hidden xl:inline">{language === 'hi' ? 'लाइव टूर' : 'Demo Tour'}</span>
             </button>
 
             {/* Notification Bell */}
-            <div className="relative">
+            <div className="relative shrink-0">
               <button
                 type="button"
                 onClick={() => setNotificationOpen(!notificationOpen)}
@@ -584,35 +582,35 @@ export function Navbar({
             <button
               type="button"
               onClick={toggleLanguage}
-              className="px-2.5 py-1 rounded-lg bg-stone-200/70 hover:bg-stone-200 text-[11px] font-bold text-stone-800 transition-colors cursor-pointer border border-stone-300/50"
+              className="px-2.5 py-1 rounded-lg bg-stone-200/70 hover:bg-stone-200 text-[11px] font-bold text-stone-800 transition-colors cursor-pointer border border-stone-300/50 shrink-0"
               title="Toggle language"
             >
               {language === 'hi' ? 'English' : 'हिंदी'}
             </button>
 
             {/* Profile Chip & Dropdown */}
-            <div className="relative">
+            <div className="relative shrink-0">
               <button
                 type="button"
                 onClick={() => setProfileOpen(!profileOpen)}
-                className="flex items-center gap-2 p-1 pr-2 rounded-full hover:bg-stone-200/50 transition-all cursor-pointer border border-transparent hover:border-stone-200"
+                className="flex items-center gap-1.5 sm:gap-2 p-1 pr-1.5 sm:pr-2 rounded-full hover:bg-stone-200/50 transition-all cursor-pointer border border-transparent hover:border-stone-200 shrink-0"
               >
                 {/* Dark Forest Green Initials Circle */}
-                <div className="w-8 h-8 rounded-full bg-[#0F3E2E] text-white flex items-center justify-center font-bold text-xs shadow-2xs">
+                <div className="w-8 h-8 rounded-full bg-[#0F3E2E] text-white flex items-center justify-center font-bold text-xs shadow-2xs shrink-0">
                   {initials}
                 </div>
 
                 {/* Name & Store Lockup (Desktop) */}
-                <div className="hidden sm:flex flex-col text-left leading-none">
-                  <span className="font-serif font-bold text-xs text-stone-900 truncate max-w-[120px]">
+                <div className="hidden sm:flex lg:hidden xl:flex flex-col text-left leading-none shrink-0">
+                  <span className="font-serif font-bold text-xs text-stone-900 truncate max-w-[100px] 2xl:max-w-[130px]">
                     {ownerName}
                   </span>
-                  <span className="text-[10px] text-stone-500 truncate max-w-[120px] mt-0.5">
+                  <span className="text-[10px] text-stone-500 truncate max-w-[100px] 2xl:max-w-[130px] mt-0.5">
                     {shopName}
                   </span>
                 </div>
 
-                <ChevronDown className="w-3.5 h-3.5 text-stone-500" />
+                <ChevronDown className="w-3.5 h-3.5 text-stone-500 shrink-0" />
               </button>
 
               {/* Dropdown Menu */}
