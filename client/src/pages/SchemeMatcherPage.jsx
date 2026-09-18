@@ -872,7 +872,7 @@ export function SchemeMatcherPage({ shop, creditData, onNavigateTab }) {
 
       {/* 6. CENTERED SCHEME DETAILS MODAL / DETAIL CARD */}
       {selectedScheme && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 md:p-6 overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 md:p-6">
           {/* Subtle warm translucent backdrop overlay */}
           <div 
             onClick={() => setSelectedScheme(null)}
@@ -884,24 +884,27 @@ export function SchemeMatcherPage({ shop, creditData, onNavigateTab }) {
             role="dialog"
             aria-modal="true"
             aria-labelledby="scheme-modal-title"
-            className="relative w-full max-w-2xl sm:max-w-[720px] md:max-w-[760px] max-h-[85vh] bg-[#FCFBF8] border border-[#E7DFD4] rounded-2xl sm:rounded-3xl shadow-2xl shadow-stone-900/15 flex flex-col overflow-hidden z-10 animate-in fade-in zoom-in-[0.98] duration-200 ease-out"
+            className="relative w-full max-w-2xl sm:max-w-[760px] lg:max-w-[820px] max-h-[calc(100vh-40px)] sm:max-h-[calc(100vh-64px)] lg:max-h-[min(90vh,760px)] bg-[#FCFBF8] border border-[#E7DFD4] rounded-2xl sm:rounded-3xl shadow-2xl shadow-stone-900/15 flex flex-col overflow-hidden z-10 animate-in fade-in zoom-in-[0.98] duration-200 ease-out"
           >
             {/* Modal Header */}
-            <div className="p-4 sm:p-5 border-b border-[#ECE5DA] bg-white/80 flex items-start justify-between gap-3 shrink-0">
-              <div className="flex items-start gap-3 sm:gap-3.5 min-w-0">
-                <div className="w-12 h-12 rounded-xl bg-[#FAF8F5] border border-[#E7DFD4] flex items-center justify-center p-1.5 shrink-0 shadow-2xs">
+            <div className="px-4 py-3 sm:px-5 sm:py-3.5 border-b border-[#ECE5DA] bg-white/90 flex items-center justify-between gap-3 shrink-0">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-10 h-10 rounded-xl bg-[#FAF8F5] border border-[#E7DFD4] flex items-center justify-center p-1 shrink-0 shadow-2xs">
                   <SchemeLogo schemeId={selectedScheme.id} className="w-full h-full" />
                 </div>
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <h3 id="scheme-modal-title" className="font-serif font-bold text-base sm:text-lg text-stone-900 leading-snug">
+                    <h3 id="scheme-modal-title" className="font-serif font-bold text-base sm:text-lg text-stone-900 leading-tight truncate">
                       {selectedScheme.name}
                     </h3>
-                    <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#E8F0EA] text-[#0F3E2E] border border-[#D5E3D8]">
+                    <span className="px-2 py-0.5 rounded-full text-[10px] sm:text-[11px] font-bold bg-[#E8F0EA] text-[#0F3E2E] border border-[#D5E3D8] shrink-0">
                       {selectedScheme.badge}
                     </span>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] sm:text-[11px] font-medium bg-stone-100 text-stone-600 border border-stone-200 shrink-0 capitalize">
+                      {selectedScheme.category === 'subsidy' ? (language === 'hi' ? 'सब्सिडी योजना' : 'Capital Subsidy') : (language === 'hi' ? 'लोन योजना' : 'Credit Facility')}
+                    </span>
                   </div>
-                  <p className="text-xs text-stone-500 font-medium mt-0.5 truncate">
+                  <p className="text-[11px] text-stone-500 font-medium truncate mt-0.5">
                     {selectedScheme.ministry || 'Government of India'}
                   </p>
                 </div>
@@ -918,117 +921,129 @@ export function SchemeMatcherPage({ shop, creditData, onNavigateTab }) {
               </button>
             </div>
 
-            {/* Scrollable Content Body */}
-            <div className="p-4 sm:p-5 overflow-y-auto space-y-4 text-xs text-stone-700 flex-1">
+            {/* Scrollable Content Body - Formatted compactly so default content fits without scrolling */}
+            <div className="px-4 py-3 sm:px-5 sm:py-3.5 overflow-y-auto space-y-2.5 sm:space-y-3 text-xs text-stone-700 flex-1">
               
-              {/* Short Description */}
-              <div className="bg-white border border-[#EDE7DD] p-3.5 rounded-xl text-xs sm:text-sm text-stone-700 leading-relaxed shadow-2xs">
-                <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block mb-1">
-                  {language === 'hi' ? 'योजना का उद्देश्य' : 'Scheme Purpose'}
+              {/* Short Purpose Statement */}
+              <div className="bg-[#FAF7F2] border border-[#EDE5DA] px-3 py-2 rounded-xl text-xs text-stone-700 leading-snug">
+                <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider mr-1.5">
+                  {language === 'hi' ? 'योजना उद्देश्य:' : 'Purpose:'}
                 </span>
-                <p className="text-stone-800 font-medium">
+                <span className="text-stone-800 font-medium">
                   {selectedScheme.summary || 'Verified government scheme designed for rural enterprise development.'}
-                </p>
+                </span>
               </div>
 
-              {/* Compact 3-Column Information Row */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                <div className="p-3 rounded-xl bg-white border border-[#EDE7DD] shadow-2xs">
-                  <span className="text-[10px] text-stone-400 font-bold uppercase tracking-wider block">
-                    {language === 'hi' ? 'ऋण / सहायता सीमा' : 'Loan / Project Limit'}
+              {/* Compact 3-Column Specifications Row */}
+              <div className="grid grid-cols-3 gap-2 sm:gap-2.5">
+                <div className="p-2 sm:p-2.5 rounded-xl bg-white border border-[#EDE7DD] shadow-2xs">
+                  <span className="text-[10px] text-stone-400 font-bold uppercase tracking-wider block truncate">
+                    {language === 'hi' ? 'सहायता सीमा' : 'Loan / Limit'}
                   </span>
-                  <span className="text-xs sm:text-sm font-bold text-stone-900 mt-1 block">
-                    {selectedScheme.loanAmount || 'Information unavailable'}
-                  </span>
-                </div>
-                <div className="p-3 rounded-xl bg-white border border-[#EDE7DD] shadow-2xs">
-                  <span className="text-[10px] text-stone-400 font-bold uppercase tracking-wider block">
-                    {language === 'hi' ? 'ब्याज दर / सब्सिडी' : 'Interest / Subsidy'}
-                  </span>
-                  <span className="text-xs sm:text-sm font-bold text-stone-900 mt-1 block">
-                    {selectedScheme.interestRate || 'Information unavailable'}
+                  <span className="text-xs sm:text-sm font-bold text-stone-900 mt-0.5 block truncate">
+                    {selectedScheme.loanAmount || '—'}
                   </span>
                 </div>
-                <div className="p-3 rounded-xl bg-white border border-[#EDE7DD] shadow-2xs">
-                  <span className="text-[10px] text-stone-400 font-bold uppercase tracking-wider block">
-                    {language === 'hi' ? 'जमानत / गारंटी' : 'Collateral / Security'}
+                <div className="p-2 sm:p-2.5 rounded-xl bg-white border border-[#EDE7DD] shadow-2xs">
+                  <span className="text-[10px] text-stone-400 font-bold uppercase tracking-wider block truncate">
+                    {language === 'hi' ? 'ब्याज / सब्सिडी' : 'Interest / Subsidy'}
                   </span>
-                  <span className="text-xs sm:text-sm font-bold text-[#0F3E2E] mt-1 block">
-                    {selectedScheme.collateral || 'Information unavailable'}
+                  <span className="text-xs sm:text-sm font-bold text-stone-900 mt-0.5 block truncate">
+                    {selectedScheme.interestRate || '—'}
+                  </span>
+                </div>
+                <div className="p-2 sm:p-2.5 rounded-xl bg-white border border-[#EDE7DD] shadow-2xs">
+                  <span className="text-[10px] text-stone-400 font-bold uppercase tracking-wider block truncate">
+                    {language === 'hi' ? 'जमानत / गारंटी' : 'Collateral'}
+                  </span>
+                  <span className="text-xs sm:text-sm font-bold text-[#0F3E2E] mt-0.5 block truncate">
+                    {selectedScheme.collateral || 'Zero Collateral'}
                   </span>
                 </div>
               </div>
 
-              {/* Who Can Apply? (Eligibility Checklist) */}
-              {selectedScheme.eligibility && selectedScheme.eligibility.length > 0 && (
-                <div className="space-y-2">
-                  <h4 className="font-serif font-bold text-stone-900 text-xs sm:text-sm flex items-center gap-1.5">
-                    <CheckCircle2 className="w-4 h-4 text-[#0F3E2E]" />
-                    <span>{language === 'hi' ? 'पात्रता की शर्तें (Who Can Apply?)' : 'Who can apply?'}</span>
-                  </h4>
-                  <div className="space-y-1.5">
-                    {selectedScheme.eligibility.map((item, i) => (
-                      <div key={i} className="flex items-start gap-2 bg-[#F4F8F5] p-2.5 rounded-xl border border-[#E2ECE5]">
-                        <Check className="w-3.5 h-3.5 text-[#0F3E2E] shrink-0 mt-0.5" />
-                        <span className="text-stone-800 leading-snug">{item}</span>
-                      </div>
-                    ))}
+              {/* Compact 2-Column Section: Why This Matches (Left) & Documents / Conditions (Right) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
+                
+                {/* Left Column: Eligibility / Why this matches */}
+                <div className="p-2.5 sm:p-3 rounded-xl bg-white border border-[#EDE7DD] shadow-2xs flex flex-col justify-between">
+                  <div>
+                    <h4 className="font-serif font-bold text-stone-900 text-xs flex items-center gap-1.5 mb-1.5">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-[#0F3E2E] shrink-0" />
+                      <span>{language === 'hi' ? 'आपकी पात्रता एवं शर्तें' : 'Why this matches & eligibility'}</span>
+                    </h4>
+                    <div className="space-y-1.5">
+                      {selectedScheme.eligibility && selectedScheme.eligibility.length > 0 ? (
+                        selectedScheme.eligibility.map((item, i) => (
+                          <div key={i} className="flex items-start gap-1.5 p-1.5 rounded-lg bg-[#F4F8F5] border border-[#E2ECE5] text-[11px] sm:text-xs text-stone-800 leading-snug">
+                            <Check className="w-3.5 h-3.5 text-[#0F3E2E] shrink-0 mt-0.5" />
+                            <span>{item}</span>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="text-[11px] text-stone-500 italic p-1">Standard micro-enterprise norms apply.</div>
+                      )}
+                    </div>
                   </div>
                 </div>
-              )}
 
-              {/* Required Documents */}
-              {selectedScheme.documents && selectedScheme.documents.length > 0 && (
-                <div className="space-y-2">
-                  <h4 className="font-serif font-bold text-stone-900 text-xs sm:text-sm flex items-center gap-1.5">
-                    <FileText className="w-4 h-4 text-stone-600" />
-                    <span>{language === 'hi' ? 'आवश्यक दस्तावेज (Required Documents)' : 'Required documents'}</span>
-                  </h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-                    {selectedScheme.documents.map((doc, i) => (
-                      <div key={i} className="flex items-center gap-2 p-2.5 bg-white rounded-xl border border-[#ECE5DA]">
-                        <span className="w-1.5 h-1.5 rounded-full bg-[#0F3E2E] shrink-0" />
-                        <span className="text-stone-800 leading-snug">{doc}</span>
-                      </div>
-                    ))}
+                {/* Right Column: Required Documents & Key Conditions */}
+                <div className="p-2.5 sm:p-3 rounded-xl bg-white border border-[#EDE7DD] shadow-2xs flex flex-col justify-between space-y-2">
+                  <div>
+                    <h4 className="font-serif font-bold text-stone-900 text-xs flex items-center gap-1.5 mb-1.5">
+                      <FileText className="w-3.5 h-3.5 text-stone-600 shrink-0" />
+                      <span>{language === 'hi' ? 'आवश्यक दस्तावेज' : 'Required documents'}</span>
+                    </h4>
+                    <div className="grid grid-cols-1 gap-1">
+                      {(selectedScheme.documents || []).map((doc, i) => (
+                        <div key={i} className="flex items-center gap-1.5 p-1.5 bg-[#FAF7F2] rounded-lg border border-[#ECE5DA] text-[11px] sm:text-xs text-stone-800 leading-tight">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#0F3E2E] shrink-0" />
+                          <span className="truncate">{doc}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
 
-              {/* Important Conditions / Terms */}
-              {(selectedScheme.tenure || selectedScheme.suitableFor) && (
-                <div className="p-3 rounded-xl bg-[#FAF7F2] border border-[#EFE9DF] space-y-1.5">
-                  <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block">
-                    {language === 'hi' ? 'मुख्य शर्तें एवं अवधि' : 'Important Conditions'}
-                  </span>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-stone-700">
-                    {selectedScheme.tenure && (
-                      <div>
-                        <span className="font-semibold text-stone-800">{language === 'hi' ? 'पुनर्भुगतान अवधि: ' : 'Tenure / Repayment: '}</span>
-                        <span>{selectedScheme.tenure}</span>
-                      </div>
-                    )}
-                    {selectedScheme.suitableFor && (
-                      <div>
-                        <span className="font-semibold text-stone-800">{language === 'hi' ? 'उपयुक्त श्रेणी: ' : 'Suitable for: '}</span>
-                        <span>{selectedScheme.suitableFor}</span>
-                      </div>
-                    )}
-                  </div>
+                  {/* Conditions Mini-Row */}
+                  {(selectedScheme.tenure || selectedScheme.suitableFor) && (
+                    <div className="pt-1.5 border-t border-[#ECE5DA] grid grid-cols-2 gap-2 text-[10px] sm:text-[11px] text-stone-600">
+                      {selectedScheme.tenure && (
+                        <div>
+                          <span className="text-stone-400 block uppercase font-semibold text-[9px]">
+                            {language === 'hi' ? 'अवधि' : 'Tenure'}
+                          </span>
+                          <span className="font-semibold text-stone-800 truncate block">
+                            {selectedScheme.tenure}
+                          </span>
+                        </div>
+                      )}
+                      {selectedScheme.suitableFor && (
+                        <div>
+                          <span className="text-stone-400 block uppercase font-semibold text-[9px]">
+                            {language === 'hi' ? 'उपयुक्त श्रेणी' : 'Suitable For'}
+                          </span>
+                          <span className="font-semibold text-stone-800 truncate block">
+                            {selectedScheme.suitableFor}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
-              )}
+
+              </div>
 
             </div>
 
-            {/* Modal Footer Actions */}
-            <div className="p-3.5 sm:p-4 border-t border-[#ECE5DA] bg-white/90 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 shrink-0">
+            {/* Modal Footer Actions - Fixed at Bottom */}
+            <div className="px-4 py-2.5 sm:px-5 sm:py-3 border-t border-[#ECE5DA] bg-white/95 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 shrink-0">
               <div className="flex items-center gap-2">
                 {selectedScheme.portalUrl && (
                   <a
                     href={selectedScheme.portalUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="text-stone-600 hover:text-stone-900 font-semibold text-xs py-2 px-3 rounded-xl border border-[#ECE5DA] hover:bg-stone-50 flex items-center justify-center gap-1 transition-colors cursor-pointer"
+                    className="text-stone-600 hover:text-stone-900 font-semibold text-xs py-1.5 px-3 rounded-xl border border-[#ECE5DA] hover:bg-stone-50 flex items-center justify-center gap-1 transition-colors cursor-pointer"
                   >
                     <ExternalLink className="w-3.5 h-3.5" />
                     <span>{language === 'hi' ? 'आधिकारिक पोर्टल' : 'Official Portal'}</span>
@@ -1037,7 +1052,7 @@ export function SchemeMatcherPage({ shop, creditData, onNavigateTab }) {
                 <button
                   type="button"
                   onClick={() => handleAskSetuAI(selectedScheme.name)}
-                  className="bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-900 font-semibold text-xs py-2 px-3 rounded-xl flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                  className="bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-900 font-semibold text-xs py-1.5 px-3 rounded-xl flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                 >
                   <Lightbulb className="w-3.5 h-3.5 text-amber-600" />
                   <span>Ask Setu AI</span>
@@ -1048,7 +1063,7 @@ export function SchemeMatcherPage({ shop, creditData, onNavigateTab }) {
                 <button
                   type="button"
                   onClick={() => setSelectedScheme(null)}
-                  className="px-4 py-2 rounded-xl text-stone-600 hover:text-stone-900 hover:bg-stone-100 text-xs font-semibold transition-colors cursor-pointer"
+                  className="px-3 py-1.5 rounded-xl text-stone-600 hover:text-stone-900 hover:bg-stone-100 text-xs font-semibold transition-colors cursor-pointer"
                 >
                   {language === 'hi' ? 'बंद करें' : 'Close'}
                 </button>
@@ -1059,7 +1074,7 @@ export function SchemeMatcherPage({ shop, creditData, onNavigateTab }) {
                     setSelectedScheme(null);
                     if (onNavigateTab) onNavigateTab('dossier');
                   }}
-                  className="bg-[#0F3E2E] hover:bg-[#165640] text-white font-bold text-xs py-2.5 px-4.5 rounded-xl shadow-2xs hover:shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                  className="bg-[#0F3E2E] hover:bg-[#165640] text-white font-bold text-xs py-2 px-4 rounded-xl shadow-2xs hover:shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                 >
                   <span>{language === 'hi' ? 'बैंक फाइल में जोड़ें →' : 'Include in Bank Dossier →'}</span>
                 </button>
