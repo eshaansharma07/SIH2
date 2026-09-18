@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   Search, 
   Star, 
@@ -71,6 +72,17 @@ export function SchemeMatcherPage({ shop, creditData, onNavigateTab }) {
     };
     window.addEventListener('keydown', handleEscape);
     return () => window.removeEventListener('keydown', handleEscape);
+  }, [selectedScheme, detailedModalOpen]);
+
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (selectedScheme || detailedModalOpen) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
   }, [selectedScheme, detailedModalOpen]);
 
   useEffect(() => {
@@ -871,12 +883,12 @@ export function SchemeMatcherPage({ shop, creditData, onNavigateTab }) {
       </section>
 
       {/* 6. CENTERED SCHEME DETAILS MODAL / DETAIL CARD */}
-      {selectedScheme && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 md:p-6">
+      {selectedScheme && typeof document !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 md:p-6 overflow-hidden">
           {/* Subtle warm translucent backdrop overlay */}
           <div 
             onClick={() => setSelectedScheme(null)}
-            className="fixed inset-0 bg-stone-950/40 backdrop-blur-[2px] transition-opacity cursor-pointer animate-in fade-in duration-200"
+            className="fixed inset-0 bg-stone-950/50 backdrop-blur-[2.5px] transition-opacity cursor-pointer animate-in fade-in duration-200"
           />
 
           {/* Centered Modal Card */}
@@ -884,7 +896,7 @@ export function SchemeMatcherPage({ shop, creditData, onNavigateTab }) {
             role="dialog"
             aria-modal="true"
             aria-labelledby="scheme-modal-title"
-            className="relative w-full max-w-2xl sm:max-w-[760px] lg:max-w-[820px] max-h-[calc(100vh-40px)] sm:max-h-[calc(100vh-64px)] lg:max-h-[min(90vh,760px)] bg-[#FCFBF8] border border-[#E7DFD4] rounded-2xl sm:rounded-3xl shadow-2xl shadow-stone-900/15 flex flex-col overflow-hidden z-10 animate-in fade-in zoom-in-[0.98] duration-200 ease-out"
+            className="relative w-full max-w-2xl sm:max-w-[760px] lg:max-w-[820px] max-h-[calc(100vh-48px)] sm:max-h-[calc(100vh-64px)] lg:max-h-[min(90vh,760px)] bg-[#FCFBF8] border border-[#E7DFD4] rounded-2xl sm:rounded-3xl shadow-2xl shadow-stone-900/20 flex flex-col overflow-hidden z-10 animate-in fade-in zoom-in-[0.98] duration-200 ease-out my-auto"
           >
             {/* Modal Header */}
             <div className="px-4 py-3 sm:px-5 sm:py-3.5 border-b border-[#ECE5DA] bg-white/90 flex items-center justify-between gap-3 shrink-0">
@@ -1082,17 +1094,18 @@ export function SchemeMatcherPage({ shop, creditData, onNavigateTab }) {
             </div>
 
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* 7. MODAL: DETAILED MATCHING ENGINE BREAKDOWN */}
-      {detailedModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/35 backdrop-blur-xs animate-fadeIn">
-          <div className="bg-white rounded-2xl border border-stone-200 max-w-lg w-full shadow-2xl relative p-5 sm:p-6">
+      {detailedModalOpen && typeof document !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-stone-950/40 backdrop-blur-xs animate-fadeIn">
+          <div className="bg-white rounded-2xl border border-stone-200 max-w-lg w-full shadow-2xl relative p-5 sm:p-6 my-auto">
             
             <button 
               onClick={() => setDetailedModalOpen(false)}
-              className="absolute top-4 right-4 p-1.5 rounded-xl text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors"
+              className="absolute top-4 right-4 p-1.5 rounded-xl text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
@@ -1151,14 +1164,15 @@ export function SchemeMatcherPage({ shop, creditData, onNavigateTab }) {
             <div className="mt-4 flex justify-end gap-2">
               <button
                 onClick={() => setDetailedModalOpen(false)}
-                className="bg-stone-900 hover:bg-black text-white text-xs font-semibold px-4 py-2 rounded-xl transition-colors"
+                className="bg-stone-900 hover:bg-black text-white text-xs font-semibold px-4 py-2 rounded-xl transition-colors cursor-pointer"
               >
                 Close
               </button>
             </div>
 
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
     </div>
