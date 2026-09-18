@@ -83,39 +83,39 @@ export function CashFlowPage({
   const [isVoiceOpen, setIsVoiceOpen] = useState(false);
   const [moreActionsOpen, setMoreActionsOpen] = useState(false);
   const moreActionsBtnRef = useRef(null);
-  const moreActionsMenuRef = useRef(null);
-  const [dropdownCoords, setDropdownCoords] = useState({ top: 0, left: 0, width: 240, placement: 'bottom' });
+  const desktopMenuRef = useRef(null);
+  const mobileMenuRef = useRef(null);
+  const [dropdownCoords, setDropdownCoords] = useState({ top: 0, left: 0, width: 220 });
 
-  // Compute precise viewport position for anchored dropdown
+  // Dynamically calculate anchored position relative to trigger button
   const updateDropdownPosition = useCallback(() => {
     if (!moreActionsBtnRef.current) return;
     const rect = moreActionsBtnRef.current.getBoundingClientRect();
-    const dropdownWidth = Math.min(256, window.innerWidth - 32);
-
-    // Align right edge of dropdown with right edge of button
+    const dropdownWidth = 230; // standard width for Apple-grade action menu
+    
+    // Position right-aligned to the trigger button, or clamp within viewport
     let left = rect.right - dropdownWidth;
-    if (left + dropdownWidth > window.innerWidth - 16) {
-      left = window.innerWidth - 16 - dropdownWidth;
-    }
-    if (left < 16) {
-      left = 16;
+    if (left < 12) left = 12;
+    if (left + dropdownWidth > window.innerWidth - 12) {
+      left = window.innerWidth - dropdownWidth - 12;
     }
 
-    // Default: directly below the trigger
+    // Position directly below trigger with a 6px gap
     let top = rect.bottom + 6;
-    let placement = 'bottom';
-    const estimatedHeight = 340;
-
-    // Flip to open above if overflowing window bottom and room exists above
-    if (top + estimatedHeight > window.innerHeight - 16 && rect.top > estimatedHeight + 16) {
-      top = rect.top - estimatedHeight - 6;
-      placement = 'top';
+    
+    // If overflowing bottom of viewport, flip to above the trigger
+    if (top + 340 > window.innerHeight && rect.top > 340) {
+      top = rect.top - 340 - 6;
     }
 
-    setDropdownCoords({ top, left, width: dropdownWidth, placement });
+    setDropdownCoords({
+      top: Math.round(top),
+      left: Math.round(left),
+      width: dropdownWidth
+    });
   }, []);
 
-  // Dropdown listeners: close on outside click, Escape, scroll/resize tracking
+  // Listen for outside clicks, window resize, and scroll to reposition or close cleanly
   useEffect(() => {
     if (!moreActionsOpen) return;
 
@@ -128,7 +128,8 @@ export function CashFlowPage({
     const handleClickOutside = (e) => {
       if (
         (moreActionsBtnRef.current && moreActionsBtnRef.current.contains(e.target)) ||
-        (moreActionsMenuRef.current && moreActionsMenuRef.current.contains(e.target))
+        (desktopMenuRef.current && desktopMenuRef.current.contains(e.target)) ||
+        (mobileMenuRef.current && mobileMenuRef.current.contains(e.target))
       ) {
         return;
       }
@@ -234,20 +235,38 @@ export function CashFlowPage({
         api.getCustomers(targetShopId)
       ]);
 
-      if (txResult.status === 'fulfilled' && txResult.value?.transactions?.length > 0) {
-        setTransactions(txResult.value.transactions);
+      if (txResult.status === 'fulfilled') {
+        if (txResult.value?.transactions?.length > 0) {
+          setTransactions(txResult.value.transactions);
+        } else if (isDemo) {
+          setTransactions(DEMO_TRANSACTIONS);
+        } else {
+          setTransactions([]);
+        }
       } else if (isDemo && transactions.length === 0) {
         setTransactions(DEMO_TRANSACTIONS);
+      } else if (!isDemo) {
+        setTransactions([]);
       }
 
-      if (udhResult.status === 'fulfilled' && udhResult.value?.customers?.length > 0) {
-        setUdhaarLedger(udhResult.value.customers);
+      if (udhResult.status === 'fulfilled') {
+        if (udhResult.value?.customers?.length > 0) {
+          setUdhaarLedger(udhResult.value.customers);
+        } else if (isDemo) {
+          setUdhaarLedger(DEMO_UDHAAR_LEDGER);
+        } else {
+          setUdhaarLedger([]);
+        }
       } else if (isDemo && udhaarLedger.length === 0) {
         setUdhaarLedger(DEMO_UDHAAR_LEDGER);
+      } else if (!isDemo) {
+        setUdhaarLedger([]);
       }
 
-      if (custListResult.status === 'fulfilled' && custListResult.value?.customers?.length > 0) {
-        setCustomerList(custListResult.value.customers);
+      if (custListResult.status === 'fulfilled') {
+        setCustomerList(custListResult.value?.customers || []);
+      } else if (!isDemo) {
+        setCustomerList([]);
       }
     } catch (err) {
       console.warn('Failed to load bahi-khata data:', err.message);
@@ -901,7 +920,9 @@ export function CashFlowPage({
 
           {/* Desktop/Tablet Anchored Popover (sm and up) */}
           <div
-            ref={moreActionsMenuRef}
+            ref={desktopMenuRef}
+            onPointerDown={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
             style={{
               top: `${dropdownCoords.top}px`,
               left: `${dropdownCoords.left}px`,
@@ -1047,7 +1068,9 @@ export function CashFlowPage({
 
           {/* Mobile Action Bottom Sheet (< 640px) */}
           <div
-            ref={moreActionsMenuRef}
+            ref={mobileMenuRef}
+            onPointerDown={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
             className="sm:hidden fixed inset-x-3 bottom-5 z-[101] bg-white border border-stone-200/90 rounded-2xl p-3 shadow-2xl space-y-1.5 text-xs select-none animate-in slide-in-from-bottom-4 duration-200"
           >
             <div className="flex items-center justify-between pb-2 border-b border-stone-100 mb-1">

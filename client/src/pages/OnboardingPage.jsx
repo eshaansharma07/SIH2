@@ -964,7 +964,7 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
       {/* ========================================================================= */}
       {/* 6. SMART INDIA HACKATHON 2026 BAR                                         */}
       {/* ========================================================================= */}
-      <section id="sih-section" className="py-12 border-t border-[#E7DFD5]/80 bg-[#FAF7F2]">
+      <section id="sih-section" className="py-8 sm:py-10 border-t border-[#E7DFD5]/80 bg-[#FAF7F2]">
         <div className="max-w-7xl mx-auto px-4 sm:px-8 flex flex-col sm:flex-row items-center justify-between gap-6">
           
           {/* SIH Emblem & Text */}
@@ -989,7 +989,7 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
             <img 
               src="/assets/saakhsetu/gaon-se-growth.png" 
               alt="Gaon Se Growth Tak" 
-              className="h-12 w-auto object-contain select-none"
+              className="h-11 sm:h-12 w-auto object-contain select-none"
             />
           </div>
 
@@ -1003,7 +1003,7 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
         <img
           src="/assets/saakhsetu/rural-landscape.png"
           alt="Rural Indian Village Landscape Line Art"
-          className="w-full h-auto max-h-36 object-cover object-bottom select-none pointer-events-none opacity-85"
+          className="w-full h-40 sm:h-52 md:h-64 lg:h-72 object-cover object-center select-none pointer-events-none opacity-90"
         />
       </div>
 
