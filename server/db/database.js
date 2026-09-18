@@ -1,4 +1,3 @@
-import Database from 'better-sqlite3';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
@@ -21,13 +20,60 @@ if (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME) {
   dbPath = tmpPath;
 }
 
-const db = new Database(dbPath);
-
-// Enable WAL mode if supported
+let db;
 try {
-  db.pragma('journal_mode = WAL');
-} catch (e) {
-  // Ignore in environments where WAL is restricted
+  const { default: Database } = await import('better-sqlite3');
+  db = new Database(dbPath);
+  try {
+    db.pragma('journal_mode = WAL');
+  } catch (e) {
+    // Ignore in environments where WAL is restricted
+  }
+} catch (loadErr) {
+  // Graceful fallback to Node's built-in node:sqlite (Node 22.5+)
+  const { DatabaseSync } = await import('node:sqlite');
+  const rawDb = new DatabaseSync(dbPath);
+  const sanitize = (val) => {
+    if (val === undefined) return null;
+    if (typeof val === 'boolean') return val ? 1 : 0;
+    return val;
+  };
+
+  const origPrepare = rawDb.prepare.bind(rawDb);
+  rawDb.prepare = function(sql) {
+    const stmt = origPrepare(sql);
+    return {
+      run: (...args) => stmt.run(...args.map(sanitize)),
+      get: (...args) => stmt.get(...args.map(sanitize)),
+      all: (...args) => stmt.all(...args.map(sanitize))
+    };
+  };
+
+  rawDb.pragma = (str) => {
+    try {
+      rawDb.exec(`PRAGMA ${str}`);
+    } catch (e) {}
+  };
+
+  rawDb.transaction = (fn) => {
+    return (...args) => {
+      rawDb.exec('BEGIN TRANSACTION');
+      try {
+        const result = fn(...args);
+        rawDb.exec('COMMIT');
+        return result;
+      } catch (err) {
+        rawDb.exec('ROLLBACK');
+        throw err;
+      }
+    };
+  };
+
+  try {
+    rawDb.pragma('journal_mode = WAL');
+  } catch (e) {}
+
+  db = rawDb;
 }
 
 // Initialize tables
