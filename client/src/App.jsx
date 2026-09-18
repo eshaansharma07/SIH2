@@ -446,6 +446,10 @@ export default function App() {
             <OnboardingPage 
               onComplete={handleRealRegistrationComplete}
               onSelectDemo={handleSelectDemo}
+              onStartDemoTour={() => {
+                handleSelectDemo();
+                setDemoTourOpen(true);
+              }}
             />
           </Suspense>
         </main>
@@ -617,7 +621,7 @@ export default function App() {
         </Suspense>
       )}
 
-      {/* Interactive Animated Guided Demo Tour for SIH Judges */}
+      {/* Live Interactive Guided Demo Tour */}
       {demoTourOpen && (
         <Suspense fallback={null}>
           <InteractiveDemoTour
@@ -647,7 +651,7 @@ export default function App() {
         <footer className="print:hidden border-t border-stone-200/80 bg-[#FAF8F5]/90 backdrop-blur-md py-8 px-4 text-center text-xs text-stone-600 pb-28 sm:pb-24">
         <div className="max-w-4xl mx-auto space-y-2">
           <div className="flex items-center justify-center gap-2 flex-wrap">
-            <span className="font-bold text-stone-900 font-serif text-sm">{APP_NAME_HI} ({APP_NAME_EN}) — Prototype</span>
+            <span className="font-bold text-stone-900 font-serif text-sm">{APP_NAME_HI} ({APP_NAME_EN})</span>
             <span className="text-stone-300">•</span>
             <span className="text-[10px] bg-stone-900 text-white font-bold px-2.5 py-0.5 rounded-full">
               DPI Sovereign Architecture
@@ -658,7 +662,7 @@ export default function App() {
             </span>
           </div>
           <p className="text-[11px] text-stone-500 max-w-2xl mx-auto leading-relaxed">
-            National Micro-Enterprise Credit & Seasonal Demand Radar. A sovereign micro-enterprise prototype built for Smart India Hackathon 2026, referencing Nayak Committee & RBI Priority Sector Lending norms. Not an official government service.
+            National Micro-Enterprise Credit & Seasonal Demand Radar. Built for Indian micro-enterprises referencing Nayak Committee & RBI Priority Sector Lending norms.
           </p>
           <div className="flex items-center justify-center gap-1.5 pt-1">
             <span className="w-1.5 h-1.5 rounded-full bg-red-600" />

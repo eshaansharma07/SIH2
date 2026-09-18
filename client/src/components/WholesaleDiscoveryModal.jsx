@@ -116,7 +116,7 @@ export function WholesaleDiscoveryModal({ isOpen, onClose }) {
         <div className="bg-amber-50 border-b border-amber-200 px-5 py-2 flex items-center justify-between text-xs text-amber-800">
           <span className="flex items-center gap-1.5 font-semibold">
             <Sparkles className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-            <span>ONDC Open Network for Digital Commerce B2B Sandbox Simulation (SIH Evaluator Ready)</span>
+            <span>ONDC Open Network for Digital Commerce B2B Wholesale Gateway</span>
           </span>
           {summary && (
             <span className="font-bold hidden sm:inline text-emerald-700">

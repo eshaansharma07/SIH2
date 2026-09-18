@@ -70,7 +70,7 @@ export function SaakhSetuBridgeLogo({ className = "w-9 h-7 text-[#0F3E2E]" }) {
   );
 }
 
-export function OnboardingPage({ onComplete, onSelectDemo }) {
+export function OnboardingPage({ onComplete, onSelectDemo, onStartDemoTour }) {
   const { language, setLanguage } = useTranslation();
 
   // Mega-menu state: 'how' | 'shopkeepers' | 'impact' | 'about' | null
@@ -223,7 +223,11 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
   const handleLaunchEvaluatorDemo = () => {
     setAuthModalOpen(false);
     setWatchDemoOpen(false);
-    onSelectDemo?.();
+    if (onStartDemoTour) {
+      onStartDemoTour();
+    } else {
+      onSelectDemo?.();
+    }
   };
 
   // Smooth scroll helper
@@ -328,7 +332,7 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
               onMouseEnter={() => handleMouseEnter('about')}
             >
               <button 
-                onClick={() => scrollToSection('sih-section')}
+                onClick={() => scrollToSection('opportunities-section')}
                 className={`flex items-center gap-1 hover:text-[#0F3E2E] transition-colors cursor-pointer ${
                   activeMega === 'about' ? 'text-[#0F3E2E] font-bold' : ''
                 }`}
@@ -570,7 +574,7 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
                         Re-engineering Rural Lending on India's Digital Public Infrastructure
                       </h4>
                       <p className="text-xs text-[#57534E] leading-relaxed">
-                        Built for Smart India Hackathon 2026. SaakhSetu bridges low-literacy shopkeepers with priority sector credit without requiring formal CA balance sheets, collateral, or traditional CIBIL histories.
+                        SaakhSetu bridges low-literacy shopkeepers with priority sector credit without requiring formal CA balance sheets, collateral, or traditional CIBIL histories.
                       </p>
                     </div>
                     <div className="col-span-5 border-l border-[#E7DFD5] pl-8 space-y-2.5 text-xs font-bold text-[#1C1917]">
@@ -580,11 +584,11 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
                       <button onClick={() => scrollToSection('four-pillars')} className="block hover:text-[#0F3E2E] transition">
                         → Our 4-Pillar Underwriting Approach
                       </button>
-                      <button onClick={() => scrollToSection('sih-section')} className="block hover:text-[#0F3E2E] transition">
-                        → Smart India Hackathon 2026 Submission
+                      <button onClick={() => scrollToSection('opportunities-section')} className="block hover:text-[#0F3E2E] transition">
+                        → Priority Sector Lending Architecture
                       </button>
-                      <button onClick={() => setAuthModalOpen(true)} className="block hover:text-[#0F3E2E] transition">
-                        → Evaluator Demo & Documentation Access
+                      <button onClick={() => handleLaunchEvaluatorDemo()} className="block hover:text-[#0F3E2E] transition">
+                        → Live Interactive Demo Tour
                       </button>
                     </div>
                   </div>
@@ -642,12 +646,12 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
 
               <button 
                 onClick={() => {
-                  scrollToSection('sih-section');
+                  scrollToSection('opportunities-section');
                 }}
                 className="w-full text-left py-2 flex items-center justify-between"
               >
-                <span>About & SIH 2026</span>
-                <span className="text-xs text-[#78716C]">Prototype</span>
+                <span>About SaakhSetu</span>
+                <span className="text-xs text-[#78716C]">PSL Platform</span>
               </button>
             </div>
 
@@ -688,7 +692,7 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
               
               {/* Eyebrow Pill */}
               <div className="inline-flex items-center px-3.5 py-1.5 rounded-full border border-[#D5CCBC] bg-[#FAF7F2] text-[11px] font-semibold text-[#57534E] tracking-tight">
-                RBI Priority Sector Lending • Smart India Hackathon 2026
+                Priority Sector Lending (PSL) • Alternative Credit Infrastructure
               </div>
 
               {/* Main Headline (Editorial Serif) */}
@@ -972,20 +976,16 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
       </section>
 
       {/* ========================================================================= */}
-      {/* 6. CTA / OPPORTUNITIES & SIH 2026 SECTION                                  */}
+      {/* 6. CTA / OPPORTUNITIES SECTION */}
       {/* ========================================================================= */}
-      <section id="sih-section" className="pt-14 sm:pt-16 pb-0 border-t border-[#E7DFD5]/80 bg-[#FAF7F2] text-center relative overflow-hidden">
+      <section id="opportunities-section" className="pt-14 sm:pt-16 pb-0 border-t border-[#E7DFD5]/80 bg-[#FAF7F2] text-center relative overflow-hidden">
         <div className="max-w-4xl mx-auto px-4 sm:px-8 space-y-6 relative z-10">
           
-          {/* SIH 2026 National Emblem Lockup */}
-          <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-white/90 border border-[#E7DFD5] shadow-2xs">
-            <img 
-              src="/assets/saakhsetu/sih-emblem.png" 
-              alt="Smart India Hackathon 2026 Emblem" 
-              className="w-5 h-5 object-contain"
-            />
+          {/* Sovereign PSL Accreditation Lockup */}
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/90 border border-[#E7DFD5] shadow-2xs">
+            <ShieldCheck className="w-4 h-4 text-[#0F3E2E]" />
             <span className="text-xs font-semibold text-[#1C1917] tracking-tight">
-              Smart India Hackathon 2026 • Ideas for a Viksit Bharat
+              {language === 'hi' ? 'प्राथमिकता क्षेत्र ऋण (PSL) • आत्मनिर्भर भारत' : 'Priority Sector Lending • Empowering Rural Enterprises'}
             </span>
           </div>
 
@@ -1007,13 +1007,13 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
           <div className="flex flex-wrap items-center justify-center gap-3.5 pt-1">
             <button
               onClick={() => setAuthModalOpen(true)}
-              className="px-6 py-3 rounded-xl bg-[#0F3E2E] hover:bg-[#165640] text-white text-xs sm:text-sm font-bold shadow-sm hover:shadow-md transition-all cursor-pointer flex items-center gap-2"
+              className="px-6 py-3 rounded-xl bg-[#0F3E2E] hover:bg-[#165640] text-white text-xs sm:text-sm font-bold shadow-sm hover:shadow-md transition-all cursor-pointer flex items-center gap-2 btn-tactile"
             >
               <span>{language === 'hi' ? 'दुकानदार लॉगिन / पंजीकरण →' : 'Get Started as Shopkeeper →'}</span>
             </button>
             <button
-              onClick={() => setDemoTourOpen(true)}
-              className="px-5 py-3 rounded-xl bg-white hover:bg-stone-50 border border-[#D5CCBC] text-[#1C1917] text-xs sm:text-sm font-semibold transition-all cursor-pointer flex items-center gap-2 shadow-2xs"
+              onClick={handleLaunchEvaluatorDemo}
+              className="px-5 py-3 rounded-xl bg-white hover:bg-stone-50 border border-[#D5CCBC] text-[#1C1917] text-xs sm:text-sm font-semibold transition-all cursor-pointer flex items-center gap-2 shadow-2xs btn-tactile"
             >
               <span className="text-[#0F3E2E]">▶</span>
               <span>{language === 'hi' ? 'डेमो देखें' : 'Watch Evaluator Demo'}</span>
@@ -1075,14 +1075,14 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
               <button onClick={() => scrollToSection('four-pillars')} className="hover:text-[#0F3E2E] cursor-pointer">
                 Impact
               </button>
-              <button onClick={() => scrollToSection('sih-section')} className="hover:text-[#0F3E2E] cursor-pointer">
+              <button onClick={() => scrollToSection('opportunities-section')} className="hover:text-[#0F3E2E] cursor-pointer">
                 About
               </button>
               <span className="text-[#D5CCBC]">|</span>
               <button onClick={() => alert('SaakhSetu operates on strict RBI Priority Sector Lending borrower data privacy principles.')} className="hover:text-[#0F3E2E] cursor-pointer">
                 Privacy
               </button>
-              <button onClick={() => alert('Prototype terms: SIH 2026 Evaluation Sandbox.')} className="hover:text-[#0F3E2E] cursor-pointer">
+              <button onClick={() => alert('SaakhSetu operates under standard Priority Sector Lending data governance norms.')} className="hover:text-[#0F3E2E] cursor-pointer">
                 Terms
               </button>
             </div>
@@ -1124,7 +1124,7 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
           </div>
 
           <div className="text-[11px] text-[#A8A29E] text-center sm:text-left border-t border-[#E7DFD5]/60 pt-4">
-            © 2026 SaakhSetu. Smart India Hackathon Prototype. All rights reserved.
+            © 2026 SaakhSetu (साख सेतु). Priority Sector Lending & Micro-Enterprise Credit Architecture. All rights reserved.
           </div>
 
         </div>

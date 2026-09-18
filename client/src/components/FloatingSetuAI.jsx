@@ -213,8 +213,8 @@ export function FloatingSetuAI({
   };
 
   return (
-    <div className="fixed bottom-20 left-4 sm:bottom-6 sm:left-6 z-50 select-none">
-      {/* 1. Minimized Circle State (Bottom Left) */}
+    <div className="fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-50 select-none">
+      {/* 1. Minimized Circle State (Bottom Right) */}
       {!isOpen && (
         <div className="relative group">
           <button
@@ -236,15 +236,15 @@ export function FloatingSetuAI({
             <span className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-400 border-2 border-[#0F3E2E] shadow-sm group-hover:scale-110 transition-transform" />
           </button>
 
-          {/* Desktop Hover Tooltip Badge */}
-          <div className="hidden sm:block absolute left-16 top-1/2 -translate-y-1/2 ml-2 px-3 py-1.5 rounded-xl bg-[#1C1917]/95 backdrop-blur-md text-[#FAF7F2] text-xs font-semibold whitespace-nowrap opacity-0 group-hover:opacity-100 group-hover:translate-x-1 pointer-events-none transition-all duration-200 shadow-2xl border border-white/10">
+          {/* Desktop Hover Tooltip Badge (Points inwards towards left from bottom-right) */}
+          <div className="hidden sm:block absolute right-16 top-1/2 -translate-y-1/2 mr-2 px-3 py-1.5 rounded-xl bg-[#1C1917]/95 backdrop-blur-md text-[#FAF7F2] text-xs font-semibold whitespace-nowrap opacity-0 group-hover:opacity-100 group-hover:-translate-x-1 pointer-events-none transition-all duration-200 shadow-2xl border border-white/10">
             <span className="text-amber-300 font-serif font-bold mr-1">सेतु AI</span>
             <span>{language === 'hi' ? '• सेवा सहायक' : '• Services & Help'}</span>
           </div>
         </div>
       )}
 
-      {/* 2. Expanded Chatbot Window (Bottom Left) */}
+      {/* 2. Expanded Chatbot Window (Bottom Right) */}
       {isOpen && (
         <div className="w-[330px] sm:w-[370px] h-[520px] max-h-[82vh] bg-[#FAF8F5] rounded-3xl shadow-[0_24px_60px_-12px_rgba(15,62,46,0.32)] border border-[#DFCFC0] flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-200">
           

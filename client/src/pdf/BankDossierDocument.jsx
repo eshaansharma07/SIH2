@@ -328,7 +328,7 @@ export function BankDossierDocument({ data }) {
             <Text style={styles.subBrand}>Hyper-Local Business Advisory & Underwriting Stack for Rural Micro-Enterprises</Text>
             <Text style={styles.documentTitle}>CREDIT APPRAISAL MEMO & VERIFIED FINANCIAL DOSSIER</Text>
             <Text style={styles.complianceBadge}>
-              FORMATTED PER RBI PSL & NAYAK COMMITTEE GUIDELINES • SIH 2026 PROTOTYPE
+              FORMATTED PER RBI PSL & NAYAK COMMITTEE GUIDELINES • SOVEREIGN MSME ARCHITECTURE
             </Text>
           </View>
           <View style={styles.metaBlock}>
@@ -514,7 +514,7 @@ export function BankDossierDocument({ data }) {
 
         {/* Footer */}
         <View style={styles.footer}>
-          <Text style={styles.footerText}>SaakhSetu • Prototype for Smart India Hackathon 2026 • Formatted per RBI PSL guidelines • Not an official government filing</Text>
+          <Text style={styles.footerText}>SaakhSetu • Priority Sector Lending & Micro-Enterprise Credit Architecture • Formatted per RBI PSL guidelines</Text>
           <Text style={styles.footerText}>Page 1 of 1 • System Generated Dossier</Text>
         </View>
 

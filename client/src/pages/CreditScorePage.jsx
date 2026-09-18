@@ -579,9 +579,27 @@ export function CreditScorePage({ shop, creditData, onNavigateTab }) {
           </div>
 
           <div className="flex items-center gap-6 text-stone-500">
-            <a href="#privacy" className="hover:text-stone-900 transition-colors">Privacy</a>
-            <a href="#terms" className="hover:text-stone-900 transition-colors">Terms</a>
-            <a href="#contact" className="hover:text-stone-900 transition-colors">Contact</a>
+            <button 
+              type="button" 
+              onClick={() => alert('SaakhSetu adheres to strict RBI Priority Sector Lending borrower data privacy principles. All merchant records remain confidential.')}
+              className="hover:text-stone-900 transition-colors cursor-pointer"
+            >
+              Privacy
+            </button>
+            <button 
+              type="button" 
+              onClick={() => alert('SaakhSetu MSME Terms: Governed under RBI PSL norms and MSMED Act framework for Indian micro-enterprises.')}
+              className="hover:text-stone-900 transition-colors cursor-pointer"
+            >
+              Terms
+            </button>
+            <button 
+              type="button" 
+              onClick={() => window.open('tel:18008897388', '_self')}
+              className="hover:text-stone-900 transition-colors cursor-pointer"
+            >
+              Contact (1800-889-SETU)
+            </button>
           </div>
         </div>
       </footer>

@@ -392,14 +392,32 @@ export function DashboardPage({
         </div>
 
         <div className="flex items-center gap-4 text-[11px] font-medium text-stone-600">
-          <a href="#privacy" className="hover:text-stone-900 transition-colors">Privacy</a>
-          <a href="#terms" className="hover:text-stone-900 transition-colors">Terms</a>
-          <a href="#contact" className="hover:text-stone-900 transition-colors">Contact</a>
+          <button 
+            type="button" 
+            onClick={() => alert('SaakhSetu adheres to strict RBI Priority Sector Lending borrower data privacy principles. All merchant records remain confidential.')}
+            className="hover:text-stone-900 transition-colors cursor-pointer"
+          >
+            Privacy
+          </button>
+          <button 
+            type="button" 
+            onClick={() => alert('SaakhSetu MSME Terms: Governed under RBI PSL norms and MSMED Act framework for Indian micro-enterprises.')}
+            className="hover:text-stone-900 transition-colors cursor-pointer"
+          >
+            Terms
+          </button>
+          <button 
+            type="button" 
+            onClick={() => window.open('tel:18008897388', '_self')}
+            className="hover:text-stone-900 transition-colors cursor-pointer"
+          >
+            Contact (1800-889-SETU)
+          </button>
           <span className="text-stone-300">|</span>
           <div className="flex items-center gap-2.5 text-stone-500">
-            <span className="hover:text-stone-800 cursor-pointer font-bold">in</span>
-            <span className="hover:text-stone-800 cursor-pointer font-bold">𝕏</span>
-            <span className="hover:text-stone-800 cursor-pointer font-bold">▶</span>
+            <a href="https://linkedin.com" target="_blank" rel="noreferrer" className="hover:text-stone-800 cursor-pointer font-bold" aria-label="LinkedIn">in</a>
+            <a href="https://twitter.com" target="_blank" rel="noreferrer" className="hover:text-stone-800 cursor-pointer font-bold" aria-label="Twitter">𝕏</a>
+            <a href="https://youtube.com" target="_blank" rel="noreferrer" className="hover:text-stone-800 cursor-pointer font-bold" aria-label="YouTube">▶</a>
           </div>
         </div>
       </footer>

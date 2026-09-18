@@ -530,7 +530,17 @@ export function Navbar({
 
           {/* Right: Action Controls (Notifications, Language, Profile) */}
           <div className="flex items-center gap-2 sm:gap-3 shrink-0 ml-auto lg:ml-0 lg:flex-1 lg:max-w-[280px] xl:max-w-[320px] justify-end">
-            
+            {/* Live Demo Tour Button */}
+            <button
+              type="button"
+              onClick={() => onStartDemoTour?.()}
+              className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-amber-100/90 hover:bg-amber-200/80 text-amber-950 text-xs font-bold border border-amber-300/80 shadow-2xs hover:shadow-xs transition-all cursor-pointer btn-tactile shrink-0"
+              title={language === 'hi' ? 'लाइव डेमो टूर चलाएं' : 'Start Live Guided Demo'}
+            >
+              <Sparkles className="w-3.5 h-3.5 text-amber-700 fill-amber-500/40" />
+              <span className="hidden sm:inline">{language === 'hi' ? 'लाइव टूर' : 'Demo Tour'}</span>
+            </button>
+
             {/* Notification Bell */}
             <div className="relative">
               <button
