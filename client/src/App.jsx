@@ -461,6 +461,7 @@ export default function App() {
               onSwitchToRegister={handleSwitchToRegister}
               onLogout={handleSwitchToRegister}
               onToggleSidebar={() => setSidebarOpen(prev => !prev)}
+              onOpenWholesale={() => setWholesaleModalOpen(true)}
             />
 
             {/* Main Page Container */}

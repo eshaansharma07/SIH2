@@ -31,7 +31,13 @@ import { SchemeLogo } from '../components/SchemeLogo';
 
 export function SchemeMatcherPage({ shop, creditData, onNavigateTab }) {
   const { language } = useTranslation();
-  const [filterType, setFilterType] = useState('recommended'); // 'recommended', 'all', 'loan', 'subsidy'
+  const [filterType, setFilterType] = useState(() => {
+    try {
+      return sessionStorage.getItem('saakhsetu_schemes_filter') || 'recommended';
+    } catch (_) {
+      return 'recommended';
+    }
+  }); // 'recommended', 'all', 'loan', 'subsidy'
   const [searchQuery, setSearchQuery] = useState('');
   const [matchedData, setMatchedData] = useState(null);
   const [allSchemes, setAllSchemes] = useState([]);
@@ -40,6 +46,19 @@ export function SchemeMatcherPage({ shop, creditData, onNavigateTab }) {
   const [detailedModalOpen, setDetailedModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
+
+  // External filter switching from Top Navigation Mega-Menu
+  useEffect(() => {
+    const handleFilterChange = (e) => {
+      const type = e.detail?.filterType;
+      if (type) {
+        setFilterType(type);
+        try { sessionStorage.setItem('saakhsetu_schemes_filter', type); } catch (_) {}
+      }
+    };
+    window.addEventListener('saakhsetu:schemes-filter', handleFilterChange);
+    return () => window.removeEventListener('saakhsetu:schemes-filter', handleFilterChange);
+  }, []);
 
   useEffect(() => {
     loadSchemes();

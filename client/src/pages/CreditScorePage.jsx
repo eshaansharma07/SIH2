@@ -110,6 +110,42 @@ export function CreditScorePage({ shop, creditData, onNavigateTab }) {
   // Score change compared to last month: calculated or baseline
   const scoreDelta = isDemo ? 44 : (creditData?.scoreDelta ?? (baseScore && creditData?.scoreDelta ? creditData.scoreDelta : null));
 
+  // External action listener from Top Navigation Mega-Menu
+  useEffect(() => {
+    const handleCreditAction = (e) => {
+      const action = e.detail?.action;
+      if (action === 'simulator') {
+        setIsSimulatorModalOpen(true);
+      } else if (action === 'pillars') {
+        setIsBreakdownModalOpen(true);
+      } else if (action === 'insights') {
+        setTimeout(() => {
+          const el = document.getElementById('credit-insights');
+          if (el) el.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+      }
+    };
+
+    // Check stored action on mount
+    try {
+      const pendingAction = sessionStorage.getItem('saakhsetu_credit_action');
+      if (pendingAction) {
+        sessionStorage.removeItem('saakhsetu_credit_action');
+        if (pendingAction === 'simulator') setIsSimulatorModalOpen(true);
+        else if (pendingAction === 'pillars') setIsBreakdownModalOpen(true);
+        else if (pendingAction === 'insights') {
+          setTimeout(() => {
+            const el = document.getElementById('credit-insights');
+            if (el) el.scrollIntoView({ behavior: 'smooth' });
+          }, 150);
+        }
+      }
+    } catch (_) {}
+
+    window.addEventListener('saakhsetu:credit-action', handleCreditAction);
+    return () => window.removeEventListener('saakhsetu:credit-action', handleCreditAction);
+  }, []);
+
   // Simulator State
   const [extraDays, setExtraDays] = useState(30);
   const [recoverUdhaar, setRecoverUdhaar] = useState(4000);
@@ -377,7 +413,7 @@ export function CreditScorePage({ shop, creditData, onNavigateTab }) {
       {/* ========================================================================= */}
       {/* 3. WHAT CAN IMPROVE YOUR SCORE? (3 CONCISE RECOMMENDATION CARDS)          */}
       {/* ========================================================================= */}
-      <section className="w-full space-y-3">
+      <section id="credit-insights" className="w-full space-y-3">
         {/* Section Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div className="flex items-center gap-2.5">

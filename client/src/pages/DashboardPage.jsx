@@ -55,6 +55,35 @@ export function DashboardPage({
     }
   };
 
+  // External action listener from Top Navigation Mega-Menu
+  useEffect(() => {
+    const handleDashAction = (e) => {
+      const action = e.detail?.action;
+      if (action === 'activity') {
+        setTimeout(() => {
+          const el = document.getElementById('recent-activity');
+          if (el) el.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+      }
+    };
+
+    try {
+      const pendingAction = sessionStorage.getItem('saakhsetu_dashboard_action');
+      if (pendingAction) {
+        sessionStorage.removeItem('saakhsetu_dashboard_action');
+        if (pendingAction === 'activity') {
+          setTimeout(() => {
+            const el = document.getElementById('recent-activity');
+            if (el) el.scrollIntoView({ behavior: 'smooth' });
+          }, 150);
+        }
+      }
+    } catch (_) {}
+
+    window.addEventListener('saakhsetu:dashboard-action', handleDashAction);
+    return () => window.removeEventListener('saakhsetu:dashboard-action', handleDashAction);
+  }, []);
+
   const handleSurveySubmit = (e) => {
     e.preventDefault();
     try {
@@ -189,7 +218,7 @@ export function DashboardPage({
       </section>
 
       {/* 2. ACTIVITY & SURVEY ROW */}
-      <section className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <section id="recent-activity" className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
         {/* Left 8 Cols: Your Business Activity Bento Cards */}
         <div className="lg:col-span-8 space-y-4">

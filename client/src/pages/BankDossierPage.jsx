@@ -180,6 +180,39 @@ export function BankDossierPage({ shop, isDemoMode, onNavigateTab, onBack }) {
     }
   };
 
+  // External action listener from Top Navigation Mega-Menu
+  useEffect(() => {
+    const handleDossierAction = (e) => {
+      const action = e.detail?.action;
+      if (action === 'download') {
+        handleDownloadPDF();
+      } else if (action === 'readiness') {
+        setTimeout(() => {
+          const el = document.getElementById('dossier-readiness');
+          if (el) el.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+      }
+    };
+
+    // Check stored action on mount
+    try {
+      const pendingAction = sessionStorage.getItem('saakhsetu_dossier_action');
+      if (pendingAction) {
+        sessionStorage.removeItem('saakhsetu_dossier_action');
+        if (pendingAction === 'download') handleDownloadPDF();
+        else if (pendingAction === 'readiness') {
+          setTimeout(() => {
+            const el = document.getElementById('dossier-readiness');
+            if (el) el.scrollIntoView({ behavior: 'smooth' });
+          }, 150);
+        }
+      }
+    } catch (_) {}
+
+    window.addEventListener('saakhsetu:dossier-action', handleDossierAction);
+    return () => window.removeEventListener('saakhsetu:dossier-action', handleDossierAction);
+  }, [dossierData, shop?.id]);
+
   const handleAskSetuAI = () => {
     window.dispatchEvent(
       new CustomEvent('saakhsetu:open-advisor', {
@@ -359,7 +392,7 @@ export function BankDossierPage({ shop, isDemoMode, onNavigateTab, onBack }) {
           </div>
 
           {/* Card B: What's Included (Informational, No Financial Numbers Clutter) */}
-          <div className="bg-white border border-stone-200/80 rounded-2xl p-6 sm:p-7 shadow-2xs">
+          <div id="dossier-readiness" className="bg-white border border-stone-200/80 rounded-2xl p-6 sm:p-7 shadow-2xs">
             <div>
               <h3 className="text-lg sm:text-xl font-bold text-stone-900 font-display">
                 What's Included

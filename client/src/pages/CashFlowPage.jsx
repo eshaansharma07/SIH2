@@ -62,7 +62,13 @@ export function CashFlowPage({
   const [deletingId, setDeletingId] = useState(null);
 
   // Search & Filter State
-  const [selectedCategoryTab, setSelectedCategoryTab] = useState('all'); // 'all', 'customers', 'sales', 'purchases', 'expenses', 'udhaar'
+  const [selectedCategoryTab, setSelectedCategoryTab] = useState(() => {
+    try {
+      return sessionStorage.getItem('saakhsetu_cashflow_tab') || 'all';
+    } catch (_) {
+      return 'all';
+    }
+  }); // 'all', 'customers', 'sales', 'purchases', 'expenses', 'udhaar'
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
   const [paymentFilter, setPaymentFilter] = useState('all');
@@ -124,14 +130,27 @@ export function CashFlowPage({
   // Custom event listeners for external navigation (from Overview Bento cards or Sidebar)
   useEffect(() => {
     const handleSwitch = (e) => {
-      if (e.detail?.tab === 'udhaar') {
+      const target = e.detail?.tab || 'all';
+      try { sessionStorage.setItem('saakhsetu_cashflow_tab', target); } catch (_) {}
+      if (target === 'sales') {
+        setSelectedCategoryTab('sales');
+        setTypeFilter('income');
+      } else if (target === 'purchases') {
+        setSelectedCategoryTab('purchases');
+        setTypeFilter('expense');
+      } else if (target === 'expenses') {
+        setSelectedCategoryTab('expenses');
+        setTypeFilter('expense');
+      } else if (target === 'udhaar') {
         setSelectedCategoryTab('udhaar');
         setTypeFilter('all');
-        setCurrentPage(1);
-      } else if (e.detail?.tab === 'customers') {
+      } else if (target === 'customers') {
         setSelectedCategoryTab('customers');
-        setCurrentPage(1);
+      } else {
+        setSelectedCategoryTab('all');
+        setTypeFilter('all');
       }
+      setCurrentPage(1);
     };
     const handleFilter = (e) => {
       if (e.detail?.filter !== undefined) {
