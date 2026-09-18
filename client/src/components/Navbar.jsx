@@ -72,23 +72,25 @@ export function Navbar({
   return (
     <header className="sticky top-0 z-30 w-full backdrop-blur-xl bg-[#FAF8F5]/90 border-b border-[#ECE5D8] transition-all">
       <div className="w-full px-4 sm:px-6">
-        <div className="flex items-center justify-between h-15 sm:h-16 gap-3">
+        <div className="flex items-center justify-between h-15 sm:h-16 gap-3 relative">
           
-          {/* Mobile Sidebar Hamburger + Left Brand (visible on mobile only) */}
-          <div className="flex items-center gap-2.5 lg:hidden">
-            <button
-              type="button"
-              onClick={onToggleSidebar}
-              className="p-2 rounded-xl text-stone-700 hover:text-stone-900 hover:bg-stone-200/60 transition-colors"
-              aria-label="Open sidebar navigation"
-            >
-              <Menu className="w-5 h-5" />
-            </button>
-            <span className="font-serif font-black text-sm text-[#0F3E2E]">साख सेतु</span>
+          {/* Left: Mobile Sidebar Hamburger + Brand (visible on mobile only) / Desktop spacer */}
+          <div className="flex items-center gap-2.5 lg:flex-1 lg:max-w-[280px] xl:max-w-[320px]">
+            <div className="flex items-center gap-2.5 lg:hidden">
+              <button
+                type="button"
+                onClick={onToggleSidebar}
+                className="p-2 rounded-xl text-stone-700 hover:text-stone-900 hover:bg-stone-200/60 transition-colors"
+                aria-label="Open sidebar navigation"
+              >
+                <Menu className="w-5 h-5" />
+              </button>
+              <span className="font-serif font-black text-sm text-[#0F3E2E]">साख सेतु</span>
+            </div>
           </div>
 
-          {/* Desktop Navigation Tabs (Exact Reference Style) */}
-          <nav className="hidden lg:flex items-center gap-1.5">
+          {/* Center: Primary Navigation Tabs (Horizontally centered relative to the main header) */}
+          <nav className="hidden lg:flex items-center justify-center gap-1 xl:gap-1.5 flex-1 mx-auto max-w-fit">
             {navItems.map(item => {
               const Icon = item.icon;
               const isActive = activeTab === item.id;
@@ -98,7 +100,7 @@ export function Navbar({
                   key={item.id}
                   onClick={() => setActiveTab(item.id)}
                   className={`
-                    flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all duration-150 cursor-pointer
+                    flex items-center gap-1.5 xl:gap-2 px-2.5 xl:px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all duration-150 cursor-pointer whitespace-nowrap
                     ${isActive 
                       ? 'bg-[#E5EDE7] text-[#0F3E2E] font-bold shadow-2xs' 
                       : 'text-stone-600 hover:text-stone-950 hover:bg-stone-200/50'
@@ -112,8 +114,8 @@ export function Navbar({
             })}
           </nav>
 
-          {/* Right Action Controls */}
-          <div className="flex items-center gap-2 sm:gap-3 shrink-0 ml-auto">
+          {/* Right: Action Controls (Notifications, Language, Profile) */}
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0 ml-auto lg:ml-0 lg:flex-1 lg:max-w-[280px] xl:max-w-[320px] justify-end">
             
             {/* Notification Bell */}
             <div className="relative">
