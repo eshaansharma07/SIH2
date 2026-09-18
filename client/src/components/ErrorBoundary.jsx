@@ -89,7 +89,7 @@ export class ErrorBoundary extends React.Component {
 
             <div className="space-y-1">
               <h2 className="text-base sm:text-lg font-serif font-black text-stone-900 tracking-tight">
-                साख सेतु (SaakhSetu)
+                व्यापार सेतु (Vyapaar Setu)
               </h2>
               <p className="text-xs text-stone-600 leading-relaxed">
                 पेज लोड करने में एक समस्या आई है। कृपया नीचे दिए गए बटन से पुनः लोड करें।

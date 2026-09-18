@@ -118,8 +118,8 @@ export function Sidebar({
                 <circle cx="22" cy="7" r="2.2" fill="currentColor" />
               </svg>
               <div className="flex flex-col leading-none">
-                <span className="font-serif font-black text-base text-[#0F3E2E] tracking-tight">साख सेतु</span>
-                <span className="text-[10px] font-sans font-bold text-[#0F3E2E]/80 tracking-wider">SaakhSetu</span>
+                <span className="font-serif font-black text-base text-[#0F3E2E] tracking-tight">व्यापार सेतु</span>
+                <span className="text-[10px] font-sans font-bold text-[#0F3E2E]/80 tracking-wider">Vyapaar Setu</span>
               </div>
             </div>
 
@@ -230,7 +230,7 @@ export function Sidebar({
                 </div>
                 <div>
                   <h3 className="font-serif font-bold text-sm text-stone-900">
-                    {language === 'hi' ? 'साख सेतु सहायता केंद्र' : 'SaakhSetu Support'}
+                    {language === 'hi' ? 'व्यापार सेतु सहायता केंद्र' : 'Vyapaar Setu Support'}
                   </h3>
                   <p className="text-[10px] text-stone-500">
                     {language === 'hi' ? '24x7 व्यापारी सहायता' : 'Merchant Assistance'}

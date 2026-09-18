@@ -284,8 +284,8 @@ export function ShopProfilePage({ shop, onShopUpdated, onReloadDemo }) {
             </div>
             <p className="text-xs text-stone-500 leading-relaxed">
               {language === 'hi'
-                ? 'साख सेतु बिना किसी एपीआई कुंजी के भी 6 पूर्व-निर्मित स्थानीय सलाह परिदृश्यों (Safety Net) पर पूरी तरह काम करता है। यदि आप लाइव जेमिनी 2.5 फ्लैश टेस्ट करना चाहते हैं तो अपनी निःशुल्क Google AI Studio कुंजी यहाँ दर्ज करें।'
-                : 'SaakhSetu operates smoothly without an API key using 6 grounded rural fallback scenarios. To enable live gemini-2.5-flash responses, paste your free Google AI Studio key below.'}
+                ? 'व्यापार सेतु बिना किसी एपीआई कुंजी के भी 6 पूर्व-निर्मित स्थानीय सलाह परिदृश्यों (Safety Net) पर पूरी तरह काम करता है। यदि आप लाइव जेमिनी 2.5 फ्लैश टेस्ट करना चाहते हैं तो अपनी निःशुल्क Google AI Studio कुंजी यहाँ दर्ज करें।'
+                : 'Vyapaar Setu operates smoothly without an API key using 6 grounded rural fallback scenarios. To enable live gemini-2.5-flash responses, paste your free Google AI Studio key below.'}
             </p>
             <input
               type="password"

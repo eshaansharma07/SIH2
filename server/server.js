@@ -38,7 +38,7 @@ app.use((req, res, next) => {
 app.get(['/api/health', '/health'], (req, res) => {
   res.json({
     status: 'ok',
-    service: 'SaakhSetu API',
+    service: 'Vyapaar Setu API',
     version: '1.0.0',
     time: new Date().toISOString()
   });
@@ -65,7 +65,7 @@ for (const [routePath, router] of routeMap) {
 
 // Root fallback
 app.get('/', (req, res) => {
-  res.send('SaakhSetu API Server is running');
+  res.send('Vyapaar Setu API Server is running');
 });
 
 // Auto seed if running fresh
@@ -77,7 +77,7 @@ try {
 
 if (!process.env.VERCEL) {
   app.listen(PORT, () => {
-    console.log(`🚀 SaakhSetu Backend Server running at http://localhost:${PORT}`);
+    console.log(`🚀 Vyapaar Setu Backend Server running at http://localhost:${PORT}`);
   });
 }
 

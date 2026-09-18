@@ -3,13 +3,13 @@ import { motion, useReducedMotion } from 'framer-motion';
 
 /**
  * RubberStamp — Authentic circular vermillion stamped mark:
- * "दर्ज • RECORDED • साख सेतु"
+ * "दर्ज • RECORDED • व्यापार सेतु"
  * Features haptic-feeling snap impact (scale-and-settle with slight overshoot).
  * Respects prefers-reduced-motion.
  */
 export default function RubberStamp({
   text = 'दर्ज • RECORDED',
-  subtext = 'साख सेतु सत्यापित',
+  subtext = 'व्यापार सेतु सत्यापित',
   date = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }),
   onComplete,
   className = '',

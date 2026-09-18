@@ -57,7 +57,7 @@ export function PublicPayPage() {
       <header className="max-w-md mx-auto w-full text-center space-y-1">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold shadow-2xs">
           <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-          <span>Verified Merchant Payment Portal • साख सेतु</span>
+          <span>Verified Merchant Payment Portal • व्यापार सेतु</span>
         </div>
       </header>
 
@@ -138,7 +138,7 @@ export function PublicPayPage() {
           {/* Security & Authenticity Note */}
           <div className="pt-2 border-t border-stone-200 text-[10px] text-stone-400 space-y-0.5">
             <p>100% सुरक्षित एवं प्रत्यक्ष बैंक खाता अंतरण (Direct-to-Merchant Settlement)</p>
-            <p className="font-semibold">Powered by SaakhSetu • ग्रामीण डिजिटल बही-खाता</p>
+            <p className="font-semibold">Powered by Vyapaar Setu • ग्रामीण डिजिटल बही-खाता</p>
           </div>
 
         </div>
@@ -146,7 +146,7 @@ export function PublicPayPage() {
 
       {/* Footer */}
       <footer className="max-w-md mx-auto w-full text-center text-[10px] text-stone-400">
-        साख सेतु (SaakhSetu) • ग्रामीण डिजिटल बही-खाता एवं साख मंच
+        व्यापार सेतु (Vyapaar Setu) • ग्रामीण डिजिटल बही-खाता एवं साख मंच
       </footer>
     </div>
   );

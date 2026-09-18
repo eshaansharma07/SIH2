@@ -419,7 +419,7 @@ export function Navbar({
               >
                 <Menu className="w-5 h-5" />
               </button>
-              <span className="font-serif font-black text-sm text-[#0F3E2E]">साख सेतु</span>
+              <span className="font-serif font-black text-sm text-[#0F3E2E]">व्यापार सेतु</span>
             </div>
           </div>
 
@@ -484,7 +484,7 @@ export function Navbar({
                             {activeHoverItem.menuTitle}
                           </span>
                           <span className="text-[10px] font-bold text-[#0F3E2E] bg-[#E8F0EA] px-2 py-0.5 rounded-full">
-                            SaakhSetu
+                            Vyapaar Setu
                           </span>
                         </div>
                         <div className="text-xs text-stone-700 font-medium">

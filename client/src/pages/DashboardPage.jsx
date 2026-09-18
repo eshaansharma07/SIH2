@@ -179,8 +179,8 @@ export function DashboardPage({
 
             <p className="text-stone-600 text-xs sm:text-sm leading-relaxed max-w-sm">
               {language === 'hi'
-                ? 'अपने लेन-देन ट्रैक करें, अपने ग्राहकों का प्रबंधन करें, सरकारी योजनाओं को जानें और साख सेतु के साथ एक मजबूत कल बनाएं।'
-                : 'Track your transactions, manage your customers, explore government schemes, and build a stronger tomorrow with SaakhSetu.'
+                ? 'अपने लेन-देन ट्रैक करें, अपने ग्राहकों का प्रबंधन करें, सरकारी योजनाओं को जानें और व्यापार सेतु के साथ एक मजबूत कल बनाएं।'
+                : 'Track your transactions, manage your customers, explore government schemes, and build a stronger tomorrow with Vyapaar Setu.'
               }
             </p>
 
@@ -309,8 +309,8 @@ export function DashboardPage({
               </h3>
               <p className="text-[11px] text-stone-500 leading-relaxed max-w-[240px] mx-auto">
                 {language === 'hi'
-                  ? 'अपनी प्रतिक्रिया साझा करें और ग्रामीण व्यापार के लिए साख सेतु को बेहतर बनाएं।'
-                  : 'Share your feedback and help improve SaakhSetu for rural businesses.'
+                  ? 'अपनी प्रतिक्रिया साझा करें और ग्रामीण व्यापार के लिए व्यापार सेतु को बेहतर बनाएं।'
+                  : 'Share your feedback and help improve Vyapaar Setu for rural businesses.'
                 }
               </p>
             </div>
@@ -384,7 +384,7 @@ export function DashboardPage({
       {/* 4. CLEAN INSTITUTIONAL FOOTER */}
       <footer className="pt-4 pb-12 border-t border-stone-200/70 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-stone-500">
         <div className="flex items-center gap-2 text-center sm:text-left flex-wrap">
-          <span className="font-bold text-stone-800">© 2026 SaakhSetu</span>
+          <span className="font-bold text-stone-800">© 2026 Vyapaar Setu</span>
           <span className="text-stone-300">•</span>
           <span>Bridging Businesses to Credit</span>
           <span className="text-stone-300">•</span>
@@ -394,14 +394,14 @@ export function DashboardPage({
         <div className="flex items-center gap-4 text-[11px] font-medium text-stone-600">
           <button 
             type="button" 
-            onClick={() => alert('SaakhSetu adheres to strict RBI Priority Sector Lending borrower data privacy principles. All merchant records remain confidential.')}
+            onClick={() => alert('Vyapaar Setu adheres to strict RBI Priority Sector Lending borrower data privacy principles. All merchant records remain confidential.')}
             className="hover:text-stone-900 transition-colors cursor-pointer"
           >
             Privacy
           </button>
           <button 
             type="button" 
-            onClick={() => alert('SaakhSetu MSME Terms: Governed under RBI PSL norms and MSMED Act framework for Indian micro-enterprises.')}
+            onClick={() => alert('Vyapaar Setu MSME Terms: Governed under RBI PSL norms and MSMED Act framework for Indian micro-enterprises.')}
             className="hover:text-stone-900 transition-colors cursor-pointer"
           >
             Terms
@@ -446,7 +446,7 @@ export function DashboardPage({
                 <p className="text-xs text-stone-600 max-w-xs mx-auto">
                   {language === 'hi'
                     ? 'आपकी प्रतिक्रिया ग्रामीण भारत के 6.3 करोड़ सूक्ष्म उद्यमियों को सशक्त बनाने में मदद करेगी।'
-                    : 'Your valuable feedback helps strengthen SaakhSetu for 63 million micro-enterprises across Bharat.'
+                    : 'Your valuable feedback helps strengthen Vyapaar Setu for 63 million micro-enterprises across Bharat.'
                   }
                 </p>
               </div>
@@ -467,7 +467,7 @@ export function DashboardPage({
                 {/* Question 1: Rating */}
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-stone-800 block">
-                    1. {language === 'hi' ? 'साख सेतु का उपयोग करना कितना आसान है?' : 'How easy is SaakhSetu to use for daily business?'}
+                    1. {language === 'hi' ? 'व्यापार सेतु का उपयोग करना कितना आसान है?' : 'How easy is Vyapaar Setu to use for daily business?'}
                   </label>
                   <div className="flex items-center gap-2">
                     {[1, 2, 3, 4, 5].map((star) => (

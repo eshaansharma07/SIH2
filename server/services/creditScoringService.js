@@ -545,7 +545,7 @@ export function generateCAM(shopOrId, transactionsOverride = null) {
       standard: 'RBI Priority Sector Lending (PSL) Cash-Flow Underwriting Guidelines',
       framework: 'Nayak Committee Working Capital Norms (20% of Projected Turnover)',
       generatedAt: new Date().toISOString(),
-      issuingEntity: 'SaakhSetu Credit Assessment Engine',
+      issuingEntity: 'Vyapaar Setu Credit Assessment Engine',
       appraisalValidityDays: 90
     },
     borrowerProfile: {

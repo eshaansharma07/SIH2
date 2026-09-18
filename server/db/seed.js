@@ -1,7 +1,7 @@
 import db from './database.js';
 
 export function seedDatabase() {
-  console.log('🌱 Seeding SaakhSetu database: "Ramesh\'s Kirana Store" with 4 months of realistic rural transactions...');
+  console.log('🌱 Seeding Vyapaar Setu database: "Ramesh\'s Kirana Store" with 4 months of realistic rural transactions...');
 
   // 1. Seed Ramesh's Kirana Store
   const insertShop = db.prepare(`

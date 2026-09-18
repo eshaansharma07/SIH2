@@ -685,7 +685,7 @@ export function CashFlowPage({
       const encodedUri = encodeURI(csvContent);
       const link = document.createElement('a');
       link.setAttribute('href', encodedUri);
-      link.setAttribute('download', `SaakhSetu_BahiKhata_${new Date().toISOString().slice(0, 10)}.csv`);
+      link.setAttribute('download', `VyapaarSetu_BahiKhata_${new Date().toISOString().slice(0, 10)}.csv`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -1826,7 +1826,7 @@ export function CashFlowPage({
       {/* 6. CLEAN FOOTER */}
       <footer className="pt-3 pb-8 border-t border-stone-200/70 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-stone-500">
         <div className="flex items-center gap-2 text-center sm:text-left flex-wrap">
-          <span className="font-bold text-stone-800">© 2026 SaakhSetu</span>
+          <span className="font-bold text-stone-800">© 2026 Vyapaar Setu</span>
           <span className="text-stone-300">•</span>
           <span>Bridging Businesses to Credit</span>
           <span className="text-stone-300">•</span>
@@ -1836,14 +1836,14 @@ export function CashFlowPage({
         <div className="flex items-center gap-4 text-[11px] font-medium text-stone-600">
           <button 
             type="button" 
-            onClick={() => alert('SaakhSetu adheres to strict RBI Priority Sector Lending borrower data privacy principles. All merchant records remain confidential.')}
+            onClick={() => alert('Vyapaar Setu adheres to strict RBI Priority Sector Lending borrower data privacy principles. All merchant records remain confidential.')}
             className="hover:text-stone-900 transition-colors cursor-pointer"
           >
             Privacy
           </button>
           <button 
             type="button" 
-            onClick={() => alert('SaakhSetu MSME Terms: Governed under RBI PSL norms and MSMED Act framework for Indian micro-enterprises.')}
+            onClick={() => alert('Vyapaar Setu MSME Terms: Governed under RBI PSL norms and MSMED Act framework for Indian micro-enterprises.')}
             className="hover:text-stone-900 transition-colors cursor-pointer"
           >
             Terms

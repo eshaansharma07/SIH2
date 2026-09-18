@@ -70,7 +70,7 @@ router.get('/generate', async (req, res) => {
         dossierNumber,
         issueDate,
         validity: 'Valid for 90 days from date of issue',
-        issuingPlatform: 'SaakhSetu — Alternative Credit & Financial Structuring Platform',
+        issuingPlatform: 'Vyapaar Setu — Alternative Credit & Financial Structuring Platform',
         pslClassification: 'Micro-Enterprise (Trading / Services) — Eligible for RBI PSL 7.5% Sub-target (FIDD.CO.Plan.BC.5/04.09.01/2020-21)',
         endorsedFor: 'Priority Sector Lending (PSL) Micro-Enterprise Credit Appraisal (Nayak Committee Cash-Flow Method)',
         shop: {

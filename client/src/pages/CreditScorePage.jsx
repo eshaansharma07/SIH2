@@ -231,8 +231,8 @@ export function CreditScorePage({ shop, creditData, onNavigateTab }) {
 
             <p className="text-stone-600 text-xs sm:text-sm leading-relaxed max-w-md">
               {language === 'hi'
-                ? 'आपके दैनिक लेन-देन, उधार प्रबंधन और डिजिटल अपनाने के आधार पर आपका साख सेतु क्रेडिट स्कोर तैयार किया जाता है।'
-                : 'Your business performance is analysed using your transactions, udhaar management, and digital adoption to create your SaakhSetu Credit Score.'
+                ? 'आपके दैनिक लेन-देन, उधार प्रबंधन और डिजिटल अपनाने के आधार पर आपका व्यापार सेतु क्रेडिट स्कोर तैयार किया जाता है।'
+                : 'Your business performance is analysed using your transactions, udhaar management, and digital adoption to create your Vyapaar Setu Credit Score.'
               }
             </p>
           </div>
@@ -273,7 +273,7 @@ export function CreditScorePage({ shop, creditData, onNavigateTab }) {
                   <FileText className="w-3.5 h-3.5" />
                 </div>
                 <span className="font-sans font-bold text-xs sm:text-sm text-stone-900">
-                  {language === 'hi' ? 'आपका साख सेतु क्रेडिट स्कोर' : 'Your SaakhSetu Credit Score'}
+                  {language === 'hi' ? 'आपका व्यापार सेतु क्रेडिट स्कोर' : 'Your Vyapaar Setu Credit Score'}
                 </span>
                 <button
                   type="button"
@@ -571,7 +571,7 @@ export function CreditScorePage({ shop, creditData, onNavigateTab }) {
       <footer className="w-full pt-8 pb-4 border-t border-stone-200/80 text-xs text-stone-500 select-none">
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2 text-stone-600 font-medium">
-            <span>© 2026 SaakhSetu</span>
+            <span>© 2026 Vyapaar Setu</span>
             <span>•</span>
             <span>Bridging Businesses to Credit</span>
             <span>•</span>
@@ -581,14 +581,14 @@ export function CreditScorePage({ shop, creditData, onNavigateTab }) {
           <div className="flex items-center gap-6 text-stone-500">
             <button 
               type="button" 
-              onClick={() => alert('SaakhSetu adheres to strict RBI Priority Sector Lending borrower data privacy principles. All merchant records remain confidential.')}
+              onClick={() => alert('Vyapaar Setu adheres to strict RBI Priority Sector Lending borrower data privacy principles. All merchant records remain confidential.')}
               className="hover:text-stone-900 transition-colors cursor-pointer"
             >
               Privacy
             </button>
             <button 
               type="button" 
-              onClick={() => alert('SaakhSetu MSME Terms: Governed under RBI PSL norms and MSMED Act framework for Indian micro-enterprises.')}
+              onClick={() => alert('Vyapaar Setu MSME Terms: Governed under RBI PSL norms and MSMED Act framework for Indian micro-enterprises.')}
               className="hover:text-stone-900 transition-colors cursor-pointer"
             >
               Terms

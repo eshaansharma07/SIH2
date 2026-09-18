@@ -38,8 +38,8 @@ import { useTranslation } from '../i18n/LanguageContext';
 import { INDIAN_STATES_AND_UTS, findStandardState } from '../data/indianStates';
 import { APP_NAME_EN, APP_NAME_HI, APP_TAGLINE_EN, APP_TAGLINE_HI } from '../config/brand';
 
-// Vector SaakhSetu Bridge Logo Icon (exact match to reference image)
-export function SaakhSetuBridgeLogo({ className = "w-9 h-7 text-[#0F3E2E]" }) {
+// Vector Vyapaar Setu Bridge Logo Icon (exact match to reference image)
+export function VyapaarSetuBridgeLogo({ className = "w-9 h-7 text-[#0F3E2E]" }) {
   return (
     <svg 
       viewBox="0 0 48 36" 
@@ -69,6 +69,7 @@ export function SaakhSetuBridgeLogo({ className = "w-9 h-7 text-[#0F3E2E]" }) {
     </svg>
   );
 }
+export const SaakhSetuBridgeLogo = VyapaarSetuBridgeLogo;
 
 export function OnboardingPage({ onComplete, onSelectDemo, onStartDemoTour }) {
   const { language, setLanguage } = useTranslation();
@@ -257,7 +258,7 @@ export function OnboardingPage({ onComplete, onSelectDemo, onStartDemoTour }) {
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
             className="flex items-center gap-2.5 cursor-pointer select-none group"
           >
-            <SaakhSetuBridgeLogo className="w-8 h-7 text-[#0F3E2E] transition-transform duration-200 group-hover:scale-[1.03]" />
+            <VyapaarSetuBridgeLogo className="w-8 h-7 text-[#0F3E2E] transition-transform duration-200 group-hover:scale-[1.03]" />
             <div className="flex flex-col leading-tight">
               <span className="font-serif font-black text-base tracking-tight text-[#0F3E2E]">
                 {APP_NAME_HI}
@@ -408,7 +409,7 @@ export function OnboardingPage({ onComplete, onSelectDemo, onStartDemoTour }) {
                             <ArrowRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
                           </div>
                           <p className="text-xs text-[#78716C] leading-relaxed">
-                            Create your SaakhSetu profile in 30 seconds
+                            Create your Vyapaar Setu profile in 30 seconds
                           </p>
                         </button>
 
@@ -568,18 +569,18 @@ export function OnboardingPage({ onComplete, onSelectDemo, onStartDemoTour }) {
                   <div className="grid grid-cols-12 gap-8 items-start">
                     <div className="col-span-7 space-y-3">
                       <span className="text-[10px] uppercase font-bold tracking-widest text-[#78716C]">
-                        ABOUT SAAKHSETU
+                        ABOUT VYAPAAR SETU
                       </span>
                       <h4 className="font-serif font-black text-lg text-[#1C1917]">
                         Re-engineering Rural Lending on India's Digital Public Infrastructure
                       </h4>
                       <p className="text-xs text-[#57534E] leading-relaxed">
-                        SaakhSetu bridges low-literacy shopkeepers with priority sector credit without requiring formal CA balance sheets, collateral, or traditional CIBIL histories.
+                        Vyapaar Setu bridges low-literacy shopkeepers with priority sector credit without requiring formal CA balance sheets, collateral, or traditional CIBIL histories.
                       </p>
                     </div>
                     <div className="col-span-5 border-l border-[#E7DFD5] pl-8 space-y-2.5 text-xs font-bold text-[#1C1917]">
                       <button onClick={() => scrollToSection('four-pillars')} className="block hover:text-[#0F3E2E] transition">
-                        → Why SaakhSetu Matters
+                        → Why Vyapaar Setu Matters
                       </button>
                       <button onClick={() => scrollToSection('four-pillars')} className="block hover:text-[#0F3E2E] transition">
                         → Our 4-Pillar Underwriting Approach
@@ -650,7 +651,7 @@ export function OnboardingPage({ onComplete, onSelectDemo, onStartDemoTour }) {
                 }}
                 className="w-full text-left py-2 flex items-center justify-between"
               >
-                <span>About SaakhSetu</span>
+                <span>About Vyapaar Setu</span>
                 <span className="text-xs text-[#78716C]">PSL Platform</span>
               </button>
             </div>
@@ -703,7 +704,7 @@ export function OnboardingPage({ onComplete, onSelectDemo, onStartDemoTour }) {
 
               {/* Supporting Editorial Paragraph */}
               <p className="text-base sm:text-lg text-[#57534E] font-normal leading-relaxed max-w-xl">
-                SaakhSetu converts everyday transactions of rural businesses into a validated credit profile — unlocking formal loans without CIBIL.
+                Vyapaar Setu converts everyday transactions of rural businesses into a validated credit profile — unlocking formal loans without CIBIL.
               </p>
 
               {/* Primary Buttons */}
@@ -1051,7 +1052,7 @@ export function OnboardingPage({ onComplete, onSelectDemo, onStartDemoTour }) {
             {/* Logo & Tagline */}
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <SaakhSetuBridgeLogo className="w-6 h-5 text-[#0F3E2E]" />
+                <VyapaarSetuBridgeLogo className="w-6 h-5 text-[#0F3E2E]" />
                 <span className="font-serif font-black text-sm text-[#0F3E2E]">
                   {APP_NAME_HI} {APP_NAME_EN}
                 </span>
@@ -1079,10 +1080,10 @@ export function OnboardingPage({ onComplete, onSelectDemo, onStartDemoTour }) {
                 About
               </button>
               <span className="text-[#D5CCBC]">|</span>
-              <button onClick={() => alert('SaakhSetu operates on strict RBI Priority Sector Lending borrower data privacy principles.')} className="hover:text-[#0F3E2E] cursor-pointer">
+              <button onClick={() => alert('Vyapaar Setu operates on strict RBI Priority Sector Lending borrower data privacy principles.')} className="hover:text-[#0F3E2E] cursor-pointer">
                 Privacy
               </button>
-              <button onClick={() => alert('SaakhSetu operates under standard Priority Sector Lending data governance norms.')} className="hover:text-[#0F3E2E] cursor-pointer">
+              <button onClick={() => alert('Vyapaar Setu operates under standard Priority Sector Lending data governance norms.')} className="hover:text-[#0F3E2E] cursor-pointer">
                 Terms
               </button>
             </div>
@@ -1124,7 +1125,7 @@ export function OnboardingPage({ onComplete, onSelectDemo, onStartDemoTour }) {
           </div>
 
           <div className="text-[11px] text-[#A8A29E] text-center sm:text-left border-t border-[#E7DFD5]/60 pt-4">
-            © 2026 SaakhSetu (साख सेतु). Priority Sector Lending & Micro-Enterprise Credit Architecture. All rights reserved.
+            © 2026 Vyapaar Setu (व्यापार सेतु). Priority Sector Lending & Micro-Enterprise Credit Architecture. All rights reserved.
           </div>
 
         </div>
@@ -1155,7 +1156,7 @@ export function OnboardingPage({ onComplete, onSelectDemo, onStartDemoTour }) {
               {/* Header */}
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <SaakhSetuBridgeLogo className="w-6 h-5 text-[#0F3E2E]" />
+                  <VyapaarSetuBridgeLogo className="w-6 h-5 text-[#0F3E2E]" />
                   <span className="font-serif font-black text-lg text-[#0F3E2E]">
                     {authMode === 'login' ? (language === 'hi' ? 'दुकानदार लॉगिन' : 'Shopkeeper Login') : (language === 'hi' ? 'नया उद्यम पंजीकरण' : 'Register New Enterprise')}
                   </span>
@@ -1417,7 +1418,7 @@ export function OnboardingPage({ onComplete, onSelectDemo, onStartDemoTour }) {
                   <span>Interactive Evaluator Walkthrough</span>
                 </div>
                 <h3 className="font-serif font-black text-2xl text-[#1C1917]">
-                  Watch SaakhSetu in Action
+                  Watch Vyapaar Setu in Action
                 </h3>
                 <p className="text-xs sm:text-sm text-[#57534E] leading-relaxed">
                   Experience how Ramesh Yadav (a kirana shopkeeper in Balrampur, UP) logs everyday counter sales and unlocks a 785/850 prime credit score without a CIBIL history.

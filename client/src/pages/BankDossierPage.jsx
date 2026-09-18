@@ -164,7 +164,7 @@ export function BankDossierPage({ shop, isDemoMode, onNavigateTab, onBack }) {
       const url = URL.createObjectURL(blob);
       const downloadAnchor = document.createElement('a');
       downloadAnchor.href = url;
-      downloadAnchor.download = `SaakhSetu_Bank_Dossier_${activeShopId}_${new Date().toISOString().slice(0, 10)}.pdf`;
+      downloadAnchor.download = `VyapaarSetu_Bank_Dossier_${activeShopId}_${new Date().toISOString().slice(0, 10)}.pdf`;
       document.body.appendChild(downloadAnchor);
       downloadAnchor.click();
       downloadAnchor.remove();
@@ -270,7 +270,7 @@ export function BankDossierPage({ shop, isDemoMode, onNavigateTab, onBack }) {
     const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://saakhsetu.vercel.app';
     const link = `${baseUrl}/api/credit-score/${activeShopId}/cam`;
     const text = encodeURIComponent(
-      `*SaakhSetu Official Bank Dossier & CAM*\n` +
+      `*Vyapaar Setu Official Bank Dossier & CAM*\n` +
       `Business: ${shopName}\n` +
       `Owner: ${ownerName}\n` +
       `PSL Verified File: ${link}`
@@ -703,7 +703,7 @@ export function BankDossierPage({ shop, isDemoMode, onNavigateTab, onBack }) {
         </div>
 
         <p className="text-[10px] text-stone-500 text-center mt-6">
-          Official RBI PSL Ready Dossier prepared by SaakhSetu. Tamper-evident verified document.
+          Official RBI PSL Ready Dossier prepared by Vyapaar Setu. Tamper-evident verified document.
         </p>
       </div>
 

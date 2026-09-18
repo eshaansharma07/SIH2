@@ -1097,7 +1097,7 @@ export function VoiceInputDialog({
             parsedData?.type === 'expense' ? 'खर्च • RECORDED' :
             parsedData?.type === 'udhaar_given' ? 'उधार • RECORDED' : 'वसूली • RECORDED'
           }
-          subtext="साख सेतु बही-खाता"
+          subtext="व्यापार सेतु बही-खाता"
         />
       )}
     </div>

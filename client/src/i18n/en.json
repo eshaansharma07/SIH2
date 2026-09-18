@@ -1,7 +1,7 @@
 {
-  "appName": "SaakhSetu",
-  "appTagline": "Your ledger, bridged to credit",
-  "hindiAppName": "साख सेतु",
+  "appName": "Vyapaar Setu",
+  "appTagline": "Your business ledger, bridged to credit",
+  "hindiAppName": "व्यापार सेतु",
   "nav": {
     "dashboard": "Dashboard",
     "advisor": "Setu AI",
@@ -59,7 +59,7 @@
     "reminderSent": "WhatsApp payment reminder simulated!"
   },
   "credit": {
-    "title": "SaakhSetu Alternative Credit Score",
+    "title": "Vyapaar Setu Alternative Credit Score",
     "subtitle": "Transparent, explainable alternative credit built from your daily transaction discipline — not a black box.",
     "scoreLabel": "Alternative Credit Score",
     "factorsTitle": "Explainable Scoring Pillars",
@@ -86,7 +86,7 @@
     "title": "Bankable Financial Statement",
     "subtitle": "Official credit readiness dossier formatted for Bank Managers and Priority Sector Lending (PSL).",
     "printBtn": "Print / Save PDF Dossier",
-    "certifiedBadge": "SaakhSetu Verified Statement",
+    "certifiedBadge": "Vyapaar Setu Verified Statement",
     "forBranch": "For Branch Manager & Credit Appraiser Review"
   }
 }

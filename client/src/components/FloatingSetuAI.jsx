@@ -95,7 +95,7 @@ export function FloatingSetuAI({
   const quickQuestions = [
     { 
       label: language === 'hi' ? 'दुकान रजिस्टर कैसे करें?' : 'How to register my shop?', 
-      prompt: language === 'hi' ? 'साख सेतु में अपनी असली दुकान कैसे रजिस्टर करें?' : 'How do I register my actual shop in SaakhSetu?',
+      prompt: language === 'hi' ? 'व्यापार सेतु में अपनी असली दुकान कैसे रजिस्टर करें?' : 'How do I register my actual shop in Vyapaar Setu?',
       serviceAction: 'register'
     },
     { 
@@ -194,8 +194,8 @@ export function FloatingSetuAI({
           : 'Your Alternative Credit Score is 753/850 (Prime Bankable), calculated from continuous transactions and customer recovery.';
       } else {
         fallbackText += language === 'hi'
-          ? 'मैं साख सेतु में आपकी हर सेवा तक पहुँचने में मदद कर सकता हूँ—बही-खाता, सरकारी योजना, क्रेडिट स्कोर, या नया रजिस्ट्रेशन।'
-          : 'I can help you navigate all SaakhSetu services—Bahi-Khata ledger, institutional schemes, credit appraisal, or registering your enterprise.';
+          ? 'मैं व्यापार सेतु में आपकी हर सेवा तक पहुँचने में मदद कर सकता हूँ—बही-खाता, सरकारी योजना, क्रेडिट स्कोर, या नया रजिस्ट्रेशन।'
+          : 'I can help you navigate all Vyapaar Setu services—Bahi-Khata ledger, institutional schemes, credit appraisal, or registering your enterprise.';
       }
 
       setMessages(prev => [

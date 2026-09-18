@@ -324,7 +324,7 @@ export function BankDossierDocument({ data }) {
         {/* Header */}
         <View style={styles.headerContainer}>
           <View style={styles.titleBlock}>
-            <Text style={styles.brandName}>साख सेतु • SAAKHSETU</Text>
+            <Text style={styles.brandName}>व्यापार सेतु • VYAPAAR SETU</Text>
             <Text style={styles.subBrand}>Hyper-Local Business Advisory & Underwriting Stack for Rural Micro-Enterprises</Text>
             <Text style={styles.documentTitle}>CREDIT APPRAISAL MEMO & VERIFIED FINANCIAL DOSSIER</Text>
             <Text style={styles.complianceBadge}>
@@ -514,7 +514,7 @@ export function BankDossierDocument({ data }) {
 
         {/* Footer */}
         <View style={styles.footer}>
-          <Text style={styles.footerText}>SaakhSetu • Priority Sector Lending & Micro-Enterprise Credit Architecture • Formatted per RBI PSL guidelines</Text>
+          <Text style={styles.footerText}>Vyapaar Setu • Priority Sector Lending & Micro-Enterprise Credit Architecture • Formatted per RBI PSL guidelines</Text>
           <Text style={styles.footerText}>Page 1 of 1 • System Generated Dossier</Text>
         </View>
 

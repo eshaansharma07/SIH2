@@ -144,7 +144,7 @@ export function SchemeMatcherPage({ shop, creditData, onNavigateTab }) {
         ],
         documents: [
           'Aadhaar Card & PAN Card',
-          'SaakhSetu Verified Bahi-Khata 90-Day Statement',
+          'Vyapaar Setu Verified Bahi-Khata 90-Day Statement',
           'UDYAM Registration / Gram Panchayat Shop Proof',
           'Bank Account Statement / Passbook'
         ],
@@ -153,51 +153,51 @@ export function SchemeMatcherPage({ shop, creditData, onNavigateTab }) {
       {
         id: 'mudra-shishu',
         name: 'PM MUDRA (Shishu)',
-        fullName: 'PM MUDRA Yojana — Shishu (प्रधानमंत्री मुद्रा योजना - शिशु)',
-        badge: '96% Match',
-        matchScore: 96,
+        fullName: 'Pradhan Mantri MUDRA Yojana (Shishu)',
+        badge: '98% Match',
+        matchScore: 98,
         category: 'loan',
-        summary: 'Starter micro-credit for inventory restocking and immediate wholesale procurement.',
+        summary: 'Micro working capital loan for immediate Kirana stocking. No collateral, minimal processing fee.',
         loanAmount: 'Up to ₹50,000',
         interestRate: '8.5% – 10.0% p.a.',
-        suitableFor: 'Micro Retailers & Vendors',
-        ministry: 'Ministry of Finance',
+        suitableFor: 'Micro Kirana & Daily Needs Stores',
+        ministry: 'Ministry of Finance / SIDBI',
         tenure: 'Up to 5 years',
-        collateral: 'Zero Collateral (100% CGFMU Credit Guarantee)',
+        collateral: 'Zero Collateral Required (CGFMU Covered)',
         eligibility: [
-          'Non-farm micro-business enterprise',
-          'Daily cash velocity evidenced in bahi-khata',
-          'Zero processing fees for Shishu category'
+          'Operating retail shop with minimum 6 months history',
+          'Audited monthly cash flow covers minimal EMI (~₹1,000/mo)',
+          'Clean banking track record'
         ],
         documents: [
-          'Aadhaar Card',
-          'Quotation for wholesale goods / inventory',
-          'Bank Passbook'
+          'Aadhaar Card & PAN Card',
+          'Vyapaar Setu Verified Bahi-Khata 90-Day Statement',
+          'Bank Passbook Copy'
         ],
         portalUrl: 'https://www.mudra.org.in'
       },
       {
         id: 'up-odop',
-        name: 'UP ODOP Margin Money',
-        fullName: 'UP One District One Product (ODOP) Margin Money Scheme',
-        badge: '93% Match',
-        matchScore: 93,
+        name: 'UP ODOP Margin Money Scheme',
+        fullName: 'Uttar Pradesh One District One Product Financing Scheme',
+        badge: '95% Match',
+        matchScore: 95,
         category: 'subsidy',
-        summary: 'Margin money subsidy up to 25% for micro units and local trade expansion.',
-        loanAmount: 'Up to ₹25 Lakh project limit',
-        interestRate: 'Standard Bank PLR (25% State Subsidy)',
-        suitableFor: 'UP Rural Enterprises',
-        ministry: 'UP Government / MSME',
+        summary: 'State capital subsidy up to ₹20 Lakh (25% project cost) for Balrampur district pulses, grains & agricultural trade.',
+        loanAmount: 'Up to ₹25 Lakh (25% Margin Subsidy)',
+        interestRate: 'Bank Lending Rate - Subsidy credited upfront',
+        suitableFor: 'Balrampur Traders, Agri-Commodities & Food Supplies',
+        ministry: 'Government of Uttar Pradesh (MSME & Export Promotion)',
         tenure: '5 to 7 years',
-        collateral: 'Covered under CGTMSE guarantee',
+        collateral: 'Covered under State Credit Guarantee / CGTMSE',
         eligibility: [
-          'Located in Uttar Pradesh (Balrampur & surrounding districts)',
+          'Enterprise located within Balrampur District, Uttar Pradesh',
           'Engaged in trade or recognized district craft/food supply',
           'Minimum age 18 years with local residence proof'
         ],
         documents: [
           'UP Domicile / Aadhaar Card',
-          'SaakhSetu Business CAM Profile',
+          'Vyapaar Setu Business CAM Profile',
           'Bank Account Details'
         ],
         portalUrl: 'https://odopup.in'
@@ -250,7 +250,7 @@ export function SchemeMatcherPage({ shop, creditData, onNavigateTab }) {
         documents: [
           'Aadhaar & PAN Card',
           'Category / Woman ownership documentation',
-          'SaakhSetu Detailed CAM & 3-Year Projection'
+          'Vyapaar Setu Detailed CAM & 3-Year Projection'
         ],
         portalUrl: 'https://www.standupmitra.in'
       },
@@ -327,7 +327,7 @@ export function SchemeMatcherPage({ shop, creditData, onNavigateTab }) {
         documents: [
           'Aadhaar Card',
           'Gramin Bank Passbook',
-          'SaakhSetu Bahi-Khata Ledger'
+          'Vyapaar Setu Bahi-Khata Ledger'
         ],
         portalUrl: 'https://www.nabard.org'
       },
@@ -351,7 +351,7 @@ export function SchemeMatcherPage({ shop, creditData, onNavigateTab }) {
         ],
         documents: [
           'Aadhaar & PAN Card',
-          'SaakhSetu Audited Revenue Record',
+          'Vyapaar Setu Audited Revenue Record',
           'FSSAI basic registration (Assisted)'
         ],
         portalUrl: 'https://pmfme.mofpi.gov.in'
@@ -376,7 +376,7 @@ export function SchemeMatcherPage({ shop, creditData, onNavigateTab }) {
         ],
         documents: [
           'Udyam Registration',
-          'SaakhSetu Verified Bank Dossier',
+          'Vyapaar Setu Verified Bank Dossier',
           'KYC Documents'
         ],
         portalUrl: 'https://www.cgtmse.in'
@@ -450,7 +450,7 @@ export function SchemeMatcherPage({ shop, creditData, onNavigateTab }) {
     const prompt = schemeName 
       ? (language === 'hi' 
           ? `कृपया मुझे सरकारी योजना "${schemeName}" के लिए आवेदन करने और आवश्यक दस्तावेजों के बारे में विस्तार से मार्गदर्शन करें।`
-          : `Please guide me on how to apply for "${schemeName}", what documents are required, and how my SaakhSetu Bahi-Khata dossier helps.`)
+          : `Please guide me on how to apply for "${schemeName}", what documents are required, and how my Vyapaar Setu Bahi-Khata dossier helps.`)
       : (language === 'hi'
           ? 'मेरी दुकान के लिए सबसे उपयुक्त सरकारी योजनाएं कौन सी हैं और मुझे क्या लाभ मिल सकता है?'
           : 'Which government schemes are best suited for my kirana store, and what benefits or interest subsidies can I receive?');
@@ -1118,7 +1118,7 @@ export function SchemeMatcherPage({ shop, creditData, onNavigateTab }) {
               </div>
               <div>
                 <h3 className="font-bold text-base text-stone-900 font-display">Detailed Scheme Matching</h3>
-                <p className="text-xs text-stone-500">How SaakhSetu matches your business profile</p>
+                <p className="text-xs text-stone-500">How Vyapaar Setu matches your business profile</p>
               </div>
             </div>
 
