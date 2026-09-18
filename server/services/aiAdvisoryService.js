@@ -20,6 +20,29 @@ import { getUpcomingFestivals } from './googleCalendarService.js';
 
 // Bilingual Curated Grounded Safety Net Responses for Live Judging
 const JUDGING_FALLBACK_SCENARIOS = {
+  // Scenario 0: Name Change, Profile Setup & Identity Queries
+  name_and_profile: {
+    keywords: ['name', 'naam', 'नाम', 'profile', 'प्रोफाइल', 'बदल', 'change', 'who am i', 'mera naam', 'my name', 'assveer'],
+    responseHi: (ctx) => `नमस्ते ${ctx.ownerName} जी! 🙏
+
+व्यापार सेतु में अपना नाम या दुकान का विवरण बदलने के 2 आसान तरीके हैं:
+1. **शॉप प्रोफ़ाइल टैब**: ऊपर दाएँ कोने में अपने प्रोफाइल आइकन पर क्लिक करें और **'दुकान प्रोफाइल व नाम' (Shop Profile)** चुनें।
+2. **नाम बदलें**: वहाँ अपना नाम (जैसे **Assveer**) और दुकान का विवरण अपडेट करके **'Save Profile'** दबाएँ।
+
+💡 **सीधा तरीका**: आप अभी इसी चैट में भी लिख सकते हैं: *"मेरा नाम Assveer है"*, और मैं आपकी प्रोफ़ाइल में आपका नाम तुरंत अपडेट कर दूँगा!
+
+वर्तमान में आपकी पंजीकृत दुकान **${ctx.shopName}** (${ctx.location}) है। क्या आप किसी अन्य सेवा में सहायता चाहते हैं?`,
+    responseEn: (ctx) => `Namaste ${ctx.ownerName} ji! 🙏
+
+To change your name or store details in Vyapaar Setu:
+1. **Shop Profile Screen**: Click on your profile icon in the top-right corner of the navigation bar and select **'Shop Profile & Name'**.
+2. **Update Details**: Change the **Owner Name** field (e.g. to **Assveer**) and click **'Save Profile'**.
+
+💡 **Direct Shortcut**: You can also simply type: *"My name is Assveer"* right here in this chat, and I will update your name instantly for you!
+
+Currently, your profile is registered under **${ctx.shopName}** in **${ctx.location}**. How can I help your business today?`
+  },
+
   // Scenario 1: Festival & Pre-Diwali Stock Planning
   festival_stock: {
     keywords: ['stock', 'स्टॉक', 'त्योहार', 'दीवाली', 'diwali', 'सामान', 'माल', 'festiv', 'oil', 'sugar', 'तेल', 'चीनी'],
@@ -192,11 +215,43 @@ For your **${ctx.tradeCategory}** in **${ctx.location}** (${ctx.monthsInOperatio
  */
 export async function generateAdvisoryResponse(shopId, userQuestion, clientApiKey = null) {
   try {
-    const shop = db.prepare('SELECT * FROM shops WHERE id = ?').get(shopId) || 
-                 db.prepare('SELECT * FROM shops LIMIT 1').get();
+    // 0. Robust Shop Lookup (never fall back to test shops)
+    let shop = shopId ? db.prepare('SELECT * FROM shops WHERE id = ?').get(shopId) : null;
+    if (!shop && shopId) {
+      shop = db.prepare('SELECT * FROM shops WHERE phone = ?').get(shopId);
+    }
+    if (!shop) {
+      shop = db.prepare("SELECT * FROM shops WHERE id = 'ramesh-kirana'").get();
+    }
+    if (!shop) {
+      shop = db.prepare('SELECT * FROM shops WHERE is_demo = 1 LIMIT 1').get();
+    }
+    if (!shop) {
+      shop = db.prepare("SELECT * FROM shops WHERE id NOT LIKE '%test%' ORDER BY created_at DESC LIMIT 1").get();
+    }
+    if (!shop) {
+      shop = db.prepare('SELECT * FROM shops LIMIT 1').get();
+    }
     
     if (!shop) {
       throw new Error('No shop registered in database');
+    }
+
+    // Direct name extraction if user specifies their name in the chat
+    let updatedOwnerName = null;
+    const nameMatch = userQuestion.match(/(?:my name is|i am|call me|change my name to|set my name to|update my name to|mera naam|naam hai)\s+([A-Za-z\u0900-\u097F]+)/i);
+    if (nameMatch && nameMatch[1]) {
+      const candidate = nameMatch[1].trim();
+      const forbidden = ['a', 'the', 'an', 'not', 'here', 'ji', 'sir', 'hai', 'ki', 'ka', 'ko', 'changing', 'asking', 'telling', 'how', 'kya', 'kaise'];
+      if (!forbidden.includes(candidate.toLowerCase()) && candidate.length >= 2) {
+        updatedOwnerName = candidate.charAt(0).toUpperCase() + candidate.slice(1);
+        try {
+          db.prepare('UPDATE shops SET owner_name = ? WHERE id = ?').run(updatedOwnerName, shop.id);
+          shop.owner_name = updatedOwnerName;
+        } catch (e) {
+          console.warn('Could not update shop owner name:', e.message);
+        }
+      }
     }
 
     // 1. Calculate Core Metrics & Credit Score
@@ -418,6 +473,22 @@ Provide practical, hyper-local advice: exact quantities to stock, wholesale mand
     }
 
     // 5. Graceful Fallback Safety Net:
+    // If user provided a name update directly, respond with immediate confirmation
+    if (updatedOwnerName) {
+      const confirmReply = isEnglishQuery
+        ? `Namaste ${updatedOwnerName} ji! 🙏 I have updated your name to **${updatedOwnerName}** in your Vyapaar Setu account.\n\nYour profile is now associated with **${contextData.shopName}** in **${contextData.location}**. You can also view or modify your full shop details anytime in the **Shop Profile** section.\n\nHow can I assist you with your shop inventory, credit score, or MUDRA loan today, ${updatedOwnerName} ji?`
+        : `नमस्ते ${updatedOwnerName} जी! 🙏 मैंने व्यापार सेतु पर आपका नाम **${updatedOwnerName}** सफलतापूर्वक अपडेट कर दिया है।\n\nआपकी दुकान **${contextData.shopName}** (${contextData.location}) का रिकॉर्ड अपडेट हो चुका है। आप ऊपर दाएँ मेन्यू से **'Shop Profile' (दुकान प्रोफ़ाइल)** में जाकर भी विवरण देख सकते हैं।\n\nबताइए ${updatedOwnerName} जी, आज आपकी दुकान के लिए मैं क्या सहायता करूँ?`;
+
+      saveChatMessage(shop.id, 'user', userQuestion);
+      saveChatMessage(shop.id, 'assistant', confirmReply);
+      return {
+        content: confirmReply,
+        source: 'name-update-direct',
+        contextUsed: contextData,
+        updatedOwnerName
+      };
+    }
+
     // Serves deeply grounded pre-written rural advisory response tailored to user data in matching language
     const fallbackResponse = selectJudgingFallbackResponse(userQuestion, contextData, isEnglishQuery);
     saveChatMessage(shop.id, 'user', userQuestion);
@@ -426,7 +497,8 @@ Provide practical, hyper-local advice: exact quantities to stock, wholesale mand
     return {
       content: fallbackResponse,
       source: 'gemini-fallback-grounded',
-      contextUsed: contextData
+      contextUsed: contextData,
+      updatedOwnerName
     };
   } catch (criticalErr) {
     console.error('Critical fallback in advisory service:', criticalErr);

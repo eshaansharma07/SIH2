@@ -59,7 +59,8 @@ router.post('/chat', advisoryRateLimiter, async (req, res) => {
       response: advice.content,
       reply: advice.content,
       answer: advice.content,
-      source: advice.source
+      source: advice.source,
+      updatedOwnerName: advice.updatedOwnerName || null
     });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });

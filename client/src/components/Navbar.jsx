@@ -686,6 +686,16 @@ export function Navbar({
                     </div>
                   </div>
 
+                  {/* Shop Profile & Name Edit */}
+                  <button
+                    type="button"
+                    onClick={() => { setActiveTab('profile'); setProfileOpen(false); }}
+                    className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-stone-800 hover:bg-[#0F3E2E]/10 hover:text-[#0F3E2E] text-left transition-colors font-semibold cursor-pointer"
+                  >
+                    <User className="w-3.5 h-3.5 text-[#0F3E2E]" />
+                    <span>{language === 'hi' ? 'दुकान प्रोफाइल व नाम बदलें' : 'Shop Profile & Change Name'}</span>
+                  </button>
+
                   {/* Evaluator & Demo Tools */}
                   <button
                     type="button"

@@ -213,6 +213,9 @@ export function FloatingSetuAI({
   // Determine if reply matches any service action
   const detectServiceAction = (text) => {
     const lower = text.toLowerCase();
+    if (lower.includes('profile') || lower.includes('name') || lower.includes('नाम') || lower.includes('दुकानदार') || lower.includes('assveer')) {
+      return { id: 'profile', label: language === 'hi' ? '👤 दुकान प्रोफाइल खोलें' : '👤 Open Shop Profile', action: () => { onNavigateTab?.('profile'); setIsOpen(false); } };
+    }
     if (lower.includes('register') || lower.includes('पंजीकरण') || lower.includes('नया खाता') || lower.includes('sign up')) {
       return { id: 'register', label: language === 'hi' ? '📝 दुकान रजिस्टर करें' : '📝 Register Shop Now', action: onOpenRegister };
     }
@@ -253,6 +256,10 @@ export function FloatingSetuAI({
       const res = await api.chatAdvisor(shopId, text);
       const reply = res?.response || res?.message || res?.reply || (language === 'hi' ? 'नमस्ते! आपके प्रश्न का विश्लेषण किया गया है।' : "Namaste! I've analyzed your query based on verified metrics.");
       
+      if (res?.updatedOwnerName) {
+        window.dispatchEvent(new CustomEvent('vyapaar:shop-updated', { detail: { owner_name: res.updatedOwnerName } }));
+      }
+
       const suggestedAction = detectServiceAction(text + ' ' + reply);
 
       setMessages(prev => [

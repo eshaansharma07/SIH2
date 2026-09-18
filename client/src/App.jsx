@@ -116,13 +116,27 @@ export default function App() {
       }
     };
 
+    const handleShopUpdated = (e) => {
+      const updatedFields = e.detail;
+      if (updatedFields) {
+        setCurrentShop(prev => {
+          const next = { ...(prev || {}), ...updatedFields };
+          safeStorage.setJSON('vyapaar_active_shop', next);
+          return next;
+        });
+        setRefreshKey(k => k + 1);
+      }
+    };
+
     window.addEventListener('vyapaar:sync-completed', handleSyncDone);
     window.addEventListener('saakhsetu:open-advisor', handleOpenAdvisor);
     window.addEventListener('saakhsetu:navigate', handleGlobalNavigate);
+    window.addEventListener('vyapaar:shop-updated', handleShopUpdated);
     return () => {
       window.removeEventListener('vyapaar:sync-completed', handleSyncDone);
       window.removeEventListener('saakhsetu:open-advisor', handleOpenAdvisor);
       window.removeEventListener('saakhsetu:navigate', handleGlobalNavigate);
+      window.removeEventListener('vyapaar:shop-updated', handleShopUpdated);
     };
   }, []);
 

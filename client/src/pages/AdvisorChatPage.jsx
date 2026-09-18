@@ -175,6 +175,9 @@ export function AdvisorChatPage({ shop, creditData, summaryData, initialPrompt =
     try {
       const res = await api.chatAdvisor(shop.id, text);
       const reply = res.response || res.advice?.content || res.reply;
+      if (res.updatedOwnerName) {
+        window.dispatchEvent(new CustomEvent('vyapaar:shop-updated', { detail: { owner_name: res.updatedOwnerName } }));
+      }
       if (res.success && reply) {
         setMessages(prev => [
           ...prev, 
