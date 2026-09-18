@@ -616,9 +616,6 @@ export function Navbar({
                       <Globe className="w-3.5 h-3.5 text-[#0F3E2E]" />
                       <span className="font-serif font-bold text-xs text-stone-900">Select Language / भाषा चुनें</span>
                     </div>
-                    <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/60">
-                      12 Languages
-                    </span>
                   </div>
                   <div className="grid grid-cols-2 gap-1.5 max-h-64 overflow-y-auto pr-0.5">
                     {supportedLanguages.map((lang) => {

@@ -653,14 +653,6 @@ export default function App() {
         <div className="max-w-4xl mx-auto space-y-2">
           <div className="flex items-center justify-center gap-2 flex-wrap">
             <span className="font-bold text-stone-900 font-serif text-sm">{APP_NAME_HI} ({APP_NAME_EN})</span>
-            <span className="text-stone-300">•</span>
-            <span className="text-[10px] bg-stone-900 text-white font-bold px-2.5 py-0.5 rounded-full">
-              DPI Sovereign Architecture
-            </span>
-            <span className="text-stone-300">•</span>
-            <span className="text-[10px] bg-emerald-50 text-emerald-800 font-bold px-2.5 py-0.5 rounded-full border border-emerald-200">
-              RBI Priority Sector Lending (PSL) Aligned
-            </span>
           </div>
           <p className="text-[11px] text-stone-500 max-w-2xl mx-auto leading-relaxed">
             National Micro-Enterprise Credit & Seasonal Demand Radar. Built for Indian micro-enterprises referencing Nayak Committee & RBI Priority Sector Lending norms.

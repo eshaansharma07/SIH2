@@ -389,9 +389,6 @@ export function OnboardingPage({ onComplete, onSelectDemo, onStartDemoTour }) {
                       <Globe className="w-3.5 h-3.5 text-[#0F3E2E]" />
                       <span className="font-serif font-bold text-xs text-[#1C1917]">Select Language</span>
                     </div>
-                    <span className="text-[10px] font-bold text-[#0F3E2E] bg-emerald-50 px-1.5 py-0.5 rounded-full border border-emerald-200/60">
-                      12 Languages
-                    </span>
                   </div>
                   <div className="grid grid-cols-2 gap-1 max-h-56 overflow-y-auto pr-0.5">
                     {supportedLanguages?.map((lang) => {
@@ -1200,9 +1197,6 @@ export function OnboardingPage({ onComplete, onSelectDemo, onStartDemoTour }) {
                   <div className="absolute bottom-full right-0 mb-2 w-64 bg-[#FAF7F2] border border-[#D5CCBC] rounded-2xl p-2.5 shadow-2xl z-50 space-y-1.5 animate-in fade-in zoom-in-[0.98] duration-150">
                     <div className="flex items-center justify-between pb-1 border-b border-[#E7DFD5]">
                       <span className="font-serif font-bold text-xs text-[#1C1917]">Select Language</span>
-                      <span className="text-[10px] font-bold text-[#0F3E2E] bg-emerald-50 px-1.5 py-0.5 rounded-full">
-                        12 Languages
-                      </span>
                     </div>
                     <div className="grid grid-cols-2 gap-1 max-h-56 overflow-y-auto pr-0.5">
                       {supportedLanguages?.map((lang) => {

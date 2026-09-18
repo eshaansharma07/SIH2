@@ -20,6 +20,8 @@ import {
 import { SaathiAvatar } from './SaathiAvatar';
 import { WarliBorder } from './WarliMotif';
 import { useTranslation } from '../i18n/LanguageContext';
+import { DEMO_TOUR_TRANSLATIONS, LANG_VOICE_MAP } from '../data/demoTourTranslations';
+import { speak, stopSpeech } from '../utils/speechService';
 
 export function InteractiveDemoTour({ 
   isOpen, 
@@ -44,13 +46,6 @@ export function InteractiveDemoTour({
     {
       id: 'persona',
       tab: 'dashboard',
-      badge: 'Step 1 / 7 • Rural Persona',
-      titleEn: "Meet Ramesh Kumar: Village Kirana Store",
-      titleHi: "मिलिए रमेश कुमार जी से: ग्रामीण किराना स्टोर",
-      narrationEn: "Ramesh operates a Kirana store in Utraula Dehat village, Balrampur, UP. Despite 4 years of solid business, traditional banks reject him because he has zero CIBIL credit history.",
-      narrationHi: "रमेश जी उत्तर प्रदेश के बलरामपुर जिले के उतरौला देहात में 4 साल से किराना दुकान चला रहे हैं। ठोस व्यापार के बावजूद, सिबिल स्कोर न होने से बैंक इन्हें लोन देने से मना कर देते हैं।",
-      highlightTextEn: "Enterprise: Ramesh's Kirana Store • Vintage: 48 Months • Village: Utraula Dehat, Balrampur (UP)",
-      highlightTextHi: "दुकान: रमेश किराना स्टोर • आयु: 48 महीने • गाँव: उतरौला देहात, बलरामपुर (उत्तर प्रदेश)",
       icon: Store,
       color: "from-terracotta-600 to-amber-600",
       action: () => {
@@ -60,13 +55,6 @@ export function InteractiveDemoTour({
     {
       id: 'cashflow',
       tab: 'cashflow',
-      badge: 'Step 2 / 7 • Seasonal Reality',
-      titleEn: "4-Month Real Rural Cash Flow & Monsoon Dip",
-      titleHi: "4 महीने का वास्तविक ग्रामीण नकदी प्रवाह एवं मानसून गिरावट",
-      narrationEn: "Notice the seasonal pattern: steady baseline in May/June, a sharp 32% dip during July monsoons due to muddy lanes, followed by an 88% surge in September ahead of Navratri and Diwali.",
-      narrationHi: "ग्रामीण अर्थव्यवस्था का मौसमी चक्र देखें: मई-जून की स्थिर बिक्री, जुलाई के भारी मानसून में -32% की गिरावट और सितंबर में त्योहारों के कारण +88% का ऐतिहासिक उछाल।",
-      highlightTextEn: "Monsoon Dip (-32% in July) ➔ Pre-Diwali Surge (+88% in September verified across 120 days)",
-      highlightTextHi: "जुलाई में मानसूनी गिरावट (-32%) ➔ सितंबर में प्री-दिवाली उछाल (+88% सत्यापित 120 दिन का डेटा)",
       icon: BookOpen,
       color: "from-amber-600 to-emerald-600",
       action: () => {
@@ -76,13 +64,6 @@ export function InteractiveDemoTour({
     {
       id: 'keypad',
       tab: 'dashboard',
-      badge: 'Step 3 / 7 • Low-Literacy Inclusion',
-      titleEn: "Tactile Touch Logger (Bahi-Khata Dialer)",
-      titleHi: "कम पढ़े-लिखे व्यापारियों के लिए स्पर्श आधारित बही-खाता",
-      narrationEn: "Vyapaar Setu replaces complex accounting software with a tactile numeric keypad, big buttons, and 1-tap quick presets (+₹100, +₹500). Shopkeepers record daily sales in 15 seconds.",
-      narrationHi: "जटिल एकाउंटिंग सॉफ्टवेयर की जगह बड़े टच बटनों और +₹100, +₹500 वाले त्वरित बटनों से युक्त डायलर, जिससे ग्रामीण दुकानदार 15 सेकंड में रोज़ की बिक्री दर्ज कर लेते हैं।",
-      highlightTextEn: "Interactive Tactile Pad • Cash / UPI Switch • Live Bahi-Khata Database Logging",
-      highlightTextHi: "बड़े अंकों वाला टच पैड • नकद/यूपीआई चुनाव • रियल-टाइम डेटाबेस में सुरक्षित प्रविष्टि",
       icon: CheckCircle2,
       color: "from-emerald-600 to-indigo-600",
       action: () => {
@@ -94,13 +75,6 @@ export function InteractiveDemoTour({
     {
       id: 'credit',
       tab: 'credit',
-      badge: 'Step 4 / 7 • Alternative Credit Engine',
-      titleEn: "Explainable Credit Score (785 / 850 Prime Bankable)",
-      titleHi: "पारदर्शी वैकल्पिक क्रेडिट स्कोर (785 / 850 प्राइम बैंकेबल)",
-      narrationEn: "No formal CIBIL required. The 4-pillar scoring engine analyzes: Daily Ledger Logging (96%), Revenue Stability (92%), Udhaar Recovery Rate (87%), and UPI Digital Footprint (37%).",
-      narrationHi: "पारंपरिक सिबिल की कोई जरूरत नहीं। 4 पारदर्शी स्तंभ: दैनिक बही-खाता नियमितता (96%), बिक्री स्थिरता (92%), उधार अनुशासन (87%), और यूपीआई डिजिटल शेयर (37%)।",
-      highlightTextEn: "Score: 785 / 850 (Prime Bankable) • +15 Points Simulator Boost with Udhaar Recovery",
-      highlightTextHi: "स्कोर: 785 / 850 (अति उत्कृष्ट) • उधार वसूली से +15 अंक का तुरंत लाइव सिम्युलेटर उछाल",
       icon: TrendingUp,
       color: "from-indigo-600 to-emerald-600",
       action: () => {
@@ -110,13 +84,6 @@ export function InteractiveDemoTour({
     {
       id: 'schemes',
       tab: 'schemes',
-      badge: 'Step 5 / 7 • Financial Structuring',
-      titleEn: "10 Authentic GOI Schemes Auto-Matched",
-      titleHi: "10 वास्तविक सरकारी योजनाओं का स्वचालित मिलान",
-      narrationEn: "Vyapaar Setu auto-matches Ramesh with government schemes. Ramesh is 98% matched with PM MUDRA Shishu and Kishor (₹50,000 to ₹5,00,000 with 0% collateral) and UP ODOP.",
-      narrationHi: "व्यापार सेतु रमेश जी के लिए 10 वास्तविक सरकारी योजनाओं का मिलान करता है। पीएम मुद्रा शिशु और किशोर योजना (0% बंधक पर ₹50,000 से ₹5 लाख) में 98% पात्रता।",
-      highlightTextEn: "Top Match: PM MUDRA Shishu & Kishor (Zero Collateral) • UP ODOP (93% Match)",
-      highlightTextHi: "शीर्ष मिलान: पीएम मुद्रा योजना (बिना किसी गारंटी के) • यूपी ओडीओपी मार्जिन मनी (93% मैच)",
       icon: Landmark,
       color: "from-emerald-600 to-terracotta-600",
       action: () => {
@@ -126,30 +93,25 @@ export function InteractiveDemoTour({
     {
       id: 'advisor',
       tab: 'advisor',
-      badge: 'Step 6 / 7 • Grounded AI Advisory',
-      titleEn: "Google Gemini Grounded Advisor",
-      titleHi: "गूगल जेमिनी आधारित स्थानीय व्यापार सलाहकार",
-      narrationEn: "No generic AI fluff. Every response is strictly grounded in Ramesh's 48-month vintage, Balrampur wholesale mandi trends, and his last 30-day sales (₹84,055 with 50.8% growth).",
-      narrationHi: "कोई बनावटी या सामान्य सलाह नहीं। हर जवाब रमेश जी के 48 महीने के अनुभव, बलरामपुर गल्ला मंडी के भाव और पिछले 30 दिनों की ₹84,055 की बिक्री पर 100% आधारित है।",
-      highlightTextEn: "Live Google Gemini • Balrampur Mandi Prices • Bulletproof Safety Net Fallback",
-      highlightTextHi: "लाइव गूगल जेमिनी • बलरामपुर गल्ला मंडी अग्रिम बुकिंग • 6 सुरक्षित ऑफलाइन परिदृश्य",
       icon: Sparkles,
       color: "from-terracotta-600 to-amber-600",
       action: () => {
         setActiveTab('advisor');
-        setInitialAdvisorPrompt(language === 'hi' ? "दिवाली के लिए कितना स्टॉक लूँ?" : "How much stock for Diwali?");
+        const promptText = language === 'hi' 
+          ? "दिवाली के लिए कितना स्टॉक लूँ?" 
+          : language === 'pa'
+          ? "ਕੀ ਮੈਨੂੰ ਦੀਵਾਲੀ ਲਈ ਸਟਾਕ ਵਧਾਉਣਾ ਚਾਹੀਦਾ ਹੈ?"
+          : language === 'bn'
+          ? "উৎসবের জন্য কতটা স্টক বাড়াবো?"
+          : language === 'ta'
+          ? "தீபாவளிக்கு எவ்வளவு சரக்கு எடுக்க வேண்டும்?"
+          : "How much stock should I plan for the upcoming festival?";
+        setInitialAdvisorPrompt(promptText);
       }
     },
     {
       id: 'dossier',
       tab: 'dossier',
-      badge: 'Step 7 / 7 • Bank Ready Dossier',
-      titleEn: "1-Click Bank Credit Dossier for Aryavart Bank",
-      titleHi: "आर्यावर्त ग्रामीण बैंक हेतु 1-क्लिक बैंक डॉसियर प्रमाण-पत्र",
-      narrationEn: "Vyapaar Setu generates a verified Priority Sector Lending (PSL) statement with QR verification, audited cash flow figures, and official stamps that village branch managers accept on the spot.",
-      narrationHi: "व्यापार सेतु प्राथमिकता प्राप्त क्षेत्र ऋण (PSL) हेतु एक सत्यापित वित्तीय प्रमाण-पत्र बनाता है, जिसे आर्यावर्त ग्रामीण बैंक प्रबंधक बिना सीए ऑडिट के तुरंत स्वीकार कर लेते हैं।",
-      highlightTextEn: "Printable Verified Dossier • QR Verification • 0% CA Audit Required for PSL Loans",
-      highlightTextHi: "प्रिंट करने योग्य मुहरबंद पत्रक • क्यूआर कोड सत्यापन • बिना किसी सीए ऑडिट के तुरंत लोन स्वीकृति",
       icon: FileText,
       color: "from-emerald-700 to-terracotta-700",
       action: () => {
@@ -160,24 +122,37 @@ export function InteractiveDemoTour({
 
   const currentStepData = demoSteps[currentStep];
 
-  // Execute step action on change
+  const getStepText = (stepId, field) => {
+    const tData = DEMO_TOUR_TRANSLATIONS[stepId];
+    if (!tData || !tData[field]) return '';
+    return tData[field][language] || tData[field].en || tData[field].hi || '';
+  };
+
+  // Handle Speech Synthesis in active language
+  const speakNarration = (text) => {
+    if (!speechEnabled) return;
+    const targetLang = LANG_VOICE_MAP[language] || 'en-IN';
+    speak({
+      text,
+      lang: targetLang,
+      onError: (err) => console.warn('[InteractiveDemoTour] Speech fallback:', err)
+    });
+  };
+
+  // Execute step action on change and speak in current language
   useEffect(() => {
     if (isOpen && currentStepData) {
       currentStepData.action();
-      speakNarration(language === 'hi' ? currentStepData.narrationHi : currentStepData.narrationEn);
+      const currentNarration = getStepText(currentStepData.id, 'narration');
+      speakNarration(currentNarration);
     }
-  }, [currentStep, isOpen]);
+  }, [currentStep, isOpen, language]);
 
-  // Handle Speech Synthesis
-  const speakNarration = (text) => {
-    if (!speechEnabled || !window.speechSynthesis) return;
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 1.0;
-    utterance.pitch = 1.0;
-    utterance.lang = language === 'hi' ? 'hi-IN' : 'en-IN';
-    window.speechSynthesis.speak(utterance);
-  };
+  useEffect(() => {
+    return () => {
+      stopSpeech();
+    };
+  }, []);
 
   // Auto-play timer
   useEffect(() => {
@@ -233,10 +208,10 @@ export function InteractiveDemoTour({
   const toggleSpeech = () => {
     const newState = !speechEnabled;
     setSpeechEnabled(newState);
-    if (!newState && window.speechSynthesis) {
-      window.speechSynthesis.cancel();
-    } else if (newState) {
-      speakNarration(language === 'hi' ? currentStepData.narrationHi : currentStepData.narrationEn);
+    if (!newState) {
+      stopSpeech();
+    } else {
+      speakNarration(getStepText(currentStepData.id, 'narration'));
     }
   };
 
@@ -262,7 +237,7 @@ export function InteractiveDemoTour({
               <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
             </span>
             <span className="text-[11px] font-bold tracking-tight text-amber-200 bg-amber-400/20 px-2.5 py-0.5 rounded-full border border-amber-400/30">
-              {currentStepData.badge}
+              {getStepText(currentStepData.id, 'badge')}
             </span>
             <span className="hidden sm:inline text-xs text-stone-200/60 font-medium">
               | Live Guided Tour
@@ -287,7 +262,7 @@ export function InteractiveDemoTour({
             {/* Exit Demo Button */}
             <button
               onClick={() => {
-                if (window.speechSynthesis) window.speechSynthesis.cancel();
+                stopSpeech();
                 onClose();
               }}
               className="p-1.5 bg-paper/10 hover:bg-paper/20 rounded-xl text-stone-200 hover:text-paper transition border border-paper/15"
@@ -306,14 +281,14 @@ export function InteractiveDemoTour({
 
             <div className="space-y-1">
               <h3 className="text-sm sm:text-base font-bold text-white flex items-center gap-2 tracking-tight font-serif">
-                <span>{language === 'hi' ? currentStepData.titleHi : currentStepData.titleEn}</span>
+                <span>{getStepText(currentStepData.id, 'title')}</span>
               </h3>
               <p className="text-xs text-stone-200/80 leading-relaxed max-w-2xl font-normal font-sans">
-                {language === 'hi' ? currentStepData.narrationHi : currentStepData.narrationEn}
+                {getStepText(currentStepData.id, 'narration')}
               </p>
               <div className="pt-1">
                 <span className="inline-block text-[11px] font-semibold text-amber-200 bg-amber-400/20 px-2.5 py-0.5 rounded-full border border-amber-400/30">
-                  {language === 'hi' ? currentStepData.highlightTextHi : currentStepData.highlightTextEn}
+                  {getStepText(currentStepData.id, 'highlight')}
                 </span>
               </div>
             </div>

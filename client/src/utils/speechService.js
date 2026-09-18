@@ -22,32 +22,48 @@ export function isSpeechSupported() {
 
 export function findMatchingVoice(lang = 'hi-IN') {
   const voices = cachedVoices.length > 0 ? cachedVoices : loadVoices();
+  if (!voices || voices.length === 0) return null;
   const prefix = lang.split('-')[0].toLowerCase();
 
   // 1. Exact match
   const exact = voices.find(v => v.lang.toLowerCase() === lang.toLowerCase());
   if (exact) return exact;
 
-  // 2. Prefix match e.g. 'hi'
+  // 2. Normalized match with _
+  const exactNormalized = voices.find(v => v.lang.toLowerCase().replace('_', '-') === lang.toLowerCase());
+  if (exactNormalized) return exactNormalized;
+
+  // 3. Prefix match e.g. 'hi', 'pa', 'ta', etc.
   const byPrefix = voices.find(v => v.lang.toLowerCase().startsWith(prefix));
   if (byPrefix) return byPrefix;
 
-  // 3. Name match for Hindi
-  if (prefix === 'hi') {
-    const byName = voices.find(v => /hindi|lekhak|neerja|madhav/i.test(v.name));
+  // 4. Name match for Indian languages
+  const namePatterns = {
+    hi: /hindi|lekhak|neerja|madhav|swara/i,
+    pa: /punjabi|gurmukhi/i,
+    bn: /bengali|bangla|bashir/i,
+    mr: /marathi|aarohi/i,
+    ta: /tamil|valluvar/i,
+    te: /telugu|mohan/i,
+    gu: /gujarati|dhwani/i,
+    kn: /kannada|gagan/i,
+    ml: /malayalam|midhun/i,
+    or: /odia|oriya/i,
+    as: /assamese|asomiya/i,
+    en: /india|indian|ravi|heera/i
+  };
+
+  if (namePatterns[prefix]) {
+    const byName = voices.find(v => namePatterns[prefix].test(v.name));
     if (byName) return byName;
   }
 
-  // 4. Default / system voice
+  // 5. Default / system voice
   return voices.find(v => v.default) || voices[0] || null;
 }
 
 export function hasLanguageVoice(lang = 'hi-IN') {
-  if (!isSpeechSupported()) return false;
-  const voices = cachedVoices.length > 0 ? cachedVoices : loadVoices();
-  if (voices.length === 0) return true; // Voices might still load asynchronously
-  const prefix = lang.split('-')[0].toLowerCase();
-  return voices.some(v => v.lang.toLowerCase().startsWith(prefix) || (prefix === 'hi' && /hindi/i.test(v.name)));
+  return isSpeechSupported();
 }
 
 let activeUtterance = null;

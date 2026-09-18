@@ -15,10 +15,16 @@ import {
   PlusCircle,
   Home,
   UserPlus,
-  HelpCircle
+  HelpCircle,
+  Mic,
+  MicOff,
+  Volume2,
+  VolumeX
 } from 'lucide-react';
 import { useTranslation } from '../i18n/LanguageContext';
 import { api } from '../utils/api';
+import { speak, stopSpeech } from '../utils/speechService';
+import { LANG_VOICE_MAP } from '../data/demoTourTranslations';
 
 export function FloatingSetuAI({ 
   currentShop, 
@@ -28,13 +34,95 @@ export function FloatingSetuAI({
   onOpenRegister,
   isDemoTourOpen = false
 }) {
-  const { language } = useTranslation();
+  const { language, currentLanguageInfo } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [activeServiceTab, setActiveServiceTab] = useState('all');
+  const [isListening, setIsListening] = useState(false);
+  const [speakingMsgIndex, setSpeakingMsgIndex] = useState(null);
   const messagesEndRef = useRef(null);
+  const recognitionRef = useRef(null);
+
+  const targetSpeechLang = LANG_VOICE_MAP[language] || 'en-IN';
+
+  const toggleListening = () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert(language === 'hi' ? 'आपके ब्राउज़र में वॉइस इनपुट समर्थित नहीं है।' : 'Speech recognition is not supported in this browser.');
+      return;
+    }
+
+    if (isListening) {
+      try {
+        recognitionRef.current?.stop();
+      } catch (_) {}
+      setIsListening(false);
+      return;
+    }
+
+    try {
+      const recognition = new SpeechRecognition();
+      recognition.lang = targetSpeechLang;
+      recognition.interimResults = true;
+      recognition.continuous = false;
+
+      recognition.onstart = () => {
+        setIsListening(true);
+      };
+
+      recognition.onresult = (event) => {
+        const transcript = Array.from(event.results)
+          .map(r => r[0].transcript)
+          .join('');
+        setInput(transcript);
+      };
+
+      recognition.onerror = (e) => {
+        console.warn('[FloatingSetuAI] Speech recognition error:', e.error);
+        setIsListening(false);
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
+      recognitionRef.current = recognition;
+      recognition.start();
+    } catch (err) {
+      console.error('[FloatingSetuAI] Failed to start speech recognition:', err);
+      setIsListening(false);
+    }
+  };
+
+  const handleSpeakMessage = (text, msgIndex) => {
+    if (speakingMsgIndex === msgIndex) {
+      stopSpeech();
+      setSpeakingMsgIndex(null);
+      return;
+    }
+
+    stopSpeech();
+    setSpeakingMsgIndex(msgIndex);
+
+    speak({
+      text,
+      lang: targetSpeechLang,
+      onStart: () => setSpeakingMsgIndex(msgIndex),
+      onEnd: () => setSpeakingMsgIndex(null),
+      onError: () => setSpeakingMsgIndex(null)
+    });
+  };
+
+  useEffect(() => {
+    return () => {
+      stopSpeech();
+      try {
+        recognitionRef.current?.abort();
+      } catch (_) {}
+    };
+  }, []);
 
   const shopName = currentShop?.owner_name || (language === 'hi' ? 'दुकानदार जी' : 'Merchant');
   const isDemo = currentShop?.is_demo === 1 || !currentShop;
@@ -404,9 +492,42 @@ export function FloatingSetuAI({
                       </button>
                     )}
 
-                    <span className={`text-[9px] block text-right mt-1 ${isUser ? 'text-emerald-200/70' : 'text-stone-400'}`}>
-                      {m.timestamp}
-                    </span>
+                    {/* Voice Read-Aloud for Assistant Response */}
+                    {!isUser && (
+                      <div className="flex items-center justify-between gap-1.5 mt-2 pt-1 border-t border-[#ECE5D8]/70">
+                        <button
+                          type="button"
+                          onClick={() => handleSpeakMessage(m.content, idx)}
+                          className={`flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-md border transition-colors cursor-pointer ${
+                            speakingMsgIndex === idx
+                              ? 'bg-amber-100 text-amber-900 border-amber-300'
+                              : 'bg-[#FAF8F5] text-stone-600 border-stone-200 hover:bg-[#F2ECE1] hover:text-stone-900'
+                          }`}
+                          title={speakingMsgIndex === idx ? "Stop voice" : `Listen aloud (${currentLanguageInfo?.nativeName || language})`}
+                        >
+                          {speakingMsgIndex === idx ? (
+                            <>
+                              <VolumeX className="w-3 h-3 text-amber-700 animate-pulse" />
+                              <span>{language === 'hi' ? 'रोकें' : 'Stop'}</span>
+                            </>
+                          ) : (
+                            <>
+                              <Volume2 className="w-3 h-3 text-[#0F3E2E]" />
+                              <span>{language === 'hi' ? 'बोलकर सुनें' : 'Listen'}</span>
+                            </>
+                          )}
+                        </button>
+                        <span className="text-[9px] text-stone-400">
+                          {m.timestamp}
+                        </span>
+                      </div>
+                    )}
+
+                    {isUser && (
+                      <span className="text-[9px] block text-right mt-1 text-emerald-200/70">
+                        {m.timestamp}
+                      </span>
+                    )}
                   </div>
                 </div>
               );
@@ -435,9 +556,32 @@ export function FloatingSetuAI({
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder={language === 'hi' ? 'कुछ भी पूछें या सेवा चुनें...' : 'Ask question or choose service...'}
-              className="flex-1 bg-[#F6F3EC] border border-[#E0D7C8] rounded-xl px-3 py-2 text-xs text-stone-900 placeholder:text-stone-400 focus:outline-none focus:border-[#0F3E2E] focus:ring-1 focus:ring-[#0F3E2E]"
+              placeholder={
+                isListening 
+                  ? `${currentLanguageInfo?.nativeName || language}: Listening... बोलिए...` 
+                  : (language === 'hi' ? 'कुछ भी पूछें या बोलकर बताएं...' : 'Ask question or tap mic to speak...')
+              }
+              className={`flex-1 bg-[#F6F3EC] border rounded-xl px-3 py-2 text-xs text-stone-900 placeholder:text-stone-400 focus:outline-none transition-all ${
+                isListening 
+                  ? 'border-amber-400 bg-amber-50/50 ring-2 ring-amber-300/60 placeholder:text-amber-700 placeholder:font-semibold' 
+                  : 'border-[#E0D7C8] focus:border-[#0F3E2E] focus:ring-1 focus:ring-[#0F3E2E]'
+              }`}
             />
+
+            {/* Voice Input Microphone Button */}
+            <button
+              type="button"
+              onClick={toggleListening}
+              className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all cursor-pointer shrink-0 ${
+                isListening 
+                  ? 'bg-amber-500 text-stone-950 animate-pulse shadow-md ring-2 ring-amber-300' 
+                  : 'bg-[#F6F3EC] hover:bg-[#ECE5D8] text-[#0F3E2E] border border-[#E0D7C8]'
+              }`}
+              title={isListening ? "Stop listening" : `Speak in ${currentLanguageInfo?.nativeName || 'your language'}`}
+            >
+              {isListening ? <Mic className="w-4 h-4 animate-bounce text-stone-950" /> : <Mic className="w-4 h-4" />}
+            </button>
+
             <button
               type="submit"
               disabled={!input.trim() || loading}

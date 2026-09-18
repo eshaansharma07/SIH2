@@ -595,9 +595,6 @@ export function SchemeMatcherPage({ shop, creditData, onNavigateTab }) {
                 Top matches calculated against your verified turnover and vintage
               </p>
             </div>
-            <span className="text-[11px] font-semibold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/60 hidden sm:inline-block">
-              ✓ Verified Eligibility
-            </span>
           </div>
 
           {/* 2-Column Compact Grid */}

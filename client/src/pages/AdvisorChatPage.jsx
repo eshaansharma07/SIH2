@@ -10,21 +10,109 @@ import {
   Info, 
   Lightbulb, 
   RotateCcw,
-  Bot
+  Bot,
+  Mic,
+  MicOff,
+  Volume2,
+  VolumeX
 } from 'lucide-react';
 import { api } from '../utils/api';
 import { useTranslation } from '../i18n/LanguageContext';
 import { WarliBorder } from '../components/WarliMotif';
 import { Card, Badge, SectionHeader, Button } from '../components/ui';
 import { APP_ADVISOR_NAME_EN, APP_ADVISOR_NAME_HI } from '../config/brand';
+import { speak, stopSpeech } from '../utils/speechService';
+import { LANG_VOICE_MAP } from '../data/demoTourTranslations';
 
 export function AdvisorChatPage({ shop, creditData, summaryData, initialPrompt = '', onPromptUsed }) {
-  const { t, language } = useTranslation();
+  const { t, language, currentLanguageInfo } = useTranslation();
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState(initialPrompt || '');
   const [loading, setLoading] = useState(false);
   const [showContext, setShowContext] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [speakingIndex, setSpeakingIndex] = useState(null);
   const messagesEndRef = useRef(null);
+  const recognitionRef = useRef(null);
+
+  const targetSpeechLang = LANG_VOICE_MAP[language] || 'en-IN';
+
+  const toggleListening = () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert(language === 'hi' ? 'आपके ब्राउज़र में वॉइस इनपुट समर्थित नहीं है।' : 'Speech recognition is not supported in this browser.');
+      return;
+    }
+
+    if (isListening) {
+      try {
+        recognitionRef.current?.stop();
+      } catch (_) {}
+      setIsListening(false);
+      return;
+    }
+
+    try {
+      const recognition = new SpeechRecognition();
+      recognition.lang = targetSpeechLang;
+      recognition.interimResults = true;
+      recognition.continuous = false;
+
+      recognition.onstart = () => {
+        setIsListening(true);
+      };
+
+      recognition.onresult = (event) => {
+        const transcript = Array.from(event.results)
+          .map(r => r[0].transcript)
+          .join('');
+        setInputText(transcript);
+      };
+
+      recognition.onerror = (e) => {
+        console.warn('[AdvisorChatPage] Speech recognition error:', e.error);
+        setIsListening(false);
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
+      recognitionRef.current = recognition;
+      recognition.start();
+    } catch (err) {
+      console.error('[AdvisorChatPage] Failed to start speech recognition:', err);
+      setIsListening(false);
+    }
+  };
+
+  const handleSpeakMessage = (text, index) => {
+    if (speakingIndex === index) {
+      stopSpeech();
+      setSpeakingIndex(null);
+      return;
+    }
+
+    stopSpeech();
+    setSpeakingIndex(index);
+
+    speak({
+      text,
+      lang: targetSpeechLang,
+      onStart: () => setSpeakingIndex(index),
+      onEnd: () => setSpeakingIndex(null),
+      onError: () => setSpeakingIndex(null)
+    });
+  };
+
+  useEffect(() => {
+    return () => {
+      stopSpeech();
+      try {
+        recognitionRef.current?.abort();
+      } catch (_) {}
+    };
+  }, []);
 
   useEffect(() => {
     loadChatHistory();
@@ -224,6 +312,36 @@ export function AdvisorChatPage({ shop, creditData, summaryData, initialPrompt =
                   <div className="whitespace-pre-wrap font-sans">
                     {msg.content}
                   </div>
+
+                  {!isUser && (
+                    <div className="mt-2 pt-2 border-t border-stone-100 flex items-center justify-between">
+                      <button
+                        type="button"
+                        onClick={() => handleSpeakMessage(msg.content, index)}
+                        className={`flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-lg border transition-colors cursor-pointer ${
+                          speakingIndex === index
+                            ? 'bg-amber-100 text-amber-900 border-amber-300'
+                            : 'bg-stone-50 text-stone-600 border-stone-200 hover:bg-stone-100 hover:text-stone-900'
+                        }`}
+                        title={speakingIndex === index ? "Stop speaking" : `Listen in ${currentLanguageInfo?.nativeName || language}`}
+                      >
+                        {speakingIndex === index ? (
+                          <>
+                            <VolumeX className="w-3.5 h-3.5 text-amber-700 animate-pulse" />
+                            <span>{language === 'hi' ? 'रोकें' : 'Stop'}</span>
+                          </>
+                        ) : (
+                          <>
+                            <Volume2 className="w-3.5 h-3.5 text-[#0F3E2E]" />
+                            <span>{language === 'hi' ? 'बोलकर सुनें' : 'Listen'}</span>
+                          </>
+                        )}
+                      </button>
+                      <span className="text-[10px] text-stone-400 font-sans">
+                        {msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
             );
@@ -272,9 +390,32 @@ export function AdvisorChatPage({ shop, creditData, summaryData, initialPrompt =
               type="text"
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
-              placeholder={language === 'hi' ? 'यहाँ अपना प्रश्न लिखें या पूछें...' : 'Ask about festival stock, loan schemes, or khata...'}
-              className="flex-1 px-4 py-3 bg-[#FAF8F5] focus:bg-white border border-stone-200 rounded-full text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-stone-900/15 transition text-stone-900 placeholder:text-stone-400"
+              placeholder={
+                isListening 
+                  ? `${currentLanguageInfo?.nativeName || language}: Listening... बोलिए...` 
+                  : (language === 'hi' ? 'यहाँ अपना प्रश्न लिखें या माइक दबाकर बोलें...' : 'Ask question or tap mic to speak in your language...')
+              }
+              className={`flex-1 px-4 py-3 bg-[#FAF8F5] focus:bg-white border rounded-full text-xs sm:text-sm font-medium focus:outline-none transition text-stone-900 placeholder:text-stone-400 ${
+                isListening 
+                  ? 'border-amber-400 ring-2 ring-amber-300 bg-amber-50/40 placeholder:text-amber-700 placeholder:font-semibold' 
+                  : 'border-stone-200 focus:ring-2 focus:ring-stone-900/15'
+              }`}
             />
+
+            {/* Voice Input Microphone Button */}
+            <button
+              type="button"
+              onClick={toggleListening}
+              className={`w-11 h-11 rounded-full flex items-center justify-center transition shrink-0 cursor-pointer ${
+                isListening 
+                  ? 'bg-amber-500 text-stone-950 animate-pulse ring-2 ring-amber-300 shadow-md' 
+                  : 'bg-stone-100 hover:bg-stone-200 text-stone-700 border border-stone-200'
+              }`}
+              title={isListening ? "Stop listening" : `Speak in ${currentLanguageInfo?.nativeName || 'your language'}`}
+            >
+              {isListening ? <Mic className="w-5 h-5 animate-bounce text-stone-950" /> : <Mic className="w-5 h-5" />}
+            </button>
+
             <button
               type="submit"
               disabled={loading || !inputText.trim()}
