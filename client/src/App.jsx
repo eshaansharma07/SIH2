@@ -10,19 +10,23 @@ import { useTranslation } from './i18n/LanguageContext';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { APP_NAME_EN, APP_NAME_HI, APP_TAGLINE_HI } from './config/brand';
 
-// Lazy-loaded pages for reduced initial bundle and sub-second reloads
-const DashboardPage = lazy(() => import('./pages/DashboardPage').then(m => ({ default: m.DashboardPage })));
-const AdvisorChatPage = lazy(() => import('./pages/AdvisorChatPage').then(m => ({ default: m.AdvisorChatPage })));
-const CashFlowPage = lazy(() => import('./pages/CashFlowPage').then(m => ({ default: m.CashFlowPage })));
-const CreditScorePage = lazy(() => import('./pages/CreditScorePage').then(m => ({ default: m.CreditScorePage })));
-const SchemeMatcherPage = lazy(() => import('./pages/SchemeMatcherPage').then(m => ({ default: m.SchemeMatcherPage })));
-const BankDossierPage = lazy(() => import('./pages/BankDossierPage').then(m => ({ default: m.BankDossierPage })));
-const ShopProfilePage = lazy(() => import('./pages/ShopProfilePage').then(m => ({ default: m.ShopProfilePage })));
-const OnboardingPage = lazy(() => import('./pages/OnboardingPage').then(m => ({ default: m.OnboardingPage })));
-const PublicPayPage = lazy(() => import('./pages/PublicPayPage').then(m => ({ default: m.PublicPayPage })));
-const VoiceInputDialog = lazy(() => import('./components/VoiceInputDialog').then(m => ({ default: m.VoiceInputDialog })));
-const InteractiveDemoTour = lazy(() => import('./components/InteractiveDemoTour').then(m => ({ default: m.InteractiveDemoTour })));
-const WholesaleDiscoveryModal = lazy(() => import('./components/WholesaleDiscoveryModal').then(m => ({ default: m.WholesaleDiscoveryModal })));
+import { lazyRetry } from './utils/lazyRetry';
+import { safeStorage } from './utils/safeStorage';
+import { PageErrorBoundary } from './components/PageErrorBoundary';
+
+// Resilient lazy-loaded pages with auto-retry and chunk recovery
+const DashboardPage = lazyRetry(() => import('./pages/DashboardPage').then(m => ({ default: m.DashboardPage })), 'DashboardPage');
+const AdvisorChatPage = lazyRetry(() => import('./pages/AdvisorChatPage').then(m => ({ default: m.AdvisorChatPage })), 'AdvisorChatPage');
+const CashFlowPage = lazyRetry(() => import('./pages/CashFlowPage').then(m => ({ default: m.CashFlowPage })), 'CashFlowPage');
+const CreditScorePage = lazyRetry(() => import('./pages/CreditScorePage').then(m => ({ default: m.CreditScorePage })), 'CreditScorePage');
+const SchemeMatcherPage = lazyRetry(() => import('./pages/SchemeMatcherPage').then(m => ({ default: m.SchemeMatcherPage })), 'SchemeMatcherPage');
+const BankDossierPage = lazyRetry(() => import('./pages/BankDossierPage').then(m => ({ default: m.BankDossierPage })), 'BankDossierPage');
+const ShopProfilePage = lazyRetry(() => import('./pages/ShopProfilePage').then(m => ({ default: m.ShopProfilePage })), 'ShopProfilePage');
+const OnboardingPage = lazyRetry(() => import('./pages/OnboardingPage').then(m => ({ default: m.OnboardingPage })), 'OnboardingPage');
+const PublicPayPage = lazyRetry(() => import('./pages/PublicPayPage').then(m => ({ default: m.PublicPayPage })), 'PublicPayPage');
+const VoiceInputDialog = lazyRetry(() => import('./components/VoiceInputDialog').then(m => ({ default: m.VoiceInputDialog })), 'VoiceInputDialog');
+const InteractiveDemoTour = lazyRetry(() => import('./components/InteractiveDemoTour').then(m => ({ default: m.InteractiveDemoTour })), 'InteractiveDemoTour');
+const WholesaleDiscoveryModal = lazyRetry(() => import('./components/WholesaleDiscoveryModal').then(m => ({ default: m.WholesaleDiscoveryModal })), 'WholesaleDiscoveryModal');
 
 function PageSkeleton() {
   return (
@@ -45,18 +49,12 @@ export default function App() {
   // Route check: Standalone /pay/:shopId customer UPI payment portal
   const isPayRoute = typeof window !== 'undefined' && window.location.pathname.startsWith('/pay');
 
-  // Read persisted state from localStorage
-  const savedShopId = localStorage.getItem('vyapaar_active_shop_id') || null;
-  const savedShopJson = localStorage.getItem('vyapaar_active_shop');
-  let initialShop = null;
-  try {
-    if (savedShopJson) initialShop = JSON.parse(savedShopJson);
-  } catch (_) {}
+  // Read persisted state from safeStorage
+  const savedShopId = safeStorage.getItem('vyapaar_active_shop_id');
+  const initialShop = safeStorage.getJSON('vyapaar_active_shop');
+  const savedIsDemo = safeStorage.getItem('vyapaar_is_demo_mode') === 'true';
+  const savedTab = safeStorage.getItem('vyapaar_active_tab');
 
-  const savedIsDemoStr = localStorage.getItem('vyapaar_is_demo_mode');
-  const savedIsDemo = savedIsDemoStr === 'true';
-
-  const savedTab = localStorage.getItem('vyapaar_active_tab');
   const hasUserSession = Boolean(savedShopId || initialShop);
   const [activeTab, setActiveTab] = useState(
     hasUserSession ? (savedTab && savedTab !== 'onboarding' ? savedTab : 'dashboard') : 'onboarding'
@@ -88,7 +86,7 @@ export default function App() {
   const changeTab = (tab) => {
     setActiveTab(tab);
     if (tab && tab !== 'onboarding') {
-      localStorage.setItem('vyapaar_active_tab', tab);
+      safeStorage.setItem('vyapaar_active_tab', tab);
     }
   };
 
@@ -96,7 +94,7 @@ export default function App() {
     loadAllShopData();
 
     const handleSyncDone = () => {
-      const activeShopId = localStorage.getItem('vyapaar_active_shop_id');
+      const activeShopId = safeStorage.getItem('vyapaar_active_shop_id');
       if (activeShopId) {
         fetchFinancials(activeShopId);
         setRefreshKey(k => k + 1);
@@ -136,12 +134,8 @@ export default function App() {
 
   const loadAllShopData = async () => {
     try {
-      const activeShopId = localStorage.getItem('vyapaar_active_shop_id');
-      const cachedJson = localStorage.getItem('vyapaar_active_shop');
-      let cachedShop = null;
-      if (cachedJson) {
-        try { cachedShop = JSON.parse(cachedJson); } catch (_) {}
-      }
+      const activeShopId = safeStorage.getItem('vyapaar_active_shop_id');
+      const cachedShop = safeStorage.getJSON('vyapaar_active_shop');
 
       // If user has neither an activeShopId nor a cached profile, show onboarding
       if (!activeShopId && !cachedShop) {
@@ -168,9 +162,9 @@ export default function App() {
         const shopRes = await api.getShopCurrent(idToFetch);
         if (shopRes?.shop) {
           setCurrentShop(shopRes.shop);
-          localStorage.setItem('vyapaar_active_shop', JSON.stringify(shopRes.shop));
+          safeStorage.setJSON('vyapaar_active_shop', shopRes.shop);
           setIsDemoMode(shopRes.shop.is_demo === 1);
-          localStorage.setItem('vyapaar_is_demo_mode', shopRes.shop.is_demo === 1 ? 'true' : 'false');
+          safeStorage.setItem('vyapaar_is_demo_mode', shopRes.shop.is_demo === 1 ? 'true' : 'false');
           await fetchFinancials(shopRes.shop.id);
         } else if (cachedShop) {
           await fetchFinancials(cachedShop.id);
@@ -271,7 +265,7 @@ export default function App() {
       setRefreshKey(k => k + 1);
 
       // Background financial sync without risk of session logout
-      const activeId = currentShop?.id || localStorage.getItem('vyapaar_active_shop_id');
+      const activeId = currentShop?.id || safeStorage.getItem('vyapaar_active_shop_id');
       if (activeId) {
         fetchFinancials(activeId);
       }
@@ -300,10 +294,10 @@ export default function App() {
 
   // Load Demo Mode (Ramesh Kirana) - Instant response + background seed
   const handleSelectDemo = async () => {
-    // 1. Instantly update local state and localStorage so user transitions immediately (0ms UI latency)
-    localStorage.setItem('vyapaar_active_shop_id', 'ramesh-kirana');
-    localStorage.setItem('vyapaar_active_shop', JSON.stringify(demoShopDefault));
-    localStorage.setItem('vyapaar_is_demo_mode', 'true');
+    // 1. Instantly update local state and safeStorage so user transitions immediately (0ms UI latency)
+    safeStorage.setItem('vyapaar_active_shop_id', 'ramesh-kirana');
+    safeStorage.setJSON('vyapaar_active_shop', demoShopDefault);
+    safeStorage.setItem('vyapaar_is_demo_mode', 'true');
     setCurrentShop(demoShopDefault);
     setIsDemoMode(true);
     setRefreshKey(k => k + 1);
@@ -319,7 +313,7 @@ export default function App() {
         return null;
       });
       const demoShop = demoRes?.shop || demoShopDefault;
-      localStorage.setItem('vyapaar_active_shop', JSON.stringify(demoShop));
+      safeStorage.setJSON('vyapaar_active_shop', demoShop);
       setCurrentShop(demoShop);
       setRefreshKey(k => k + 1);
       fetchFinancials('ramesh-kirana');
@@ -332,22 +326,21 @@ export default function App() {
   const rememberShop = (shop) => {
     if (!shop || !shop.id) return;
     try {
-      const raw = localStorage.getItem('vyapaar_saved_shops');
-      let list = raw ? JSON.parse(raw) : [];
+      let list = safeStorage.getJSON('vyapaar_saved_shops', []);
       if (!Array.isArray(list)) list = [];
       list = list.filter(s => s.id !== shop.id);
       list.unshift(shop);
       list = list.slice(0, 6);
-      localStorage.setItem('vyapaar_saved_shops', JSON.stringify(list));
+      safeStorage.setJSON('vyapaar_saved_shops', list);
     } catch (_) {}
   };
 
   // Real Registration / Login Complete
   const handleRealRegistrationComplete = (newShop) => {
     if (newShop?.id) {
-      localStorage.setItem('vyapaar_active_shop_id', newShop.id);
-      localStorage.setItem('vyapaar_active_shop', JSON.stringify(newShop));
-      localStorage.setItem('vyapaar_is_demo_mode', newShop.is_demo === 1 ? 'true' : 'false');
+      safeStorage.setItem('vyapaar_active_shop_id', newShop.id);
+      safeStorage.setJSON('vyapaar_active_shop', newShop);
+      safeStorage.setItem('vyapaar_is_demo_mode', newShop.is_demo === 1 ? 'true' : 'false');
       rememberShop(newShop);
     }
     setCurrentShop(newShop);
@@ -363,10 +356,10 @@ export default function App() {
 
   // Switch to real registration from demo mode (MANUAL LOGOUT)
   const handleSwitchToRegister = () => {
-    localStorage.removeItem('vyapaar_active_shop_id');
-    localStorage.removeItem('vyapaar_active_shop');
-    localStorage.removeItem('vyapaar_is_demo_mode');
-    localStorage.removeItem('vyapaar_active_tab');
+    safeStorage.removeItem('vyapaar_active_shop_id');
+    safeStorage.removeItem('vyapaar_active_shop');
+    safeStorage.removeItem('vyapaar_is_demo_mode');
+    safeStorage.removeItem('vyapaar_active_tab');
     setCurrentShop(null);
     setIsDemoMode(false);
     setCreditData(null);
@@ -380,9 +373,9 @@ export default function App() {
     try {
       const demoRes = await api.resetDemoShop().catch(() => null);
       const demoShop = demoRes?.shop || demoShopDefault;
-      localStorage.setItem('vyapaar_active_shop_id', 'ramesh-kirana');
-      localStorage.setItem('vyapaar_active_shop', JSON.stringify(demoShop));
-      localStorage.setItem('vyapaar_is_demo_mode', 'true');
+      safeStorage.setItem('vyapaar_active_shop_id', 'ramesh-kirana');
+      safeStorage.setJSON('vyapaar_active_shop', demoShop);
+      safeStorage.setItem('vyapaar_is_demo_mode', 'true');
       setCurrentShop(demoShop);
       setIsDemoMode(true);
       setRefreshKey(k => k + 1);
@@ -466,87 +459,89 @@ export default function App() {
 
             {/* Main Page Container */}
             <main className="flex-1 w-full min-w-0 px-4 sm:px-6 lg:px-8 py-4 sm:py-6 max-w-7xl xl:max-w-[1440px] mx-auto pb-28 sm:pb-32 lg:pb-12">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={activeTab}
-                  initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, x: 15 }}
-                  animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, x: 0 }}
-                  exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, x: -15 }}
-                  transition={shouldReduceMotion ? { duration: 0.1 } : { duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-                  className="w-full min-w-0"
-                >
-                  <Suspense fallback={<PageSkeleton />}>
-                    {activeTab === 'dashboard' && (
-                      <DashboardPage
-                        shop={currentShop}
-                        onOpenKeypad={handleOpenKeypad}
-                        onOpenWholesale={() => setWholesaleModalOpen(true)}
-                        onNavigateTab={(tab) => changeTab(tab)}
-                      />
-                    )}
+              <PageErrorBoundary activeTab={activeTab} onResetTab={() => changeTab('dashboard')}>
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={activeTab}
+                    initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, x: 15 }}
+                    animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, x: 0 }}
+                    exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, x: -15 }}
+                    transition={shouldReduceMotion ? { duration: 0.1 } : { duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+                    className="w-full min-w-0"
+                  >
+                    <Suspense fallback={<PageSkeleton />}>
+                      {activeTab === 'dashboard' && (
+                        <DashboardPage
+                          shop={currentShop}
+                          onOpenKeypad={handleOpenKeypad}
+                          onOpenWholesale={() => setWholesaleModalOpen(true)}
+                          onNavigateTab={(tab) => changeTab(tab)}
+                        />
+                      )}
 
-                    {activeTab === 'advisor' && (
-                      <AdvisorChatPage
-                        shop={currentShop}
-                        creditData={creditData}
-                        summaryData={summaryData}
-                        initialPrompt={initialAdvisorPrompt}
-                        onPromptUsed={() => setInitialAdvisorPrompt('')}
-                      />
-                    )}
+                      {activeTab === 'advisor' && (
+                        <AdvisorChatPage
+                          shop={currentShop}
+                          creditData={creditData}
+                          summaryData={summaryData}
+                          initialPrompt={initialAdvisorPrompt}
+                          onPromptUsed={() => setInitialAdvisorPrompt('')}
+                        />
+                      )}
 
-                    {activeTab === 'cashflow' && (
-                      <CashFlowPage
-                        shop={currentShop}
-                        isDemoMode={isDemoMode}
-                        summaryData={summaryData}
-                        onOpenKeypad={handleOpenKeypad}
-                        onOpenWholesale={() => setWholesaleModalOpen(true)}
-                        refreshKey={refreshKey}
-                        latestTx={latestTx}
-                        onTransactionSaved={handleTransactionSaved}
-                      />
-                    )}
+                      {activeTab === 'cashflow' && (
+                        <CashFlowPage
+                          shop={currentShop}
+                          isDemoMode={isDemoMode}
+                          summaryData={summaryData}
+                          onOpenKeypad={handleOpenKeypad}
+                          onOpenWholesale={() => setWholesaleModalOpen(true)}
+                          refreshKey={refreshKey}
+                          latestTx={latestTx}
+                          onTransactionSaved={handleTransactionSaved}
+                        />
+                      )}
 
-                    {activeTab === 'credit' && (
-                      <CreditScorePage
-                        shop={currentShop}
-                        creditData={creditData}
-                        onNavigateTab={(tab) => changeTab(tab)}
-                      />
-                    )}
+                      {activeTab === 'credit' && (
+                        <CreditScorePage
+                          shop={currentShop}
+                          creditData={creditData}
+                          onNavigateTab={(tab) => changeTab(tab)}
+                        />
+                      )}
 
-                    {activeTab === 'schemes' && (
-                      <SchemeMatcherPage
-                        shop={currentShop}
-                        creditData={creditData}
-                        onNavigateTab={(tab) => changeTab(tab)}
-                      />
-                    )}
+                      {activeTab === 'schemes' && (
+                        <SchemeMatcherPage
+                          shop={currentShop}
+                          creditData={creditData}
+                          onNavigateTab={(tab) => changeTab(tab)}
+                        />
+                      )}
 
-                    {activeTab === 'dossier' && (
-                      <BankDossierPage
-                        shop={currentShop}
-                        isDemoMode={isDemoMode}
-                        onNavigateTab={(tab) => changeTab(tab)}
-                        onBack={() => changeTab('dashboard')}
-                      />
-                    )}
+                      {activeTab === 'dossier' && (
+                        <BankDossierPage
+                          shop={currentShop}
+                          isDemoMode={isDemoMode}
+                          onNavigateTab={(tab) => changeTab(tab)}
+                          onBack={() => changeTab('dashboard')}
+                        />
+                      )}
 
-                    {activeTab === 'profile' && (
-                      <ShopProfilePage
-                        shop={currentShop}
-                        onShopUpdated={(updated) => {
-                          setCurrentShop(updated);
-                          localStorage.setItem('vyapaar_active_shop', JSON.stringify(updated));
-                          setRefreshKey(k => k + 1);
-                        }}
-                        onReloadDemo={handleReloadDemo}
-                      />
-                    )}
-                  </Suspense>
-                </motion.div>
-              </AnimatePresence>
+                      {activeTab === 'profile' && (
+                        <ShopProfilePage
+                          shop={currentShop}
+                          onShopUpdated={(updated) => {
+                            setCurrentShop(updated);
+                            safeStorage.setJSON('vyapaar_active_shop', updated);
+                            setRefreshKey(k => k + 1);
+                          }}
+                          onReloadDemo={handleReloadDemo}
+                        />
+                      )}
+                    </Suspense>
+                  </motion.div>
+                </AnimatePresence>
+              </PageErrorBoundary>
             </main>
           </div>
         </div>

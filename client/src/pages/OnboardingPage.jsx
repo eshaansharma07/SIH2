@@ -33,6 +33,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../utils/api';
+import { safeStorage } from '../utils/safeStorage';
 import { useTranslation } from '../i18n/LanguageContext';
 import { INDIAN_STATES_AND_UTS, findStandardState } from '../data/indianStates';
 import { APP_NAME_EN, APP_NAME_HI, APP_TAGLINE_EN, APP_TAGLINE_HI } from '../config/brand';
@@ -105,13 +106,10 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
   // Load saved device shops
   useEffect(() => {
     try {
-      const stored = localStorage.getItem('vyapaar_saved_shops');
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setSavedShops(parsed);
-          setLoginPhone(parsed[0].phone || '');
-        }
+      const parsed = safeStorage.getJSON('vyapaar_saved_shops', []);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        setSavedShops(parsed);
+        setLoginPhone(parsed[0].phone || '');
       }
     } catch (_) {}
   }, []);

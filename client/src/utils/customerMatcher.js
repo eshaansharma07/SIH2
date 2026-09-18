@@ -5,6 +5,7 @@
  */
 
 import { DEMO_UDHAAR_LEDGER } from '../data/demoData.js';
+import { safeStorage } from './safeStorage.js';
 
 // Strips common honorifics, titles, and extra whitespace for fuzzy matching
 export function normalizeCustomerName(rawName) {
@@ -227,12 +228,9 @@ export function searchCustomerSuggestions(query, customerList = [], limit = 6) {
 export function getCachedCustomers(shopId) {
   if (!shopId) return [];
   try {
-    const cached = localStorage.getItem(`vyapaar_customers_${shopId}`);
-    if (cached) {
-      const parsed = JSON.parse(cached);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed;
-      }
+    const parsed = safeStorage.getJSON(`vyapaar_customers_${shopId}`);
+    if (Array.isArray(parsed) && parsed.length > 0) {
+      return parsed;
     }
   } catch (_) {}
 
@@ -245,11 +243,11 @@ export function getCachedCustomers(shopId) {
 }
 
 /**
- * Cache customer list in localStorage for offline resiliency & zero-latency startup.
+ * Cache customer list in safeStorage for offline resiliency & zero-latency startup.
  */
 export function setCachedCustomers(shopId, customers) {
   if (!shopId || !Array.isArray(customers)) return;
   try {
-    localStorage.setItem(`vyapaar_customers_${shopId}`, JSON.stringify(customers));
+    safeStorage.setJSON(`vyapaar_customers_${shopId}`, customers);
   } catch (_) {}
 }

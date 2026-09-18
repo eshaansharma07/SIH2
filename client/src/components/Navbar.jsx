@@ -116,12 +116,9 @@ export function Navbar({
 
   const ownerName = currentShop?.owner_name || 'Ramesh Kumar';
   const shopName = currentShop?.name || "Ramesh's Kirana Store";
-  const initials = ownerName
-    .split(' ')
-    .map(n => n[0])
-    .join('')
-    .substring(0, 2)
-    .toUpperCase() || 'RK';
+  const initials = typeof ownerName === 'string'
+    ? (ownerName.trim().split(/\s+/).map(n => n?.[0]).filter(Boolean).join('').substring(0, 2).toUpperCase() || 'RK')
+    : 'RK';
 
   // Navigation Data Map with Contextual Mega-Menu Specs
   const navItems = [

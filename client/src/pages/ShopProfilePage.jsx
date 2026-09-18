@@ -14,6 +14,7 @@ import {
   X 
 } from 'lucide-react';
 import { api } from '../utils/api';
+import { safeStorage } from '../utils/safeStorage';
 import { useTranslation } from '../i18n/LanguageContext';
 import { WarliBorder } from '../components/WarliMotif';
 import { Card, Badge, SectionHeader, Button } from '../components/ui';
@@ -29,7 +30,7 @@ export function ShopProfilePage({ shop, onShopUpdated, onReloadDemo }) {
   const [state, setState] = useState(findStandardState(shop?.state) || 'Uttar Pradesh');
   const [vintage, setVintage] = useState(shop?.vintage_years ?? 1);
   const [bank, setBank] = useState(shop?.bank_account_type || 'State Bank of India');
-  const [apiKey, setApiKey] = useState(localStorage.getItem('vyapaar_gemini_api_key') || '');
+  const [apiKey, setApiKey] = useState(() => safeStorage.getItem('vyapaar_gemini_api_key', ''));
   const [savedSuccess, setSavedSuccess] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [loading, setLoading] = useState(false);
@@ -98,9 +99,9 @@ export function ShopProfilePage({ shop, onShopUpdated, onReloadDemo }) {
     setErrorMsg('');
     try {
       if (apiKey) {
-        localStorage.setItem('vyapaar_gemini_api_key', apiKey);
+        safeStorage.setItem('vyapaar_gemini_api_key', apiKey);
       } else {
-        localStorage.removeItem('vyapaar_gemini_api_key');
+        safeStorage.removeItem('vyapaar_gemini_api_key');
       }
 
       if (!shop?.id) {

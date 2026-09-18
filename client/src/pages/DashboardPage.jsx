@@ -16,6 +16,7 @@ import {
   MessageSquare
 } from 'lucide-react';
 import { useTranslation } from '../i18n/LanguageContext';
+import { safeStorage } from '../utils/safeStorage';
 import { TricolorBrush } from '../components/TricolorBrush';
 import { SurveyChecklistIcon } from '../components/SurveyChecklistIcon';
 
@@ -87,12 +88,12 @@ export function DashboardPage({
   const handleSurveySubmit = (e) => {
     e.preventDefault();
     try {
-      localStorage.setItem('saakhsetu_merchant_feedback', JSON.stringify({
+      safeStorage.setJSON('saakhsetu_merchant_feedback', {
         rating: surveyRating,
         feature: surveyFeature,
         feedback: surveyFeedback,
         submittedAt: new Date().toISOString()
-      }));
+      });
     } catch (_) {}
     setSurveySubmitted(true);
     setTimeout(() => {
