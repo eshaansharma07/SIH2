@@ -751,10 +751,10 @@ export function CashFlowPage({
           <button
             type="button"
             onClick={() => { setSelectedCategoryTab('all'); setTypeFilter('all'); }}
-            className={`flex-1 min-w-[145px] p-3.5 rounded-2xl border text-left transition-all duration-150 cursor-pointer shrink-0 ${
+            className={`flex-1 min-w-[145px] p-3.5 rounded-2xl border text-left cursor-pointer shrink-0 transition-all duration-200 ${
               selectedCategoryTab === 'all'
                 ? 'bg-[#0F3E2E] text-white border-[#0F3E2E] shadow-sm'
-                : 'bg-white/95 text-stone-800 border-stone-200/80 hover:border-stone-300 hover:bg-white'
+                : 'bg-white/95 text-stone-800 border-stone-200/80 hover:border-stone-300 hover:bg-white hover-lift'
             }`}
           >
             <div className="flex items-center gap-2 mb-1">
@@ -772,10 +772,10 @@ export function CashFlowPage({
           <button
             type="button"
             onClick={() => { setSelectedCategoryTab('customers'); }}
-            className={`flex-1 min-w-[135px] p-3.5 rounded-2xl border text-left transition-all duration-150 cursor-pointer shrink-0 ${
+            className={`flex-1 min-w-[135px] p-3.5 rounded-2xl border text-left cursor-pointer shrink-0 transition-all duration-200 ${
               selectedCategoryTab === 'customers'
                 ? 'bg-[#0F3E2E] text-white border-[#0F3E2E] shadow-sm'
-                : 'bg-white/95 text-stone-800 border-stone-200/80 hover:border-stone-300 hover:bg-white'
+                : 'bg-white/95 text-stone-800 border-stone-200/80 hover:border-stone-300 hover:bg-white hover-lift'
             }`}
           >
             <div className="flex items-center gap-2 mb-1">
@@ -793,10 +793,10 @@ export function CashFlowPage({
           <button
             type="button"
             onClick={() => { setSelectedCategoryTab('sales'); setTypeFilter('income'); }}
-            className={`flex-1 min-w-[130px] p-3.5 rounded-2xl border text-left transition-all duration-150 cursor-pointer shrink-0 ${
+            className={`flex-1 min-w-[130px] p-3.5 rounded-2xl border text-left cursor-pointer shrink-0 transition-all duration-200 ${
               selectedCategoryTab === 'sales'
                 ? 'bg-[#0F3E2E] text-white border-[#0F3E2E] shadow-sm'
-                : 'bg-white/95 text-stone-800 border-stone-200/80 hover:border-stone-300 hover:bg-white'
+                : 'bg-white/95 text-stone-800 border-stone-200/80 hover:border-stone-300 hover:bg-white hover-lift'
             }`}
           >
             <div className="flex items-center gap-2 mb-1">
@@ -814,10 +814,10 @@ export function CashFlowPage({
           <button
             type="button"
             onClick={() => { setSelectedCategoryTab('purchases'); setTypeFilter('expense'); }}
-            className={`flex-1 min-w-[130px] p-3.5 rounded-2xl border text-left transition-all duration-150 cursor-pointer shrink-0 ${
+            className={`flex-1 min-w-[130px] p-3.5 rounded-2xl border text-left cursor-pointer shrink-0 transition-all duration-200 ${
               selectedCategoryTab === 'purchases'
                 ? 'bg-[#0F3E2E] text-white border-[#0F3E2E] shadow-sm'
-                : 'bg-white/95 text-stone-800 border-stone-200/80 hover:border-stone-300 hover:bg-white'
+                : 'bg-white/95 text-stone-800 border-stone-200/80 hover:border-stone-300 hover:bg-white hover-lift'
             }`}
           >
             <div className="flex items-center gap-2 mb-1">
@@ -835,10 +835,10 @@ export function CashFlowPage({
           <button
             type="button"
             onClick={() => { setSelectedCategoryTab('expenses'); setTypeFilter('expense'); }}
-            className={`flex-1 min-w-[130px] p-3.5 rounded-2xl border text-left transition-all duration-150 cursor-pointer shrink-0 ${
+            className={`flex-1 min-w-[130px] p-3.5 rounded-2xl border text-left cursor-pointer shrink-0 transition-all duration-200 ${
               selectedCategoryTab === 'expenses'
                 ? 'bg-[#0F3E2E] text-white border-[#0F3E2E] shadow-sm'
-                : 'bg-white/95 text-stone-800 border-stone-200/80 hover:border-stone-300 hover:bg-white'
+                : 'bg-white/95 text-stone-800 border-stone-200/80 hover:border-stone-300 hover:bg-white hover-lift'
             }`}
           >
             <div className="flex items-center gap-2 mb-1">
@@ -856,10 +856,10 @@ export function CashFlowPage({
           <button
             type="button"
             onClick={() => { setSelectedCategoryTab('udhaar'); setTypeFilter('all'); }}
-            className={`flex-1 min-w-[130px] p-3.5 rounded-2xl border text-left transition-all duration-150 cursor-pointer shrink-0 ${
+            className={`flex-1 min-w-[130px] p-3.5 rounded-2xl border text-left cursor-pointer shrink-0 transition-all duration-200 ${
               selectedCategoryTab === 'udhaar'
                 ? 'bg-[#0F3E2E] text-white border-[#0F3E2E] shadow-sm'
-                : 'bg-white/95 text-stone-800 border-stone-200/80 hover:border-stone-300 hover:bg-white'
+                : 'bg-white/95 text-stone-800 border-stone-200/80 hover:border-stone-300 hover:bg-white hover-lift'
             }`}
           >
             <div className="flex items-center gap-2 mb-1">
@@ -1311,7 +1311,7 @@ export function CashFlowPage({
                 <button
                   type="button"
                   onClick={() => setIsRegisterCustomerOpen(true)}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#0F3E2E] hover:bg-[#165640] text-white font-bold text-xs shadow-2xs hover:shadow-md transition-all cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#0F3E2E] hover:bg-[#165640] text-white font-bold text-xs btn-tactile cursor-pointer"
                 >
                   <UserPlus className="w-3.5 h-3.5" />
                   <span>{language === 'hi' ? '+ नया ग्राहक' : '+ Add Customer'}</span>
@@ -1344,12 +1344,12 @@ export function CashFlowPage({
                               setCustomerTxFilter('all');
                               setCustomerTxSearch('');
                             }}
-                            className="hover:bg-[#FAF8F5] transition-colors cursor-pointer group"
+                            className="hover:bg-[#F5EFE6]/70 transition-all duration-150 cursor-pointer group"
                           >
                             {/* Name with Avatar */}
                             <td className="py-3 px-3.5 sm:px-4">
                               <div className="flex items-center gap-2.5">
-                                <div className="w-8 h-8 rounded-xl bg-[#0F3E2E] text-white flex items-center justify-center font-serif font-bold text-xs shrink-0 shadow-2xs">
+                                <div className="w-8 h-8 rounded-xl bg-[#0F3E2E] text-white flex items-center justify-center font-serif font-bold text-xs shrink-0 shadow-2xs group-hover:scale-110 transition-transform duration-200">
                                   {initial}
                                 </div>
                                 <div>
@@ -1481,12 +1481,12 @@ export function CashFlowPage({
                         <tr
                           key={tx.id}
                           onClick={() => setSelectedTx(tx)}
-                          className="hover:bg-[#FAF8F5] transition-colors cursor-pointer group"
+                          className="hover:bg-[#F5EFE6]/70 transition-all duration-150 cursor-pointer group"
                         >
                           {/* Type with Context Icon */}
                           <td className="py-3 px-3.5 sm:px-4 whitespace-nowrap">
                             <div className="flex items-center gap-2">
-                              <div className={`w-7 h-7 rounded-lg flex items-center justify-center border shrink-0 ${meta.color}`}>
+                              <div className={`w-7 h-7 rounded-lg flex items-center justify-center border shrink-0 group-hover:scale-110 transition-transform duration-200 ${meta.color}`}>
                                 <Icon className="w-3.5 h-3.5" />
                               </div>
                               <span className="font-serif font-bold text-stone-900 group-hover:text-[#0F3E2E] transition-colors">

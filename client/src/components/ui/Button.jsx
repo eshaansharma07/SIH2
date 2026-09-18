@@ -46,7 +46,7 @@ export function Button({
       type={type}
       onClick={onClick}
       disabled={disabled}
-      className={`inline-flex items-center justify-center font-sans tracking-tight transition duration-150 active:scale-[0.98] cursor-pointer ${variantStyles[variant] || variantStyles.primary} ${sizeStyles[size] || sizeStyles.md} ${disabled ? disabledStyles : ''} ${className}`}
+      className={`inline-flex items-center justify-center font-sans tracking-tight btn-tactile hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] cursor-pointer ${variantStyles[variant] || variantStyles.primary} ${sizeStyles[size] || sizeStyles.md} ${disabled ? disabledStyles : ''} ${className}`}
       {...props}
     >
       {Icon && iconPosition === 'left' && <Icon className="w-4 h-4 shrink-0" />}

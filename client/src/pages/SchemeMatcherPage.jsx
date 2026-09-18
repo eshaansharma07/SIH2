@@ -605,12 +605,13 @@ export function SchemeMatcherPage({ shop, creditData, onNavigateTab }) {
             {recommendedSchemes.map((scheme) => (
               <div
                 key={scheme.id}
-                className="bg-white border border-stone-200/80 hover:border-stone-300 rounded-xl p-3.5 shadow-2xs transition-all flex flex-col justify-between hover:shadow-xs group"
+                onClick={() => setSelectedScheme(scheme)}
+                className="bg-white border border-stone-200/80 hover:border-emerald-800/30 rounded-xl p-3.5 interactive-card flex flex-col justify-between group cursor-pointer"
               >
                 <div>
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-center gap-2.5 min-w-0">
-                      <div className="w-8 h-8 rounded-lg bg-stone-50 border border-stone-100 flex items-center justify-center p-1 shrink-0">
+                      <div className="w-8 h-8 rounded-lg bg-stone-50 border border-stone-100 flex items-center justify-center p-1 shrink-0 group-hover:scale-110 transition-transform duration-200">
                         <SchemeLogo schemeId={scheme.id} className="w-full h-full" />
                       </div>
                       <div className="min-w-0">
@@ -645,11 +646,11 @@ export function SchemeMatcherPage({ shop, creditData, onNavigateTab }) {
                   </span>
                   <button
                     type="button"
-                    onClick={() => setSelectedScheme(scheme)}
+                    onClick={(e) => { e.stopPropagation(); setSelectedScheme(scheme); }}
                     className="text-xs font-semibold text-[#0F3E2E] hover:text-[#0B2F23] flex items-center gap-1 hover:underline cursor-pointer"
                   >
                     <span>View Details</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
+                    <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
                   </button>
                 </div>
               </div>
@@ -658,7 +659,7 @@ export function SchemeMatcherPage({ shop, creditData, onNavigateTab }) {
         </div>
 
         {/* Right: Compact Bento Eligibility Snapshot (4 Columns) */}
-        <div className="lg:col-span-4 bg-white border border-stone-200/80 rounded-2xl p-4 sm:p-5 shadow-2xs space-y-3">
+        <div className="lg:col-span-4 bg-white border border-stone-200/80 rounded-2xl p-4 sm:p-5 shadow-2xs hover-lift transition-all duration-200 space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-bold text-stone-400 tracking-wider uppercase font-sans">
               Your Eligibility
@@ -752,12 +753,13 @@ export function SchemeMatcherPage({ shop, creditData, onNavigateTab }) {
             {paginatedSchemes.map((scheme) => (
               <div 
                 key={scheme.id}
-                className="border border-stone-200/80 hover:border-stone-300 rounded-xl p-3.5 bg-[#FAF8F5]/40 hover:bg-white transition-all flex flex-col justify-between shadow-2xs group"
+                onClick={() => setSelectedScheme(scheme)}
+                className="border border-stone-200/80 hover:border-emerald-800/30 rounded-xl p-3.5 bg-[#FAF8F5]/40 hover:bg-white interactive-card flex flex-col justify-between group cursor-pointer"
               >
                 <div>
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-center gap-2.5 min-w-0">
-                      <div className="w-8 h-8 rounded-lg bg-white border border-stone-200 flex items-center justify-center p-1 shrink-0">
+                      <div className="w-8 h-8 rounded-lg bg-white border border-stone-200 flex items-center justify-center p-1 shrink-0 group-hover:scale-110 transition-transform duration-200">
                         <SchemeLogo schemeId={scheme.id} className="w-full h-full" />
                       </div>
                       <div className="min-w-0">
@@ -794,11 +796,11 @@ export function SchemeMatcherPage({ shop, creditData, onNavigateTab }) {
 
                   <button
                     type="button"
-                    onClick={() => setSelectedScheme(scheme)}
+                    onClick={(e) => { e.stopPropagation(); setSelectedScheme(scheme); }}
                     className="text-xs font-semibold text-[#0F3E2E] hover:text-[#0B2F23] flex items-center gap-1 hover:underline cursor-pointer"
                   >
                     <span>View Details</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
+                    <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
                   </button>
                 </div>
               </div>

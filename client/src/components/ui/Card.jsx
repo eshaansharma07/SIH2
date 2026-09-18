@@ -45,10 +45,12 @@ export function Card({
   const radiusStyles = variant === 'hero' ? 'rounded-3xl' : 'rounded-2xl';
   const chosenElevation = variant === 'hero' ? '' : (elevationClasses[elevation] || elevationClasses[1]);
 
+  const interactiveClasses = onClick ? 'cursor-pointer hover-lift active:scale-[0.995]' : '';
+
   return (
     <div
       onClick={onClick}
-      className={`${radiusStyles} ${variantStyles[variant] || variantStyles.default} ${chosenElevation} ${paddingStyles[padding] || paddingStyles.md} ${onClick ? 'cursor-pointer' : ''} ${className}`}
+      className={`${radiusStyles} ${variantStyles[variant] || variantStyles.default} ${chosenElevation} ${paddingStyles[padding] || paddingStyles.md} ${interactiveClasses} ${className}`}
       {...props}
     >
       {children}

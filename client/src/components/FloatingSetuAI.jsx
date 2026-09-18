@@ -220,24 +220,24 @@ export function FloatingSetuAI({
           <button
             type="button"
             onClick={() => setIsOpen(true)}
-            className="w-14 h-14 rounded-full bg-[#0F3E2E] hover:bg-[#165640] text-white shadow-[0_8px_30px_rgba(15,62,46,0.38)] border-2 border-[#E5D7B7]/80 flex items-center justify-center hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer relative"
+            className="w-14 h-14 rounded-full bg-[#0F3E2E] hover:bg-[#165640] text-white shadow-[0_8px_30px_rgba(15,62,46,0.38)] hover:shadow-[0_14px_38px_rgba(15,62,46,0.52)] border-2 border-[#E5D7B7]/80 hover:border-amber-300 flex items-center justify-center hover:scale-110 hover:-translate-y-1 active:scale-95 active:translate-y-0 transition-all duration-200 cursor-pointer relative"
             aria-label="Open Setu AI Assistant"
             title={language === 'hi' ? 'सेतु AI सहायक खोलें' : 'Open Setu AI Assistant'}
           >
             {/* Ambient Pulsing Aura */}
-            <span className="absolute inset-0 rounded-full bg-emerald-500/25 animate-ping pointer-events-none" />
+            <span className="absolute inset-0 rounded-full bg-emerald-500/25 animate-ping pointer-events-none group-hover:scale-125 transition-transform" />
             
             {/* Center Icon */}
             <div className="relative flex items-center justify-center">
-              <Sparkles className="w-6 h-6 text-amber-300 fill-amber-300/30 transition-transform duration-200 group-hover:rotate-12" />
+              <Sparkles className="w-6 h-6 text-amber-300 fill-amber-300/40 transition-transform duration-300 group-hover:rotate-45 group-hover:scale-120" />
             </div>
 
             {/* Online Live Status Indicator */}
-            <span className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-400 border-2 border-[#0F3E2E] shadow-sm" />
+            <span className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-400 border-2 border-[#0F3E2E] shadow-sm group-hover:scale-110 transition-transform" />
           </button>
 
           {/* Desktop Hover Tooltip Badge */}
-          <div className="hidden sm:block absolute left-16 top-1/2 -translate-y-1/2 ml-2 px-3 py-1.5 rounded-xl bg-[#1C1917]/90 backdrop-blur-md text-[#FAF7F2] text-xs font-semibold whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-200 shadow-xl border border-white/10">
+          <div className="hidden sm:block absolute left-16 top-1/2 -translate-y-1/2 ml-2 px-3 py-1.5 rounded-xl bg-[#1C1917]/95 backdrop-blur-md text-[#FAF7F2] text-xs font-semibold whitespace-nowrap opacity-0 group-hover:opacity-100 group-hover:translate-x-1 pointer-events-none transition-all duration-200 shadow-2xl border border-white/10">
             <span className="text-amber-300 font-serif font-bold mr-1">सेतु AI</span>
             <span>{language === 'hi' ? '• सेवा सहायक' : '• Services & Help'}</span>
           </div>
@@ -314,9 +314,9 @@ export function FloatingSetuAI({
                     key={svc.id}
                     type="button"
                     onClick={svc.action}
-                    className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-bold whitespace-nowrap transition-all duration-150 cursor-pointer shadow-2xs shrink-0 ${
+                    className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-bold whitespace-nowrap hover-pill transition-all duration-150 cursor-pointer shadow-2xs shrink-0 ${
                       svc.highlight
-                        ? 'bg-[#0F3E2E] text-white hover:bg-[#165640] border border-emerald-800'
+                        ? 'bg-[#0F3E2E] text-white hover:bg-[#165640] border border-emerald-800 hover:shadow-sm'
                         : 'bg-white hover:bg-[#ECE5D8] text-stone-800 border border-[#DCD3C4]'
                     }`}
                   >
@@ -331,7 +331,7 @@ export function FloatingSetuAI({
           {/* Chat Stream */}
           <div className="flex-1 overflow-y-auto p-3.5 space-y-3 bg-[#FAF8F5]">
             {/* Friendly Greeting Card */}
-            <div className="p-3.5 rounded-2xl bg-white border border-[#ECE5D8] shadow-2xs">
+            <div className="p-3.5 rounded-2xl bg-white border border-[#ECE5D8] shadow-2xs hover:shadow-xs transition-shadow">
               <div className="flex items-center justify-between">
                 <div className="font-serif font-bold text-stone-900 text-xs">
                   {language === 'hi' ? `राम-राम ${shopName}!` : `Namaste ${shopName}!`}
@@ -356,7 +356,7 @@ export function FloatingSetuAI({
                     key={idx}
                     type="button"
                     onClick={() => handleSend(q.prompt, q.serviceAction)}
-                    className="px-2.5 py-2 rounded-xl bg-[#F6F2E9] hover:bg-[#EDE5D5] text-[10px] font-bold text-stone-800 text-left transition-colors cursor-pointer border border-[#E0D7C5] line-clamp-2 leading-tight"
+                    className="px-2.5 py-2 rounded-xl bg-[#F6F2E9] hover:bg-[#EDE5D5] hover:border-emerald-700/40 hover:-translate-y-0.5 hover:shadow-2xs active:translate-y-0 active:scale-95 text-[10px] font-bold text-stone-800 text-left transition-all duration-150 cursor-pointer border border-[#E0D7C5] line-clamp-2 leading-tight"
                   >
                     {q.label}
                   </button>

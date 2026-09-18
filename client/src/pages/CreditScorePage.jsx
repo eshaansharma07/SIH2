@@ -349,7 +349,7 @@ export function CreditScorePage({ shop, creditData, onNavigateTab }) {
             <button
               type="button"
               onClick={() => setIsHistoryModalOpen(true)}
-              className="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-stone-200 bg-white hover:bg-stone-50 hover:border-stone-300 text-stone-800 text-xs font-bold transition-all shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer"
+              className="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-stone-200 bg-white hover:bg-stone-50 hover:border-stone-300 text-stone-800 text-xs font-bold btn-tactile flex items-center justify-center gap-1.5 cursor-pointer"
             >
               <span>{language === 'hi' ? 'स्कोर का इतिहास देखें →' : 'View Score History →'}</span>
             </button>
@@ -395,7 +395,7 @@ export function CreditScorePage({ shop, creditData, onNavigateTab }) {
               <button
                 type="button"
                 onClick={() => onNavigateTab?.('schemes')}
-                className="w-full bg-[#0F3E2E] hover:bg-[#165640] text-white text-xs font-bold py-2.5 px-4 rounded-xl shadow-2xs hover:shadow-sm transition-all text-center cursor-pointer"
+                className="w-full bg-[#0F3E2E] hover:bg-[#165640] text-white text-xs font-bold py-2.5 px-4 rounded-xl btn-tactile text-center cursor-pointer"
               >
                 {language === 'hi' ? 'सरकारी योजनाएं देखें →' : 'Explore Schemes →'}
               </button>
@@ -447,14 +447,14 @@ export function CreditScorePage({ shop, creditData, onNavigateTab }) {
           <button
             type="button"
             onClick={() => { setActiveRecommendationPillar('consistency'); setIsBreakdownModalOpen(true); }}
-            className="w-full bg-white border border-stone-200/90 rounded-2xl p-4.5 hover:shadow-md hover:border-stone-300 transition-all text-left flex items-center justify-between gap-3 group cursor-pointer shadow-2xs"
+            className="w-full bg-white border border-stone-200/90 rounded-2xl p-4.5 interactive-card text-left flex items-center justify-between gap-3 group cursor-pointer"
           >
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-800 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-800 flex items-center justify-center shrink-0 group-hover:scale-110 group-hover:shadow-xs transition-transform duration-200">
                 <FileText className="w-5 h-5" />
               </div>
               <div className="min-w-0">
-                <h3 className="font-bold text-xs text-stone-900 truncate">
+                <h3 className="font-bold text-xs text-stone-900 truncate group-hover:text-[#0F3E2E] transition-colors">
                   {language === 'hi' ? 'नियमित लेन-देन दर्ज करें' : 'Maintain Regular Transactions'}
                 </h3>
                 <p className="text-[11px] text-stone-500 leading-snug mt-0.5 line-clamp-2">
@@ -465,21 +465,21 @@ export function CreditScorePage({ shop, creditData, onNavigateTab }) {
                 </p>
               </div>
             </div>
-            <ChevronRight className="w-4 h-4 text-stone-400 group-hover:text-stone-800 group-hover:translate-x-0.5 transition-all shrink-0" />
+            <ChevronRight className="w-4 h-4 text-stone-400 group-hover:text-stone-800 group-hover:translate-x-1 transition-all shrink-0" />
           </button>
 
           {/* Card 2: Recover Pending Udhaar */}
           <button
             type="button"
             onClick={() => { setActiveRecommendationPillar('udhaar'); setIsBreakdownModalOpen(true); }}
-            className="w-full bg-white border border-stone-200/90 rounded-2xl p-4.5 hover:shadow-md hover:border-stone-300 transition-all text-left flex items-center justify-between gap-3 group cursor-pointer shadow-2xs"
+            className="w-full bg-white border border-stone-200/90 rounded-2xl p-4.5 interactive-card text-left flex items-center justify-between gap-3 group cursor-pointer"
           >
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-800 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-800 flex items-center justify-center shrink-0 group-hover:scale-110 group-hover:shadow-xs transition-transform duration-200">
                 <Users className="w-5 h-5" />
               </div>
               <div className="min-w-0">
-                <h3 className="font-bold text-xs text-stone-900 truncate">
+                <h3 className="font-bold text-xs text-stone-900 truncate group-hover:text-[#0F3E2E] transition-colors">
                   {language === 'hi' ? 'लंबित उधार वसूलें' : 'Recover Pending Udhaar'}
                 </h3>
                 <p className="text-[11px] text-stone-500 leading-snug mt-0.5 line-clamp-2">
@@ -490,21 +490,21 @@ export function CreditScorePage({ shop, creditData, onNavigateTab }) {
                 </p>
               </div>
             </div>
-            <ChevronRight className="w-4 h-4 text-stone-400 group-hover:text-stone-800 group-hover:translate-x-0.5 transition-all shrink-0" />
+            <ChevronRight className="w-4 h-4 text-stone-400 group-hover:text-stone-800 group-hover:translate-x-1 transition-all shrink-0" />
           </button>
 
           {/* Card 3: Increase Digital Payments */}
           <button
             type="button"
             onClick={() => { setActiveRecommendationPillar('digital'); setIsBreakdownModalOpen(true); }}
-            className="w-full bg-white border border-stone-200/90 rounded-2xl p-4.5 hover:shadow-md hover:border-stone-300 transition-all text-left flex items-center justify-between gap-3 group cursor-pointer shadow-2xs"
+            className="w-full bg-white border border-stone-200/90 rounded-2xl p-4.5 interactive-card text-left flex items-center justify-between gap-3 group cursor-pointer"
           >
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-800 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-800 flex items-center justify-center shrink-0 group-hover:scale-110 group-hover:shadow-xs transition-transform duration-200">
                 <Smartphone className="w-5 h-5" />
               </div>
               <div className="min-w-0">
-                <h3 className="font-bold text-xs text-stone-900 truncate">
+                <h3 className="font-bold text-xs text-stone-900 truncate group-hover:text-[#0F3E2E] transition-colors">
                   {language === 'hi' ? 'डिजिटल भुगतान बढ़ाएं' : 'Increase Digital Payments'}
                 </h3>
                 <p className="text-[11px] text-stone-500 leading-snug mt-0.5 line-clamp-2">
@@ -515,7 +515,7 @@ export function CreditScorePage({ shop, creditData, onNavigateTab }) {
                 </p>
               </div>
             </div>
-            <ChevronRight className="w-4 h-4 text-stone-400 group-hover:text-stone-800 group-hover:translate-x-0.5 transition-all shrink-0" />
+            <ChevronRight className="w-4 h-4 text-stone-400 group-hover:text-stone-800 group-hover:translate-x-1 transition-all shrink-0" />
           </button>
 
         </div>

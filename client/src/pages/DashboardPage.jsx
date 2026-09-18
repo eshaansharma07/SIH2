@@ -189,7 +189,7 @@ export function DashboardPage({
               <button
                 type="button"
                 onClick={onOpenKeypad}
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#0F3E2E] hover:bg-[#165640] text-white font-bold text-xs sm:text-sm shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer transform hover:-translate-y-0.5 active:translate-y-0"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#0F3E2E] hover:bg-[#165640] text-white font-bold text-xs sm:text-sm btn-tactile cursor-pointer"
               >
                 <span>{language === 'hi' ? 'बिक्री दर्ज करें' : 'Record Sale'}</span>
                 <ArrowRight className="w-4 h-4" />
@@ -253,16 +253,16 @@ export function DashboardPage({
                 <div
                   key={card.id}
                   onClick={card.action}
-                  className="group relative rounded-2xl bg-white/95 hover:bg-white border border-stone-200/80 hover:border-stone-300 p-4 sm:p-4.5 flex flex-col justify-between min-h-[120px] transition-all duration-200 shadow-2xs hover:shadow-md hover:-translate-y-0.5 cursor-pointer"
+                  className="group relative rounded-2xl bg-white/95 hover:bg-white border border-stone-200/80 hover:border-emerald-800/30 p-4 sm:p-4.5 flex flex-col justify-between min-h-[120px] interactive-card cursor-pointer"
                 >
                   <div className="flex items-start justify-between gap-2">
                     {/* Tinted Icon Badge */}
-                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center border ${card.iconBg} transition-transform duration-200 group-hover:scale-105 shrink-0`}>
+                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center border ${card.iconBg} transition-transform duration-200 group-hover:scale-110 group-hover:shadow-xs shrink-0`}>
                       <Icon className="w-4 h-4" />
                     </div>
 
                     {/* Small Navigation Arrow */}
-                    <div className="w-6 h-6 rounded-full bg-stone-100 text-stone-400 group-hover:bg-[#0F3E2E] group-hover:text-white flex items-center justify-center transition-all duration-200 shrink-0">
+                    <div className="w-6 h-6 rounded-full bg-stone-100 text-stone-400 group-hover:bg-[#0F3E2E] group-hover:text-white flex items-center justify-center transition-all duration-200 shrink-0 group-hover:scale-110">
                       <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
                     </div>
                   </div>
@@ -284,7 +284,7 @@ export function DashboardPage({
 
         {/* Right 4 Cols: Quick Survey Card */}
         <div className="lg:col-span-4 flex flex-col">
-          <div className="flex-1 rounded-2xl bg-white border border-stone-200/90 p-5 flex flex-col justify-between shadow-2xs">
+          <div className="flex-1 rounded-2xl bg-white border border-stone-200/90 p-5 flex flex-col justify-between shadow-2xs hover-lift transition-all duration-200">
             
             {/* Top Row: Title & 2 min Badge */}
             <div className="flex items-center justify-between">
@@ -319,7 +319,7 @@ export function DashboardPage({
             <button
               type="button"
               onClick={() => setSurveyOpen(true)}
-              className="mt-4 w-full py-2.5 px-4 rounded-xl bg-[#0F3E2E] hover:bg-[#165640] text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-2xs hover:shadow-md transition-all cursor-pointer"
+              className="mt-4 w-full py-2.5 px-4 rounded-xl bg-[#0F3E2E] hover:bg-[#165640] text-white font-bold text-xs flex items-center justify-center gap-1.5 btn-tactile cursor-pointer"
             >
               <span>{language === 'hi' ? 'सर्वेक्षण में भाग लें' : 'Take Survey'}</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -352,7 +352,7 @@ export function DashboardPage({
               <button
                 type="button"
                 onClick={() => onNavigateTab('schemes')}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#0F3E2E] hover:bg-[#165640] text-white font-bold text-xs sm:text-sm shadow-2xs hover:shadow-md transition-all cursor-pointer"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#0F3E2E] hover:bg-[#165640] text-white font-bold text-xs sm:text-sm btn-tactile cursor-pointer"
               >
                 <span>{language === 'hi' ? 'अवसर खोजें' : 'Explore Opportunities'}</span>
                 <ArrowRight className="w-4 h-4" />
