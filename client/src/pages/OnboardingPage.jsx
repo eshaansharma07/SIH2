@@ -962,50 +962,74 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
       </section>
 
       {/* ========================================================================= */}
-      {/* 6. SMART INDIA HACKATHON 2026 BAR                                         */}
+      {/* 6. CTA / OPPORTUNITIES & SIH 2026 SECTION                                  */}
       {/* ========================================================================= */}
-      <section id="sih-section" className="py-8 sm:py-10 border-t border-[#E7DFD5]/80 bg-[#FAF7F2]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-8 flex flex-col sm:flex-row items-center justify-between gap-6">
+      <section id="sih-section" className="pt-14 sm:pt-16 pb-0 border-t border-[#E7DFD5]/80 bg-[#FAF7F2] text-center relative overflow-hidden">
+        <div className="max-w-4xl mx-auto px-4 sm:px-8 space-y-6 relative z-10">
           
-          {/* SIH Emblem & Text */}
-          <div className="flex items-center gap-3.5">
+          {/* SIH 2026 National Emblem Lockup */}
+          <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-white/90 border border-[#E7DFD5] shadow-2xs">
             <img 
               src="/assets/saakhsetu/sih-emblem.png" 
               alt="Smart India Hackathon 2026 Emblem" 
-              className="w-12 h-12 object-contain"
+              className="w-5 h-5 object-contain"
             />
-            <div>
-              <h3 className="font-bold text-sm text-[#1C1917]">
-                Smart India Hackathon 2026
-              </h3>
-              <p className="text-xs text-[#78716C]">
-                Ideas for a Viksit Bharat • Priority Sector Lending Innovation
-              </p>
-            </div>
+            <span className="text-xs font-semibold text-[#1C1917] tracking-tight">
+              Smart India Hackathon 2026 • Ideas for a Viksit Bharat
+            </span>
+          </div>
+
+          {/* Editorial Headline & Supporting Copy */}
+          <div className="space-y-2.5">
+            <h2 className="font-serif font-black text-3xl sm:text-4xl text-[#1C1917] tracking-tight">
+              {language === 'hi' 
+                ? 'आज ही अपने बही-खाते को बैंक से जोड़ें।' 
+                : 'Bridge Your Bahi-Khata to Credit Today.'}
+            </h2>
+            <p className="text-sm sm:text-base text-[#57534E] max-w-xl mx-auto leading-relaxed">
+              {language === 'hi'
+                ? 'दैनिक लेन-देन दर्ज करें, वैकल्पिक साख स्कोर बनाएं और बिना किसी बंधक के प्राथमिक क्षेत्र ऋण (PSL) का लाभ उठाएं।'
+                : 'Transform daily counter sales into a verified credit score and access collateral-free Priority Sector Lending.'}
+            </p>
+          </div>
+
+          {/* Action CTAs */}
+          <div className="flex flex-wrap items-center justify-center gap-3.5 pt-1">
+            <button
+              onClick={() => setAuthModalOpen(true)}
+              className="px-6 py-3 rounded-xl bg-[#0F3E2E] hover:bg-[#165640] text-white text-xs sm:text-sm font-bold shadow-sm hover:shadow-md transition-all cursor-pointer flex items-center gap-2"
+            >
+              <span>{language === 'hi' ? 'दुकानदार लॉगिन / पंजीकरण →' : 'Get Started as Shopkeeper →'}</span>
+            </button>
+            <button
+              onClick={() => setDemoTourOpen(true)}
+              className="px-5 py-3 rounded-xl bg-white hover:bg-stone-50 border border-[#D5CCBC] text-[#1C1917] text-xs sm:text-sm font-semibold transition-all cursor-pointer flex items-center gap-2 shadow-2xs"
+            >
+              <span className="text-[#0F3E2E]">▶</span>
+              <span>{language === 'hi' ? 'डेमो देखें' : 'Watch Evaluator Demo'}</span>
+            </button>
           </div>
 
           {/* Calligraphic Accent: Gaon Se Growth Tak */}
-          <div className="flex items-center gap-4">
+          <div className="pt-2 flex items-center justify-center">
             <img 
               src="/assets/saakhsetu/gaon-se-growth.png" 
               alt="Gaon Se Growth Tak" 
-              className="h-11 sm:h-12 w-auto object-contain select-none"
+              className="h-9 sm:h-10 w-auto object-contain select-none opacity-90"
             />
           </div>
 
         </div>
-      </section>
 
-      {/* ========================================================================= */}
-      {/* 7. PANORAMIC RURAL LANDSCAPE ILLUSTRATION                                 */}
-      {/* ========================================================================= */}
-      <div className="w-full overflow-hidden border-t border-[#E7DFD5]/60 bg-[#FAF7F2]">
-        <img
-          src="/assets/saakhsetu/rural-landscape.png"
-          alt="Rural Indian Village Landscape Line Art"
-          className="w-full h-40 sm:h-52 md:h-64 lg:h-72 object-cover object-center select-none pointer-events-none opacity-90"
-        />
-      </div>
+        {/* Panoramic Rural Village Landscape grounding the section directly into footer */}
+        <div className="w-full mt-8 select-none pointer-events-none">
+          <img
+            src="/assets/saakhsetu/rural-landscape.png"
+            alt="Rural Indian Village Landscape Line Art"
+            className="w-full h-auto max-h-44 sm:max-h-52 md:max-h-60 object-contain object-bottom opacity-85 block mx-auto"
+          />
+        </div>
+      </section>
 
       {/* ========================================================================= */}
       {/* 8. FOOTER WITH SUBTLE LANGUAGE TOGGLE                                     */}
