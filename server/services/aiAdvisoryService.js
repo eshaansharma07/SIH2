@@ -350,6 +350,10 @@ export async function generateAdvisoryResponse(shopId, userQuestion, clientApiKe
 ${languageInstruction}
 Never use robotic AI jargon, sterile corporate language, or generic advice like "consider stocking more inventory".
 
+STRICT OUTPUT FORMATTING RULES:
+- NEVER use asterisks (*) anywhere in your response. Do not use asterisks for bold text, italics, or bullet points.
+- NEVER use em dashes (—) or en dashes (–) or double hyphens (--). Use colons (:), commas (,), or simple numbers (1., 2., 3.) instead.
+
 CRITICAL MANDATORY REQUIREMENT:
 Every single response MUST reference at least ONE (and ideally multiple) of the following shop-specific parameters BY NAME AND EXACT NUMBER:
 1. User's Trade Category: "${contextData.tradeCategory}"
@@ -365,7 +369,7 @@ Every single response MUST reference at least ONE (and ideally multiple) of the 
 6. Alternative Credit Score: ${contextData.creditScore} / 850 (${contextData.creditRating})
 7. Top Loan Scheme: ${contextData.topMatchingScheme}
 
-Provide practical, hyper-local advice: exact quantities to stock, wholesale mandi advice in Balrampur, udhaar recovery timing linked with paddy harvest, and loan steps. Keep advice in 2 to 4 readable paragraphs with clear bullet points.`;
+Provide practical, hyper-local advice: exact quantities to stock, wholesale mandi advice in Balrampur, udhaar recovery timing linked with paddy harvest, and loan steps. Keep advice in 2 to 4 readable paragraphs with clear numbered points without asterisks or em dashes.`;
 
     // 4A. Primary: Google Gemini API (Free Tier via Google AI Studio)
     if (geminiKey) {
@@ -402,14 +406,16 @@ Provide practical, hyper-local advice: exact quantities to stock, wholesale mand
           if (response.ok) {
             const data = await response.json();
             const candidate = data.candidates?.[0];
-            const content = candidate?.content?.parts?.find(p => p.text)?.text || candidate?.content?.parts?.[0]?.text;
-            if (content && content.trim()) {
+            const rawContent = candidate?.content?.parts?.find(p => p.text)?.text || candidate?.content?.parts?.[0]?.text;
+            if (rawContent && rawContent.trim()) {
+              const content = cleanChatbotResponse(rawContent);
               saveChatMessage(shop.id, 'user', userQuestion);
               saveChatMessage(shop.id, 'assistant', content);
               return {
                 content,
                 source: `gemini-${model}`,
-                contextUsed: contextData
+                contextUsed: contextData,
+                updatedOwnerName
               };
             }
           } else {
@@ -454,14 +460,16 @@ Provide practical, hyper-local advice: exact quantities to stock, wholesale mand
         if (response.ok) {
           const data = await response.json();
           const textBlock = data.content?.find(block => block.type === 'text');
-          const content = textBlock?.text || (typeof data.content?.[0] === 'string' ? data.content[0] : data.content?.[0]?.text);
-          if (content && content.trim()) {
+          const rawContent = textBlock?.text || (typeof data.content?.[0] === 'string' ? data.content[0] : data.content?.[0]?.text);
+          if (rawContent && rawContent.trim()) {
+            const content = cleanChatbotResponse(rawContent);
             saveChatMessage(shop.id, 'user', userQuestion);
             saveChatMessage(shop.id, 'assistant', content);
             return {
               content,
               source: data.model || claudeModel,
-              contextUsed: contextData
+              contextUsed: contextData,
+              updatedOwnerName
             };
           }
         } else {
@@ -475,10 +483,11 @@ Provide practical, hyper-local advice: exact quantities to stock, wholesale mand
     // 5. Graceful Fallback Safety Net:
     // If user provided a name update directly, respond with immediate confirmation
     if (updatedOwnerName) {
-      const confirmReply = isEnglishQuery
-        ? `Namaste ${updatedOwnerName} ji! 🙏 I have updated your name to **${updatedOwnerName}** in your Vyapaar Setu account.\n\nYour profile is now associated with **${contextData.shopName}** in **${contextData.location}**. You can also view or modify your full shop details anytime in the **Shop Profile** section.\n\nHow can I assist you with your shop inventory, credit score, or MUDRA loan today, ${updatedOwnerName} ji?`
-        : `नमस्ते ${updatedOwnerName} जी! 🙏 मैंने व्यापार सेतु पर आपका नाम **${updatedOwnerName}** सफलतापूर्वक अपडेट कर दिया है।\n\nआपकी दुकान **${contextData.shopName}** (${contextData.location}) का रिकॉर्ड अपडेट हो चुका है। आप ऊपर दाएँ मेन्यू से **'Shop Profile' (दुकान प्रोफ़ाइल)** में जाकर भी विवरण देख सकते हैं।\n\nबताइए ${updatedOwnerName} जी, आज आपकी दुकान के लिए मैं क्या सहायता करूँ?`;
+      const rawConfirm = isEnglishQuery
+        ? `Namaste ${updatedOwnerName} ji! 🙏 I have updated your name to ${updatedOwnerName} in your Vyapaar Setu account.\n\nYour profile is now associated with ${contextData.shopName} in ${contextData.location}. You can also view or modify your full shop details anytime in the Shop Profile section.\n\nHow can I assist you with your shop inventory, credit score, or MUDRA loan today, ${updatedOwnerName} ji?`
+        : `नमस्ते ${updatedOwnerName} जी! 🙏 मैंने व्यापार सेतु पर आपका नाम ${updatedOwnerName} सफलतापूर्वक अपडेट कर दिया है।\n\nआपकी दुकान ${contextData.shopName} (${contextData.location}) का रिकॉर्ड अपडेट हो चुका है। आप ऊपर दाएँ मेन्यू से Shop Profile (दुकान प्रोफ़ाइल) में जाकर भी विवरण देख सकते हैं।\n\nबताइए ${updatedOwnerName} जी, आज आपकी दुकान के लिए मैं क्या सहायता करूँ?`;
 
+      const confirmReply = cleanChatbotResponse(rawConfirm);
       saveChatMessage(shop.id, 'user', userQuestion);
       saveChatMessage(shop.id, 'assistant', confirmReply);
       return {
@@ -490,7 +499,7 @@ Provide practical, hyper-local advice: exact quantities to stock, wholesale mand
     }
 
     // Serves deeply grounded pre-written rural advisory response tailored to user data in matching language
-    const fallbackResponse = selectJudgingFallbackResponse(userQuestion, contextData, isEnglishQuery);
+    const fallbackResponse = cleanChatbotResponse(selectJudgingFallbackResponse(userQuestion, contextData, isEnglishQuery));
     saveChatMessage(shop.id, 'user', userQuestion);
     saveChatMessage(shop.id, 'assistant', fallbackResponse);
 
@@ -502,8 +511,9 @@ Provide practical, hyper-local advice: exact quantities to stock, wholesale mand
     };
   } catch (criticalErr) {
     console.error('Critical fallback in advisory service:', criticalErr);
+    const safeErrorReply = cleanChatbotResponse(`राम राम Ramesh Kumar जी! 🙏\n\nउत्तर प्रदेश के Utraula Dehat village, Balrampur district में आपकी Kirana & General Store पिछले 48 महीनों से सफलता से चल रही है।\n\nदीपावली पर तेल, घी और चीनी की मांग में 40% से 45% उछाल आने का अनुमान है। आपका वैकल्पिक क्रेडिट स्कोर 785/850 है, जिससे आप PM MUDRA कार्यशील पूंजी लोन के लिए बिना किसी बंधक (0% Collateral) के 100% पात्र हैं।`);
     return {
-      content: `राम राम Ramesh Kumar जी! 🙏\n\nउत्तर प्रदेश के **Utraula Dehat village, Balrampur district** में आपकी **Kirana & General Store** पिछले **48 महीनों** से सफलता से चल रही है।\n\nदीपावली पर तेल, घी और चीनी की मांग में 40% से 45% उछाल आने का अनुमान है। आपका वैकल्पिक क्रेडिट स्कोर **785/850** है, जिससे आप **PM MUDRA** कार्यशील पूंजी लोन के लिए बिना किसी बंधक (0% Collateral) के 100% पात्र हैं।`,
+      content: safeErrorReply,
       source: 'claude-fallback-grounded',
       contextUsed: null
     };
@@ -554,6 +564,29 @@ Key highlights from your verified 30-day transactional log during **${ctx.curren
 1. **आगामी मांग**: बलरामपुर जिले में त्योहारों और धान फसल भुगतान के कारण राशन व तेल की मांग में 35% से अधिक उछाल अपेक्षित है।
 2. **ऋण सुविधा**: आपका 785 स्कोर आपको **${ctx.topMatchingScheme}** के लिए बिना किसी संपत्ति बंधक (Zero Collateral) के पात्र बनाता है।
 3. **डॉसियर**: बैंक प्रबंधक को प्रस्तुत करने के लिए हमारे 'बैंक डॉसियर' टैब से सत्यापित विवरण डाउनलोड करें।`;
+}
+
+/**
+ * Strips asterisks (*) and em dashes (— / – / --) from all chatbot outputs
+ */
+export function cleanChatbotResponse(text) {
+  if (!text) return '';
+  let s = String(text);
+
+  // 1. Remove all asterisks (*), including markdown bold ** and italic * and bullet *
+  s = s.replace(/\*/g, '');
+
+  // 2. Replace em dashes (—), en dashes (–), and double hyphens (--) with clean colons or commas
+  s = s.replace(/\s*[\u2014\u2013]\s*/g, ': ');
+  s = s.replace(/[\u2014\u2013]/g, ': ');
+  s = s.replace(/\s*--\s*/g, ': ');
+
+  // 3. Clean up extra spaces or punctuation artifacts
+  s = s.replace(/[ \t]+/g, ' ');
+  s = s.replace(/ : /g, ': ');
+  s = s.replace(/\n\s*:\s*/g, '\n');
+
+  return s.trim();
 }
 
 function saveChatMessage(shopId, role, content) {

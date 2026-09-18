@@ -254,7 +254,8 @@ export function FloatingSetuAI({
     try {
       const shopId = currentShop?.id || 'ramesh-kirana';
       const res = await api.chatAdvisor(shopId, text);
-      const reply = res?.response || res?.message || res?.reply || (language === 'hi' ? 'नमस्ते! आपके प्रश्न का विश्लेषण किया गया है।' : "Namaste! I've analyzed your query based on verified metrics.");
+      const rawReply = res?.response || res?.message || res?.reply || (language === 'hi' ? 'नमस्ते! आपके प्रश्न का विश्लेषण किया गया है।' : "Namaste! I've analyzed your query based on verified metrics.");
+      const reply = String(rawReply).replace(/\*/g, '').replace(/\s*[\u2014\u2013]\s*/g, ': ').replace(/[\u2014\u2013]/g, ': ').replace(/\s*--\s*/g, ': ').trim();
       
       if (res?.updatedOwnerName) {
         window.dispatchEvent(new CustomEvent('vyapaar:shop-updated', { detail: { owner_name: res.updatedOwnerName } }));
@@ -290,15 +291,17 @@ export function FloatingSetuAI({
           : 'Your Alternative Credit Score is 753/850 (Prime Bankable), calculated from continuous transactions and customer recovery.';
       } else {
         fallbackText += language === 'hi'
-          ? 'मैं व्यापार सेतु में आपकी हर सेवा तक पहुँचने में मदद कर सकता हूँ—बही-खाता, सरकारी योजना, क्रेडिट स्कोर, या नया रजिस्ट्रेशन।'
-          : 'I can help you navigate all Vyapaar Setu services—Bahi-Khata ledger, institutional schemes, credit appraisal, or registering your enterprise.';
+          ? 'मैं व्यापार सेतु में आपकी हर सेवा तक पहुँचने में मदद कर सकता हूँ: बही-खाता, सरकारी योजना, क्रेडिट स्कोर, या नया रजिस्ट्रेशन।'
+          : 'I can help you navigate all Vyapaar Setu services: Bahi-Khata ledger, institutional schemes, credit appraisal, or registering your enterprise.';
       }
+
+      const cleanedFallback = fallbackText.replace(/\*/g, '').replace(/\s*[\u2014\u2013]\s*/g, ': ').replace(/[\u2014\u2013]/g, ': ').replace(/\s*--\s*/g, ': ').trim();
 
       setMessages(prev => [
         ...prev,
         {
           role: 'assistant',
-          content: fallbackText,
+          content: cleanedFallback,
           action: suggestedAction,
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         }
@@ -482,7 +485,9 @@ export function FloatingSetuAI({
                         : 'bg-white text-stone-800 border border-[#ECE5D8] rounded-bl-xs shadow-2xs'
                     }`}
                   >
-                    <p className="whitespace-pre-line">{m.content}</p>
+                    <p className="whitespace-pre-line">
+                      {String(m.content || '').replace(/\*/g, '').replace(/\s*[\u2014\u2013]\s*/g, ': ').replace(/[\u2014\u2013]/g, ': ').replace(/\s*--\s*/g, ': ')}
+                    </p>
 
                     {/* Action button in bot response if service suggested */}
                     {!isUser && m.action && (

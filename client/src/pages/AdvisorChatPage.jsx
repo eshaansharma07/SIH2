@@ -140,7 +140,7 @@ export function AdvisorChatPage({ shop, creditData, summaryData, initialPrompt =
       if (res.history && res.history.length > 0) {
         setMessages(res.history.map(m => ({
           role: m.role,
-          content: m.content,
+          content: String(m.content || '').replace(/\*/g, '').replace(/\s*[\u2014\u2013]\s*/g, ': ').replace(/[\u2014\u2013]/g, ': ').replace(/\s*--\s*/g, ': ').trim(),
           timestamp: m.timestamp
         })));
       } else {
@@ -148,7 +148,7 @@ export function AdvisorChatPage({ shop, creditData, summaryData, initialPrompt =
           {
             role: 'assistant',
             content: language === 'hi' 
-              ? `राम राम ${shop?.owner_name || 'दुकानदार'} जी! 🙏\n\nमैं आपका सेतु AI सलाहकार हूँ। मैंने आपकी दुकान (${shop?.name || 'दुकान'}) के बही-खाते और ${shop?.district || 'क्षेत्र'} के आगामी त्योहारी कैलेंडर का विश्लेषण कर लिया है।\n\nमुझसे कुछ भी पूछें — जैसे कि त्योहार पर कितना माल स्टॉक करना है, ग्राहकों का उधार कैसे समेटना है, या नया उपकरण लेने के लिए कौन सा मुद्रा लोन उपयुक्त है!`
+              ? `राम राम ${shop?.owner_name || 'दुकानदार'} जी! 🙏\n\nमैं आपका सेतु AI सलाहकार हूँ। मैंने आपकी दुकान (${shop?.name || 'दुकान'}) के बही-खाते और ${shop?.district || 'क्षेत्र'} के आगामी त्योहारी कैलेंडर का विश्लेषण कर लिया है।\n\nमुझसे कुछ भी पूछें: जैसे कि त्योहार पर कितना माल स्टॉक करना है, ग्राहकों का उधार कैसे समेटना है, या नया उपकरण लेने के लिए कौन सा मुद्रा लोन उपयुक्त है!`
               : `Namaste ${shop?.owner_name || 'Partner'}! 🙏\n\nI am your Setu AI Advisor. I have synchronized with your store (${shop?.name || 'Your Store'}) and the upcoming seasonal demand in ${shop?.district || 'your area'}.\n\nAsk me anything about seasonal inventory planning, managing udhaar recovery, or applying for a statutory MSME loan!`
           }
         ]);
@@ -174,7 +174,9 @@ export function AdvisorChatPage({ shop, creditData, summaryData, initialPrompt =
 
     try {
       const res = await api.chatAdvisor(shop.id, text);
-      const reply = res.response || res.advice?.content || res.reply;
+      const rawReply = res.response || res.advice?.content || res.reply;
+      const reply = String(rawReply || '').replace(/\*/g, '').replace(/\s*[\u2014\u2013]\s*/g, ': ').replace(/[\u2014\u2013]/g, ': ').replace(/\s*--\s*/g, ': ').trim();
+      
       if (res.updatedOwnerName) {
         window.dispatchEvent(new CustomEvent('vyapaar:shop-updated', { detail: { owner_name: res.updatedOwnerName } }));
       }
@@ -313,7 +315,7 @@ export function AdvisorChatPage({ shop, creditData, summaryData, initialPrompt =
                   }`}
                 >
                   <div className="whitespace-pre-wrap font-sans">
-                    {msg.content}
+                    {String(msg.content || '').replace(/\*/g, '').replace(/\s*[\u2014\u2013]\s*/g, ': ').replace(/[\u2014\u2013]/g, ': ').replace(/\s*--\s*/g, ': ')}
                   </div>
 
                   {!isUser && (
