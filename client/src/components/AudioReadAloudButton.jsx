@@ -13,8 +13,22 @@ export function AudioReadAloudButton({
   const [playing, setPlaying] = useState(false);
   const [supported, setSupported] = useState(true);
 
-  const targetLang = language === 'hi' ? 'hi-IN' : 'en-IN';
-  const targetText = language === 'hi' ? textHi : (textEn || textHi);
+  const langMap = {
+    hi: 'hi-IN',
+    pa: 'pa-IN',
+    bn: 'bn-IN',
+    mr: 'mr-IN',
+    ta: 'ta-IN',
+    te: 'te-IN',
+    gu: 'gu-IN',
+    kn: 'kn-IN',
+    ml: 'ml-IN',
+    or: 'or-IN',
+    as: 'as-IN',
+    en: 'en-IN'
+  };
+  const targetLang = langMap[language] || 'en-IN';
+  const targetText = language === 'en' ? (textEn || textHi) : (textHi || textEn);
 
   useEffect(() => {
     setSupported(isSpeechSupported());

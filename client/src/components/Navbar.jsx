@@ -16,7 +16,9 @@ import {
   ShieldCheck,
   Sparkles,
   ChevronRight,
-  ArrowRight
+  ArrowRight,
+  Globe,
+  Check
 } from 'lucide-react';
 import { useTranslation } from '../i18n/LanguageContext';
 import { api } from '../utils/api';
@@ -34,15 +36,18 @@ export function Navbar({
   onToggleSidebar,
   onOpenWholesale
 }) {
-  const { language, toggleLanguage } = useTranslation();
+  const { language, setLanguage, t, supportedLanguages, currentLanguageInfo } = useTranslation();
   const [profileOpen, setProfileOpen] = useState(false);
   const [notificationOpen, setNotificationOpen] = useState(false);
+  const [languageOpen, setLanguageOpen] = useState(false);
   const [resetting, setResetting] = useState(false);
 
   // Interactive Hover Mega-Menu State
   const [hoveredTab, setHoveredTab] = useState(null);
   const leaveTimerRef = useRef(null);
   const navRef = useRef(null);
+  const langRef = useRef(null);
+  const profileRef = useRef(null);
 
   // Dismiss dropdown on outside pointer click or Escape key
   useEffect(() => {
@@ -50,12 +55,19 @@ export function Navbar({
       if (navRef.current && !navRef.current.contains(e.target)) {
         setHoveredTab(null);
       }
+      if (langRef.current && !langRef.current.contains(e.target)) {
+        setLanguageOpen(false);
+      }
+      if (profileRef.current && !profileRef.current.contains(e.target)) {
+        setProfileOpen(false);
+      }
     };
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
         setHoveredTab(null);
         setProfileOpen(false);
         setNotificationOpen(false);
+        setLanguageOpen(false);
       }
     };
     document.addEventListener('pointerdown', handlePointerDown);
@@ -124,7 +136,7 @@ export function Navbar({
   const navItems = [
     { 
       id: 'dashboard', 
-      label: language === 'hi' ? 'अवलोकन' : 'Overview', 
+      label: t('nav.dashboard', 'Overview'), 
       icon: Home,
       menuTitle: language === 'hi' ? 'अवलोकन' : 'Overview',
       menuTagline: language === 'hi' ? 'आपका व्यापार एक नज़र में' : 'Your business at a glance',
@@ -181,7 +193,7 @@ export function Navbar({
     },
     { 
       id: 'cashflow', 
-      label: language === 'hi' ? 'बही-खाता' : 'Bahi-Khata', 
+      label: t('nav.cashflow', 'Bahi-Khata'), 
       icon: BookOpen,
       menuTitle: language === 'hi' ? 'बही-खाता' : 'Bahi-Khata',
       menuTagline: language === 'hi' ? 'दैनिक व्यापार और हिसाब-किताब का प्रबंधन।' : 'Manage your everyday business records.',
@@ -251,7 +263,7 @@ export function Navbar({
     },
     { 
       id: 'credit', 
-      label: language === 'hi' ? 'क्रेडिट स्कोर' : 'Credit Score', 
+      label: t('nav.credit', 'Credit Score'), 
       icon: TrendingUp,
       menuTitle: language === 'hi' ? 'क्रेडिट स्कोर' : 'Credit Score',
       menuTagline: language === 'hi' ? 'व्यापार से बैंक ऋण पात्रता का निर्माण।' : 'Understand how your business activity builds credit readiness.',
@@ -300,7 +312,7 @@ export function Navbar({
     },
     { 
       id: 'schemes', 
-      label: language === 'hi' ? 'सरकारी योजनाएं' : 'Schemes', 
+      label: t('nav.schemes', 'Govt Schemes'), 
       icon: Landmark,
       menuTitle: language === 'hi' ? 'सरकारी योजनाएं' : 'Government Schemes',
       menuTagline: language === 'hi' ? 'अपने व्यापार के लिए उपयुक्त योजनाएं खोजें।' : 'Find schemes relevant to your business.',
@@ -350,7 +362,7 @@ export function Navbar({
     },
     { 
       id: 'dossier', 
-      label: language === 'hi' ? 'बैंक फाइल' : 'Bank Dossier', 
+      label: t('nav.dossier', 'Bank Dossier'), 
       icon: FileText,
       menuTitle: language === 'hi' ? 'बैंक फाइल' : 'Bank Dossier',
       menuTagline: language === 'hi' ? 'बैंक ऋण के लिए प्रमाणित फाइल तैयार करें।' : 'Prepare your verified business information for formal credit conversations.',
@@ -578,18 +590,70 @@ export function Navbar({
               )}
             </div>
 
-            {/* Language Switcher: हिन्दी | English */}
-            <button
-              type="button"
-              onClick={toggleLanguage}
-              className="px-2.5 py-1 rounded-lg bg-stone-200/70 hover:bg-stone-200 text-[11px] font-bold text-stone-800 transition-colors cursor-pointer border border-stone-300/50 shrink-0"
-              title="Toggle language"
-            >
-              {language === 'hi' ? 'English' : 'हिंदी'}
-            </button>
+            {/* Multi-Language Selector Dropdown (12 Indian Languages) */}
+            <div className="relative shrink-0" ref={langRef}>
+              <button
+                type="button"
+                onClick={() => {
+                  setLanguageOpen(prev => !prev);
+                  setProfileOpen(false);
+                  setNotificationOpen(false);
+                }}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-stone-200/70 hover:bg-stone-200 text-[11px] font-bold text-stone-800 transition-colors cursor-pointer border border-stone-300/50 shrink-0"
+                title="Select Language / भाषा चुनें"
+                aria-label="Select Language"
+              >
+                <Globe className="w-3.5 h-3.5 text-[#0F3E2E] shrink-0" />
+                <span>{currentLanguageInfo?.nativeName || 'English'}</span>
+                <ChevronDown className={`w-3 h-3 text-stone-500 transition-transform duration-200 ${languageOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {/* 12-Language Popover Menu */}
+              {languageOpen && (
+                <div className="absolute right-0 mt-2 w-72 sm:w-80 bg-[#FAF8F5] border border-stone-200 rounded-2xl p-2.5 shadow-2xl z-50 space-y-2 animate-in fade-in zoom-in-[0.98] duration-150">
+                  <div className="flex items-center justify-between pb-1.5 border-b border-stone-200/70">
+                    <div className="flex items-center gap-1.5">
+                      <Globe className="w-3.5 h-3.5 text-[#0F3E2E]" />
+                      <span className="font-serif font-bold text-xs text-stone-900">Select Language / भाषा चुनें</span>
+                    </div>
+                    <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/60">
+                      12 Languages
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-1.5 max-h-64 overflow-y-auto pr-0.5">
+                    {supportedLanguages.map((lang) => {
+                      const isSelected = language === lang.code;
+                      return (
+                        <button
+                          key={lang.code}
+                          type="button"
+                          onClick={() => {
+                            setLanguage(lang.code);
+                            setLanguageOpen(false);
+                          }}
+                          className={`flex items-center justify-between p-2 rounded-xl text-xs text-left transition-all cursor-pointer ${
+                            isSelected
+                              ? 'bg-[#0F3E2E] text-white font-bold shadow-xs'
+                              : 'bg-white/80 hover:bg-stone-200/70 text-stone-800 font-medium border border-stone-200/40'
+                          }`}
+                        >
+                          <div className="flex flex-col min-w-0">
+                            <span className="text-xs truncate font-semibold">{lang.nativeName}</span>
+                            <span className={`text-[9.5px] truncate ${isSelected ? 'text-emerald-200' : 'text-stone-500'}`}>
+                              {lang.name}
+                            </span>
+                          </div>
+                          {isSelected && <Check className="w-3.5 h-3.5 text-white shrink-0 ml-1" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* Profile Chip & Dropdown */}
-            <div className="relative shrink-0">
+            <div className="relative shrink-0" ref={profileRef}>
               <button
                 type="button"
                 onClick={() => setProfileOpen(!profileOpen)}

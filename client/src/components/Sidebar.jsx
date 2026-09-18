@@ -24,19 +24,19 @@ export function Sidebar({
   isOpen = false,
   onClose
 }) {
-  const { language } = useTranslation();
+  const { language, t } = useTranslation();
   const [helpOpen, setHelpOpen] = useState(false);
 
   // Map sidebar item IDs to existing App tab IDs
   const navItems = [
     { 
       id: 'dashboard', 
-      label: language === 'hi' ? 'अवलोकन' : 'Overview', 
+      label: t('nav.dashboard', 'Overview'), 
       icon: Home 
     },
     { 
       id: 'cashflow', 
-      label: language === 'hi' ? 'बही-खाता' : 'Bahi-Khata', 
+      label: t('nav.cashflow', 'Bahi-Khata'), 
       icon: Receipt,
       filter: 'all'
     },
@@ -55,17 +55,17 @@ export function Sidebar({
     },
     { 
       id: 'credit', 
-      label: language === 'hi' ? 'क्रेडिट स्कोर' : 'Credit Score', 
+      label: t('nav.credit', 'Credit Score'), 
       icon: TrendingUp 
     },
     { 
       id: 'schemes', 
-      label: language === 'hi' ? 'सरकारी योजनाएं' : 'Schemes', 
+      label: t('nav.schemes', 'Schemes'), 
       icon: Landmark 
     },
     { 
       id: 'dossier', 
-      label: language === 'hi' ? 'बैंक डॉसियर' : 'Bank Dossier', 
+      label: t('nav.dossier', 'Bank Dossier'), 
       icon: FileText 
     }
   ];

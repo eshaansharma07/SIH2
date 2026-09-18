@@ -29,7 +29,8 @@ import {
   Building2,
   ChevronRight,
   AlertCircle,
-  Loader2
+  Loader2,
+  Globe
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../utils/api';
@@ -72,11 +73,17 @@ export function VyapaarSetuBridgeLogo({ className = "w-9 h-7 text-[#0F3E2E]" }) 
 export const SaakhSetuBridgeLogo = VyapaarSetuBridgeLogo;
 
 export function OnboardingPage({ onComplete, onSelectDemo, onStartDemoTour }) {
-  const { language, setLanguage } = useTranslation();
+  const { language, setLanguage, supportedLanguages, currentLanguageInfo } = useTranslation();
 
   // Mega-menu state: 'how' | 'shopkeepers' | 'impact' | 'about' | null
   const [activeMega, setActiveMega] = useState(null);
   const megaTimeoutRef = useRef(null);
+
+  // Multi-language dropdown states
+  const [headerLangOpen, setHeaderLangOpen] = useState(false);
+  const [footerLangOpen, setFooterLangOpen] = useState(false);
+  const headerLangRef = useRef(null);
+  const footerLangRef = useRef(null);
 
   // Mobile menu drawer
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -124,6 +131,20 @@ export function OnboardingPage({ onComplete, onSelectDemo, onStartDemoTour }) {
     };
     window.addEventListener('saakhsetu:open-register-modal', handler);
     return () => window.removeEventListener('saakhsetu:open-register-modal', handler);
+  }, []);
+
+  // Dismiss language popovers on outside click
+  useEffect(() => {
+    const handlePointerDown = (e) => {
+      if (headerLangRef.current && !headerLangRef.current.contains(e.target)) {
+        setHeaderLangOpen(false);
+      }
+      if (footerLangRef.current && !footerLangRef.current.contains(e.target)) {
+        setFooterLangOpen(false);
+      }
+    };
+    document.addEventListener('pointerdown', handlePointerDown);
+    return () => document.removeEventListener('pointerdown', handlePointerDown);
   }, []);
 
   // Mega-menu hover handlers with 120ms debounce to prevent flicker
@@ -345,8 +366,65 @@ export function OnboardingPage({ onComplete, onSelectDemo, onStartDemoTour }) {
 
           </nav>
 
-          {/* Right: Shopkeeper Login Pill Button */}
-          <div className="flex items-center gap-3">
+          {/* Right: Language Selector + Shopkeeper Login Pill Button */}
+          <div className="flex items-center gap-2 sm:gap-3">
+            {/* Header 12-Language Selector */}
+            <div className="relative" ref={headerLangRef}>
+              <button
+                type="button"
+                onClick={() => setHeaderLangOpen(prev => !prev)}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-[#EAE3D2]/80 hover:bg-[#DFD6C2] text-xs font-bold text-[#1C1917] transition cursor-pointer border border-[#D5CCBC]"
+                title="Select Language / भाषा चुनें"
+                aria-label="Select Language"
+              >
+                <Globe className="w-3.5 h-3.5 text-[#0F3E2E]" />
+                <span className="hidden sm:inline font-sans">{currentLanguageInfo?.nativeName || 'English'}</span>
+                <ChevronDown className={`w-3 h-3 text-[#78716C] transition-transform duration-200 ${headerLangOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {headerLangOpen && (
+                <div className="absolute right-0 mt-2 w-64 sm:w-72 bg-[#FAF7F2] border border-[#D5CCBC] rounded-2xl p-2.5 shadow-2xl z-50 space-y-1.5 animate-in fade-in zoom-in-[0.98] duration-150">
+                  <div className="flex items-center justify-between pb-1 border-b border-[#E7DFD5]">
+                    <div className="flex items-center gap-1.5">
+                      <Globe className="w-3.5 h-3.5 text-[#0F3E2E]" />
+                      <span className="font-serif font-bold text-xs text-[#1C1917]">Select Language</span>
+                    </div>
+                    <span className="text-[10px] font-bold text-[#0F3E2E] bg-emerald-50 px-1.5 py-0.5 rounded-full border border-emerald-200/60">
+                      12 Languages
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-1 max-h-56 overflow-y-auto pr-0.5">
+                    {supportedLanguages?.map((lang) => {
+                      const isSelected = language === lang.code;
+                      return (
+                        <button
+                          key={lang.code}
+                          type="button"
+                          onClick={() => {
+                            setLanguage(lang.code);
+                            setHeaderLangOpen(false);
+                          }}
+                          className={`flex items-center justify-between p-1.5 px-2 rounded-xl text-xs text-left transition-all cursor-pointer ${
+                            isSelected
+                              ? 'bg-[#0F3E2E] text-white font-bold shadow-xs'
+                              : 'bg-white/80 hover:bg-[#EAE3D2] text-[#1C1917] border border-[#E7DFD5]/70'
+                          }`}
+                        >
+                          <div className="flex flex-col min-w-0">
+                            <span className="text-xs truncate font-semibold">{lang.nativeName}</span>
+                            <span className={`text-[9px] truncate ${isSelected ? 'text-emerald-200' : 'text-stone-500'}`}>
+                              {lang.name}
+                            </span>
+                          </div>
+                          {isSelected && <Check className="w-3 h-3 text-white shrink-0 ml-1" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+
             <button
               onClick={() => {
                 setAuthMode('login');
@@ -1104,21 +1182,53 @@ export function OnboardingPage({ onComplete, onSelectDemo, onStartDemoTour }) {
 
               <span className="text-[#D5CCBC]">|</span>
 
-              {/* Refined Language Toggle (हिन्दी | English) */}
-              <div className="flex items-center gap-1.5 text-xs font-semibold select-none">
+              {/* Refined 12-Language Selector */}
+              <div className="relative select-none" ref={footerLangRef}>
                 <button
-                  onClick={() => setLanguage('hi')}
-                  className={`transition-colors cursor-pointer ${language === 'hi' ? 'font-bold text-[#0F3E2E]' : 'text-[#78716C] hover:text-[#1C1917]'}`}
+                  type="button"
+                  onClick={() => setFooterLangOpen(prev => !prev)}
+                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#EAE3D2]/70 hover:bg-[#DFD6C2] text-xs font-bold text-[#1C1917] transition-colors cursor-pointer border border-[#D5CCBC]"
+                  title="Select Language / भाषा चुनें"
+                  aria-label="Select Language"
                 >
-                  हिन्दी
+                  <Globe className="w-3.5 h-3.5 text-[#0F3E2E]" />
+                  <span>{currentLanguageInfo?.nativeName || 'English'}</span>
+                  <ChevronDown className={`w-3 h-3 text-[#78716C] transition-transform ${footerLangOpen ? 'rotate-180' : ''}`} />
                 </button>
-                <span className="text-[#D5CCBC]">|</span>
-                <button
-                  onClick={() => setLanguage('en')}
-                  className={`transition-colors cursor-pointer ${language === 'en' ? 'font-bold text-[#0F3E2E]' : 'text-[#78716C] hover:text-[#1C1917]'}`}
-                >
-                  English
-                </button>
+
+                {footerLangOpen && (
+                  <div className="absolute bottom-full right-0 mb-2 w-64 bg-[#FAF7F2] border border-[#D5CCBC] rounded-2xl p-2.5 shadow-2xl z-50 space-y-1.5 animate-in fade-in zoom-in-[0.98] duration-150">
+                    <div className="flex items-center justify-between pb-1 border-b border-[#E7DFD5]">
+                      <span className="font-serif font-bold text-xs text-[#1C1917]">Select Language</span>
+                      <span className="text-[10px] font-bold text-[#0F3E2E] bg-emerald-50 px-1.5 py-0.5 rounded-full">
+                        12 Languages
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-1 max-h-56 overflow-y-auto pr-0.5">
+                      {supportedLanguages?.map((lang) => {
+                        const isSelected = language === lang.code;
+                        return (
+                          <button
+                            key={lang.code}
+                            type="button"
+                            onClick={() => {
+                              setLanguage(lang.code);
+                              setFooterLangOpen(false);
+                            }}
+                            className={`flex items-center justify-between p-1.5 px-2 rounded-xl text-xs text-left transition-all cursor-pointer ${
+                              isSelected
+                                ? 'bg-[#0F3E2E] text-white font-bold'
+                                : 'bg-white/80 hover:bg-[#EAE3D2] text-[#1C1917]'
+                            }`}
+                          >
+                            <span className="text-xs truncate font-semibold">{lang.nativeName}</span>
+                            {isSelected && <Check className="w-3 h-3 text-white shrink-0 ml-1" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
