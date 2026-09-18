@@ -47,7 +47,8 @@ export function CashFlowPage({
   isDemoMode,
   summaryData,
   onOpenKeypad, 
-  onOpenWholesale, 
+  onOpenWholesale,
+  onNavigateTab,
   refreshKey, 
   latestTx, 
   onTransactionSaved 
@@ -61,16 +62,25 @@ export function CashFlowPage({
   const [loading, setLoading] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
 
-  // Search & Filter State
-  const [selectedCategoryTab, setSelectedCategoryTab] = useState(() => {
+  // Read one-time initial navigation target from sessionStorage (e.g. from Mega-Menu)
+  const initialCategoryTab = (() => {
     try {
-      return sessionStorage.getItem('saakhsetu_cashflow_tab') || 'all';
-    } catch (_) {
-      return 'all';
-    }
-  }); // 'all', 'customers', 'sales', 'purchases', 'expenses', 'udhaar'
+      const stored = sessionStorage.getItem('saakhsetu_cashflow_tab');
+      if (stored) {
+        sessionStorage.removeItem('saakhsetu_cashflow_tab');
+        return stored;
+      }
+    } catch (_) {}
+    return 'all';
+  })();
+
+  // Search & Filter State
+  const [selectedCategoryTab, setSelectedCategoryTab] = useState(initialCategoryTab);
   const [searchQuery, setSearchQuery] = useState('');
-  const [typeFilter, setTypeFilter] = useState('all');
+  const [typeFilter, setTypeFilter] = useState(
+    initialCategoryTab === 'sales' ? 'income' : 
+    (initialCategoryTab === 'purchases' || initialCategoryTab === 'expenses') ? 'expense' : 'all'
+  );
   const [paymentFilter, setPaymentFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [datePreset, setDatePreset] = useState('all'); // 'all', 'today', 'week', 'month'
@@ -1795,10 +1805,8 @@ export function CashFlowPage({
         <button
           type="button"
           onClick={() => {
-            window.dispatchEvent(new CustomEvent('saakhsetu:switch-tab', { detail: { tab: 'schemes' } }));
-            // Also trigger navigation via location or App state
-            const btn = document.querySelector('button[title*="Schemes"], button[title*="योजनाएं"]');
-            if (btn) btn.click();
+            onNavigateTab?.('schemes');
+            window.dispatchEvent(new CustomEvent('saakhsetu:navigate', { detail: { tab: 'schemes' } }));
           }}
           className="px-5 py-2.5 rounded-xl bg-[#0F3E2E] hover:bg-[#165640] text-white font-bold text-xs shadow-2xs hover:shadow-md transition-all cursor-pointer whitespace-nowrap z-10 shrink-0"
         >

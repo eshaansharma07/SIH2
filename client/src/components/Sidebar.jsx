@@ -282,7 +282,7 @@ export function Sidebar({
               </div>
 
               <div className="p-2.5 rounded-xl bg-amber-50/70 border border-amber-200/60 text-[11px] text-amber-900 leading-relaxed">
-                💡 <strong>Tip:</strong> You can also ask <strong>Setu AI</strong> at the bottom-right for instant guidance on logging sales, calculating udhaar, or matching government schemes!
+                💡 <strong>Tip:</strong> You can also ask <strong>Setu AI</strong> at the bottom-left for instant guidance on logging sales, calculating udhaar, or matching government schemes!
               </div>
             </div>
 

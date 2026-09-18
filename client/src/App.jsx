@@ -100,8 +100,30 @@ export default function App() {
         setRefreshKey(k => k + 1);
       }
     };
+
+    const handleOpenAdvisor = (e) => {
+      const prompt = e.detail?.prompt;
+      if (prompt) {
+        setInitialAdvisorPrompt(prompt);
+      }
+      changeTab('advisor');
+    };
+
+    const handleGlobalNavigate = (e) => {
+      const tab = e.detail?.tab;
+      if (tab) {
+        changeTab(tab);
+      }
+    };
+
     window.addEventListener('vyapaar:sync-completed', handleSyncDone);
-    return () => window.removeEventListener('vyapaar:sync-completed', handleSyncDone);
+    window.addEventListener('saakhsetu:open-advisor', handleOpenAdvisor);
+    window.addEventListener('saakhsetu:navigate', handleGlobalNavigate);
+    return () => {
+      window.removeEventListener('vyapaar:sync-completed', handleSyncDone);
+      window.removeEventListener('saakhsetu:open-advisor', handleOpenAdvisor);
+      window.removeEventListener('saakhsetu:navigate', handleGlobalNavigate);
+    };
   }, []);
 
   const fetchFinancials = async (shopId) => {
@@ -496,6 +518,7 @@ export default function App() {
                           summaryData={summaryData}
                           onOpenKeypad={handleOpenKeypad}
                           onOpenWholesale={() => setWholesaleModalOpen(true)}
+                          onNavigateTab={(tab) => changeTab(tab)}
                           refreshKey={refreshKey}
                           latestTx={latestTx}
                           onTransactionSaved={handleTransactionSaved}
