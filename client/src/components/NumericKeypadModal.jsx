@@ -15,12 +15,20 @@ import {
   setCachedCustomers 
 } from '../utils/customerMatcher';
 
-export function NumericKeypadModal({ isOpen, onClose, onTransactionSaved, shopId, onOpenVoice }) {
+export function NumericKeypadModal({ 
+  isOpen, 
+  onClose, 
+  onTransactionSaved, 
+  shopId, 
+  onOpenVoice,
+  initialType = 'income',
+  initialCategory = null
+}) {
   const { t, language } = useTranslation();
   const [amountStr, setAmountStr] = useState('');
-  const [type, setType] = useState('income'); // 'income', 'expense', 'udhaar_given', 'udhaar_repaid'
+  const [type, setType] = useState(initialType || 'income'); // 'income', 'expense', 'udhaar_given', 'udhaar_repaid'
   const [paymentMode, setPaymentMode] = useState('cash'); // 'cash', 'upi', 'khata'
-  const [category, setCategory] = useState('Daily Counter Sales');
+  const [category, setCategory] = useState(initialCategory || 'Daily Counter Sales');
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [customerList, setCustomerList] = useState(() => getCachedCustomers(shopId));
@@ -70,6 +78,20 @@ export function NumericKeypadModal({ isOpen, onClose, onTransactionSaved, shopId
       isMounted = false;
     };
   }, [isOpen, shopId]);
+
+  // Reset/sync type and category when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setType(initialType || 'income');
+      setPaymentMode('cash');
+      setCategory(initialCategory || (initialType === 'expense' ? 'Stock Purchase / माल खरीद' : 'Daily Counter Sales'));
+      setAmountStr('');
+      setCustomerName('');
+      setCustomerPhone('');
+      setSelectedCustomer(null);
+      setErrorMessage('');
+    }
+  }, [isOpen, initialType, initialCategory]);
 
   if (!isOpen) return null;
 

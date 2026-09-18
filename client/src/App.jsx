@@ -67,6 +67,15 @@ export default function App() {
   const [summaryData, setSummaryData] = useState(null);
   const [cuesData, setCuesData] = useState(null);
   const [keypadOpen, setKeypadOpen] = useState(false);
+  const [keypadInitialType, setKeypadInitialType] = useState('income');
+  const [keypadInitialCategory, setKeypadInitialCategory] = useState(null);
+
+  const handleOpenKeypad = (type = 'income', category = null) => {
+    setKeypadInitialType(type);
+    setKeypadInitialCategory(category);
+    setKeypadOpen(true);
+  };
+
   const [voiceModalOpen, setVoiceModalOpen] = useState(false);
   const [wholesaleModalOpen, setWholesaleModalOpen] = useState(false);
   const [demoTourOpen, setDemoTourOpen] = useState(false);
@@ -469,7 +478,7 @@ export default function App() {
                     {activeTab === 'dashboard' && (
                       <DashboardPage
                         shop={currentShop}
-                        onOpenKeypad={() => setKeypadOpen(true)}
+                        onOpenKeypad={handleOpenKeypad}
                         onOpenWholesale={() => setWholesaleModalOpen(true)}
                         onNavigateTab={(tab) => changeTab(tab)}
                       />
@@ -490,7 +499,7 @@ export default function App() {
                         shop={currentShop}
                         isDemoMode={isDemoMode}
                         summaryData={summaryData}
-                        onOpenKeypad={() => setKeypadOpen(true)}
+                        onOpenKeypad={handleOpenKeypad}
                         onOpenWholesale={() => setWholesaleModalOpen(true)}
                         refreshKey={refreshKey}
                         latestTx={latestTx}
@@ -546,7 +555,7 @@ export default function App() {
         <FloatingSetuAI 
           currentShop={currentShop}
           onNavigateTab={changeTab}
-          onOpenKeypad={() => setKeypadOpen(true)}
+          onOpenKeypad={handleOpenKeypad}
           onOpenWholesale={() => setWholesaleModalOpen(true)}
         />
       )}
@@ -558,6 +567,8 @@ export default function App() {
         onTransactionSaved={handleTransactionSaved}
         shopId={currentShop?.id}
         onOpenVoice={() => setVoiceModalOpen(true)}
+        initialType={keypadInitialType}
+        initialCategory={keypadInitialCategory}
       />
 
       {/* Global Voice Bahi-Khata Input Dialog */}
