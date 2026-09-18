@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import en from './en.json';
 import hi from './hi.json';
+import { safeStorage } from '../utils/safeStorage';
 
 const translations = { en, hi };
 
@@ -8,11 +9,11 @@ const LanguageContext = createContext();
 
 export function LanguageProvider({ children }) {
   const [language, setLanguage] = useState(() => {
-    return localStorage.getItem('vyapaar_lang') || 'en';
+    return safeStorage.getItem('vyapaar_lang', 'en');
   });
 
   useEffect(() => {
-    localStorage.setItem('vyapaar_lang', language);
+    safeStorage.setItem('vyapaar_lang', language);
   }, [language]);
 
   const t = (path, fallback = '') => {

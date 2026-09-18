@@ -1,7 +1,7 @@
 import React from 'react';
 
 /**
- * Canonical Card component for Vyapaar Saathi
+ * Canonical Card component for SaakhSetu
  * Consistent border-radius (rounded-2xl for normal, rounded-3xl for hero),
  * warm paper palette border and subtle authentic shadow.
  *
@@ -21,17 +21,18 @@ export function Card({
   ...props
 }) {
   const elevationClasses = {
-    0: 'shadow-none border border-paper-200',
-    1: 'shadow-elevation-1 border border-paper-300/80 hover:border-terracotta-200/80 transition-all duration-200',
-    2: 'shadow-elevation-2 border border-paper-300',
-    3: 'shadow-elevation-3 border border-paper-300'
+    0: 'shadow-none border border-stone-200/60',
+    1: 'shadow-apple-card border border-stone-200/70 hover:border-stone-300/80 transition-all duration-200',
+    2: 'shadow-apple-elevated border border-stone-200/80',
+    3: 'shadow-apple-floating border border-stone-200/90'
   };
 
   const variantStyles = {
-    default: 'bg-white/95',
-    hero: 'bg-white relative overflow-hidden shadow-elevation-2 border border-paper-300',
-    accent: 'bg-terracotta-50/60 border border-terracotta-200/80',
-    paper: 'bg-paper-100/90 border border-paper-300/90'
+    default: 'bg-white',
+    hero: 'bg-white relative overflow-hidden shadow-apple-elevated border border-stone-200/80',
+    accent: 'bg-amber-50/40 border border-amber-200/60',
+    paper: 'bg-paper-50/90 border border-stone-200/70',
+    glass: 'apple-glass-pill'
   };
 
   const paddingStyles = {
@@ -47,7 +48,7 @@ export function Card({
   return (
     <div
       onClick={onClick}
-      className={`${radiusStyles} ${variantStyles[variant] || variantStyles.default} ${chosenElevation} ${paddingStyles[padding] || paddingStyles.md} ${onClick ? 'cursor-pointer hover:-translate-y-0.5 hover:shadow-card-hover focus-within:ring-2 focus-within:ring-terracotta-500/20' : ''} transition-[transform,box-shadow,border-color] duration-200 ${className}`}
+      className={`${radiusStyles} ${variantStyles[variant] || variantStyles.default} ${chosenElevation} ${paddingStyles[padding] || paddingStyles.md} ${onClick ? 'cursor-pointer' : ''} ${className}`}
       {...props}
     >
       {children}

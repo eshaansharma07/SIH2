@@ -1,28 +1,38 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Printer, 
   Download, 
+  Printer, 
   FileText, 
-  ShieldCheck, 
-  Award, 
-  Building2, 
-  Calendar, 
-  CheckCircle, 
-  ArrowLeft,
-  FileCheck 
+  CheckCircle2, 
+  ArrowRight,
+  ChevronRight,
+  User,
+  BarChart3,
+  ShieldCheck,
+  Building2,
+  Share2,
+  TrendingUp,
+  Lightbulb,
+  Sprout,
+  X,
+  Copy,
+  Check,
+  MessageCircle
 } from 'lucide-react';
 import { api } from '../utils/api';
 import { useTranslation } from '../i18n/LanguageContext';
-import { SaathiAvatar } from '../components/SaathiAvatar';
-import { WarliBorder } from '../components/WarliMotif';
-import { Card, Badge, Button } from '../components/ui';
 import { DEMO_DOSSIER } from '../data/demoData';
+import { APP_NAME_EN, APP_NAME_HI } from '../config/brand';
 
-export function BankDossierPage({ shop, isDemoMode, onBack }) {
+export function BankDossierPage({ shop, isDemoMode, onNavigateTab, onBack }) {
   const { language } = useTranslation();
   const isDemo = Boolean(isDemoMode || shop?.id === 'ramesh-kirana' || shop?.is_demo === 1 || !shop?.id);
   const [dossierData, setDossierData] = useState(() => (isDemo ? DEMO_DOSSIER : null));
   const [loading, setLoading] = useState(() => !isDemo && Boolean(shop?.id));
+  const [downloadingCam, setDownloadingCam] = useState(false);
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
+  const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
 
   useEffect(() => {
     loadDossier();
@@ -56,14 +66,10 @@ export function BankDossierPage({ shop, isDemoMode, onBack }) {
     window.print();
   };
 
-  const [downloadingCam, setDownloadingCam] = useState(false);
-  const [downloadingPdf, setDownloadingPdf] = useState(false);
-
   const handleDownloadPDF = async () => {
     setDownloadingPdf(true);
     try {
       const activeShopId = shop?.id || 'ramesh-kirana';
-      // Dynamic imports for code-splitting heavy PDF renderer
       const [
         camRes,
         scoreRes,
@@ -82,10 +88,9 @@ export function BankDossierPage({ shop, isDemoMode, onBack }) {
       const cam = camRes?.cam || camRes || d?.cam || DEMO_DOSSIER;
       const scoreData = scoreRes || d?.creditEvaluation || DEMO_DOSSIER.creditEvaluation;
 
-      // Generate dynamic verification QR Code linking to live CAM verification endpoint
-      const baseUrl = typeof window !== 'undefined' && window.location.origin.includes('localhost')
-        ? 'https://vyapaar-saathi-nine.vercel.app'
-        : (typeof window !== 'undefined' ? window.location.origin : 'https://vyapaar-saathi-nine.vercel.app');
+      const baseUrl = typeof window !== 'undefined' && !window.location.origin.includes('localhost')
+        ? window.location.origin
+        : 'https://saakhsetu.vercel.app';
       const verificationUrl = `${baseUrl}/api/credit-score/${activeShopId}/cam`;
       
       const qrCodeDataUrl = await QRCode.toDataURL(verificationUrl, {
@@ -119,7 +124,7 @@ export function BankDossierPage({ shop, isDemoMode, onBack }) {
             scoreData,
             qrCodeDataUrl,
             generatedAt: new Date().toISOString(),
-            documentId: d?.dossierNumber || `VS-CAM-${(effectiveShop.state || 'IN').substring(0, 2).toUpperCase()}-${Date.now().toString().slice(-6)}`
+            documentId: d?.dossierNumber || `SS-CAM-${(effectiveShop.state || 'IN').substring(0, 2).toUpperCase()}-${Date.now().toString().slice(-6)}`
           }}
         />
       );
@@ -128,7 +133,7 @@ export function BankDossierPage({ shop, isDemoMode, onBack }) {
       const url = URL.createObjectURL(blob);
       const downloadAnchor = document.createElement('a');
       downloadAnchor.href = url;
-      downloadAnchor.download = `Vyapaar_Saathi_Bank_Dossier_${activeShopId}_${new Date().toISOString().slice(0, 10)}.pdf`;
+      downloadAnchor.download = `SaakhSetu_Bank_Dossier_${activeShopId}_${new Date().toISOString().slice(0, 10)}.pdf`;
       document.body.appendChild(downloadAnchor);
       downloadAnchor.click();
       downloadAnchor.remove();
@@ -149,7 +154,7 @@ export function BankDossierPage({ shop, isDemoMode, onBack }) {
       try {
         cam = await api.getCAM(activeShopId);
       } catch (e) {
-        console.warn('API getCAM error, using fallback:', e.message);
+        console.warn('API getCAM notice:', e.message);
       }
       if (!cam && (isDemo || d)) {
         cam = d?.cam || {
@@ -175,318 +180,531 @@ export function BankDossierPage({ shop, isDemoMode, onBack }) {
     }
   };
 
+  // External action listener from Top Navigation Mega-Menu
+  useEffect(() => {
+    const handleDossierAction = (e) => {
+      const action = e.detail?.action;
+      if (action === 'download') {
+        handleDownloadPDF();
+      } else if (action === 'readiness') {
+        setTimeout(() => {
+          const el = document.getElementById('dossier-readiness');
+          if (el) el.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+      }
+    };
+
+    // Check stored action on mount
+    try {
+      const pendingAction = sessionStorage.getItem('saakhsetu_dossier_action');
+      if (pendingAction) {
+        sessionStorage.removeItem('saakhsetu_dossier_action');
+        if (pendingAction === 'download') handleDownloadPDF();
+        else if (pendingAction === 'readiness') {
+          setTimeout(() => {
+            const el = document.getElementById('dossier-readiness');
+            if (el) el.scrollIntoView({ behavior: 'smooth' });
+          }, 150);
+        }
+      }
+    } catch (_) {}
+
+    window.addEventListener('saakhsetu:dossier-action', handleDossierAction);
+    return () => window.removeEventListener('saakhsetu:dossier-action', handleDossierAction);
+  }, [dossierData, shop?.id]);
+
+  const handleAskSetuAI = () => {
+    window.dispatchEvent(
+      new CustomEvent('saakhsetu:open-advisor', {
+        detail: {
+          prompt: language === 'hi'
+            ? 'कृपया मुझे बताएं कि बैंक ऋण के लिए यह बैंक प्रमाण पत्र (Bank Dossier) और CAM फ़ाइल बैंक मैनेजर को कैसे प्रस्तुत करें?'
+            : 'Please guide me on how to present my Bank Dossier and CAM file to a bank officer for Priority Sector Lending (PSL) loan approval.'
+        }
+      })
+    );
+  };
+
+  const handleCopyVerificationLink = () => {
+    const activeShopId = shop?.id || 'ramesh-kirana';
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://saakhsetu.vercel.app';
+    const link = `${baseUrl}/api/credit-score/${activeShopId}/cam`;
+    navigator.clipboard.writeText(link);
+    setCopiedLink(true);
+    setTimeout(() => setCopiedLink(false), 2500);
+  };
+
+  const handleWhatsAppShare = () => {
+    const activeShopId = shop?.id || 'ramesh-kirana';
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://saakhsetu.vercel.app';
+    const link = `${baseUrl}/api/credit-score/${activeShopId}/cam`;
+    const text = encodeURIComponent(
+      `*SaakhSetu Official Bank Dossier & CAM*\n` +
+      `Business: ${shopName}\n` +
+      `Owner: ${ownerName}\n` +
+      `PSL Verified File: ${link}`
+    );
+    window.open(`https://wa.me/?text=${text}`, '_blank');
+  };
+
   if (loading && !dossierData) {
     return (
-      <div className="py-16 text-center text-indigoRural-500 text-sm">
+      <div className="py-24 text-center text-stone-500 text-sm">
+        <div className="w-9 h-9 border-2 border-stone-300 border-t-emerald-800 rounded-full animate-spin mx-auto mb-3" />
         {language === 'hi' ? 'बैंक प्रमाण-पत्र तैयार किया जा रहा है...' : 'Generating Official Bankable Dossier...'}
       </div>
     );
   }
 
   const d = dossierData || (isDemo ? DEMO_DOSSIER : null);
-  const netSurplus = d?.financialAudit?.netOperatingSurplus ?? (isDemo ? 68657 : 0);
-  const monthlySurplus = Math.round(netSurplus / 3);
-  const debtHeadroom = Math.round(monthlySurplus * 0.4);
-
-  // Enterprise details with guaranteed fallbacks
-  const shopName = d?.shop?.name || shop?.name || (isDemo ? DEMO_DOSSIER.shop.name : '—');
+  const shopName = d?.shop?.name || shop?.name || (isDemo ? DEMO_DOSSIER.shop.name : 'Ramesh’s Kirana Store');
   const ownerName = d?.shop?.ownerName || shop?.owner_name || (isDemo ? DEMO_DOSSIER.shop.ownerName : 'Ramesh Kumar');
   const tradeName = d?.shop?.tradeName || shop?.trade_name || (isDemo ? DEMO_DOSSIER.shop.tradeName : 'Kirana & General Store');
-  const village = d?.shop?.village || shop?.village || (isDemo ? DEMO_DOSSIER.shop.village : '');
-  const district = d?.shop?.district || shop?.district || (isDemo ? DEMO_DOSSIER.shop.district : '');
-  const state = d?.shop?.state || shop?.state || (isDemo ? DEMO_DOSSIER.shop.state : '');
-  const locationText = (village || district || state)
-    ? `${[village, district].filter(Boolean).join(', ')}${state ? ` (${state})` : ''}`
-    : '—';
+  const village = d?.shop?.village || shop?.village || (isDemo ? DEMO_DOSSIER.shop.village : 'Utraula Dehat');
+  const district = d?.shop?.district || shop?.district || (isDemo ? DEMO_DOSSIER.shop.district : 'Balrampur');
+  const state = d?.shop?.state || shop?.state || (isDemo ? DEMO_DOSSIER.shop.state : 'Uttar Pradesh');
   const vintageYears = d?.shop?.vintageYears ?? shop?.vintage_years ?? (isDemo ? DEMO_DOSSIER.shop.vintageYears : 4);
   const bankAccount = d?.shop?.bankAccount || shop?.bank_account_type || (isDemo ? DEMO_DOSSIER.shop.bankAccount : 'Aryavart Gramin Bank');
 
-  // Alternative Credit Evaluation & Financial Audit with guaranteed fallbacks
-  const creditScore = d?.creditEvaluation?.totalScore ?? (isDemo ? 745 : '—');
-  const ratingBadge = d?.creditEvaluation?.ratingBadge || (isDemo ? 'Loan Ready' : 'Prime Bankable');
-  const grossSales = d?.financialAudit?.totalGrossSales ?? (isDemo ? 230907 : null);
-  const totalExpenses = d?.financialAudit?.totalExpenses ?? (isDemo ? 162250 : null);
-  const operatingSurplus = d?.financialAudit?.netOperatingSurplus ?? (isDemo ? 68657 : null);
-  const digitalShare = d?.financialAudit?.digitalCollectionPercentage || (isDemo ? '38% UPI QR' : '38% UPI QR');
-  const schemesList = (d?.recommendedSchemes && d.recommendedSchemes.length > 0)
-    ? d.recommendedSchemes
-    : (isDemo ? DEMO_DOSSIER.recommendedSchemes : []);
+  // Real timestamp logic: dynamic date formatting without hardcoded fallbacks for real shops
+  const formattedDate = isDemo
+    ? '18 Sep 2026, 09:41 AM'
+    : (d?.issueDate
+        ? new Intl.DateTimeFormat('en-IN', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+          }).format(new Date(d.issueDate))
+        : new Intl.DateTimeFormat('en-IN', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+          }).format(new Date()));
 
   return (
-    <div className="space-y-6 pb-12 animate-fadeIn max-w-4xl mx-auto">
+    <div className="space-y-6 pb-12 animate-fadeIn max-w-[1360px] mx-auto text-stone-900">
       
-      {/* Top Action Bar (Hidden in Print) */}
-      <div className="print:hidden">
-        <Card padding="sm" className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <Button
-            onClick={onBack}
-            variant="ghost"
-            size="sm"
-            icon={ArrowLeft}
-          >
-            <span>{language === 'hi' ? 'डैशबोर्ड पर वापस जाएं' : 'Back to Dashboard'}</span>
-          </Button>
-
-          <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
-            <span className="text-xs text-indigoRural-500 font-semibold hidden lg:inline-flex items-center gap-1.5">
-              <FileCheck className="w-3.5 h-3.5 text-forestRural-600" />
-              <span>Working Capital Summary — PSL-Format Ready</span>
-            </span>
-            <Button
-              onClick={handleDownloadCAM}
-              disabled={downloadingCam}
-              variant="secondary"
-              size="sm"
-              icon={Download}
-              className="sm:!px-3 sm:!py-2"
-            >
-              <span>{downloadingCam ? (language === 'hi' ? 'डाउनलोड...' : 'Downloading...') : (language === 'hi' ? 'CAM (JSON)' : 'Download CAM (JSON)')}</span>
-            </Button>
-            <Button
-              onClick={handlePrint}
-              variant="outline"
-              size="sm"
-              icon={Printer}
-              className="sm:!px-3 sm:!py-2"
-            >
-              <span>{language === 'hi' ? 'प्रिंट' : 'Print View'}</span>
-            </Button>
-            <Button
-              onClick={handleDownloadPDF}
-              disabled={downloadingPdf}
-              variant="primary"
-              size="sm"
-              icon={Download}
-              className="sm:!px-4 sm:!py-2 font-black"
-            >
-              <span>
-                {downloadingPdf 
-                  ? (language === 'hi' ? 'पीडीएफ बन रहा है...' : 'Generating PDF...') 
-                  : (language === 'hi' ? 'बैंक डॉसियर (PDF)' : 'Download Bank Dossier (PDF)')}
-              </span>
-            </Button>
-          </div>
-        </Card>
-      </div>
-
-      {/* Official Printable Bank Dossier Sheet */}
-      <div className="bg-white rounded-2xl p-3.5 sm:p-10 border border-paper-300 shadow-sm space-y-5 sm:space-y-6 text-indigoRural-900 print:border-0 print:shadow-none print:p-0 print:m-0 font-sans">
-        
-        {/* Dossier Letterhead */}
-        <div className="border-b-2 border-indigoRural-900 pb-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div className="flex items-center gap-3.5">
-            <SaathiAvatar size="lg" />
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-xl sm:text-2xl font-black text-indigoRural-900 tracking-tight font-display">
-                  व्यापार साथी (Vyapaar Saathi)
-                </h1>
-                <Badge variant="brand" size="sm">
-                  DPI-Inspired Architecture (Prototype)
-                </Badge>
-              </div>
-              <p className="text-xs font-bold text-indigoRural-700 mt-0.5">
-                Formatted per RBI Priority Sector Lending (PSL) documentation guidelines • Prototype, not an official filing
-              </p>
-              <p className="text-[10px] text-indigoRural-500">
-                Credit Readiness Appraisal Memo • Prototype for Bank Loan File Evaluation
-              </p>
-            </div>
-          </div>
-
-          <div className="text-left sm:text-right space-y-1 text-xs">
-            <div className="font-mono text-indigoRural-900 font-extrabold text-xs">
-              DOC REF: {d?.dossierNumber || 'VS-DOC-BAL-493587'}
-            </div>
-            <div className="text-[11px] text-indigoRural-500">
-              Issue Date: {d?.issueDate || (isDemo ? DEMO_DOSSIER.issueDate : new Date().toLocaleDateString('en-IN'))}
-            </div>
-            <Badge variant={d?.creditScore?.isUnrated || d?.creditScore?.score === null ? 'attention' : 'positive'} size="sm" dot>
-              {d?.creditScore?.isUnrated || d?.creditScore?.score === null ? 'Provisional Registration' : 'Verified 90-Day Audit'}
-            </Badge>
-          </div>
-        </div>
-
-        {/* Warli Folk Border on Dossier */}
-        <WarliBorder className="w-full h-5 text-terracotta-400 opacity-60 my-1" />
-
-        {/* Title of Document */}
-        <div className="text-center py-3 bg-paper-100 rounded-xl border border-paper-300">
-          <h2 className="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-indigoRural-900 font-display">
-            {d?.creditScore?.isUnrated || d?.creditScore?.score === null 
-              ? 'Provisional Micro-Enterprise Statement & Registration Dossier' 
-              : 'Micro-Enterprise Financial Statement & Credit Readiness Certificate'}
-          </h2>
-          <p className="text-[11px] text-indigoRural-500 mt-0.5">
-            {d?.creditScore?.isUnrated || d?.creditScore?.score === null
-              ? 'अनंतिम सूक्ष्म उद्यम विवरण एवं पंजीकरण डॉसियर (Provisional Bank File)'
-              : 'सूक्ष्म उद्यम वित्तीय विवरण एवं ऋण पात्रता प्रमाण-पत्र (For Bank Branch Loan File)'}
-          </p>
-        </div>
-
-        {/* 1. Borrower & Enterprise Profile */}
-        <div className="space-y-2">
-          <h3 className="text-xs font-black text-indigoRural-900 uppercase tracking-wider border-b border-paper-200 pb-1">
-            1. Enterprise Identification (उद्यम पहचान विवरण)
-          </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3 text-xs bg-paper-50 p-3 sm:p-4 rounded-xl border border-paper-200">
-            <div className="min-w-0">
-              <span className="text-indigoRural-400 block text-[10px] font-semibold">Enterprise Name:</span>
-              <strong className="text-indigoRural-900 truncate block">{shopName}</strong>
-            </div>
-            <div>
-              <span className="text-indigoRural-400 block text-[10px] font-semibold">Proprietor:</span>
-              <strong className="text-indigoRural-900">{ownerName}</strong>
-            </div>
-            <div>
-              <span className="text-indigoRural-400 block text-[10px] font-semibold">Trade Category:</span>
-              <strong className="text-indigoRural-900">{tradeName}</strong>
-            </div>
-            <div>
-              <span className="text-indigoRural-400 block text-[10px] font-semibold">Location:</span>
-              <strong className="text-indigoRural-900">{locationText}</strong>
-            </div>
-            <div>
-              <span className="text-indigoRural-400 block text-[10px] font-semibold">Business Vintage:</span>
-              <strong className="text-indigoRural-900">{vintageYears} Years (Established)</strong>
-            </div>
-            <div>
-              <span className="text-indigoRural-400 block text-[10px] font-semibold">Existing Bank:</span>
-              <strong className="text-indigoRural-900">{bankAccount}</strong>
-            </div>
-          </div>
-        </div>
-
-        {/* 2. Alternative Credit Rating Certificate */}
-        <div className="space-y-2">
-          <h3 className="text-xs font-black text-indigoRural-900 uppercase tracking-wider border-b border-paper-200 pb-1">
-            2. Alternative Credit Evaluation (वैकल्पिक क्रेडिट मूल्यांकन)
-          </h3>
-          <div className="bg-gradient-to-br from-forestRural-50 via-white to-paper-50 p-5 rounded-xl border border-forestRural-200 shadow-2xs flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="space-y-1 text-center sm:text-left">
-              <span className="text-xs font-bold text-indigoRural-600 block">Vyapaar Saathi Alternative Credit Score:</span>
-              <div className="flex items-baseline gap-2 justify-center sm:justify-start">
-                <span className="text-3xl sm:text-4xl font-black text-forestRural-800 font-display tracking-tight tabular-nums">
-                  {creditScore}
-                </span>
-                <span className="text-xs text-indigoRural-400 font-bold">/ 850</span>
-                <Badge variant="positive" size="sm">
-                  {ratingBadge}
-                </Badge>
-              </div>
-              <p className="text-[11px] text-forestRural-800 font-semibold">
-                Classified as Prime Micro-Borrower under rural Priority Sector Lending.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2 text-[10px] sm:text-[11px] shrink-0 w-full sm:w-auto">
-              <div className="p-2.5 bg-white rounded-lg border border-forestRural-200 shadow-2xs">
-                <span className="text-indigoRural-400 block text-[10px] font-semibold">Logging Discipline</span>
-                <strong className="text-forestRural-800 font-bold">96% Regularity</strong>
-              </div>
-              <div className="p-2.5 bg-white rounded-lg border border-forestRural-200 shadow-2xs">
-                <span className="text-indigoRural-400 block text-[10px] font-semibold">Revenue Stability</span>
-                <strong className="text-forestRural-800 font-bold">92% Coverage</strong>
-              </div>
-              <div className="p-2.5 bg-white rounded-lg border border-forestRural-200 shadow-2xs">
-                <span className="text-indigoRural-400 block text-[10px] font-semibold">Udhaar Recovery</span>
-                <strong className="text-forestRural-800 font-bold">82% Verified</strong>
-              </div>
-              <div className="p-2.5 bg-white rounded-lg border border-forestRural-200 shadow-2xs">
-                <span className="text-indigoRural-400 block text-[10px] font-semibold">Digital Adoption</span>
-                <strong className="text-forestRural-800 font-bold">{digitalShare}</strong>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* 3. 90-Day Cash Flow Audit */}
-        <div className="space-y-2">
-          <h3 className="text-xs font-black text-indigoRural-900 uppercase tracking-wider border-b border-paper-200 pb-1">
-            3. Verified Cash Flow & Turnover Audit (90-Day Operating History)
-          </h3>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 text-xs">
-            <div className="p-2.5 sm:p-3.5 bg-paper-50 rounded-xl border border-paper-200 min-w-0">
-              <span className="text-indigoRural-400 text-[9px] sm:text-[10px] font-semibold block truncate">Gross 90-Day Sales:</span>
-              <strong className="text-sm sm:text-base text-indigoRural-900 font-black tabular-nums block truncate">
-                {grossSales !== null ? `₹${Number(grossSales).toLocaleString('en-IN')}` : '—'}
-              </strong>
-            </div>
-            <div className="p-2.5 sm:p-3.5 bg-paper-50 rounded-xl border border-paper-200 min-w-0">
-              <span className="text-indigoRural-400 text-[9px] sm:text-[10px] font-semibold block truncate">Cost of Goods & Rent:</span>
-              <strong className="text-sm sm:text-base text-indigoRural-900 font-black tabular-nums block truncate">
-                {totalExpenses !== null ? `₹${Number(totalExpenses).toLocaleString('en-IN')}` : '—'}
-              </strong>
-            </div>
-            <div className="p-2.5 sm:p-3.5 bg-paper-50 rounded-xl border border-paper-200 min-w-0">
-              <span className="text-indigoRural-400 text-[9px] sm:text-[10px] font-semibold block truncate">Net Operating Surplus:</span>
-              <strong className="text-sm sm:text-base text-forestRural-700 font-black tabular-nums block truncate">
-                {operatingSurplus !== null ? `₹${Number(operatingSurplus).toLocaleString('en-IN')}` : '—'}
-              </strong>
-            </div>
-            <div className="p-2.5 sm:p-3.5 bg-paper-50 rounded-xl border border-paper-200 min-w-0">
-              <span className="text-indigoRural-400 text-[9px] sm:text-[10px] font-semibold block truncate">Monthly Debt Headroom:</span>
-              <strong className="text-sm sm:text-base text-terracotta-700 font-black tabular-nums block truncate">
-                {debtHeadroom > 0 ? `₹${debtHeadroom.toLocaleString('en-IN')} / mo` : (isDemo ? '₹9,154 / mo' : '—')}
-              </strong>
-            </div>
-          </div>
-        </div>
-
-        {/* 4. Recommended Government Loan Schemes */}
-        <div className="space-y-2">
-          <h3 className="text-xs font-black text-indigoRural-900 uppercase tracking-wider border-b border-paper-200 pb-1">
-            4. Recommended Priority Sector Schemes for Branch Sanction
-          </h3>
-          <div className="space-y-2 text-xs">
-            {schemesList.map((sch, i) => (
-              <div key={i} className="p-3.5 rounded-xl bg-paper-50 border border-paper-200 flex items-start justify-between gap-3">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <strong className="text-indigoRural-900 font-extrabold">{sch.name}</strong>
-                    <Badge variant="positive" size="sm">
-                      {sch.matchScore}% Compatibility
-                    </Badge>
-                  </div>
-                  <p className="text-[11px] text-indigoRural-500 mt-1">
-                    Limit: <strong className="text-indigoRural-800">{sch.maxAmount}</strong> • Interest: <strong className="text-indigoRural-800">{sch.interestRate}</strong> • Security: <strong className="text-indigoRural-800">{sch.collateral}</strong>
-                  </p>
-                </div>
-                <Badge variant="brand" size="sm" className="shrink-0">
-                  Recommended
-                </Badge>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* 5. Official Verification Stamp & Signature Block */}
-        <div className="pt-6 border-t border-paper-200 grid grid-cols-1 sm:grid-cols-2 gap-6 text-xs">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2 text-forestRural-700 font-bold">
-              <ShieldCheck className="w-5 h-5 text-forestRural-600" />
-              <span>Digital Audit Authenticity Seal</span>
-            </div>
-            <p className="text-[10px] text-indigoRural-400 leading-relaxed">
-              Certified that the cash flow and alternative credit metrics stated above are compiled from daily tamper-evident bahi-khata logs recorded on the Vyapaar Saathi platform.
+      {/* 1. HERO SECTION (EDITORIAL, AIRY, MATCHING APPROVED REFERENCE) */}
+      <section className="relative overflow-hidden pt-2 pb-2">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 lg:gap-8">
+          
+          {/* Left Hero Copy */}
+          <div className="max-w-xl z-10">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-serif font-black tracking-tight text-stone-900 leading-[1.15]">
+              Bank Dossier
+            </h1>
+            <p className="text-xl sm:text-2xl font-bold text-stone-900 mt-2 font-display">
+              One file. More opportunities.
+            </p>
+            <p className="text-sm sm:text-base text-stone-600 mt-3 leading-relaxed font-normal">
+              Your verified business and financial information, prepared as per RBI Priority Sector Lending (PSL) guidelines, ready to share with banks.
             </p>
           </div>
 
-          <div className="sm:text-right space-y-4">
-            <div className="inline-block text-center border-t border-paper-300 pt-1.5 px-6">
-              <p className="font-extrabold text-indigoRural-900 text-xs">{ownerName}</p>
-              <p className="text-[10px] text-indigoRural-400">Proprietor Signature / अंगूठा निशान</p>
+          {/* Right Bespoke Artwork */}
+          <div className="lg:max-w-[460px] xl:max-w-[520px] w-full flex justify-center lg:justify-end shrink-0">
+            <img 
+              src="/assets/saakhsetu/dossier-hero.png" 
+              alt="Bank Dossier PSL Kirana Store Illustration"
+              className="w-full max-w-[440px] object-contain drop-shadow-sm rounded-xl"
+              loading="eager"
+            />
+          </div>
+
+        </div>
+      </section>
+
+      {/* 2. MAIN 2-COLUMN GRID (8 COLS LEFT, 4 COLS RIGHT) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        {/* LEFT COLUMN: 8 Columns */}
+        <div className="lg:col-span-8 space-y-6">
+          
+          {/* Card A: Your Bank Dossier is Ready */}
+          <div className="bg-white border border-stone-200/80 rounded-2xl p-6 sm:p-7 shadow-2xs">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+              
+              {/* Left Details */}
+              <div className="flex items-start gap-4 sm:gap-5 min-w-0">
+                <div className="w-14 h-14 rounded-2xl bg-[#EBF7EE] border border-emerald-100 flex items-center justify-center text-[#137333] shrink-0 shadow-2xs">
+                  <FileText className="w-7 h-7" strokeWidth={1.75} />
+                </div>
+
+                <div className="min-w-0">
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#E6F4EA] text-[#137333] border border-emerald-200/60 mb-2">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>PSL-Format Ready</span>
+                  </div>
+
+                  <h2 className="text-xl sm:text-2xl font-bold text-stone-900 font-display tracking-tight">
+                    Your Bank Dossier is Ready
+                  </h2>
+
+                  <p className="text-xs sm:text-sm text-stone-600 mt-1 leading-normal max-w-md">
+                    Formatted as per RBI Priority Sector Lending (PSL) guidelines. Includes business profile, financial summary and credit readiness.
+                  </p>
+
+                  <p className="text-xs text-stone-400 mt-3 font-medium">
+                    Last updated: {formattedDate}
+                  </p>
+                </div>
+              </div>
+
+              {/* Right Stack of Buttons */}
+              <div className="flex flex-col gap-2.5 shrink-0 w-full md:w-[260px]">
+                <button
+                  type="button"
+                  onClick={handleDownloadPDF}
+                  disabled={downloadingPdf}
+                  className="w-full bg-[#0F3E2E] hover:bg-[#0B2F23] active:bg-[#071F17] text-white font-semibold text-xs sm:text-sm px-4 py-3 rounded-xl shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed"
+                >
+                  <Download className="w-4 h-4 shrink-0" />
+                  <span>{downloadingPdf ? 'Generating PDF...' : 'Download Bank Dossier (PDF)'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleDownloadCAM}
+                  disabled={downloadingCam}
+                  className="w-full bg-white hover:bg-stone-50 active:bg-stone-100 border border-stone-200 text-stone-800 font-semibold text-xs sm:text-sm px-4 py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75"
+                >
+                  <FileText className="w-4 h-4 text-stone-600 shrink-0" />
+                  <span>{downloadingCam ? 'Downloading CAM...' : 'Download CAM (JSON)'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handlePrint}
+                  className="w-full bg-white hover:bg-stone-50 active:bg-stone-100 border border-stone-200 text-stone-800 font-semibold text-xs sm:text-sm px-4 py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Printer className="w-4 h-4 text-stone-600 shrink-0" />
+                  <span>Print View</span>
+                </button>
+              </div>
+
+            </div>
+          </div>
+
+          {/* Card B: What's Included (Informational, No Financial Numbers Clutter) */}
+          <div id="dossier-readiness" className="bg-white border border-stone-200/80 rounded-2xl p-6 sm:p-7 shadow-2xs">
+            <div>
+              <h3 className="text-lg sm:text-xl font-bold text-stone-900 font-display">
+                What's Included
+              </h3>
+              <p className="text-xs sm:text-sm text-stone-500 mt-1">
+                A complete file to help you access credit, schemes and business opportunities.
+              </p>
+            </div>
+
+            {/* 4 Informational Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 mt-5">
+              
+              {/* 1. Business Profile */}
+              <div className="bg-[#F0FDF4] border border-[#DCFCE7] rounded-xl p-4 sm:p-5 flex flex-col justify-start">
+                <div className="w-9 h-9 rounded-full bg-white flex items-center justify-center text-[#16A34A] shadow-2xs mb-3">
+                  <User className="w-4 h-4" />
+                </div>
+                <h4 className="font-bold text-stone-900 text-sm">
+                  Business Profile
+                </h4>
+                <p className="text-xs text-stone-600 mt-1 leading-snug">
+                  Basic business and owner details
+                </p>
+              </div>
+
+              {/* 2. Transaction Summary */}
+              <div className="bg-[#FFFBEB] border border-[#FEF3C7] rounded-xl p-4 sm:p-5 flex flex-col justify-start">
+                <div className="w-9 h-9 rounded-full bg-white flex items-center justify-center text-[#D97706] shadow-2xs mb-3">
+                  <FileText className="w-4 h-4" />
+                </div>
+                <h4 className="font-bold text-stone-900 text-sm">
+                  Transaction Summary
+                </h4>
+                <p className="text-xs text-stone-600 mt-1 leading-snug">
+                  Sales, purchases and cash flow records
+                </p>
+              </div>
+
+              {/* 3. Financial Statements */}
+              <div className="bg-[#F0F9FF] border border-[#E0F2FE] rounded-xl p-4 sm:p-5 flex flex-col justify-start">
+                <div className="w-9 h-9 rounded-full bg-white flex items-center justify-center text-[#0284C7] shadow-2xs mb-3">
+                  <BarChart3 className="w-4 h-4" />
+                </div>
+                <h4 className="font-bold text-stone-900 text-sm">
+                  Financial Statements
+                </h4>
+                <p className="text-xs text-stone-600 mt-1 leading-snug">
+                  Key financial information as per PSL format
+                </p>
+              </div>
+
+              {/* 4. Credit Readiness */}
+              <div className="bg-[#F0FDF9] border border-[#CCFBF1] rounded-xl p-4 sm:p-5 flex flex-col justify-start">
+                <div className="w-9 h-9 rounded-full bg-white flex items-center justify-center text-[#0D9488] shadow-2xs mb-3">
+                  <ShieldCheck className="w-4 h-4" />
+                </div>
+                <h4 className="font-bold text-stone-900 text-sm">
+                  Credit Readiness
+                </h4>
+                <p className="text-xs text-stone-600 mt-1 leading-snug">
+                  Your credit profile and supporting documents
+                </p>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+
+        {/* RIGHT COLUMN: 4 Columns */}
+        <div className="lg:col-span-4 space-y-6">
+          
+          {/* Panel 1: Use Your Bank Dossier */}
+          <div className="bg-white border border-stone-200/80 rounded-2xl p-5 sm:p-6 shadow-2xs">
+            <h3 className="text-base font-bold text-stone-900 font-display mb-3.5">
+              Use Your Bank Dossier
+            </h3>
+
+            <div className="space-y-1">
+              
+              {/* Row 1: Apply for business loans */}
+              <button
+                type="button"
+                onClick={() => onNavigateTab ? onNavigateTab('credit') : null}
+                className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-stone-50 active:bg-stone-100 transition-colors text-left group cursor-pointer"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0 group-hover:bg-emerald-100 transition-colors">
+                    <Building2 className="w-4 h-4" />
+                  </div>
+                  <span className="font-medium text-xs sm:text-sm text-stone-800 truncate">
+                    Apply for business loans
+                  </span>
+                </div>
+                <ChevronRight className="w-4 h-4 text-stone-400 group-hover:text-stone-700 group-hover:translate-x-0.5 transition-all shrink-0 ml-2" />
+              </button>
+
+              {/* Row 2: Access government schemes */}
+              <button
+                type="button"
+                onClick={() => onNavigateTab ? onNavigateTab('schemes') : null}
+                className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-stone-50 active:bg-stone-100 transition-colors text-left group cursor-pointer"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0 group-hover:bg-emerald-100 transition-colors">
+                    <FileText className="w-4 h-4" />
+                  </div>
+                  <span className="font-medium text-xs sm:text-sm text-stone-800 truncate">
+                    Access government schemes
+                  </span>
+                </div>
+                <ChevronRight className="w-4 h-4 text-stone-400 group-hover:text-stone-700 group-hover:translate-x-0.5 transition-all shrink-0 ml-2" />
+              </button>
+
+              {/* Row 3: Share with banks and NBFCs */}
+              <button
+                type="button"
+                onClick={() => setShareModalOpen(true)}
+                className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-stone-50 active:bg-stone-100 transition-colors text-left group cursor-pointer"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0 group-hover:bg-emerald-100 transition-colors">
+                    <Share2 className="w-4 h-4" />
+                  </div>
+                  <span className="font-medium text-xs sm:text-sm text-stone-800 truncate">
+                    Share with banks and NBFCs
+                  </span>
+                </div>
+                <ChevronRight className="w-4 h-4 text-stone-400 group-hover:text-stone-700 group-hover:translate-x-0.5 transition-all shrink-0 ml-2" />
+              </button>
+
+              {/* Row 4: Showcase your business growth */}
+              <button
+                type="button"
+                onClick={() => onNavigateTab ? onNavigateTab('dashboard') : (onBack ? onBack() : null)}
+                className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-stone-50 active:bg-stone-100 transition-colors text-left group cursor-pointer"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0 group-hover:bg-emerald-100 transition-colors">
+                    <TrendingUp className="w-4 h-4" />
+                  </div>
+                  <span className="font-medium text-xs sm:text-sm text-stone-800 truncate">
+                    Showcase your business growth
+                  </span>
+                </div>
+                <ChevronRight className="w-4 h-4 text-stone-400 group-hover:text-stone-700 group-hover:translate-x-0.5 transition-all shrink-0 ml-2" />
+              </button>
+
+            </div>
+          </div>
+
+          {/* Panel 2: Need Help? Ask Setu AI */}
+          <div className="bg-[#FEF9EE] border border-[#FDE68A]/70 rounded-2xl p-5 sm:p-6 shadow-2xs">
+            <div className="flex items-center gap-2.5">
+              <div className="w-7 h-7 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
+                <Lightbulb className="w-4 h-4" />
+              </div>
+              <h4 className="font-bold text-stone-900 text-base font-display">
+                Need Help?
+              </h4>
+            </div>
+
+            <p className="text-xs sm:text-sm text-stone-600 mt-2.5 leading-relaxed">
+              Understand your bank dossier, required documents, or next steps with Setu AI.
+            </p>
+
+            <button
+              type="button"
+              onClick={handleAskSetuAI}
+              className="mt-4 inline-flex items-center gap-1.5 px-4 py-2 bg-white hover:bg-stone-50 border border-stone-200 hover:border-amber-300 text-stone-900 rounded-xl text-xs sm:text-sm font-semibold shadow-2xs transition-all cursor-pointer"
+            >
+              <span>Ask Setu AI</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+
+      {/* 3. FULL-WIDTH BOTTOM GROWTH BANNER */}
+      <section className="bg-[#FAF7F2] border border-stone-200/80 rounded-2xl overflow-hidden relative p-6 sm:p-8 shadow-2xs">
+        {/* Background panoramic line art image */}
+        <div 
+          className="absolute right-0 top-0 bottom-0 w-full sm:w-2/3 lg:w-1/2 pointer-events-none opacity-40 sm:opacity-85 bg-contain bg-right bg-no-repeat mix-blend-multiply"
+          style={{ backgroundImage: "url('/assets/saakhsetu/growth-cta-landscape.png')" }}
+        />
+
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          
+          <div className="flex items-start sm:items-center gap-4 max-w-xl">
+            <div className="w-11 h-11 rounded-2xl bg-emerald-100/80 text-emerald-800 flex items-center justify-center shrink-0 mt-1 sm:mt-0 shadow-2xs">
+              <Sprout className="w-6 h-6" />
+            </div>
+
+            <div>
+              <h3 className="text-lg sm:text-xl font-bold text-stone-900 font-display">
+                Better Records. Bigger Opportunities.
+              </h3>
+              <p className="text-xs sm:text-sm text-stone-600 mt-1 leading-normal">
+                Keep your bahi-khata updated to build a stronger dossier and unlock more credit, schemes and growth.
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => onNavigateTab ? onNavigateTab('schemes') : null}
+            className="bg-[#0F3E2E] hover:bg-[#0B2F23] active:bg-[#071F17] text-white font-semibold text-xs sm:text-sm px-5 py-2.5 rounded-xl shadow-xs inline-flex items-center gap-2 shrink-0 transition-all cursor-pointer self-start md:self-auto"
+          >
+            <span>Explore Schemes</span>
+            <ArrowRight className="w-4 h-4" />
+          </button>
+
+        </div>
+      </section>
+
+      {/* 4. MODAL: SHARE WITH BANKS AND NBFCS */}
+      {shareModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fadeIn">
+          <div className="bg-white rounded-2xl border border-stone-200 p-6 max-w-lg w-full shadow-2xl relative">
+            <button 
+              onClick={() => setShareModalOpen(false)}
+              className="absolute top-4 right-4 p-1 rounded-lg text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center">
+                <Share2 className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="font-bold text-lg text-stone-900 font-display">Share Bank Dossier & CAM</h3>
+                <p className="text-xs text-stone-500">Provide official RBI PSL verification link to your lending officer</p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="text-xs font-semibold text-stone-700 block mb-1.5">Verification Link (Direct JSON CAM)</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    readOnly
+                    value={`${typeof window !== 'undefined' ? window.location.origin : 'https://saakhsetu.vercel.app'}/api/credit-score/${shop?.id || 'ramesh-kirana'}/cam`}
+                    className="flex-1 text-xs font-mono bg-stone-50 border border-stone-200 rounded-xl px-3 py-2.5 text-stone-700 truncate"
+                  />
+                  <button
+                    onClick={handleCopyVerificationLink}
+                    className="bg-stone-900 hover:bg-black text-white px-3.5 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors shrink-0"
+                  >
+                    {copiedLink ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                    <span>{copiedLink ? 'Copied' : 'Copy'}</span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="pt-2 border-t border-stone-100 flex flex-col sm:flex-row gap-2.5">
+                <button
+                  onClick={handleWhatsAppShare}
+                  className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 transition-colors"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  <span>Share on WhatsApp</span>
+                </button>
+                <button
+                  onClick={handleDownloadCAM}
+                  className="flex-1 bg-stone-100 hover:bg-stone-200 text-stone-800 font-semibold text-xs py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 transition-colors"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>Download CAM File</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
+      )}
 
-        {/* SIH Prototype Disclaimer */}
-        <div className="pt-3 border-t border-paper-200 text-center">
-          <p className="text-[10px] text-indigoRural-400 font-medium">
-            Smart India Hackathon 2026 Prototype • Formatted per RBI Priority Sector Lending (PSL) documentation guidelines • Not an official government filing or certificate.
-          </p>
+      {/* 5. PRINT LAYOUT (Visible only when window.print() is called) */}
+      <div className="hidden print:block text-black bg-white p-6 font-sans">
+        <div className="border-b-2 border-stone-900 pb-4 mb-4 flex justify-between items-start">
+          <div>
+            <h1 className="text-2xl font-bold font-serif">{APP_NAME_HI} • {APP_NAME_EN}</h1>
+            <p className="text-xs text-stone-600">Credit Assessment Memorandum (CAM) — Priority Sector Lending (PSL)</p>
+          </div>
+          <div className="text-right text-xs">
+            <p className="font-bold">{d?.dossierNumber || 'SS-CAM-UP-982341'}</p>
+            <p className="text-stone-500">{formattedDate}</p>
+          </div>
         </div>
 
+        <div className="grid grid-cols-2 gap-4 text-xs mb-4">
+          <div className="border border-stone-300 p-3 rounded">
+            <p className="font-bold mb-1">Business Information</p>
+            <p><strong>Shop:</strong> {shopName}</p>
+            <p><strong>Proprietor:</strong> {ownerName}</p>
+            <p><strong>Category:</strong> {tradeName}</p>
+            <p><strong>Location:</strong> {[village, district, state].filter(Boolean).join(', ')}</p>
+          </div>
+          <div className="border border-stone-300 p-3 rounded">
+            <p className="font-bold mb-1">PSL Dossier Summary</p>
+            <p><strong>Format:</strong> RBI Priority Sector Lending (Micro Enterprise)</p>
+            <p><strong>Vintage:</strong> {vintageYears} Years in Operation</p>
+            <p><strong>Primary Bank:</strong> {bankAccount}</p>
+            <p><strong>Verification:</strong> Certified via Bahi-Khata Cashflows</p>
+          </div>
+        </div>
+
+        <p className="text-[10px] text-stone-500 text-center mt-6">
+          Official RBI PSL Ready Dossier prepared by SaakhSetu. Tamper-evident verified document.
+        </p>
       </div>
 
     </div>

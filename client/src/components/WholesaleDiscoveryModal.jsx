@@ -77,26 +77,26 @@ export function WholesaleDiscoveryModal({ isOpen, onClose }) {
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 animate-fadeIn">
       <div 
-        className="bg-paper-50 rounded-2xl max-w-4xl w-full border border-paper-300 shadow-2xl overflow-hidden flex flex-col max-h-[90vh] my-auto"
+        className="bg-stone-50 rounded-2xl max-w-4xl w-full border border-stone-300 shadow-2xl overflow-hidden flex flex-col max-h-[90vh] my-auto"
         role="dialog"
         aria-modal="true"
       >
         {/* Header */}
-        <div className="bg-white px-5 py-4 border-b border-paper-200 flex items-center justify-between">
+        <div className="bg-white px-5 py-4 border-b border-stone-200 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-forestRural-600 to-forestRural-700 text-white flex items-center justify-center shadow-xs">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-emerald-700 text-white flex items-center justify-center shadow-xs">
               <ShoppingBag className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-base sm:text-lg font-black text-indigoRural-900 font-display">
+                <h2 className="text-base sm:text-lg font-black text-stone-900 font-display">
                   {language === 'hi' ? 'ONDC थोक मूल्य खोज' : 'ONDC B2B Wholesale Price Discovery'}
                 </h2>
                 <Badge variant="brand" size="sm">
                   BECKN B2B PROTOCOL
                 </Badge>
               </div>
-              <p className="text-xs text-indigoRural-500">
+              <p className="text-xs text-stone-500">
                 {language === 'hi'
                   ? 'स्थानीय बिचौलियों के बजाय सीधे FPO व निर्माताओं से थोक भाव पाएं'
                   : 'Procure inventory directly from FPOs and manufacturers at transparent wholesale prices'}
@@ -105,7 +105,7 @@ export function WholesaleDiscoveryModal({ isOpen, onClose }) {
           </div>
           <button 
             onClick={onClose}
-            className="p-2 rounded-xl text-indigoRural-400 hover:text-indigoRural-700 hover:bg-paper-100 transition cursor-pointer"
+            className="p-2 rounded-xl text-stone-400 hover:text-stone-700 hover:bg-[#FAF8F5] transition cursor-pointer"
             aria-label="Close dialog"
           >
             <X className="w-5 h-5" />
@@ -113,29 +113,29 @@ export function WholesaleDiscoveryModal({ isOpen, onClose }) {
         </div>
 
         {/* Evaluation Mock Notice */}
-        <div className="bg-ochre-50 border-b border-ochre-200 px-5 py-2 flex items-center justify-between text-xs text-ochre-800">
+        <div className="bg-amber-50 border-b border-amber-200 px-5 py-2 flex items-center justify-between text-xs text-amber-800">
           <span className="flex items-center gap-1.5 font-semibold">
-            <Sparkles className="w-3.5 h-3.5 text-ochre-600 shrink-0" />
+            <Sparkles className="w-3.5 h-3.5 text-amber-600 shrink-0" />
             <span>ONDC Open Network for Digital Commerce B2B Sandbox Simulation (SIH Evaluator Ready)</span>
           </span>
           {summary && (
-            <span className="font-bold hidden sm:inline text-forestRural-700">
+            <span className="font-bold hidden sm:inline text-emerald-700">
               Avg Margin Gain: +{summary.avgSavingsPct}%
             </span>
           )}
         </div>
 
         {/* Filter & Search Bar */}
-        <div className="p-4 bg-white border-b border-paper-200 space-y-3">
+        <div className="p-4 bg-white border-b border-stone-200 space-y-3">
           <form onSubmit={handleSearch} className="flex gap-2">
             <div className="relative flex-1">
-              <Search className="w-4 h-4 text-indigoRural-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <Search className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={language === 'hi' ? 'सामग्री खोजें (जैसे आटा, चीनी, तेल, साबुन)...' : 'Search commodity (e.g., Atta, Sugar, Oil, Soap)...'}
-                className="w-full pl-10 pr-4 py-2 bg-paper-50 rounded-xl border border-paper-300 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-forestRural-500/20 focus:border-forestRural-500 text-indigoRural-900"
+                className="w-full pl-10 pr-4 py-2 bg-stone-50 rounded-xl border border-stone-300 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-stone-900"
               />
             </div>
             <Button type="submit" variant="forest" size="sm">
@@ -151,8 +151,8 @@ export function WholesaleDiscoveryModal({ isOpen, onClose }) {
                 onClick={() => setSelectedCategory(cat.id)}
                 className={`px-3 py-1.5 rounded-lg font-bold text-xs whitespace-nowrap transition cursor-pointer ${
                   selectedCategory === cat.id
-                    ? 'bg-forestRural-600 text-white shadow-xs'
-                    : 'bg-paper-100 text-indigoRural-600 hover:bg-paper-200'
+                    ? 'bg-emerald-600 text-white shadow-xs'
+                    : 'bg-[#FAF8F5] text-stone-600 hover:bg-stone-100'
                 }`}
               >
                 {cat.name}
@@ -164,11 +164,11 @@ export function WholesaleDiscoveryModal({ isOpen, onClose }) {
         {/* Content Area */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4">
           {loading ? (
-            <div className="py-16 text-center text-indigoRural-400 text-xs">
+            <div className="py-16 text-center text-stone-400 text-xs">
               {language === 'hi' ? 'ONDC नेटवर्क से थोक दरें खोजी जा रही हैं...' : 'Querying ONDC B2B seller nodes for real-time rates...'}
             </div>
           ) : catalog.length === 0 ? (
-            <div className="py-12 text-center text-indigoRural-400 text-xs">
+            <div className="py-12 text-center text-stone-400 text-xs">
               {language === 'hi' ? 'कोई सामग्री नहीं मिली।' : 'No commodities found matching your filter.'}
             </div>
           ) : (
@@ -181,16 +181,16 @@ export function WholesaleDiscoveryModal({ isOpen, onClose }) {
                     onClick={() => handleSelectItem(item)}
                     className={`p-4 rounded-xl border transition-all cursor-pointer bg-white ${
                       isSelected
-                        ? 'border-forestRural-500 ring-2 ring-forestRural-500/20 shadow-sm'
-                        : 'border-paper-200 hover:border-forestRural-300 hover:shadow-2xs'
+                        ? 'border-emerald-500 ring-2 ring-emerald-500/20 shadow-sm'
+                        : 'border-stone-200 hover:border-emerald-300 hover:shadow-2xs'
                     }`}
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div>
-                        <h4 className="font-extrabold text-xs sm:text-sm text-indigoRural-900 leading-tight">
+                        <h4 className="font-extrabold text-xs sm:text-sm text-stone-900 leading-tight">
                           {language === 'hi' && item.itemNameHindi ? item.itemNameHindi : item.itemName}
                         </h4>
-                        <span className="text-[11px] text-indigoRural-500 block mt-0.5">
+                        <span className="text-[11px] text-stone-500 block mt-0.5">
                           Unit: {item.unit} • Min Order: {item.minOrderQty}
                         </span>
                       </div>
@@ -200,33 +200,33 @@ export function WholesaleDiscoveryModal({ isOpen, onClose }) {
                     </div>
 
                     {/* Price Comparison Row */}
-                    <div className="grid grid-cols-2 gap-2 mt-3 pt-3 border-t border-paper-200 text-xs">
-                      <div className="bg-paper-50 p-2 rounded-lg">
-                        <span className="text-[10px] text-indigoRural-400 uppercase font-bold block">
+                    <div className="grid grid-cols-2 gap-2 mt-3 pt-3 border-t border-stone-200 text-xs">
+                      <div className="bg-stone-50 p-2 rounded-lg">
+                        <span className="text-[10px] text-stone-400 uppercase font-bold block">
                           Local Mandi Rate
                         </span>
-                        <span className="font-extrabold text-indigoRural-800 line-through">
+                        <span className="font-extrabold text-stone-800 line-through">
                           ₹{item.localMandiPrice.toLocaleString('en-IN')}
                         </span>
                       </div>
-                      <div className="bg-forestRural-50 p-2 rounded-lg border border-forestRural-200">
-                        <span className="text-[10px] text-forestRural-600 uppercase font-bold block">
+                      <div className="bg-emerald-50 p-2 rounded-lg border border-emerald-200">
+                        <span className="text-[10px] text-emerald-600 uppercase font-bold block">
                           ONDC B2B Price
                         </span>
-                        <span className="font-black text-forestRural-800 text-sm">
+                        <span className="font-black text-emerald-800 text-sm">
                           ₹{item.ondcB2BPrice.toLocaleString('en-IN')}
                         </span>
                       </div>
                     </div>
 
                     {/* FPO Supplier Footer */}
-                    <div className="flex items-center justify-between mt-3 text-[11px] text-indigoRural-500 pt-2 border-t border-paper-100">
+                    <div className="flex items-center justify-between mt-3 text-[11px] text-stone-500 pt-2 border-t border-stone-100">
                       <span className="flex items-center gap-1 truncate max-w-[200px]" title={item.supplierName}>
-                        <Building2 className="w-3 h-3 text-forestRural-600 shrink-0" />
+                        <Building2 className="w-3 h-3 text-emerald-600 shrink-0" />
                         <span className="truncate">{item.supplierName}</span>
                       </span>
-                      <span className="flex items-center gap-1 font-semibold text-indigoRural-600">
-                        <Truck className="w-3 h-3 text-indigoRural-400" />
+                      <span className="flex items-center gap-1 font-semibold text-stone-600">
+                        <Truck className="w-3 h-3 text-stone-400" />
                         <span>{item.deliveryDays}d delivery</span>
                       </span>
                     </div>
@@ -238,15 +238,15 @@ export function WholesaleDiscoveryModal({ isOpen, onClose }) {
 
           {/* Deep Compare Analysis Drawer (if item selected) */}
           {selectedItem && compareAnalysis && (
-            <div className="bg-white rounded-xl p-4 sm:p-5 border-2 border-forestRural-500/50 shadow-sm space-y-4 animate-fadeIn">
-              <div className="flex items-center justify-between border-b border-paper-200 pb-3">
+            <div className="bg-white rounded-xl p-4 sm:p-5 border-2 border-emerald-500/50 shadow-sm space-y-4 animate-fadeIn">
+              <div className="flex items-center justify-between border-b border-stone-200 pb-3">
                 <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-lg bg-forestRural-100 text-forestRural-700 flex items-center justify-center">
+                  <div className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center">
                     <Percent className="w-4 h-4" />
                   </div>
-                  <h4 className="text-sm font-black text-indigoRural-900 font-display">
+                  <h4 className="text-sm font-black text-stone-900 font-display">
                     {language === 'hi' ? 'वार्षिक बचत विश्लेषण: ' : 'Procurement Impact Analysis: '}
-                    <span className="text-forestRural-700">{selectedItem.itemName}</span>
+                    <span className="text-emerald-700">{selectedItem.itemName}</span>
                   </h4>
                 </div>
                 <Badge variant="positive" size="sm">
@@ -255,41 +255,41 @@ export function WholesaleDiscoveryModal({ isOpen, onClose }) {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-center">
-                <div className="bg-paper-50 p-3 rounded-xl border border-paper-200">
-                  <span className="text-[10px] font-bold text-indigoRural-400 uppercase block">
+                <div className="bg-stone-50 p-3 rounded-xl border border-stone-200">
+                  <span className="text-[10px] font-bold text-stone-400 uppercase block">
                     Typical Monthly Volume
                   </span>
-                  <span className="text-base font-black text-indigoRural-900">
+                  <span className="text-base font-black text-stone-900">
                     {compareAnalysis.procurementAnalysis?.sampleVolume}
                   </span>
                 </div>
 
-                <div className="bg-forestRural-50 p-3 rounded-xl border border-forestRural-200">
-                  <span className="text-[10px] font-bold text-forestRural-600 uppercase block">
+                <div className="bg-emerald-50 p-3 rounded-xl border border-emerald-200">
+                  <span className="text-[10px] font-bold text-emerald-600 uppercase block">
                     Monthly Profit Expansion
                   </span>
-                  <span className="text-lg font-black text-forestRural-800">
+                  <span className="text-lg font-black text-emerald-800">
                     +₹{compareAnalysis.procurementAnalysis?.monthlySavings?.toLocaleString('en-IN')}
                   </span>
                 </div>
 
-                <div className="bg-ochre-50 p-3 rounded-xl border border-ochre-200">
-                  <span className="text-[10px] font-bold text-ochre-700 uppercase block">
+                <div className="bg-amber-50 p-3 rounded-xl border border-amber-200">
+                  <span className="text-[10px] font-bold text-amber-700 uppercase block">
                     Annual Capital Retained
                   </span>
-                  <span className="text-lg font-black text-ochre-900">
+                  <span className="text-lg font-black text-amber-900">
                     ₹{compareAnalysis.procurementAnalysis?.annualizedSavings?.toLocaleString('en-IN')}
                   </span>
                 </div>
               </div>
 
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 text-xs text-indigoRural-600 bg-paper-50 p-3 rounded-xl border border-paper-200">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 text-xs text-stone-600 bg-stone-50 p-3 rounded-xl border border-stone-200">
                 <div className="space-y-0.5">
-                  <span className="font-bold text-indigoRural-900">Direct FPO Supplier:</span>
+                  <span className="font-bold text-stone-900">Direct FPO Supplier:</span>
                   <p>{compareAnalysis.supplierProfile?.name} • Rating: ★ {compareAnalysis.supplierProfile?.rating}</p>
                 </div>
                 <div className="space-y-0.5">
-                  <span className="font-bold text-indigoRural-900">Credit Terms:</span>
+                  <span className="font-bold text-stone-900">Credit Terms:</span>
                   <p>{compareAnalysis.supplierProfile?.paymentTerms}</p>
                 </div>
               </div>
@@ -298,8 +298,8 @@ export function WholesaleDiscoveryModal({ isOpen, onClose }) {
         </div>
 
         {/* Footer */}
-        <div className="bg-white px-5 py-3 border-t border-paper-200 flex items-center justify-between text-xs">
-          <span className="text-indigoRural-500 font-medium">
+        <div className="bg-white px-5 py-3 border-t border-stone-200 flex items-center justify-between text-xs">
+          <span className="text-stone-500 font-medium">
             Protocol: Beckn B2B Retail Gateway v2.0
           </span>
           <Button onClick={onClose} variant="dark" size="sm">

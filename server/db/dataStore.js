@@ -160,7 +160,7 @@ export const dataStore = {
   // 2. TRANSACTIONS
   // ==========================================
 
-  async getTransactions(shopId, { type = '', limit = 100 } = {}) {
+  async getTransactions(shopId, { type = '', limit = 100, customerId = '', customerName = '' } = {}) {
     if (!shopId) return [];
     const isMongo = await this.isPrimaryMongo();
     if (isMongo) {
@@ -168,6 +168,8 @@ export const dataStore = {
         const col = await getTransactionsCollection();
         const query = { shop_id: shopId };
         if (type) query.type = type;
+        if (customerId) query.customer_id = customerId;
+        if (customerName) query.customer_vendor_name = { $regex: new RegExp(`^${customerName}$`, 'i') };
         const docs = await col.find(query).sort({ date: -1, created_at: -1 }).limit(Number(limit) || 100).toArray();
         if (docs && docs.length > 0) return docs.map(cleanDoc);
       } catch (err) {
@@ -181,6 +183,14 @@ export const dataStore = {
       query += ' AND type = ?';
       params.push(type);
     }
+    if (customerId) {
+      query += ' AND customer_id = ?';
+      params.push(customerId);
+    }
+    if (customerName) {
+      query += ' AND LOWER(customer_vendor_name) = LOWER(?)';
+      params.push(customerName);
+    }
     query += ' ORDER BY date DESC, created_at DESC LIMIT ?';
     params.push(Number(limit) || 100);
 
@@ -189,7 +199,12 @@ export const dataStore = {
 
   async findTransactions(query = {}) {
     const shopId = query.shop_id || query.shopId;
-    return this.getTransactions(shopId, { type: query.type, limit: query.limit || 200 });
+    return this.getTransactions(shopId, { 
+      type: query.type, 
+      limit: query.limit || 200,
+      customerId: query.customerId || query.customer_id,
+      customerName: query.customerName
+    });
   },
 
   async getTransactionById(id) {
@@ -230,13 +245,14 @@ export const dataStore = {
     try {
       db.prepare(`
         INSERT OR REPLACE INTO transactions (
-          id, shop_id, date, type, amount, category, payment_mode, customer_vendor_name, customer_phone, notes, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          id, shop_id, date, type, amount, category, payment_mode, customer_vendor_name, customer_phone, customer_id, notes, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).run(
         txData.id, txData.shop_id || txData.shopId, txData.date, txData.type,
         txData.amount, txData.category, txData.payment_mode || txData.paymentMode || 'cash',
         txData.customer_vendor_name || txData.customerVendorName || '',
         txData.customer_phone || txData.customerPhone || '',
+        txData.customer_id || txData.customerId || null,
         txData.notes || '', txData.created_at || new Date().toISOString()
       );
     } catch (_) {}

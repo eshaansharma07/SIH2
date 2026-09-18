@@ -1,9 +1,9 @@
 {
-  "name": "vyapaar-saathi",
+  "name": "saakhsetu",
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Vyapaar Saathi — Hyper-Local Business Advisory and Financial Structuring Assistant for Rural Micro-Entrepreneurs",
+  "description": "SaakhSetu — Hyper-Local Business Advisory and Financial Structuring Assistant for Rural Micro-Entrepreneurs",
   "scripts": {
     "build": "cd client && npm install && npm run build",
     "start:server": "cd server && npm start",

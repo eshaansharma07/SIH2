@@ -107,6 +107,7 @@ db.exec(`
     payment_mode TEXT NOT NULL, -- 'cash', 'upi', 'khata'
     customer_vendor_name TEXT,
     customer_phone TEXT,
+    customer_id TEXT,
     notes TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(shop_id) REFERENCES shops(id)
@@ -176,6 +177,13 @@ try {
   db.exec('ALTER TABLE transactions ADD COLUMN customer_phone TEXT;');
 } catch (_) {
   // Column already exists
+}
+
+try {
+  db.exec('ALTER TABLE transactions ADD COLUMN customer_id TEXT;');
+  db.exec('CREATE INDEX IF NOT EXISTS idx_transactions_customer_id ON transactions(customer_id);');
+} catch (_) {
+  // Column / index already exists
 }
 
 try {

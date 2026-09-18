@@ -57,7 +57,7 @@ router.get('/generate', async (req, res) => {
     });
 
     const districtCode = (shop.district || 'IND').substring(0, 3).toUpperCase();
-    const dossierNumber = `VS-DOC-${districtCode}-${Date.now().toString().slice(-6)}`;
+    const dossierNumber = `SS-DOC-${districtCode}-${Date.now().toString().slice(-6)}`;
     const issueDate = new Date().toLocaleDateString('en-IN', {
       day: 'numeric',
       month: 'long',
@@ -70,7 +70,7 @@ router.get('/generate', async (req, res) => {
         dossierNumber,
         issueDate,
         validity: 'Valid for 90 days from date of issue',
-        issuingPlatform: 'Vyapaar Saathi — Alternative Credit & Financial Structuring Platform',
+        issuingPlatform: 'SaakhSetu — Alternative Credit & Financial Structuring Platform',
         pslClassification: 'Micro-Enterprise (Trading / Services) — Eligible for RBI PSL 7.5% Sub-target (FIDD.CO.Plan.BC.5/04.09.01/2020-21)',
         endorsedFor: 'Priority Sector Lending (PSL) Micro-Enterprise Credit Appraisal (Nayak Committee Cash-Flow Method)',
         shop: {

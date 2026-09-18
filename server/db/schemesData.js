@@ -42,11 +42,11 @@ export const SCHEMES = [
       "Voter ID / Driving License / Ration Card",
       "Passport size photographs (2 copies)",
       "Quotation / price estimate of goods or stock to be purchased",
-      "Vyapaar Saathi Bahi-Khata 90-Day Cash Flow Statement (Bankable Dossier)",
+      "SaakhSetu Bahi-Khata 90-Day Cash Flow Statement (Bankable Dossier)",
       "Savings or Jan Dhan Bank Account Passbook"
     ],
     applicationSteps: [
-      "Download your Vyapaar Saathi Verified Bahi-Khata Statement",
+      "Download your SaakhSetu Verified Bahi-Khata Statement",
       "Visit any nearby Gramin Bank, SBI, PNB, or local cooperative bank branch",
       "Request 1-page MUDRA Shishu loan form (no formal DPR needed)",
       "Submit with Aadhaar and stock quotation; appraisal timeline is 7–10 days"
@@ -81,7 +81,7 @@ export const SCHEMES = [
       let score = 70;
       if (isVintageOk) { score += 10; reasons.push(`Operating for ${shop.vintageYears} years proves vintage stability`); }
       if (isRevenueOk) { score += 10; reasons.push(`Monthly turnover (₹${shop.monthlyRevenue.toLocaleString('en-IN')}) covers Kishor debt servicing`); }
-      if (isCreditOk) { score += 8; reasons.push(`Vyapaar Saathi Alternative Credit Score (${creditScore}) indicates prime debt repayment`); }
+      if (isCreditOk) { score += 8; reasons.push(`SaakhSetu Alternative Credit Score (${creditScore}) indicates prime debt repayment`); }
 
       return {
         eligible: isVintageOk && (isRevenueOk || isCreditOk),
@@ -92,14 +92,14 @@ export const SCHEMES = [
     requiredDocuments: [
       "Proof of Identity (Aadhaar & PAN Card)",
       "Proof of Business Address (Udyam Registration / Gram Panchayat Certificate)",
-      "Last 6 months Bank Account Statement + Vyapaar Saathi Cash Flow Ledger",
+      "Last 6 months Bank Account Statement + SaakhSetu Cash Flow Ledger",
       "Quotation for equipment (e.g. deep freezer, solar inverter, shelving)",
       "1-year business cash flow projection (auto-compiled in Bank Dossier)"
     ],
     applicationSteps: [
       "Obtain free Udyam Registration number",
       "Collect quotation from authorized machinery / freezer dealer",
-      "Print Vyapaar Saathi Bankable Dossier with audited 90-day surplus",
+      "Print SaakhSetu Bankable Dossier with audited 90-day surplus",
       "Submit through Lead Bank branch or online via Udyami Mitra portal"
     ],
     officialPortal: "https://www.udyamimitra.in"
@@ -240,7 +240,7 @@ export const SCHEMES = [
       "Aadhaar & PAN Card",
       "Caste / Category Certificate (for 35% rural special category grant)",
       "Educational qualification proof (8th standard pass certificate for service projects over ₹5 Lakhs)",
-      "Detailed Project Report (DPR) — compiled via Vyapaar Saathi Dossier",
+      "Detailed Project Report (DPR) — compiled via SaakhSetu Dossier",
       "Rural area verification certificate from Gram Panchayat"
     ],
     applicationSteps: [
@@ -296,7 +296,7 @@ export const SCHEMES = [
       "Aadhaar, PAN & Caste Certificate (for SC/ST applicants)",
       "Proof of woman enterprise ownership (minimum 51% equity share)",
       "Comprehensive business project report with cash flow forecasts",
-      "Vyapaar Saathi audited financial transaction history"
+      "SaakhSetu audited financial transaction history"
     ],
     applicationSteps: [
       "Register on Stand-Up Mitra portal (standupmitra.in)",
@@ -389,7 +389,7 @@ export const SCHEMES = [
       "UP ODOP application form (DIIC portal submission)",
       "Aadhaar Card showing Uttar Pradesh domicile",
       "Gram Panchayat certificate confirming local craft or retail trading",
-      "Bank Account details & Vyapaar Saathi audited 90-day ledger"
+      "Bank Account details & SaakhSetu audited 90-day ledger"
     ],
     applicationSteps: [
       "Submit application on UP MSME DIIC portal (diupmsme.upsdc.gov.in)",
@@ -432,11 +432,11 @@ export const SCHEMES = [
     requiredDocuments: [
       "Aadhaar Card and Gram Panchayat residential proof",
       "Trade registration or Gram Pradhan letter of standing",
-      "Vyapaar Saathi 90-day cash turnover statement",
+      "SaakhSetu 90-day cash turnover statement",
       "Passbook of local Regional Rural Bank branch"
     ],
     applicationSteps: [
-      "Present Vyapaar Saathi Bankable Dossier at nearest Regional Rural Bank branch",
+      "Present SaakhSetu Bankable Dossier at nearest Regional Rural Bank branch",
       "Interview with Agricultural Field Officer (AFO) or Branch Manager",
       "Credit approved and sanctioned under RBI Priority Sector Lending guidelines"
     ],
@@ -477,7 +477,7 @@ export const SCHEMES = [
     },
     requiredDocuments: [
       "Aadhaar, PAN & Udyam Registration Certificate",
-      "Last 12 months Bank Statement & Vyapaar Saathi Verified Ledger",
+      "Last 12 months Bank Statement & SaakhSetu Verified Ledger",
       "Audited or self-certified balance sheet & sales summary",
       "Quotation for vehicle/machinery or lease agreement for new branch"
     ],
@@ -533,7 +533,7 @@ export const SCHEMES = [
       "Maharashtra Domicile Certificate or Aadhaar showing Maharashtra address",
       "PAN Card & Aadhaar Card of Proprietor",
       "Educational qualification certificate (minimum 7th / 10th pass)",
-      "Detailed Project Report (DPR) / Vyapaar Saathi 90-day Bankable Dossier",
+      "Detailed Project Report (DPR) / SaakhSetu 90-day Bankable Dossier",
       "Machinery or stock quotation from authorized suppliers"
     ],
     applicationSteps: [
@@ -588,7 +588,7 @@ export const SCHEMES = [
       "Proof of educational qualification (minimum 8th standard pass)",
       "Community certificate (for category benefits if applicable)",
       "Quotation for trade machinery or commercial stock inventory",
-      "Vyapaar Saathi 90-day Cash Flow Statement"
+      "SaakhSetu 90-day Cash Flow Statement"
     ],
     applicationSteps: [
       "Apply online at Tamil Nadu MSME portal (msmeonline.tn.gov.in/uyegp)",
@@ -642,7 +642,7 @@ export const SCHEMES = [
       "Aadhaar Card & PAN Card",
       "Caste / Category certificate (for enhanced rural subsidy tiers)",
       "Machinery or stock estimate quotation",
-      "Vyapaar Saathi Bahi-Khata record book"
+      "SaakhSetu Bahi-Khata record book"
     ],
     applicationSteps: [
       "Submit application on Gujarat Bankable Loan Portal (blp.gujarat.gov.in)",
@@ -693,8 +693,8 @@ export const SCHEMES = [
     },
     requiredDocuments: [
       "Rajasthan Jan Aadhaar Card / Aadhaar Card",
-      "Udyam Registration Certificate (or Vyapaar Saathi assisted Udyam number)",
-      "Bank Account details & 90-day Vyapaar Saathi Verified Bahi-Khata",
+      "Udyam Registration Certificate (or SaakhSetu assisted Udyam number)",
+      "Bank Account details & 90-day SaakhSetu Verified Bahi-Khata",
       "Quotation / invoice for working capital or shop enhancement goods"
     ],
     applicationSteps: [

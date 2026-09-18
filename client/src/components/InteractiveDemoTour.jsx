@@ -79,7 +79,7 @@ export function InteractiveDemoTour({
       badge: 'Step 3 / 7 • Low-Literacy Inclusion',
       titleEn: "Tactile Touch Logger (Bahi-Khata Dialer)",
       titleHi: "कम पढ़े-लिखे व्यापारियों के लिए स्पर्श आधारित बही-खाता",
-      narrationEn: "Vyapaar Saathi replaces complex accounting software with a tactile numeric keypad, big buttons, and 1-tap quick presets (+₹100, +₹500). Shopkeepers record daily sales in 15 seconds.",
+      narrationEn: "SaakhSetu replaces complex accounting software with a tactile numeric keypad, big buttons, and 1-tap quick presets (+₹100, +₹500). Shopkeepers record daily sales in 15 seconds.",
       narrationHi: "जटिल एकाउंटिंग सॉफ्टवेयर की जगह बड़े टच बटनों और +₹100, +₹500 वाले त्वरित बटनों से युक्त डायलर, जिससे ग्रामीण दुकानदार 15 सेकंड में रोज़ की बिक्री दर्ज कर लेते हैं।",
       highlightTextEn: "Interactive Tactile Pad • Cash / UPI Switch • Live Bahi-Khata Database Logging",
       highlightTextHi: "बड़े अंकों वाला टच पैड • नकद/यूपीआई चुनाव • रियल-टाइम डेटाबेस में सुरक्षित प्रविष्टि",
@@ -102,7 +102,7 @@ export function InteractiveDemoTour({
       highlightTextEn: "Score: 785 / 850 (Prime Bankable) • +15 Points Simulator Boost with Udhaar Recovery",
       highlightTextHi: "स्कोर: 785 / 850 (अति उत्कृष्ट) • उधार वसूली से +15 अंक का तुरंत लाइव सिम्युलेटर उछाल",
       icon: TrendingUp,
-      color: "from-indigo-600 to-forestRural-600",
+      color: "from-indigo-600 to-emerald-600",
       action: () => {
         setActiveTab('credit');
       }
@@ -113,12 +113,12 @@ export function InteractiveDemoTour({
       badge: 'Step 5 / 7 • Financial Structuring',
       titleEn: "10 Authentic GOI Schemes Auto-Matched",
       titleHi: "10 वास्तविक सरकारी योजनाओं का स्वचालित मिलान",
-      narrationEn: "Vyapaar Saathi auto-matches Ramesh with government schemes. Ramesh is 98% matched with PM MUDRA Shishu and Kishor (₹50,000 to ₹5,00,000 with 0% collateral) and UP ODOP.",
-      narrationHi: "व्यापार साथी रमेश जी के लिए 10 वास्तविक सरकारी योजनाओं का मिलान करता है। पीएम मुद्रा शिशु और किशोर योजना (0% बंधक पर ₹50,000 से ₹5 लाख) में 98% पात्रता।",
+      narrationEn: "SaakhSetu auto-matches Ramesh with government schemes. Ramesh is 98% matched with PM MUDRA Shishu and Kishor (₹50,000 to ₹5,00,000 with 0% collateral) and UP ODOP.",
+      narrationHi: "साख सेतु रमेश जी के लिए 10 वास्तविक सरकारी योजनाओं का मिलान करता है। पीएम मुद्रा शिशु और किशोर योजना (0% बंधक पर ₹50,000 से ₹5 लाख) में 98% पात्रता।",
       highlightTextEn: "Top Match: PM MUDRA Shishu & Kishor (Zero Collateral) • UP ODOP (93% Match)",
       highlightTextHi: "शीर्ष मिलान: पीएम मुद्रा योजना (बिना किसी गारंटी के) • यूपी ओडीओपी मार्जिन मनी (93% मैच)",
       icon: Landmark,
-      color: "from-forestRural-600 to-terracotta-600",
+      color: "from-emerald-600 to-terracotta-600",
       action: () => {
         setActiveTab('schemes');
       }
@@ -146,8 +146,8 @@ export function InteractiveDemoTour({
       badge: 'Step 7 / 7 • Bank Ready Dossier',
       titleEn: "1-Click Bank Credit Dossier for Aryavart Bank",
       titleHi: "आर्यावर्त ग्रामीण बैंक हेतु 1-क्लिक बैंक डॉसियर प्रमाण-पत्र",
-      narrationEn: "Vyapaar Saathi generates a verified Priority Sector Lending (PSL) statement with QR verification, audited cash flow figures, and official stamps that village branch managers accept on the spot.",
-      narrationHi: "व्यापार साथी प्राथमिकता प्राप्त क्षेत्र ऋण (PSL) हेतु एक सत्यापित वित्तीय प्रमाण-पत्र बनाता है, जिसे आर्यावर्त ग्रामीण बैंक प्रबंधक बिना सीए ऑडिट के तुरंत स्वीकार कर लेते हैं।",
+      narrationEn: "SaakhSetu generates a verified Priority Sector Lending (PSL) statement with QR verification, audited cash flow figures, and official stamps that village branch managers accept on the spot.",
+      narrationHi: "साख सेतु प्राथमिकता प्राप्त क्षेत्र ऋण (PSL) हेतु एक सत्यापित वित्तीय प्रमाण-पत्र बनाता है, जिसे आर्यावर्त ग्रामीण बैंक प्रबंधक बिना सीए ऑडिट के तुरंत स्वीकार कर लेते हैं।",
       highlightTextEn: "Printable Verified Dossier • QR Verification • 0% CA Audit Required for PSL Loans",
       highlightTextHi: "प्रिंट करने योग्य मुहरबंद पत्रक • क्यूआर कोड सत्यापन • बिना किसी सीए ऑडिट के तुरंत लोन स्वीकृति",
       icon: FileText,
@@ -242,29 +242,29 @@ export function InteractiveDemoTour({
 
   return (
     <div className="fixed inset-x-0 bottom-4 z-50 px-4 max-w-4xl mx-auto animate-slideUp">
-      <div className="bg-slate-900/90 text-white backdrop-blur-2xl rounded-3xl border border-white/10 shadow-2xl p-4 sm:p-5 relative overflow-hidden ring-1 ring-white/10">
+      <div className="bg-stone-950/95 text-paper backdrop-blur-2xl rounded-3xl border border-amber-400/30 shadow-2xl p-4 sm:p-5 relative overflow-hidden ring-1 ring-amber-400/20">
         
         {/* Animated Background Shimmer */}
-        <div className="absolute inset-0 bg-gradient-to-r from-indigo-900/20 via-slate-900/40 to-slate-900/80 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-r from-stone-950 via-stone-950/90 to-stone-950/95 pointer-events-none" />
 
         {/* Progress Bar Top */}
-        <div className="absolute top-0 left-0 right-0 h-1 bg-slate-800">
+        <div className="absolute top-0 left-0 right-0 h-1 bg-stone-950/60">
           <div 
-            className="h-full bg-gradient-to-r from-indigo-500 to-cyan-400 transition-all duration-100 ease-linear"
+            className="h-full bg-gradient-to-r from-amber-500 via-amber-400 to-emerald-400 transition-all duration-100 ease-linear"
             style={{ width: `${progress}%` }}
           />
         </div>
 
         {/* Header Strip */}
-        <div className="relative z-10 flex items-center justify-between gap-3 pb-2.5 border-b border-white/10">
+        <div className="relative z-10 flex items-center justify-between gap-3 pb-2.5 border-b border-amber-400/20">
           <div className="flex items-center gap-2.5">
             <span className="flex h-2.5 w-2.5 relative">
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-indigo-400"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
             </span>
-            <span className="text-[11px] font-bold tracking-tight text-indigo-300 bg-indigo-500/20 px-2.5 py-0.5 rounded-full border border-indigo-500/30">
+            <span className="text-[11px] font-bold tracking-tight text-amber-200 bg-amber-400/20 px-2.5 py-0.5 rounded-full border border-amber-400/30">
               {currentStepData.badge}
             </span>
-            <span className="hidden sm:inline text-xs text-slate-400 font-medium">
+            <span className="hidden sm:inline text-xs text-stone-200/60 font-medium">
               | Smart India Hackathon 2026 Prototype • PSL Documentation Format
             </span>
           </div>
@@ -276,8 +276,8 @@ export function InteractiveDemoTour({
               title={speechEnabled ? "Mute Voice Narration" : "Enable AI Voice Narration"}
               className={`p-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 border transition ${
                 speechEnabled 
-                  ? 'bg-indigo-600 text-white border-indigo-500 shadow-sm' 
-                  : 'bg-white/10 text-slate-300 border-white/10 hover:bg-white/20'
+                  ? 'bg-amber-500 text-stone-950 border-amber-400 shadow-sm' 
+                  : 'bg-white/10 text-stone-200 border-white/15 hover:bg-white/20'
               }`}
             >
               {speechEnabled ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
@@ -290,7 +290,7 @@ export function InteractiveDemoTour({
                 if (window.speechSynthesis) window.speechSynthesis.cancel();
                 onClose();
               }}
-              className="p-1.5 bg-white/10 hover:bg-white/20 rounded-xl text-slate-300 hover:text-white transition border border-white/10"
+              className="p-1.5 bg-paper/10 hover:bg-paper/20 rounded-xl text-stone-200 hover:text-paper transition border border-paper/15"
             >
               <X className="w-4 h-4" />
             </button>
@@ -300,19 +300,19 @@ export function InteractiveDemoTour({
         {/* Center Content & Dynamic Narration */}
         <div className="relative z-10 py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div className="flex items-start gap-3.5">
-            <div className="shrink-0 w-10 h-10 rounded-2xl bg-white/10 border border-white/10 flex items-center justify-center text-indigo-300 shadow-xs">
+            <div className="shrink-0 w-10 h-10 rounded-2xl bg-white/10 border border-amber-400/20 flex items-center justify-center text-amber-300 shadow-xs">
               <currentStepData.icon className="w-5 h-5" />
             </div>
 
             <div className="space-y-1">
-              <h3 className="text-sm sm:text-base font-bold text-white flex items-center gap-2 tracking-tight">
+              <h3 className="text-sm sm:text-base font-bold text-white flex items-center gap-2 tracking-tight font-serif">
                 <span>{language === 'hi' ? currentStepData.titleHi : currentStepData.titleEn}</span>
               </h3>
-              <p className="text-xs text-slate-300 leading-relaxed max-w-2xl font-normal">
+              <p className="text-xs text-stone-200/80 leading-relaxed max-w-2xl font-normal font-sans">
                 {language === 'hi' ? currentStepData.narrationHi : currentStepData.narrationEn}
               </p>
               <div className="pt-1">
-                <span className="inline-block text-[11px] font-semibold text-indigo-300 bg-indigo-500/20 px-2.5 py-0.5 rounded-full border border-indigo-500/30">
+                <span className="inline-block text-[11px] font-semibold text-amber-200 bg-amber-400/20 px-2.5 py-0.5 rounded-full border border-amber-400/30">
                   {language === 'hi' ? currentStepData.highlightTextHi : currentStepData.highlightTextEn}
                 </span>
               </div>
@@ -321,7 +321,7 @@ export function InteractiveDemoTour({
         </div>
 
         {/* Bottom Control Bar */}
-        <div className="relative z-10 pt-2.5 border-t border-white/10 flex items-center justify-between gap-2">
+        <div className="relative z-10 pt-2.5 border-t border-amber-400/20 flex items-center justify-between gap-2">
           
           {/* Step Selector Dots */}
           <div className="flex items-center gap-1.5">
@@ -331,49 +331,40 @@ export function InteractiveDemoTour({
                 onClick={() => setCurrentStep(idx)}
                 className={`h-1.5 rounded-full transition-all ${
                   idx === currentStep 
-                    ? 'w-6 bg-indigo-400' 
+                    ? 'w-6 bg-amber-500' 
                     : idx < currentStep 
-                    ? 'w-1.5 bg-slate-500' 
-                    : 'w-1.5 bg-slate-800'
+                    ? 'w-1.5 bg-amber-400/50' 
+                    : 'w-1.5 bg-white/20'
                 }`}
               />
             ))}
           </div>
 
-          {/* Navigation Buttons */}
+          {/* Action Buttons */}
           <div className="flex items-center gap-1.5">
-            
-            {/* Prev */}
+            <button
+              onClick={() => setIsPlaying(!isPlaying)}
+              className="p-1.5 bg-white/10 hover:bg-white/20 rounded-xl text-stone-200 transition border border-white/15 cursor-pointer"
+              title={isPlaying ? "Pause Tour" : "Play Tour"}
+            >
+              {isPlaying ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+            </button>
+
             <button
               onClick={handlePrev}
               disabled={currentStep === 0}
-              className={`p-2 rounded-xl border text-xs font-semibold transition ${
-                currentStep === 0 
-                  ? 'bg-white/5 text-slate-600 border-transparent cursor-not-allowed' 
-                  : 'bg-white/10 text-slate-200 border-white/10 hover:bg-white/20'
-              }`}
+              className="p-1.5 bg-white/10 hover:bg-white/20 disabled:opacity-30 rounded-xl text-stone-200 transition border border-white/15 cursor-pointer"
             >
               <SkipBack className="w-3.5 h-3.5" />
             </button>
 
-            {/* Play/Pause */}
-            <button
-              onClick={() => setIsPlaying(!isPlaying)}
-              className="px-3.5 py-1.5 bg-white hover:bg-slate-100 text-slate-900 rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-sm active:scale-95 transition"
-            >
-              {isPlaying ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5 fill-current" />}
-              <span>{isPlaying ? 'Pause' : 'Play'}</span>
-            </button>
-
-            {/* Next */}
             <button
               onClick={handleNext}
-              className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold text-xs flex items-center gap-1 shadow-sm active:scale-95 transition"
+              className="px-4 py-1.5 bg-amber-500 hover:bg-amber-600 text-stone-950 rounded-xl font-bold text-xs flex items-center gap-1 shadow-sm active:scale-95 transition"
             >
-              <span>{currentStep === demoSteps.length - 1 ? 'Restart' : 'Next'}</span>
-              <SkipForward className="w-3.5 h-3.5" />
+              <span>{currentStep === demoSteps.length - 1 ? 'Restart Tour' : 'Next Step'}</span>
+              <ArrowRight className="w-3.5 h-3.5" />
             </button>
-
           </div>
 
         </div>

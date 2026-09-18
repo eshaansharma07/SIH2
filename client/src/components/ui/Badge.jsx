@@ -19,22 +19,24 @@ export function Badge({
   className = ''
 }) {
   const variantStyles = {
-    brand: 'bg-terracotta-50/90 text-terracotta-800 border-terracotta-200',
-    positive: 'bg-forestRural-50/90 text-forestRural-800 border-forestRural-200',
-    attention: 'bg-ochre-50/90 text-ochre-800 border-ochre-200',
-    neutral: 'bg-paper-100 text-indigoRural-700 border-paper-300'
+    brand: 'bg-amber-50 text-amber-900 border-amber-200/80',
+    positive: 'bg-emerald-50 text-emerald-800 border-emerald-200/80',
+    attention: 'bg-amber-50 text-amber-800 border-amber-300/80',
+    neutral: 'bg-stone-100/80 text-stone-700 border-stone-200/80',
+    vermillion: 'bg-red-50 text-red-800 border-red-200/80'
   };
 
   const dotColors = {
-    brand: 'bg-terracotta-600',
-    positive: 'bg-forestRural-600',
-    attention: 'bg-ochre-600',
-    neutral: 'bg-indigoRural-500'
+    brand: 'bg-amber-600',
+    positive: 'bg-emerald-600',
+    attention: 'bg-amber-600',
+    neutral: 'bg-stone-400',
+    vermillion: 'bg-red-600'
   };
 
   const sizeStyles = {
-    sm: 'text-[10px] px-2 py-0.5 font-semibold rounded-md',
-    md: 'text-xs px-2.5 py-1 font-semibold rounded-md'
+    sm: 'text-[10px] px-2 py-0.5 font-bold rounded-full',
+    md: 'text-xs px-2.5 py-0.5 font-bold rounded-full'
   };
 
   return (

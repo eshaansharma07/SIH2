@@ -1,780 +1,530 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
-  TrendingUp, 
-  Sparkles, 
-  Calendar, 
-  ArrowRight, 
-  PlusCircle, 
+  ShoppingCart, 
   Users, 
-  ShoppingBag, 
-  CreditCard, 
-  ShieldCheck, 
+  Package, 
+  IndianRupee, 
+  FileText, 
+  BarChart3, 
+  ArrowRight, 
+  Calendar, 
+  Clock, 
   CheckCircle2, 
-  ArrowUpRight, 
-  Activity,
-  FileText,
-  Clock,
-  Check
+  X, 
+  Sparkles,
+  Star,
+  MessageSquare
 } from 'lucide-react';
-import { CreditGauge } from '../components/CreditGauge';
 import { useTranslation } from '../i18n/LanguageContext';
-import { WarliBorder } from '../components/WarliMotif';
-import { Card, Badge, SectionHeader, Button } from '../components/ui';
-import { AudioReadAloudButton } from '../components/AudioReadAloudButton';
-import { motion, useReducedMotion } from 'framer-motion';
+import { safeStorage } from '../utils/safeStorage';
+import { TricolorBrush } from '../components/TricolorBrush';
+import { SurveyChecklistIcon } from '../components/SurveyChecklistIcon';
 
 export function DashboardPage({ 
   shop, 
-  creditData, 
-  summaryData, 
-  cuesData, 
   onOpenKeypad, 
   onOpenWholesale,
-  onNavigateTab, 
-  onAskPrompt,
-  onStartDemoTour,
-  isDemoMode,
-  onSwitchToDemo,
-  onSwitchToRegister
+  onNavigateTab
 }) {
-  const { t, language } = useTranslation();
+  const { language } = useTranslation();
+  const [surveyOpen, setSurveyOpen] = useState(false);
+  const [surveyRating, setSurveyRating] = useState(5);
+  const [surveyFeature, setSurveyFeature] = useState('khata');
+  const [surveyFeedback, setSurveyFeedback] = useState('');
+  const [surveySubmitted, setSurveySubmitted] = useState(false);
 
-  // Pure real data binding - no fabricated default constants!
-  const metrics = {
-    totalIncome: summaryData?.totalIncome ?? creditData?.metrics?.totalIncome ?? null,
-    totalExpense: summaryData?.totalExpense ?? creditData?.metrics?.totalExpense ?? null,
-    netSurplus: summaryData?.netSurplus ?? creditData?.metrics?.netSurplus ?? null,
-    totalUdhaarPending: summaryData?.pendingUdhaar ?? creditData?.metrics?.totalUdhaarPending ?? null,
-    digitalSharePct: summaryData?.digitalSharePct ?? creditData?.metrics?.digitalSharePct ?? null,
-    loggedDaysCount: creditData?.metrics?.loggedDaysCount ?? summaryData?.activeDaysCount ?? summaryData?.activeDays ?? null
+  const shopOwner = shop?.owner_name || 'Ramesh Ji';
+  const currentDateFormatted = new Intl.DateTimeFormat('en-IN', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric'
+  }).format(new Date());
+
+  const handleBentoClick = (target, options = {}) => {
+    if (target === 'wholesale') {
+      onOpenWholesale?.();
+    } else if (target === 'udhaar') {
+      onNavigateTab?.('cashflow');
+      window.dispatchEvent(new CustomEvent('saakhsetu:switch-tab', { detail: { tab: 'udhaar' } }));
+    } else if (target === 'cashflow') {
+      onNavigateTab?.('cashflow');
+      if (options.filter) {
+        window.dispatchEvent(new CustomEvent('saakhsetu:filter-tx', { detail: { filter: options.filter } }));
+      }
+    } else {
+      onNavigateTab?.(target);
+    }
   };
 
-  const hasFinancialData = metrics.totalIncome !== null;
+  // External action listener from Top Navigation Mega-Menu
+  useEffect(() => {
+    const handleDashAction = (e) => {
+      const action = e.detail?.action;
+      if (action === 'activity') {
+        setTimeout(() => {
+          const el = document.getElementById('recent-activity');
+          if (el) el.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+      }
+    };
 
-  // Progressive Onboarding Checklist computation
-  const totalTxs = summaryData?.totalTransactions ?? (summaryData?.totalIncome > 0 ? 1 : 0);
-  const actDays = summaryData?.activeDays ?? summaryData?.activeDaysCount ?? (metrics.loggedDaysCount || 0);
+    try {
+      const pendingAction = sessionStorage.getItem('saakhsetu_dashboard_action');
+      if (pendingAction) {
+        sessionStorage.removeItem('saakhsetu_dashboard_action');
+        if (pendingAction === 'activity') {
+          setTimeout(() => {
+            const el = document.getElementById('recent-activity');
+            if (el) el.scrollIntoView({ behavior: 'smooth' });
+          }, 150);
+        }
+      }
+    } catch (_) {}
 
-  const step1Complete = true; // Shop registered
-  const step2Complete = totalTxs >= 1; // First sale logged
-  const step3Complete = actDays >= 3; // 3 active days
-  const step4Complete = (totalTxs >= 5 && actDays >= 3) || (creditData && !creditData.isUnrated && creditData.totalScore !== null);
-  const step5Complete = Boolean(creditData && creditData.totalScore && creditData.totalScore >= 600);
+    window.addEventListener('saakhsetu:dashboard-action', handleDashAction);
+    return () => window.removeEventListener('saakhsetu:dashboard-action', handleDashAction);
+  }, []);
 
-  const checklistSteps = [
+  const handleSurveySubmit = (e) => {
+    e.preventDefault();
+    try {
+      safeStorage.setJSON('saakhsetu_merchant_feedback', {
+        rating: surveyRating,
+        feature: surveyFeature,
+        feedback: surveyFeedback,
+        submittedAt: new Date().toISOString()
+      });
+    } catch (_) {}
+    setSurveySubmitted(true);
+    setTimeout(() => {
+      setSurveySubmitted(false);
+      setSurveyOpen(false);
+    }, 2200);
+  };
+
+  const bentoCards = [
     {
-      id: 'profile',
-      num: 1,
-      title: language === 'hi' ? 'उद्यम प्रोफ़ाइल' : 'Store Profile',
-      desc: language === 'hi' ? 'पंजीकरण पूर्ण ✓' : 'Enterprise registered ✓',
-      completed: step1Complete,
-      active: false
+      id: 'sales',
+      title: language === 'hi' ? 'बिक्री' : 'Sales',
+      description: language === 'hi' ? 'अपनी बिक्री रिकॉर्ड देखें और प्रबंधित करें' : 'View and manage your sales records',
+      icon: ShoppingCart,
+      iconBg: 'bg-[#E8F5E9] text-[#1B5E20] border-[#C8E6C9]',
+      action: () => handleBentoClick('cashflow', { filter: 'income' })
     },
     {
-      id: 'first_tx',
-      num: 2,
-      title: language === 'hi' ? 'पहली बिक्री दर्ज करें' : 'Log First Sale',
-      desc: language === 'hi' ? 'काउंटर लेन-देन जोड़ें' : 'Record first sale',
-      completed: step2Complete,
-      active: !step2Complete,
-      progressText: `${Math.min(1, totalTxs)}/1`,
-      action: onOpenKeypad,
-      actionText: language === 'hi' ? '+ बिक्री दर्ज करें' : '+ Record Sale'
+      id: 'customers',
+      title: language === 'hi' ? 'ग्राहक' : 'Customers',
+      description: language === 'hi' ? 'ग्राहक खाते और उधार प्रबंधित करें' : 'Manage customer accounts and udhaar',
+      icon: Users,
+      iconBg: 'bg-[#FFF3E0] text-[#E65100] border-[#FFE0B2]',
+      action: () => handleBentoClick('udhaar')
     },
     {
-      id: 'three_days',
-      num: 3,
-      title: language === 'hi' ? '3 सक्रिय दिन' : '3 Active Days',
-      desc: language === 'hi' ? 'दैनिक बही-खाता नियमितता' : 'Bahi-khata regularity',
-      completed: step3Complete,
-      active: step2Complete && !step3Complete,
-      progressText: `${Math.min(3, actDays)}/3`,
-      action: onOpenKeypad,
-      actionText: language === 'hi' ? '+ आज का खाता' : '+ Log Today'
+      id: 'inventory',
+      title: language === 'hi' ? 'स्टॉक' : 'Inventory',
+      description: language === 'hi' ? 'स्टॉक ट्रैक करें और कम-स्टॉक अलर्ट प्राप्त करें' : 'Track stock and get low-stock alerts',
+      icon: Package,
+      iconBg: 'bg-[#E1F5FE] text-[#0277BD] border-[#B3E5FC]',
+      action: () => handleBentoClick('wholesale')
     },
     {
-      id: 'score_unlock',
-      num: 4,
-      title: language === 'hi' ? 'क्रेडिट स्कोर अनलॉक' : 'Unlock Score',
-      desc: language === 'hi' ? '5 लेनदेन एवं 3 दिन' : 'Min 5 sales & 3 days',
-      completed: step4Complete,
-      active: step3Complete && !step4Complete,
-      progressText: `${Math.min(5, totalTxs)}/5`,
-      action: () => onNavigateTab('credit'),
-      actionText: language === 'hi' ? 'स्कोर देखें' : 'View Score'
+      id: 'udhaar',
+      title: language === 'hi' ? 'उधार' : 'Udhaar',
+      description: language === 'hi' ? 'लंबित और वसूल किए गए भुगतान प्रबंधित करें' : 'Manage pending and recovered payments',
+      icon: IndianRupee,
+      iconBg: 'bg-[#FBE9E7] text-[#D84315] border-[#FFCCBC]',
+      action: () => handleBentoClick('udhaar')
     },
     {
-      id: 'schemes',
-      num: 5,
-      title: language === 'hi' ? 'मुद्रा / सरकारी योजनाएं' : 'Match Schemes',
-      desc: language === 'hi' ? 'ऋण सब्सिडी पात्रता' : 'Statutory loan match',
-      completed: step5Complete,
-      active: step4Complete && !step5Complete,
-      progressText: step5Complete ? 'Matched' : 'Locked',
-      action: () => onNavigateTab('schemes'),
-      actionText: language === 'hi' ? 'योजनाएं खोजें' : 'Schemes'
+      id: 'purchases',
+      title: language === 'hi' ? 'खरीद' : 'Purchases',
+      description: language === 'hi' ? 'अपने खरीद रिकॉर्ड देखें' : 'View your purchase records',
+      icon: FileText,
+      iconBg: 'bg-[#EDE7F6] text-[#4527A0] border-[#D1C4E9]',
+      action: () => handleBentoClick('cashflow', { filter: 'expense' })
+    },
+    {
+      id: 'expenses',
+      title: language === 'hi' ? 'खर्च' : 'Expenses',
+      description: language === 'hi' ? 'अपने व्यावसायिक खर्च ट्रैक करें' : 'Track your business expenses',
+      icon: BarChart3,
+      iconBg: 'bg-[#E0F2F1] text-[#00695C] border-[#B2DFDB]',
+      action: () => handleBentoClick('cashflow', { filter: 'expense' })
     }
   ];
-
-  const stepCountCompleted = [step1Complete, step2Complete, step3Complete, step4Complete, step5Complete].filter(Boolean).length;
-
-  // Computed ratios from real numbers
-  const operatingMargin = (metrics.totalIncome && metrics.totalIncome > 0 && metrics.netSurplus !== null)
-    ? ((metrics.netSurplus / metrics.totalIncome) * 100).toFixed(1)
-    : null;
-
-  const expenseRatio = (metrics.totalIncome && metrics.totalIncome > 0 && metrics.totalExpense !== null)
-    ? ((metrics.totalExpense / metrics.totalIncome) * 100).toFixed(1)
-    : null;
-
-  const digitalPct = metrics.digitalSharePct ?? (metrics.totalIncome && summaryData?.upiIncome ? Math.round((summaryData.upiIncome / metrics.totalIncome) * 100) : null);
-  const cashPct = digitalPct !== null ? Math.max(0, 100 - digitalPct) : null;
-
-  const riskPct = (metrics.totalIncome && metrics.totalIncome > 0 && metrics.totalUdhaarPending !== null)
-    ? ((metrics.totalUdhaarPending / metrics.totalIncome) * 100).toFixed(1)
-    : null;
-
-  const sampleQuestions = [
-    { text: "दिवाली के लिए तेल और चीनी का कितना स्टॉक लूँ?", textEn: "How much stock of oil & sugar for Diwali?", topic: "festival_stock" },
-    { text: "ग्राहक उधार कैसे नियंत्रित करें?", textEn: "How do I manage customer udhaar?", topic: "udhaar_management" },
-    { text: "डीप-फ्रीज़र के लिए कौन सा मुद्रा लोन मिलेगा?", textEn: "Which MUDRA loan fits for a deep freezer?", topic: "loan_freezer" },
-    { text: "क्रेडिट स्कोर 750+ कैसे करें?", textEn: "How to raise credit score above 750?", topic: "credit_boost" }
-  ];
-
-  const festivalList = cuesData?.festivalCues || [
-    {
-      id: "navratri-dussehra",
-      festival: "Sharad Navratri & Dussehra",
-      festivalHi: "शारदीय नवरात्रि एवं दशहरा",
-      timing: "Oct 11 – Oct 20",
-      timingHi: "11 अक्तूबर – 20 अक्तूबर",
-      daysRemaining: 37,
-      demandSurge: "+38%",
-      priorityItems: "Mustard oil, Desi ghee, Sabudana, Pooja items",
-      priorityItemsHi: "सरसों तेल, देशी घी, साबूदाना, पूजा सामग्री",
-      verifiedByGoogleCalendar: true
-    },
-    {
-      id: "diwali-dhanteras",
-      festival: "Dhanteras & Diwali",
-      festivalHi: "धनतेरस एवं दीपावली",
-      timing: "Nov 6 – Nov 11",
-      timingHi: "6 नवंबर – 11 नवंबर",
-      daysRemaining: 63,
-      demandSurge: "+48%",
-      priorityItems: "Sugar, Besan, Edible oil, Dry fruits",
-      priorityItemsHi: "चीनी, बेसन, रिफाइंड तेल, मेवा गिफ्ट पैक",
-      verifiedByGoogleCalendar: true
-    },
-    {
-      id: "chhath-puja",
-      festival: "Chhath Puja Mahaparv",
-      festivalHi: "छठ पूजा महापर्व",
-      timing: "Nov 15",
-      timingHi: "15 नवंबर",
-      daysRemaining: 72,
-      demandSurge: "+42%",
-      priorityItems: "Thekua flour, Desi Gur, Ghee, Soop",
-      priorityItemsHi: "ठेकुआ आटा, शुद्ध गुड़, घी, बांस का सूप",
-      verifiedByGoogleCalendar: true
-    },
-    {
-      id: "kharif-harvest",
-      festival: "Kharif Paddy Mandi Payouts",
-      festivalHi: "खरीफ धान मंडी भुगतान",
-      timing: "Mid-to-Late November",
-      timingHi: "मध्य-से-उत्तर नवंबर",
-      daysRemaining: 75,
-      demandSurge: "+28%",
-      priorityItems: "Bulk 50kg bags, Premium tea, Detergents",
-      priorityItemsHi: "थोक 50kg अनाज बोरे, प्रीमियम चाय पत्ती",
-      verifiedByGoogleCalendar: true
-    }
-  ];
-
-  // Dynamic pillars from creditData
-  const factors = creditData?.factors || [];
-
-  const udyamLabel = shop?.is_udyam_verified ? 'UDYAM VERIFIED (Mock Gateway)' : 'UDYAM ALIGNED MSME (DEMO)';
-  const udyamNumber = shop?.udyam_number || (shop?.id ? `UDYAM-${(shop.state || 'IN').substring(0, 2).toUpperCase()}-0092478` : 'UDYAM-DEMO');
-  const vintageLabel = shop?.vintage_years ? `Vintage: ${Math.round(shop.vintage_years * 12)} Months (${shop.vintage_years}y)` : 'Vintage: —';
-  const pslLabel = creditData?.totalScore && creditData.totalScore >= 750 ? 'Internal PSL-Format Tier: A (Self-Assessed)' : 'Demo PSL-Format Assessment';
 
   return (
-    <div className="space-y-4 sm:space-y-5 animate-fadeIn pb-16 lg:pb-8">
+    <div className="w-full space-y-6 sm:space-y-8 animate-in fade-in duration-300">
+      
+      {/* 1. HERO SECTION (Editorial Rural Composition) */}
+      <section className="w-full relative rounded-3xl bg-[#FAF7F2] border border-[#EFE9DF] p-6 sm:p-8 lg:p-10 overflow-hidden shadow-2xs">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+          
+          {/* Left Hero Typography */}
+          <div className="lg:col-span-5 space-y-3 z-10">
+            <span className="text-[11px] font-bold uppercase tracking-widest text-stone-500 block">
+              {language === 'hi' ? 'शुभ प्रभात,' : 'GOOD MORNING,'}
+            </span>
+            
+            <h1 className="font-serif font-black text-3xl sm:text-4xl xl:text-5xl text-stone-900 tracking-tight leading-none">
+              {shopOwner}!
+            </h1>
 
-      {/* Persistent Demo Data Badge */}
-      {isDemoMode && (
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 sm:gap-3 bg-ochre-50 border border-ochre-300 rounded-xl px-3.5 py-2 text-xs">
-          <div className="flex items-center gap-2 font-bold text-ochre-800 text-[11px] sm:text-xs min-w-0">
-            <Sparkles className="w-4 h-4 text-ochre-600 shrink-0" />
-            <span className="truncate">DEMO DATA • Ramesh Kirana <span className="hidden xs:inline text-ochre-700 font-medium">(SIH Evaluator Mode)</span></span>
+            <p className="font-sans font-bold text-stone-800 text-sm sm:text-base leading-snug pt-1">
+              {language === 'hi' 
+                ? 'अपने व्यापार को व्यवस्थित रखें, एक समय में एक कदम।' 
+                : 'Keep your business organized, one step at a time.'
+              }
+            </p>
+
+            <p className="text-stone-600 text-xs sm:text-sm leading-relaxed max-w-sm">
+              {language === 'hi'
+                ? 'अपने लेन-देन ट्रैक करें, अपने ग्राहकों का प्रबंधन करें, सरकारी योजनाओं को जानें और साख सेतु के साथ एक मजबूत कल बनाएं।'
+                : 'Track your transactions, manage your customers, explore government schemes, and build a stronger tomorrow with SaakhSetu.'
+              }
+            </p>
+
+            {/* Primary Single CTA: Record Sale */}
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={onOpenKeypad}
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#0F3E2E] hover:bg-[#165640] text-white font-bold text-xs sm:text-sm shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer transform hover:-translate-y-0.5 active:translate-y-0"
+              >
+                <span>{language === 'hi' ? 'बिक्री दर्ज करें' : 'Record Sale'}</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
           </div>
-          {onSwitchToRegister && (
-            <button onClick={onSwitchToRegister} className="text-ochre-700 hover:text-ochre-900 font-bold underline underline-offset-2 cursor-pointer text-[11px] sm:text-xs shrink-0 self-end sm:self-auto">
-              {language === 'hi' ? 'असली पंजीकरण करें' : 'Test Real Registration'}
-            </button>
-          )}
-        </div>
-      )}
 
-      {/* Progressive Onboarding Checklist (visible for non-demo real users) */}
-      {!isDemoMode && !step5Complete && (
-        <Card elevation={1} padding="md" className="space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <div className="p-1.5 rounded-xl bg-forestRural-50 border border-forestRural-200 text-forestRural-700 shadow-2xs">
-                <Activity className="w-4 h-4" />
-              </div>
-              <div>
-                <h3 className="text-sm font-black text-indigoRural-900 font-display">
-                  {language === 'hi' ? 'ऑनबोर्डिंग चेकलिस्ट' : 'Onboarding Checklist'}
-                </h3>
-                <p className="text-[11px] text-indigoRural-500 font-medium">{stepCountCompleted}/5 {language === 'hi' ? 'पूर्ण' : 'complete'}</p>
+          {/* Right Hero Visual & Handwritten Art */}
+          <div className="lg:col-span-7 relative flex items-center justify-center lg:justify-end select-none">
+            <div className="relative w-full max-w-[580px] rounded-2xl bg-[#FAF7F2] border border-[#EBE4D8] overflow-hidden shadow-2xs">
+              <img 
+                src="/assets/saakhsetu/overview-hero.png" 
+                alt="Ramesh Kirana Store in Rural Bharat" 
+                className="w-full h-auto object-contain select-none pointer-events-none"
+              />
+              {/* Authentic Motivational Calligraphic Strip */}
+              <div className="px-4 py-2.5 bg-[#FAF7F2]/95 border-t border-[#EBE4D8] flex items-center justify-between flex-wrap gap-2">
+                <span className="font-serif italic font-bold text-xs sm:text-sm text-[#0F3E2E] tracking-wide">
+                  "छोटे व्यापारी, बड़ी सोच रखते हैं।"
+                </span>
+                <TricolorBrush className="w-20 h-2.5 shrink-0" />
               </div>
             </div>
-            {onSwitchToDemo && (
-              <button onClick={onSwitchToDemo} className="text-[11px] text-indigoRural-500 hover:text-terracotta-700 font-bold underline underline-offset-2 cursor-pointer transition-colors">
-                {language === 'hi' ? 'जज डेमो देखें' : 'View Judge Demo'}
-              </button>
-            )}
           </div>
 
-          {/* Smooth Animated Progress Bar */}
-          <div className="w-full h-2 bg-paper-200 rounded-full overflow-hidden p-0.5 border border-paper-300">
-            <motion.div 
-              className="h-full bg-gradient-to-r from-forestRural-500 to-forestRural-600 rounded-full shadow-2xs" 
-              initial={{ width: 0 }}
-              animate={{ width: `${(stepCountCompleted / 5) * 100}%` }}
-              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-            />
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-5 gap-2">
-            {checklistSteps.map((step) => (
-              <motion.div 
-                key={step.id} 
-                whileHover={{ y: -2, transition: { duration: 0.15 } }}
-                className={`p-2.5 rounded-xl border text-center space-y-1 transition-all ${
-                  step.completed 
-                    ? 'bg-forestRural-50/70 border-forestRural-200 shadow-2xs' 
-                    : step.active 
-                    ? 'bg-white border-terracotta-400 shadow-elevation-1 ring-1 ring-terracotta-500/20' 
-                    : 'bg-paper-50/60 border-paper-200 opacity-65'
-                }`}
-              >
-                <div className={`w-5 h-5 mx-auto rounded-full flex items-center justify-center text-[10px] font-black ${
-                  step.completed ? 'bg-forestRural-600 text-white shadow-2xs' : step.active ? 'bg-terracotta-600 text-white shadow-2xs' : 'bg-paper-300 text-indigoRural-500'
-                }`}>
-                  {step.completed ? (
-                    <motion.span 
-                      initial={{ scale: 0 }} 
-                      animate={{ scale: 1 }} 
-                      transition={{ type: 'spring', stiffness: 500, damping: 20 }}
-                    >
-                      <Check className="w-3 h-3" />
-                    </motion.span>
-                  ) : step.num}
-                </div>
-                <p className="text-[10px] font-bold text-indigoRural-900 leading-tight">{step.title}</p>
-                <p className="text-[9px] text-indigoRural-500 leading-snug">{step.desc}</p>
-                {step.active && step.action && (
-                  <button onClick={step.action} className="mt-0.5 text-[9px] font-bold text-terracotta-700 hover:text-terracotta-900 underline underline-offset-2 cursor-pointer transition-colors">
-                    {step.actionText}
-                  </button>
-                )}
-              </motion.div>
-            ))}
-          </div>
-        </Card>
-      )}
-      
-      {/* 1. Merchant Executive Card (Warli + Terracotta Identity) */}
-      <Card variant="hero" padding="md" className="space-y-3.5 sm:space-y-4">
-        
-        {/* Tri-color Accent Bar */}
-        <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-terracotta-500 via-paper-300 to-forestRural-600" />
-
-        {/* Verification Credentials Strip */}
-        <div className="flex flex-wrap items-center justify-between gap-2 pb-2.5 sm:pb-3 border-b border-paper-200 text-xs">
-          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap min-w-0">
-            <Badge variant={shop?.is_udyam_verified ? 'positive' : 'neutral'} size="sm" dot className="text-[10px] sm:text-xs">
-              <span>{udyamLabel}</span>
-            </Badge>
-            <span className="text-paper-400 hidden sm:inline">•</span>
-            <span className="font-mono text-[10px] sm:text-[11px] text-indigoRural-600 font-bold tracking-wider">
-              {udyamNumber}
-            </span>
-            <span className="text-paper-400 hidden sm:inline">•</span>
-            <span className="text-indigoRural-600 text-[10px] sm:text-[11px] font-semibold">
-              {vintageLabel}
-            </span>
-          </div>
-
-          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-            <Badge variant="brand" size="sm" className="text-[10px] sm:text-xs">
-              <ShieldCheck className="w-3.5 h-3.5 text-terracotta-600 mr-1" />
-              <span>{pslLabel}</span>
-            </Badge>
-            <Badge variant="neutral" size="sm" className="text-[10px] sm:text-xs">
-              DPI-Inspired Design (Prototype)
-            </Badge>
-          </div>
         </div>
+      </section>
 
-        {/* Core Hero Body */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 lg:gap-6">
-          <div className="space-y-2 max-w-2xl min-w-0">
-            <div className="space-y-0.5">
-              <span className="text-[10px] font-black uppercase tracking-wider text-terracotta-600 block">
-                {language === 'hi' ? 'सूक्ष्म उद्यम प्रोफ़ाइल' : 'Micro-Enterprise Profile (Self-Assessed)'}
-              </span>
-              <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-indigoRural-900 font-display truncate">
-                {shop?.name || (language === 'hi' ? 'मेरी दुकान' : 'My Store')}
-              </h1>
-              <p className="text-indigoRural-600 text-xs font-medium flex flex-wrap items-center gap-x-2 gap-y-0.5 pt-0.5">
-                <span className="font-bold text-indigoRural-900">{shop?.owner_name || (language === 'hi' ? 'दुकानदार' : 'Proprietor')} (Proprietor)</span>
-                <span className="text-paper-400">•</span>
-                <span>{shop?.village || '—'}, {shop?.district || '—'} ({shop?.state || '—'})</span>
+      {/* 2. ACTIVITY & SURVEY ROW */}
+      <section id="recent-activity" className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        {/* Left 8 Cols: Your Business Activity Bento Cards */}
+        <div className="lg:col-span-8 space-y-4">
+          
+          {/* Section Header with Date Badge */}
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <div>
+              <h2 className="font-serif font-bold text-lg sm:text-xl text-stone-900 leading-tight">
+                {language === 'hi' ? 'आपकी व्यावसायिक गतिविधि' : 'Your Business Activity'}
+              </h2>
+              <p className="text-xs text-stone-500 mt-0.5">
+                {language === 'hi' 
+                  ? 'अपने रिकॉर्ड देखने और प्रबंधित करने के लिए एक अनुभाग चुनें।' 
+                  : 'Choose a section to view and manage your records.'
+                }
               </p>
             </div>
 
-            {/* Turnover & Surplus Highlights */}
-            <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-baseline gap-3 sm:gap-6 pt-1">
-              <div>
-                <span className="text-[10px] font-bold text-indigoRural-400 uppercase tracking-wider block mb-0.5">
-                  {language === 'hi' ? 'सत्यापित कारोबार (Turnover)' : 'Audited Turnover'}
-                </span>
-                <div className="text-xl sm:text-3xl font-black tracking-tight tabular-nums text-indigoRural-900 font-display">
-                  {hasFinancialData ? `₹${metrics.totalIncome.toLocaleString('en-IN')}` : '—'}
-                </div>
-              </div>
-              <div className="border-l border-paper-300 pl-3 sm:pl-6">
-                <div className="flex items-center gap-1.5 mb-0.5">
-                  <span className="text-[10px] font-bold text-indigoRural-400 uppercase tracking-wider block">
-                    {language === 'hi' ? 'शुद्ध परिचालन अधिशेष' : 'Net Operating Surplus'}
-                  </span>
-                  <AudioReadAloudButton
-                    size="sm"
-                    textHi={`आज का शुद्ध मुनाफा: ${metrics.netSurplus !== null ? Number(metrics.netSurplus).toLocaleString('en-IN') : 0} रुपये।`}
-                    textEn={`Net operating surplus: ₹${metrics.netSurplus !== null ? Number(metrics.netSurplus).toLocaleString('en-IN') : 0}.`}
-                  />
-                </div>
-                <div className="text-xl sm:text-2xl font-black tracking-tight tabular-nums text-forestRural-700 font-display">
-                  {metrics.netSurplus !== null ? `₹${metrics.netSurplus.toLocaleString('en-IN')}` : '—'}
-                </div>
-              </div>
-              <div className="border-l border-paper-300 pl-4 sm:pl-6 hidden sm:block">
-                <span className="text-[10px] font-bold text-indigoRural-400 uppercase tracking-wider block mb-0.5">
-                  {language === 'hi' ? 'बचत मार्जिन' : 'Operating Margin'}
-                </span>
-                <div className="text-xl sm:text-2xl font-black tracking-tight tabular-nums text-terracotta-700 font-display">
-                  {operatingMargin ? `+${operatingMargin}%` : '—'}
-                </div>
-              </div>
+            {/* Date Picker Pill */}
+            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-stone-200/90 text-xs font-semibold text-stone-700 shadow-2xs">
+              <Calendar className="w-3.5 h-3.5 text-stone-500" />
+              <span>{language === 'hi' ? `आज, ${currentDateFormatted}` : `Today, ${currentDateFormatted}`}</span>
             </div>
           </div>
 
-          {/* Clean Executive Tactile Action Buttons in 2x2 Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-2 shrink-0 lg:w-72 xl:w-80">
-            <Button
-              onClick={onOpenKeypad}
-              variant="dark"
-              size="sm"
-              icon={PlusCircle}
-              className="w-full justify-center !py-2.5 shadow-2xs"
-            >
-              <span className="truncate">{language === 'hi' ? '+ लेन-देन दर्ज' : '+ Record Sale'}</span>
-            </Button>
-            <Button
-              onClick={() => onNavigateTab('advisor')}
-              variant="secondary"
-              size="sm"
-              icon={Sparkles}
-              className="w-full justify-center !py-2.5"
-            >
-              <span className="truncate">{language === 'hi' ? 'साथी AI' : 'Saathi AI'}</span>
-            </Button>
-            <Button
-              onClick={onOpenWholesale}
-              variant="forest"
-              size="sm"
-              icon={ShoppingBag}
-              className="w-full justify-center !py-2.5"
-            >
-              <span className="truncate">{language === 'hi' ? 'ONDC थोक' : 'ONDC Wholesale'}</span>
-            </Button>
-            <Button
-              onClick={() => onNavigateTab('dossier')}
-              variant="outline"
-              size="sm"
-              icon={FileText}
-              className="w-full justify-center !py-2.5"
-            >
-              <span className="truncate">{language === 'hi' ? 'बैंक डॉसियर' : 'Bank Dossier'}</span>
-            </Button>
-          </div>
-        </div>
-
-        {/* Warli Folk Art Line Border */}
-        <WarliBorder className="w-full h-4 text-terracotta-400 opacity-40" />
-      </Card>
-
-      {/* 2. Asymmetric Financial Pulse Bento */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5">
-        
-        {/* Primary Engine (8 Cols): Audited Financial Pulse & Cash Flow Breakdown */}
-        <Card padding="md" className="lg:col-span-8 space-y-3.5 sm:space-y-4">
-          <SectionHeader
-            icon={TrendingUp}
-            iconColor="forest"
-            title={language === 'hi' ? 'बही-खाता वित्तीय स्थिति' : 'Audited Financial Performance'}
-            subtitle={language === 'hi' ? 'दैनिक बिक्री, माल खरीद एवं शुद्ध परिचालन अधिशेष' : 'Daily gross revenue, inventory replenishment outlays, and net retained margins'}
-            action={
-              <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-                <Badge variant="positive" size="sm" dot className="text-[10px] sm:text-xs">
-                  {metrics.loggedDaysCount ? `● ${metrics.loggedDaysCount} Days Audited` : '● Live Sync'}
-                </Badge>
-                {operatingMargin && (
-                  <Badge variant="neutral" size="sm" className="hidden sm:inline-flex text-[10px] sm:text-xs">
-                    <span>Margin: </span>
-                    <strong className="text-forestRural-700 font-extrabold ml-1">+{operatingMargin}%</strong>
-                  </Badge>
-                )}
-              </div>
-            }
-          />
-
-          {/* 3 Structured Metrics with Deep Context */}
-          <div className="grid grid-cols-3 gap-1.5 sm:gap-4">
-            <div className="space-y-0.5">
-              <span className="text-[9px] sm:text-[10px] font-bold text-indigoRural-400 uppercase tracking-wider block">
-                {language === 'hi' ? 'सत्यापित कुल बिक्री' : 'Gross Turnover'}
-              </span>
-              <div className="text-base xs:text-lg sm:text-2xl font-black text-indigoRural-900 tabular-nums tracking-tight font-display">
-                {hasFinancialData ? `₹${metrics.totalIncome.toLocaleString('en-IN')}` : '—'}
-              </div>
-              <span className="text-[9px] sm:text-[10px] font-semibold text-forestRural-700 flex items-center gap-0.5 sm:gap-1">
-                <span>↑</span> 100% audited
-              </span>
-            </div>
-
-            <div className="space-y-0.5 border-l border-paper-200 pl-2 sm:pl-4">
-              <span className="text-[9px] sm:text-[10px] font-bold text-indigoRural-400 uppercase tracking-wider block">
-                {language === 'hi' ? 'माल व दुकान खर्च' : 'Operating Outlay'}
-              </span>
-              <div className="text-base xs:text-lg sm:text-2xl font-black text-indigoRural-900 tabular-nums tracking-tight font-display">
-                {metrics.totalExpense !== null ? `₹${metrics.totalExpense.toLocaleString('en-IN')}` : '—'}
-              </div>
-              <button
-                type="button"
-                onClick={onOpenWholesale}
-                className="text-[9px] sm:text-[10px] font-semibold text-forestRural-700 hover:text-forestRural-900 flex items-center gap-0.5 sm:gap-1 cursor-pointer transition-colors underline underline-offset-2"
-              >
-                <span>ONDC (-12%)</span>
-              </button>
-            </div>
-
-            <div className="space-y-0.5 border-l border-paper-200 pl-2 sm:pl-4">
-              <div className="flex items-center gap-1">
-                <span className="text-[9px] sm:text-[10px] font-bold text-indigoRural-400 uppercase tracking-wider block">
-                  {language === 'hi' ? 'शुद्ध बचत' : 'Retained Surplus'}
-                </span>
-                <AudioReadAloudButton
-                  size="sm"
-                  textHi={`शुद्ध बचत: ${metrics.netSurplus !== null ? Number(metrics.netSurplus).toLocaleString('en-IN') : 0} रुपये।`}
-                  textEn={`Retained surplus: ₹${metrics.netSurplus !== null ? Number(metrics.netSurplus).toLocaleString('en-IN') : 0}.`}
-                />
-              </div>
-              <div className="text-base xs:text-lg sm:text-2xl font-black text-forestRural-700 tabular-nums tracking-tight font-display">
-                {metrics.netSurplus !== null ? `₹${metrics.netSurplus.toLocaleString('en-IN')}` : '—'}
-              </div>
-              <span className="text-[9px] sm:text-[10px] font-semibold text-forestRural-700">
-                Prime capacity
-              </span>
-            </div>
-          </div>
-
-          {/* Payment Channels Deepening Bar (RBI Mandated Digital Ratio) */}
-          <div className="space-y-1.5 pt-3 border-t border-paper-200">
-            <div className="flex items-center justify-between text-xs font-bold">
-              <span className="text-indigoRural-500 uppercase tracking-wider text-[10px]">
-                {language === 'hi' ? 'भुगतान माध्यम वितरण (Cash vs. UPI)' : 'Payment Channel Distribution'}
-              </span>
-              <span className="text-terracotta-600 font-extrabold text-[10px] sm:text-[11px]">
-                {language === 'hi' ? 'डिजिटल लेनदेन अनुपात (PSL)' : 'Digital Deepening (PSL)'}
-              </span>
-            </div>
-
-            {/* Segmented Distribution Bar */}
-            {digitalPct !== null ? (
-              <>
-                <div className="w-full h-2.5 bg-paper-200 rounded-full overflow-hidden flex p-[1px] gap-1">
-                  <div 
-                    className="bg-terracotta-600 h-full rounded-full transition-all duration-500" 
-                    style={{ width: `${digitalPct}%` }} 
-                    title={`Digital UPI: ${digitalPct}%`} 
-                  />
-                  <div 
-                    className="bg-forestRural-600 h-full rounded-full transition-all duration-500" 
-                    style={{ width: `${cashPct}%` }} 
-                    title={`Direct Cash: ${cashPct}%`} 
-                  />
-                </div>
-
-                <div className="flex items-center justify-between text-[11px] text-indigoRural-600 font-semibold pt-0.5">
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-terracotta-600 shrink-0" />
-                    <span>UPI: <strong>{digitalPct}%</strong> ({hasFinancialData ? `₹${Math.round(metrics.totalIncome * (digitalPct / 100)).toLocaleString('en-IN')}` : '—'})</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-forestRural-600 shrink-0" />
-                    <span>Cash: <strong>{cashPct}%</strong> ({hasFinancialData ? `₹${Math.round(metrics.totalIncome * (cashPct / 100)).toLocaleString('en-IN')}` : '—'})</span>
-                  </div>
-                </div>
-              </>
-            ) : (
-              <div className="py-1 text-xs text-indigoRural-400 italic">
-                Awaiting transaction channel breakdown...
-              </div>
-            )}
-          </div>
-        </Card>
-
-        {/* Secondary Card (4 Cols): Udhaar Working Capital & Recovery Meter */}
-        <Card padding="md" className="lg:col-span-4 flex flex-col justify-between gap-3.5 sm:gap-4">
-          <SectionHeader
-            icon={ShoppingBag}
-            iconColor="ochre"
-            title={language === 'hi' ? 'ग्राहक उधारी जोखिम' : 'Customer Credit Exposure'}
-            subtitle="Working Capital Protection"
-            action={
-              riskPct !== null ? (
-                <Badge variant={Number(riskPct) < 5 ? 'positive' : 'attention'} size="sm">
-                  {Number(riskPct) < 5 ? `Low (${riskPct}%)` : `Attention (${riskPct}%)`}
-                </Badge>
-              ) : (
-                <Badge variant="neutral" size="sm">Safe Ratio</Badge>
-              )
-            }
-          />
-
-          <div className="space-y-0.5">
-            <span className="text-[10px] font-bold text-indigoRural-400 uppercase tracking-wider block">
-              {language === 'hi' ? 'बकाया ग्राहक खाता' : 'Active Udhaar Balance'}
-            </span>
-            <div className="text-2xl sm:text-3xl font-black text-indigoRural-900 tabular-nums font-display">
-              {metrics.totalUdhaarPending !== null ? `₹${metrics.totalUdhaarPending.toLocaleString('en-IN')}` : '—'}
-            </div>
-            <p className="text-[10px] text-indigoRural-500 font-medium pt-0.5">
-              Strict 7-day credit limit maintained with village patrons.
-            </p>
-          </div>
-
-          <div className="space-y-1.5 pt-2.5 border-t border-paper-200 text-xs">
-            <div className="flex items-center justify-between font-semibold text-indigoRural-600">
-              <span className="text-[11px]">Average Recovery</span>
-              <strong className="text-indigoRural-900 font-bold text-[11px]">
-                {summaryData?.avgRecoveryDays ? `${summaryData.avgRecoveryDays} Days` : (isDemoMode ? '4.2 Days' : '—')}
-              </strong>
-            </div>
-            <div className="flex items-center justify-between font-semibold text-indigoRural-600">
-              <span className="text-[11px]">Khata Accounts</span>
-              <strong className="text-indigoRural-900 font-bold text-[11px]">
-                {summaryData?.activeUdhaarCustomers !== undefined ? `${summaryData.activeUdhaarCustomers} Customers` : (shop?.customer_count ? `${shop.customer_count} Customers` : (isDemoMode ? '8 Customers' : '0 Customers'))}
-              </strong>
-            </div>
-            <div className="flex items-center justify-between font-semibold text-indigoRural-600">
-              <span className="text-[11px]">Capital At Risk</span>
-              <strong className="text-forestRural-700 font-bold text-[11px]">
-                {riskPct ? `${riskPct}% (Safe)` : 'Safe'}
-              </strong>
-            </div>
-          </div>
-
-          <Button
-            onClick={() => onNavigateTab('cashflow')}
-            variant="secondary"
-            size="sm"
-            icon={ArrowRight}
-            iconPosition="right"
-            className="w-full justify-center !py-2"
-          >
-            <span>{language === 'hi' ? 'ग्राहक खाता बही देखें' : 'View Customer Ledger'}</span>
-          </Button>
-        </Card>
-
-      </div>
-
-      {/* 3. National Seasonal Demand Radar & Credit Health Split */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5">
-        
-        {/* Left: Seasonal Demand Radar (7 Cols) */}
-        <Card padding="md" className="lg:col-span-7 space-y-3.5 sm:space-y-4">
-          <SectionHeader
-            icon={Calendar}
-            iconColor="ochre"
-            title={language === 'hi' ? 'मौसमी मांग रडार (Demand Radar)' : 'Seasonal Demand Radar'}
-            subtitle={`${shop?.district || 'Balrampur'} Mandi Agricultural & Festival Projections`}
-            action={
-              <Badge variant="positive" size="sm" dot>
-                <span>Google Calendar 2026</span>
-              </Badge>
-            }
-          />
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
-            {festivalList.map((item, idx) => {
-              const name = (language === 'hi' && item.festivalHi) ? item.festivalHi : item.festival;
-              const timing = (language === 'hi' && item.timingHi) ? item.timingHi : item.timing;
-              const stock = (language === 'hi' && item.priorityItemsHi) ? item.priorityItemsHi : item.priorityItems;
-
+          {/* 3x2 Bento Activity Cards Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
+            {bentoCards.map((card) => {
+              const Icon = card.icon;
               return (
-                <div 
-                  key={idx}
-                  className="p-3 rounded-xl bg-paper-50 hover:bg-white hover:border-terracotta-300 transition duration-200 border border-paper-200 flex flex-col justify-between gap-2 group"
+                <div
+                  key={card.id}
+                  onClick={card.action}
+                  className="group relative rounded-2xl bg-white/95 hover:bg-white border border-stone-200/80 hover:border-stone-300 p-4 sm:p-4.5 flex flex-col justify-between min-h-[120px] transition-all duration-200 shadow-2xs hover:shadow-md hover:-translate-y-0.5 cursor-pointer"
                 >
-                  <div className="space-y-1.5">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="font-extrabold text-xs text-indigoRural-900 group-hover:text-terracotta-700 transition truncate">{name}</span>
-                      <Badge variant="attention" size="sm" className="shrink-0 tabular-nums flex items-center gap-1 text-[10px] py-0.5 px-1.5">
-                        <Clock className="w-2.5 h-2.5" />
-                        <span>{item.daysRemaining}d</span>
-                      </Badge>
+                  <div className="flex items-start justify-between gap-2">
+                    {/* Tinted Icon Badge */}
+                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center border ${card.iconBg} transition-transform duration-200 group-hover:scale-105 shrink-0`}>
+                      <Icon className="w-4 h-4" />
                     </div>
-                    <div className="text-[10px] text-indigoRural-500 font-medium flex items-center gap-1">
-                      <Calendar className="w-3 h-3 text-indigoRural-400 shrink-0" />
-                      <span>{timing}</span>
-                    </div>
-                    <div className="text-[10px] text-indigoRural-800 font-semibold bg-white p-2 rounded-lg border border-paper-200 leading-snug">
-                      <span className="text-indigoRural-400 font-bold block text-[8px] uppercase tracking-wider mb-0.5">Wholesale Pre-Order</span>
-                      {stock}
+
+                    {/* Small Navigation Arrow */}
+                    <div className="w-6 h-6 rounded-full bg-stone-100 text-stone-400 group-hover:bg-[#0F3E2E] group-hover:text-white flex items-center justify-center transition-all duration-200 shrink-0">
+                      <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between pt-1.5 border-t border-paper-200 text-[11px]">
-                    <span className="text-indigoRural-500 font-medium">{language === 'hi' ? 'अनुमानित बिक्री उछाल' : 'Projected Surge'}</span>
-                    <span className="font-black text-forestRural-700 text-xs tabular-nums">{item.demandSurge}</span>
+                  <div className="mt-3">
+                    <h3 className="font-serif font-bold text-sm text-stone-900 group-hover:text-[#0F3E2E] transition-colors leading-snug">
+                      {card.title}
+                    </h3>
+                    <p className="text-[11px] text-stone-500 line-clamp-2 mt-0.5 leading-normal">
+                      {card.description}
+                    </p>
                   </div>
                 </div>
               );
             })}
           </div>
-        </Card>
 
-        {/* Right: Credit Score & Health Dial (5 Cols) */}
-        <Card padding="md" className="lg:col-span-5 flex flex-col justify-between gap-3.5 sm:gap-4">
-          <SectionHeader
-            icon={ShieldCheck}
-            iconColor="terracotta"
-            title={language === 'hi' ? 'वैकल्पिक क्रेडिट स्वास्थ्य' : 'Alternative Credit Health'}
-            subtitle="4-Pillar Non-CIBIL Score"
-            action={
-              <Button
-                onClick={() => onNavigateTab('credit')}
-                variant="ghost"
-                size="sm"
-                icon={ArrowRight}
-                iconPosition="right"
-              >
-                <span>{language === 'hi' ? 'सिम्युलेटर' : 'Simulate'}</span>
-              </Button>
-            }
-          />
+        </div>
 
-          <div className="py-0.5">
-            {(creditData?.isUnrated || creditData?.totalScore === null || creditData?.totalScore === undefined) && !isDemoMode ? (
-              <div className="text-center p-4 space-y-2.5">
-                <div className="w-12 h-12 mx-auto rounded-xl bg-ochre-100 border border-ochre-300 flex items-center justify-center text-ochre-700">
-                  <ShieldCheck className="w-6 h-6" />
-                </div>
-                <h3 className="font-display font-black text-sm text-indigoRural-900">
-                  {language === 'hi' ? 'अवर्गीकृत (Unrated)' : 'Unrated Enterprise'}
-                </h3>
-                <p className="text-[11px] text-indigoRural-600 max-w-xs mx-auto leading-relaxed">
-                  {language === 'hi'
-                    ? 'पहले हफ्ते की बिक्री दर्ज करें (5 लेनदेन, 3 दिन) ताकि 4-पिलर बैंक-मान्य स्कोर अनलॉक हो सके।'
-                    : 'Log your first week of sales (5 transactions, 3 days) to unlock your 4-pillar bankable credit score.'}
-                </p>
-                <Button onClick={onOpenKeypad} variant="dark" size="sm" icon={PlusCircle}>
-                  <span>{language === 'hi' ? 'बिक्री दर्ज करें' : 'Record a Sale'}</span>
-                </Button>
-              </div>
-            ) : (
-              <CreditGauge 
-                score={creditData?.totalScore !== undefined ? creditData.totalScore : null} 
-                ratingLabel={language === 'hi' ? (creditData?.ratingLabel || 'Prime Bankable (ऋण के लिए पात्र)') : (creditData?.ratingBadge || 'Prime Bankable')}
-              />
-            )}
-          </div>
-
-          {/* 4 Pillars Activity Progress Bars - Bound to creditData.factors */}
-          <div className="space-y-2 pt-2.5 border-t border-paper-200 text-xs">
-            {factors.length > 0 ? (
-              factors.map((factor) => {
-                const name = language === 'hi' ? (factor.nameHindi || factor.name) : factor.name;
-                const isPositive = factor.status === 'positive' || factor.percentage >= 70;
-                
-                return (
-                  <div key={factor.id} className="space-y-1 bg-paper-50/60 p-1.5 rounded-lg border border-paper-200/70">
-                    <div className="flex justify-between items-center text-indigoRural-700">
-                      <span className="font-bold text-[10px]">{name}</span>
-                      <span className="font-black text-indigoRural-900 tabular-nums text-[10px]">{factor.percentage}% ({factor.score}/{factor.maxScore})</span>
-                    </div>
-                    <div className="w-full bg-paper-200 h-1 rounded-full overflow-hidden">
-                      <div 
-                        className={`h-full rounded-full transition-all duration-500 ${isPositive ? 'bg-forestRural-600' : 'bg-ochre-500'}`} 
-                        style={{ width: `${factor.percentage}%` }} 
-                      />
-                    </div>
-                  </div>
-                );
-              })
-            ) : (
-              <div className="py-1 text-center text-indigoRural-400 text-xs">
-                Auditing 4-pillar alternative credit score...
-              </div>
-            )}
-          </div>
-        </Card>
-
-      </div>
-
-      {/* 4. Saathi AI Suggestion Prompts */}
-      <Card variant="accent" padding="md" className="space-y-2.5">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="p-1 rounded-lg bg-terracotta-600 text-white shadow-2xs">
-              <Sparkles className="w-3 h-3 text-ochre-200" />
+        {/* Right 4 Cols: Quick Survey Card */}
+        <div className="lg:col-span-4 flex flex-col">
+          <div className="flex-1 rounded-2xl bg-white border border-stone-200/90 p-5 flex flex-col justify-between shadow-2xs">
+            
+            {/* Top Row: Title & 2 min Badge */}
+            <div className="flex items-center justify-between">
+              <span className="font-serif font-bold text-sm text-stone-900">
+                {language === 'hi' ? 'त्वरित सर्वेक्षण' : 'Quick Survey'}
+              </span>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-stone-100 text-stone-600 text-[10px] font-semibold border border-stone-200/60">
+                <Clock className="w-2.5 h-2.5" />
+                <span>2 min</span>
+              </span>
             </div>
-            <span className="text-[11px] font-black text-indigoRural-900 uppercase tracking-wider font-display">
-              {language === 'hi' ? 'साथी AI से तुरंत पूछें' : 'Saathi AI Intelligence Prompts'}
-            </span>
+
+            {/* Checklist Illustration */}
+            <div className="my-3 flex justify-center select-none">
+              <SurveyChecklistIcon className="w-24 h-24 sm:w-28 sm:h-28" />
+            </div>
+
+            {/* Content Copy */}
+            <div className="text-center space-y-1">
+              <h3 className="font-serif font-bold text-sm sm:text-base text-stone-900 leading-tight">
+                {language === 'hi' ? 'आपकी बेहतर सेवा के लिए' : 'Help us serve you better'}
+              </h3>
+              <p className="text-[11px] text-stone-500 leading-relaxed max-w-[240px] mx-auto">
+                {language === 'hi'
+                  ? 'अपनी प्रतिक्रिया साझा करें और ग्रामीण व्यापार के लिए साख सेतु को बेहतर बनाएं।'
+                  : 'Share your feedback and help improve SaakhSetu for rural businesses.'
+                }
+              </p>
+            </div>
+
+            {/* Action CTA: Take Survey */}
+            <button
+              type="button"
+              onClick={() => setSurveyOpen(true)}
+              className="mt-4 w-full py-2.5 px-4 rounded-xl bg-[#0F3E2E] hover:bg-[#165640] text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-2xs hover:shadow-md transition-all cursor-pointer"
+            >
+              <span>{language === 'hi' ? 'सर्वेक्षण में भाग लें' : 'Take Survey'}</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
           </div>
-          <Button
-            onClick={() => onNavigateTab('advisor')}
-            variant="ghost"
-            size="sm"
-            icon={ArrowRight}
-            iconPosition="right"
-          >
-            <span>{language === 'hi' ? 'साथी AI खोलें' : 'Open Saathi AI'}</span>
-          </Button>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
-          {sampleQuestions.map((q, i) => (
-            <button
-              key={i}
-              onClick={() => onAskPrompt(language === 'hi' ? q.text : q.textEn)}
-              className="p-2.5 bg-white hover:bg-paper-50 active:scale-[0.98] rounded-xl border border-paper-300/80 hover:border-terracotta-300 text-left transition duration-150 shadow-2xs flex items-center justify-between gap-2 text-xs font-extrabold text-indigoRural-900 group cursor-pointer"
-            >
-              <span className="truncate group-hover:text-terracotta-700 transition">{language === 'hi' ? q.text : q.textEn}</span>
-              <ArrowUpRight className="w-3.5 h-3.5 text-indigoRural-400 group-hover:text-terracotta-600 shrink-0 transition" />
-            </button>
-          ))}
+      </section>
+
+      {/* 3. GROWING TOGETHER WITH RURAL INDIA */}
+      <section className="w-full relative rounded-3xl bg-[#FAF7F2] border border-[#EFE9DF] p-6 sm:p-8 overflow-hidden shadow-2xs">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+          
+          {/* Left Text & CTA */}
+          <div className="lg:col-span-6 space-y-2 z-10">
+            <h2 className="font-serif font-bold text-xl sm:text-2xl text-stone-900 leading-tight">
+              {language === 'hi' 
+                ? 'ग्रामीण भारत के साथ मिलकर आगे बढ़ रहे हैं' 
+                : 'Growing Together With Rural India'
+              }
+            </h2>
+            <p className="text-xs sm:text-sm text-stone-600 max-w-md leading-relaxed">
+              {language === 'hi'
+                ? 'नई सरकारी योजनाओं की खोज करें, अपना बैंक दस्तावेज़ तैयार करें और अपने व्यवसाय के लिए नए अवसर अनलॉक करें।'
+                : 'Discover new schemes, build your bank dossier, and unlock more opportunities for your business.'
+              }
+            </p>
+
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={() => onNavigateTab('schemes')}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#0F3E2E] hover:bg-[#165640] text-white font-bold text-xs sm:text-sm shadow-2xs hover:shadow-md transition-all cursor-pointer"
+              >
+                <span>{language === 'hi' ? 'अवसर खोजें' : 'Explore Opportunities'}</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          {/* Right Dedicated Rural Village Landscape Artwork */}
+          <div className="lg:col-span-6 flex justify-end select-none">
+            <div className="w-full max-w-[540px] rounded-2xl bg-[#FAF7F2] border border-[#EAE3D6] overflow-hidden shadow-2xs">
+              <img 
+                src="/assets/saakhsetu/growing-together.png" 
+                alt="Rural Village Landscape of Bharat" 
+                className="w-full h-auto object-contain select-none pointer-events-none"
+              />
+              {/* Cultural Pride Caption Strip */}
+              <div className="px-4 py-2 bg-[#FAF7F2]/95 border-t border-[#EAE3D6] flex items-center justify-between">
+                <span className="font-serif font-bold text-xs text-[#0F3E2E] tracking-wider">
+                  गाँव से गौरव तक
+                </span>
+                <TricolorBrush className="w-16 h-2 shrink-0" />
+              </div>
+            </div>
+          </div>
+
         </div>
-      </Card>
+      </section>
+
+      {/* 4. CLEAN INSTITUTIONAL FOOTER */}
+      <footer className="pt-4 pb-12 border-t border-stone-200/70 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-stone-500">
+        <div className="flex items-center gap-2 text-center sm:text-left flex-wrap">
+          <span className="font-bold text-stone-800">© 2026 SaakhSetu</span>
+          <span className="text-stone-300">•</span>
+          <span>Bridging Businesses to Credit</span>
+          <span className="text-stone-300">•</span>
+          <span className="font-semibold text-emerald-800">Built for Bharat</span>
+        </div>
+
+        <div className="flex items-center gap-4 text-[11px] font-medium text-stone-600">
+          <a href="#privacy" className="hover:text-stone-900 transition-colors">Privacy</a>
+          <a href="#terms" className="hover:text-stone-900 transition-colors">Terms</a>
+          <a href="#contact" className="hover:text-stone-900 transition-colors">Contact</a>
+          <span className="text-stone-300">|</span>
+          <div className="flex items-center gap-2.5 text-stone-500">
+            <span className="hover:text-stone-800 cursor-pointer font-bold">in</span>
+            <span className="hover:text-stone-800 cursor-pointer font-bold">𝕏</span>
+            <span className="hover:text-stone-800 cursor-pointer font-bold">▶</span>
+          </div>
+        </div>
+      </footer>
+
+      {/* QUICK SURVEY MODAL */}
+      {surveyOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
+          <div className="bg-[#FAF8F5] border border-stone-200 rounded-2xl max-w-md w-full p-6 shadow-2xl relative space-y-4">
+            
+            <button
+              type="button"
+              onClick={() => setSurveyOpen(false)}
+              className="absolute top-4 right-4 p-1.5 rounded-lg text-stone-400 hover:text-stone-700"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            {surveySubmitted ? (
+              <div className="py-8 text-center space-y-3">
+                <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center mx-auto">
+                  <CheckCircle2 className="w-6 h-6" />
+                </div>
+                <h3 className="font-serif font-bold text-lg text-stone-900">
+                  {language === 'hi' ? 'धन्यवाद रमेश जी!' : 'Thank you Ramesh Ji!'}
+                </h3>
+                <p className="text-xs text-stone-600 max-w-xs mx-auto">
+                  {language === 'hi'
+                    ? 'आपकी प्रतिक्रिया ग्रामीण भारत के 6.3 करोड़ सूक्ष्म उद्यमियों को सशक्त बनाने में मदद करेगी।'
+                    : 'Your valuable feedback helps strengthen SaakhSetu for 63 million micro-enterprises across Bharat.'
+                  }
+                </p>
+              </div>
+            ) : (
+              <form onSubmit={handleSurveySubmit} className="space-y-4">
+                <div>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-800 block">
+                    Merchant Survey • 2 min
+                  </span>
+                  <h3 className="font-serif font-bold text-lg text-stone-900 mt-0.5">
+                    {language === 'hi' ? 'आपकी राय हमारे लिए महत्वपूर्ण है' : 'Help us serve you better'}
+                  </h3>
+                  <p className="text-xs text-stone-500">
+                    {language === 'hi' ? '3 छोटे प्रश्नों के उत्तर दें' : 'Answer 3 quick questions'}
+                  </p>
+                </div>
+
+                {/* Question 1: Rating */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-stone-800 block">
+                    1. {language === 'hi' ? 'साख सेतु का उपयोग करना कितना आसान है?' : 'How easy is SaakhSetu to use for daily business?'}
+                  </label>
+                  <div className="flex items-center gap-2">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        type="button"
+                        onClick={() => setSurveyRating(star)}
+                        className={`p-2 rounded-xl transition-all cursor-pointer ${
+                          star <= surveyRating 
+                            ? 'bg-amber-100 text-amber-600' 
+                            : 'bg-stone-100 text-stone-400 hover:bg-stone-200'
+                        }`}
+                      >
+                        <Star className={`w-4 h-4 ${star <= surveyRating ? 'fill-current' : ''}`} />
+                      </button>
+                    ))}
+                    <span className="text-xs font-semibold text-stone-600 ml-2">
+                      {surveyRating === 5 ? '⭐⭐⭐⭐⭐ Excellent' : `${surveyRating} / 5`}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Question 2: Favorite feature */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-stone-800 block">
+                    2. {language === 'hi' ? 'कौन सी सुविधा आपके लिए सबसे उपयोगी रही?' : 'Which feature helped your store the most?'}
+                  </label>
+                  <select
+                    value={surveyFeature}
+                    onChange={(e) => setSurveyFeature(e.target.value)}
+                    className="w-full bg-white border border-stone-300 rounded-xl px-3 py-2 text-xs text-stone-800 focus:outline-none focus:border-[#0F3E2E]"
+                  >
+                    <option value="khata">Daily Bahi-Khata & Voice Entry</option>
+                    <option value="udhaar">Customer Udhaar WhatsApp Reminders</option>
+                    <option value="credit">Alternative Credit Score (RBI PSL)</option>
+                    <option value="schemes">Government Scheme Matcher (MUDRA / SVANidhi)</option>
+                    <option value="wholesale">ONDC Wholesale Group Purchasing</option>
+                  </select>
+                </div>
+
+                {/* Question 3: Comments */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-stone-800 block">
+                    3. {language === 'hi' ? 'कोई अन्य सुझाव या आवश्यकता?' : 'Any suggestions for your village or store?'}
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={surveyFeedback}
+                    onChange={(e) => setSurveyFeedback(e.target.value)}
+                    placeholder={language === 'hi' ? 'अपनी बात यहाँ लिखें...' : 'Tell us what you would like improved...'}
+                    className="w-full bg-white border border-stone-300 rounded-xl px-3 py-2 text-xs text-stone-800 focus:outline-none focus:border-[#0F3E2E]"
+                  />
+                </div>
+
+                <div className="pt-2 flex items-center justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setSurveyOpen(false)}
+                    className="px-4 py-2 rounded-xl text-xs font-semibold text-stone-600 hover:text-stone-900"
+                  >
+                    {language === 'hi' ? 'रद्द करें' : 'Cancel'}
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-5 py-2 rounded-xl bg-[#0F3E2E] hover:bg-[#165640] text-white text-xs font-bold shadow-2xs transition-all cursor-pointer"
+                  >
+                    {language === 'hi' ? 'जमा करें →' : 'Submit Feedback →'}
+                  </button>
+                </div>
+              </form>
+            )}
+
+          </div>
+        </div>
+      )}
 
     </div>
   );

@@ -1,39 +1,106 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
-  Store, 
-  Sparkles, 
+  Home,
   BookOpen, 
   TrendingUp, 
   Landmark, 
   FileText, 
-  Globe, 
-  RotateCcw, 
+  Bell, 
+  ChevronDown, 
   Menu, 
   X, 
-  ShieldCheck, 
-  Zap,
-  MapPin,
+  User, 
+  LogOut, 
+  RotateCcw, 
   ArrowRightLeft,
-  LogOut
+  ShieldCheck,
+  Sparkles,
+  ChevronRight,
+  ArrowRight
 } from 'lucide-react';
 import { useTranslation } from '../i18n/LanguageContext';
 import { api } from '../utils/api';
-import { Badge, Button } from './ui';
-import { SyncStatusBadge } from './SyncStatusBadge';
 
-export function Navbar({ activeTab, setActiveTab, currentShop, isDemoMode, onReloadDemo, onStartDemoTour, onSwitchToDemo, onSwitchToRegister, onLogout }) {
-  const { t, language, toggleLanguage } = useTranslation();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+export function Navbar({ 
+  activeTab, 
+  setActiveTab, 
+  currentShop, 
+  isDemoMode, 
+  onReloadDemo, 
+  onStartDemoTour, 
+  onSwitchToDemo, 
+  onSwitchToRegister, 
+  onLogout,
+  onToggleSidebar,
+  onOpenWholesale
+}) {
+  const { language, toggleLanguage } = useTranslation();
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [notificationOpen, setNotificationOpen] = useState(false);
   const [resetting, setResetting] = useState(false);
 
-  const navItems = [
-    { id: 'dashboard', label: language === 'hi' ? 'डैशबोर्ड' : 'Overview', icon: Store },
-    { id: 'cashflow', label: language === 'hi' ? 'बही-खाता' : 'Bahi-Khata', icon: BookOpen },
-    { id: 'credit', label: language === 'hi' ? 'क्रेडिट स्कोर' : 'Credit Score', icon: TrendingUp },
-    { id: 'schemes', label: language === 'hi' ? 'सरकारी योजनाएं' : 'Schemes', icon: Landmark },
-    { id: 'advisor', label: language === 'hi' ? 'साथी AI' : 'Saathi AI', icon: Sparkles, isAi: true },
-    { id: 'dossier', label: language === 'hi' ? 'बैंक फाइल' : 'Bank Dossier', icon: FileText }
-  ];
+  // Interactive Hover Mega-Menu State
+  const [hoveredTab, setHoveredTab] = useState(null);
+  const leaveTimerRef = useRef(null);
+  const navRef = useRef(null);
+
+  // Dismiss dropdown on outside pointer click or Escape key
+  useEffect(() => {
+    const handlePointerDown = (e) => {
+      if (navRef.current && !navRef.current.contains(e.target)) {
+        setHoveredTab(null);
+      }
+    };
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setHoveredTab(null);
+        setProfileOpen(false);
+        setNotificationOpen(false);
+      }
+    };
+    document.addEventListener('pointerdown', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+      if (leaveTimerRef.current) clearTimeout(leaveTimerRef.current);
+    };
+  }, []);
+
+  // If on landing/onboarding, OnboardingPage provides its own dedicated masthead
+  if (activeTab === 'onboarding' || !currentShop) {
+    return null;
+  }
+
+  // Hover Bridge Debounce Handlers (140ms delay)
+  const handleTabMouseEnter = (tabId) => {
+    if (leaveTimerRef.current) {
+      clearTimeout(leaveTimerRef.current);
+      leaveTimerRef.current = null;
+    }
+    setHoveredTab(tabId);
+  };
+
+  const handleTabMouseLeave = () => {
+    if (leaveTimerRef.current) clearTimeout(leaveTimerRef.current);
+    leaveTimerRef.current = setTimeout(() => {
+      setHoveredTab(null);
+    }, 140);
+  };
+
+  const handleMenuMouseEnter = () => {
+    if (leaveTimerRef.current) {
+      clearTimeout(leaveTimerRef.current);
+      leaveTimerRef.current = null;
+    }
+  };
+
+  const handleMenuMouseLeave = () => {
+    if (leaveTimerRef.current) clearTimeout(leaveTimerRef.current);
+    leaveTimerRef.current = setTimeout(() => {
+      setHoveredTab(null);
+    }, 140);
+  };
 
   const handleResetDemo = async () => {
     setResetting(true);
@@ -47,259 +114,568 @@ export function Navbar({ activeTab, setActiveTab, currentShop, isDemoMode, onRel
     }
   };
 
-  const udyamNumber = currentShop?.udyam_number || (currentShop?.id ? `UDYAM-${(currentShop.state || 'IN').substring(0, 2).toUpperCase()}-DEMO` : '');
+  const ownerName = currentShop?.owner_name || 'Ramesh Kumar';
+  const shopName = currentShop?.name || "Ramesh's Kirana Store";
+  const initials = typeof ownerName === 'string'
+    ? (ownerName.trim().split(/\s+/).map(n => n?.[0]).filter(Boolean).join('').substring(0, 2).toUpperCase() || 'RK')
+    : 'RK';
+
+  // Navigation Data Map with Contextual Mega-Menu Specs
+  const navItems = [
+    { 
+      id: 'dashboard', 
+      label: language === 'hi' ? 'अवलोकन' : 'Overview', 
+      icon: Home,
+      menuTitle: language === 'hi' ? 'अवलोकन' : 'Overview',
+      menuTagline: language === 'hi' ? 'आपका व्यापार एक नज़र में' : 'Your business at a glance',
+      menuDescription: language === 'hi' ? 'व्यापार के सभी मुख्य आंकड़े और दैनिक प्रगति।' : "See what's happening across your business.",
+      items: [
+        {
+          id: 'dash-overview',
+          title: language === 'hi' ? 'व्यापार अवलोकन' : 'Business Overview',
+          description: language === 'hi' ? 'मुख्य आंकड़े और दैनिक समरी' : 'View all key business metrics',
+          action: () => {
+            setActiveTab('dashboard');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }
+        },
+        {
+          id: 'dash-activity',
+          title: language === 'hi' ? 'हालिया गतिविधि' : 'Recent Activity',
+          description: language === 'hi' ? 'दैनिक बही-खाता गतिविधि' : 'Latest ledger & shop updates',
+          action: () => {
+            try { sessionStorage.setItem('saakhsetu_dashboard_action', 'activity'); } catch (_) {}
+            setActiveTab('dashboard');
+            window.dispatchEvent(new CustomEvent('saakhsetu:dashboard-action', { detail: { action: 'activity' } }));
+          }
+        },
+        {
+          id: 'dash-customers',
+          title: language === 'hi' ? 'ग्राहक' : 'Customers',
+          description: language === 'hi' ? 'ग्राहक खाते और उधार रिकॉर्ड' : 'Customer ledgers & balances',
+          action: () => {
+            try { sessionStorage.setItem('saakhsetu_cashflow_tab', 'customers'); } catch (_) {}
+            setActiveTab('cashflow');
+            window.dispatchEvent(new CustomEvent('saakhsetu:switch-tab', { detail: { tab: 'customers' } }));
+          }
+        },
+        {
+          id: 'dash-inventory',
+          title: language === 'hi' ? 'स्टॉक व इन्वेंट्री' : 'Inventory',
+          description: language === 'hi' ? 'थोक खरीद व सप्लायर कैटलॉग' : 'Wholesale discovery & stock',
+          action: () => {
+            onOpenWholesale?.();
+          }
+        },
+        {
+          id: 'dash-transactions',
+          title: language === 'hi' ? 'लेन-देन' : 'Transactions',
+          description: language === 'hi' ? 'दैनिक नकदी एवं यूपीआई रिकॉर्ड' : 'Recent cash & digital records',
+          action: () => {
+            try { sessionStorage.setItem('saakhsetu_cashflow_tab', 'all'); } catch (_) {}
+            setActiveTab('cashflow');
+            window.dispatchEvent(new CustomEvent('saakhsetu:switch-tab', { detail: { tab: 'all' } }));
+          }
+        }
+      ]
+    },
+    { 
+      id: 'cashflow', 
+      label: language === 'hi' ? 'बही-खाता' : 'Bahi-Khata', 
+      icon: BookOpen,
+      menuTitle: language === 'hi' ? 'बही-खाता' : 'Bahi-Khata',
+      menuTagline: language === 'hi' ? 'दैनिक व्यापार और हिसाब-किताब का प्रबंधन।' : 'Manage your everyday business records.',
+      menuDescription: language === 'hi' ? 'प्रत्येक लेन-देन का सुरक्षित और पारदर्शी रिकॉर्ड।' : 'Record and manage every business transaction.',
+      items: [
+        {
+          id: 'cf-all',
+          title: language === 'hi' ? 'सभी लेन-देन' : 'All Transactions',
+          description: language === 'hi' ? 'सभी रिकॉर्ड देखें' : 'View all records',
+          action: () => {
+            try { sessionStorage.setItem('saakhsetu_cashflow_tab', 'all'); } catch (_) {}
+            setActiveTab('cashflow');
+            window.dispatchEvent(new CustomEvent('saakhsetu:switch-tab', { detail: { tab: 'all' } }));
+          }
+        },
+        {
+          id: 'cf-sales',
+          title: language === 'hi' ? 'बिक्री' : 'Sales',
+          description: language === 'hi' ? 'दैनिक आय और बिक्री' : 'Money received',
+          action: () => {
+            try { sessionStorage.setItem('saakhsetu_cashflow_tab', 'sales'); } catch (_) {}
+            setActiveTab('cashflow');
+            window.dispatchEvent(new CustomEvent('saakhsetu:switch-tab', { detail: { tab: 'sales' } }));
+          }
+        },
+        {
+          id: 'cf-purchases',
+          title: language === 'hi' ? 'खरीद' : 'Purchases',
+          description: language === 'hi' ? 'दुकान का सामान खरीद' : 'Stock purchases',
+          action: () => {
+            try { sessionStorage.setItem('saakhsetu_cashflow_tab', 'purchases'); } catch (_) {}
+            setActiveTab('cashflow');
+            window.dispatchEvent(new CustomEvent('saakhsetu:switch-tab', { detail: { tab: 'purchases' } }));
+          }
+        },
+        {
+          id: 'cf-expenses',
+          title: language === 'hi' ? 'खर्च' : 'Expenses',
+          description: language === 'hi' ? 'दुकान व परिचालन खर्च' : 'Business costs',
+          action: () => {
+            try { sessionStorage.setItem('saakhsetu_cashflow_tab', 'expenses'); } catch (_) {}
+            setActiveTab('cashflow');
+            window.dispatchEvent(new CustomEvent('saakhsetu:switch-tab', { detail: { tab: 'expenses' } }));
+          }
+        },
+        {
+          id: 'cf-udhaar',
+          title: language === 'hi' ? 'उधार' : 'Udhaar',
+          description: language === 'hi' ? 'लंबित उधारी व वसूली' : 'Credit ledger',
+          action: () => {
+            try { sessionStorage.setItem('saakhsetu_cashflow_tab', 'udhaar'); } catch (_) {}
+            setActiveTab('cashflow');
+            window.dispatchEvent(new CustomEvent('saakhsetu:switch-tab', { detail: { tab: 'udhaar' } }));
+          }
+        },
+        {
+          id: 'cf-customers',
+          title: language === 'hi' ? 'ग्राहक' : 'Customers',
+          description: language === 'hi' ? 'ग्राहक संपर्क व इतिहास' : 'Customer records',
+          action: () => {
+            try { sessionStorage.setItem('saakhsetu_cashflow_tab', 'customers'); } catch (_) {}
+            setActiveTab('cashflow');
+            window.dispatchEvent(new CustomEvent('saakhsetu:switch-tab', { detail: { tab: 'customers' } }));
+          }
+        }
+      ]
+    },
+    { 
+      id: 'credit', 
+      label: language === 'hi' ? 'क्रेडिट स्कोर' : 'Credit Score', 
+      icon: TrendingUp,
+      menuTitle: language === 'hi' ? 'क्रेडिट स्कोर' : 'Credit Score',
+      menuTagline: language === 'hi' ? 'व्यापार से बैंक ऋण पात्रता का निर्माण।' : 'Understand how your business activity builds credit readiness.',
+      menuDescription: language === 'hi' ? 'बिना सिबिल स्कोर के बैंक ऋण पात्रता की पारदर्शी जांच।' : 'See how your verified business activity contributes to your credit profile.',
+      items: [
+        {
+          id: 'cr-score',
+          title: language === 'hi' ? 'क्रेडिट स्कोर' : 'Credit Score',
+          description: language === 'hi' ? 'समग्र स्कोर और योजना श्रेणी' : 'Overall score & breakdown',
+          action: () => {
+            setActiveTab('credit');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }
+        },
+        {
+          id: 'cr-pillars',
+          title: language === 'hi' ? 'मूल्यांकन के आधार' : 'Evaluation Pillars',
+          description: language === 'hi' ? 'पारदर्शी 4 स्कोरिंग मानक' : 'Core scoring dimensions',
+          action: () => {
+            try { sessionStorage.setItem('saakhsetu_credit_action', 'pillars'); } catch (_) {}
+            setActiveTab('credit');
+            window.dispatchEvent(new CustomEvent('saakhsetu:credit-action', { detail: { action: 'pillars' } }));
+          }
+        },
+        {
+          id: 'cr-simulator',
+          title: language === 'hi' ? 'स्कोर सिम्युलेटर' : 'Score Simulator',
+          description: language === 'hi' ? 'स्कोर बढ़ाने का सिमुलेशन' : 'Test improvement scenarios',
+          action: () => {
+            try { sessionStorage.setItem('saakhsetu_credit_action', 'simulator'); } catch (_) {}
+            setActiveTab('credit');
+            window.dispatchEvent(new CustomEvent('saakhsetu:credit-action', { detail: { action: 'simulator' } }));
+          }
+        },
+        {
+          id: 'cr-insights',
+          title: language === 'hi' ? 'क्रेडिट अंतर्दृष्टि' : 'Credit Insights',
+          description: language === 'hi' ? 'स्कोर सुधारने के व्यावहारिक सुझाव' : 'Alternative credit analysis',
+          action: () => {
+            try { sessionStorage.setItem('saakhsetu_credit_action', 'insights'); } catch (_) {}
+            setActiveTab('credit');
+            window.dispatchEvent(new CustomEvent('saakhsetu:credit-action', { detail: { action: 'insights' } }));
+          }
+        }
+      ]
+    },
+    { 
+      id: 'schemes', 
+      label: language === 'hi' ? 'सरकारी योजनाएं' : 'Schemes', 
+      icon: Landmark,
+      menuTitle: language === 'hi' ? 'सरकारी योजनाएं' : 'Government Schemes',
+      menuTagline: language === 'hi' ? 'अपने व्यापार के लिए उपयुक्त योजनाएं खोजें।' : 'Find schemes relevant to your business.',
+      menuDescription: language === 'hi' ? 'सत्यापित सरकारी सब्सिडी एवं ऋण योजनाएं।' : 'Explore verified government support matched to your business.',
+      items: [
+        {
+          id: 'sc-recommended',
+          title: language === 'hi' ? 'आपके लिए अनुशंसित' : 'Recommended for You',
+          description: language === 'hi' ? 'दुकान के अनुरूप शीर्ष योजनाएं' : 'Matched to your business',
+          action: () => {
+            try { sessionStorage.setItem('saakhsetu_schemes_filter', 'recommended'); } catch (_) {}
+            setActiveTab('schemes');
+            window.dispatchEvent(new CustomEvent('saakhsetu:schemes-filter', { detail: { filterType: 'recommended' } }));
+          }
+        },
+        {
+          id: 'sc-all',
+          title: language === 'hi' ? 'सभी योजनाएं' : 'All Schemes',
+          description: language === 'hi' ? 'राष्ट्रीय योजना डायरेक्टरी' : 'Complete scheme directory',
+          action: () => {
+            try { sessionStorage.setItem('saakhsetu_schemes_filter', 'all'); } catch (_) {}
+            setActiveTab('schemes');
+            window.dispatchEvent(new CustomEvent('saakhsetu:schemes-filter', { detail: { filterType: 'all' } }));
+          }
+        },
+        {
+          id: 'sc-loans',
+          title: language === 'hi' ? 'ऋण योजनाएं' : 'Loan Schemes',
+          description: language === 'hi' ? 'मुद्रा व कार्यशील पूंजी ऋण' : 'MUDRA & credit facilities',
+          action: () => {
+            try { sessionStorage.setItem('saakhsetu_schemes_filter', 'loan'); } catch (_) {}
+            setActiveTab('schemes');
+            window.dispatchEvent(new CustomEvent('saakhsetu:schemes-filter', { detail: { filterType: 'loan' } }));
+          }
+        },
+        {
+          id: 'sc-subsidies',
+          title: language === 'hi' ? 'सब्सिडी व अनुदान' : 'Subsidies & Grants',
+          description: language === 'hi' ? 'सीधी आर्थिक सहायता एवं छूट' : 'Direct financial incentives',
+          action: () => {
+            try { sessionStorage.setItem('saakhsetu_schemes_filter', 'subsidy'); } catch (_) {}
+            setActiveTab('schemes');
+            window.dispatchEvent(new CustomEvent('saakhsetu:schemes-filter', { detail: { filterType: 'subsidy' } }));
+          }
+        }
+      ]
+    },
+    { 
+      id: 'dossier', 
+      label: language === 'hi' ? 'बैंक फाइल' : 'Bank Dossier', 
+      icon: FileText,
+      menuTitle: language === 'hi' ? 'बैंक फाइल' : 'Bank Dossier',
+      menuTagline: language === 'hi' ? 'बैंक ऋण के लिए प्रमाणित फाइल तैयार करें।' : 'Prepare your verified business information for formal credit conversations.',
+      menuDescription: language === 'hi' ? 'क्रेडिट असेसमेंट मेमोरेंडम एवं सत्यापन दस्तावेज।' : 'Review and prepare your business credit dossier.',
+      items: [
+        {
+          id: 'ds-overview',
+          title: language === 'hi' ? 'डोज़ियर सारांश' : 'Dossier Overview',
+          description: language === 'hi' ? 'बैंक मैनेजर के लिए सारांश' : 'Executive credit profile',
+          action: () => {
+            setActiveTab('dossier');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }
+        },
+        {
+          id: 'ds-readiness',
+          title: language === 'hi' ? 'ऋण तत्परता' : 'Credit Readiness',
+          description: language === 'hi' ? 'फाइल में शामिल आधिकारिक विवरण' : "What's included in CAM file",
+          action: () => {
+            try { sessionStorage.setItem('saakhsetu_dossier_action', 'readiness'); } catch (_) {}
+            setActiveTab('dossier');
+            window.dispatchEvent(new CustomEvent('saakhsetu:dossier-action', { detail: { action: 'readiness' } }));
+          }
+        },
+        {
+          id: 'ds-schemes',
+          title: language === 'hi' ? 'पात्र योजनाएं' : 'Recommended Schemes',
+          description: language === 'hi' ? 'अनुशंसित सरकारी लोन विकल्प' : 'Explore eligible loans',
+          action: () => {
+            try { sessionStorage.setItem('saakhsetu_schemes_filter', 'recommended'); } catch (_) {}
+            setActiveTab('schemes');
+            window.dispatchEvent(new CustomEvent('saakhsetu:schemes-filter', { detail: { filterType: 'recommended' } }));
+          }
+        },
+        {
+          id: 'ds-download',
+          title: language === 'hi' ? 'डोज़ियर डाउनलोड' : 'Download Dossier',
+          description: language === 'hi' ? 'आधिकारिक बैंक CAM PDF डाउनलोड' : 'Export official PDF document',
+          action: () => {
+            try { sessionStorage.setItem('saakhsetu_dossier_action', 'download'); } catch (_) {}
+            setActiveTab('dossier');
+            window.dispatchEvent(new CustomEvent('saakhsetu:dossier-action', { detail: { action: 'download' } }));
+          }
+        }
+      ]
+    }
+  ];
+
+  const activeHoverItem = navItems.find(item => item.id === hoveredTab);
 
   return (
-    <header className="sticky top-0 z-50 w-full backdrop-blur-2xl bg-white/90 border-b border-paper-300/90 shadow-[0_4px_20px_rgba(12,19,34,0.06)] transition-all duration-300">
-      {/* Tri-Color Micro-Rule */}
-      <div className="h-[3px] w-full bg-gradient-to-r from-terracotta-500 via-paper-200 to-forestRural-600" />
-
-      <div className="max-w-7xl xl:max-w-[1440px] mx-auto px-3 sm:px-6">
-        <div className="flex items-center justify-between h-[4.25rem] gap-2 sm:gap-4">
+    <header className="sticky top-0 z-30 w-full backdrop-blur-xl bg-[#FAF8F5]/92 border-b border-[#ECE5D8] transition-all select-none">
+      <div className="w-full px-4 sm:px-6">
+        <div className="flex items-center justify-between h-15 sm:h-16 gap-3 relative">
           
-          {/* Brand Mark: Rural Micro-Enterprise Ledger */}
-          <div 
-            onClick={() => setActiveTab('dashboard')}
-            className="flex items-center gap-2 sm:gap-3 cursor-pointer select-none group min-w-0 flex-1 sm:flex-initial"
-          >
-            {/* Folk / Bahi-Khata Geometric Mark */}
-            <div className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-terracotta-600 flex items-center justify-center text-white shadow-2xs group-hover:bg-terracotta-700 group-hover:-translate-y-0.5 transition-all duration-200 shrink-0">
-              <BookOpen className="w-4 h-4 sm:w-5 sm:h-5 text-paper-100 transition-transform duration-200 group-hover:scale-105" />
-            </div>
-
-            <div className="flex flex-col min-w-0">
-              <div className="flex items-center gap-1.5 sm:gap-2 leading-tight">
-                <span className="font-black text-sm sm:text-lg tracking-tight text-indigoRural-900 font-display truncate">
-                  व्यापार साथी
-                </span>
-                <span className="text-xs font-bold text-indigoRural-500 hidden sm:inline">
-                  Vyapaar Saathi
-                </span>
-                {/* Mode Badge */}
-                {isDemoMode ? (
-                  <Badge variant="attention" size="sm" className="px-1.5 py-0 text-[10px] shrink-0">
-                    DEMO DATA
-                  </Badge>
-                ) : currentShop ? (
-                  <Badge variant="positive" size="sm" className="px-1.5 py-0 text-[10px] shrink-0">
-                    LIVE
-                  </Badge>
-                ) : (
-                  <Badge variant="brand" size="sm" className="px-1.5 py-0 text-[10px] shrink-0">
-                    DPI Stack
-                  </Badge>
-                )}
-              </div>
-              <div className="text-[10px] font-semibold text-indigoRural-500 flex items-center gap-1.5 mt-0.5 min-w-0">
-                <span className="font-bold text-indigoRural-800 truncate max-w-[110px] xs:max-w-[150px] sm:max-w-none">
-                  {currentShop?.name || (language === 'hi' ? 'दुकान' : 'Store')}
-                </span>
-                {udyamNumber && (
-                  <>
-                    <span className="text-paper-400 shrink-0">•</span>
-                    <span className="text-indigoRural-600 font-mono truncate text-[9px] sm:text-[10px] max-w-[90px] sm:max-w-none">
-                      {udyamNumber}
-                    </span>
-                  </>
-                )}
-              </div>
+          {/* Left: Mobile Sidebar Hamburger + Brand (visible on mobile only) / Desktop spacer */}
+          <div className="flex items-center gap-2.5 lg:flex-1 lg:max-w-[280px] xl:max-w-[320px]">
+            <div className="flex items-center gap-2.5 lg:hidden">
+              <button
+                type="button"
+                onClick={onToggleSidebar}
+                className="p-2 rounded-xl text-stone-700 hover:text-stone-900 hover:bg-stone-200/60 transition-colors cursor-pointer"
+                aria-label="Open sidebar navigation"
+              >
+                <Menu className="w-5 h-5" />
+              </button>
+              <span className="font-serif font-black text-sm text-[#0F3E2E]">साख सेतु</span>
             </div>
           </div>
 
-          {/* Desktop Navigation: Segmented Controls */}
-          <nav className="hidden lg:flex items-center p-1 rounded-xl bg-paper-200/80 border border-paper-300 shadow-2xs">
-            {navItems.map(item => {
-              const Icon = item.icon;
-              const isActive = activeTab === item.id;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => setActiveTab(item.id)}
-                  className={`relative flex items-center gap-1.5 xl:gap-2 px-2.5 xl:px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-150 cursor-pointer ${
-                    isActive 
-                      ? 'bg-white text-indigoRural-950 shadow-card scale-[1.01] ring-1 ring-paper-300/70' 
-                      : 'text-indigoRural-600 hover:text-indigoRural-900 hover:bg-white/80'
-                  }`}
-                >
-                  <Icon className={`w-3.5 h-3.5 ${
-                    item.isAi 
-                      ? 'text-terracotta-600' 
-                      : isActive ? 'text-terracotta-600' : 'text-indigoRural-500'
-                  }`} />
-                  <span>{item.label}</span>
-                  {item.isAi && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-terracotta-600" />
-                  )}
-                </button>
-              );
-            })}
-          </nav>
+          {/* Center: Primary Navigation Tabs & Floating Interactive Mega-Menu */}
+          <div ref={navRef} className="hidden lg:flex items-center justify-center flex-1 mx-auto max-w-fit relative">
+            <nav className="flex items-center justify-center gap-1 xl:gap-1.5">
+              {navItems.map(item => {
+                const Icon = item.icon;
+                const isActive = activeTab === item.id;
+                const isHovered = hoveredTab === item.id;
 
-          {/* Right Action Controls */}
-          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-            {/* Real-time DPI / PWA Sync & Connectivity Badge */}
-            <SyncStatusBadge />
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => {
+                      setActiveTab(item.id);
+                      setHoveredTab(null);
+                    }}
+                    onMouseEnter={() => handleTabMouseEnter(item.id)}
+                    onMouseLeave={handleTabMouseLeave}
+                    className={`
+                      relative flex items-center gap-1.5 xl:gap-2 px-3 xl:px-3.5 py-2 text-xs transition-all duration-150 cursor-pointer select-none rounded-xl whitespace-nowrap
+                      ${isActive 
+                        ? 'text-[#0F3E2E] font-bold bg-[#0F3E2E]/6 shadow-2xs' 
+                        : isHovered
+                        ? 'text-stone-950 font-semibold bg-stone-200/60'
+                        : 'text-stone-600 hover:text-stone-950 font-medium hover:bg-stone-200/40'
+                      }
+                    `}
+                  >
+                    <Icon className={`w-3.5 h-3.5 transition-colors ${isActive ? 'text-[#0F3E2E] stroke-[2.25]' : 'text-stone-500'}`} />
+                    <span>{item.label}</span>
+
+                    {/* Subtle, Lightweight Active Underline Indicator */}
+                    {isActive && (
+                      <span className="absolute bottom-1 left-3 right-3 h-[2px] bg-[#0F3E2E] rounded-full transition-all" />
+                    )}
+                  </button>
+                );
+              })}
+            </nav>
+
+            {/* Contextual Interactive Mega-Menu Panel */}
+            {activeHoverItem && (
+              <div 
+                className="absolute top-full left-1/2 -translate-x-1/2 pt-2.5 z-50 pointer-events-auto"
+                onMouseEnter={handleMenuMouseEnter}
+                onMouseLeave={handleMenuMouseLeave}
+              >
+                {/* Panel Card */}
+                <div className="w-[440px] max-w-[92vw] bg-[#FCFBF8] border border-[#E7DFD4] rounded-2xl p-4 shadow-xl shadow-stone-900/10 transition-all duration-200 ease-out">
+                  
+                  {/* Morphing Content Area */}
+                  <div key={activeHoverItem.id} className="animate-in fade-in zoom-in-[0.99] duration-150">
+                    
+                    {/* Header Banner */}
+                    <div className="flex items-start justify-between pb-2.5 border-b border-[#EDE6DC]">
+                      <div className="space-y-0.5">
+                        <div className="flex items-center gap-2">
+                          <span className="font-serif font-bold text-sm sm:text-base text-stone-900 tracking-tight">
+                            {activeHoverItem.menuTitle}
+                          </span>
+                          <span className="text-[10px] font-bold text-[#0F3E2E] bg-[#E8F0EA] px-2 py-0.5 rounded-full">
+                            SaakhSetu
+                          </span>
+                        </div>
+                        <div className="text-xs text-stone-700 font-medium">
+                          {activeHoverItem.menuTagline}
+                        </div>
+                        <div className="text-[11px] text-stone-500 italic leading-snug">
+                          "{activeHoverItem.menuDescription}"
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 2-Column Quick Links Grid */}
+                    <div className="grid grid-cols-2 gap-1.5 mt-2.5">
+                      {activeHoverItem.items.map((subItem) => (
+                        <button
+                          key={subItem.id}
+                          type="button"
+                          onClick={() => {
+                            subItem.action();
+                            setHoveredTab(null);
+                          }}
+                          className="p-2.5 rounded-xl text-left bg-white/70 hover:bg-[#F2ECE3] border border-[#ECE5DA]/80 hover:border-[#DFCFC0] transition-all duration-150 group cursor-pointer flex flex-col justify-between"
+                        >
+                          <div className="flex items-center justify-between w-full">
+                            <span className="text-xs font-bold text-stone-800 group-hover:text-[#0F3E2E] transition-colors line-clamp-1">
+                              {subItem.title}
+                            </span>
+                            <ChevronRight className="w-3 h-3 text-stone-400 group-hover:text-[#0F3E2E] group-hover:translate-x-0.5 transition-all shrink-0 ml-1" />
+                          </div>
+                          <span className="text-[10px] text-stone-500 group-hover:text-stone-700 line-clamp-1 mt-0.5">
+                            {subItem.description}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+
+                  </div>
+
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Right: Action Controls (Notifications, Language, Profile) */}
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0 ml-auto lg:ml-0 lg:flex-1 lg:max-w-[280px] xl:max-w-[320px] justify-end">
             
-            {/* Live Guided Demo Button */}
-            {isDemoMode && (
-              <Button
-                onClick={onStartDemoTour}
-                variant="primary"
-                size="sm"
-                icon={Sparkles}
-                className="shadow-2xs !p-1.5 sm:!px-3 sm:!py-1.5"
+            {/* Notification Bell */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setNotificationOpen(!notificationOpen)}
+                className="relative p-2 rounded-full text-stone-600 hover:text-stone-900 hover:bg-stone-200/60 transition-colors cursor-pointer"
+                aria-label="Notifications"
               >
-                <span className="hidden sm:inline">{language === 'hi' ? 'लाइव टूर' : 'Live Tour'}</span>
-              </Button>
-            )}
+                <Bell className="w-4 h-4" />
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500 ring-2 ring-[#FAF8F5]" />
+              </button>
 
-            {/* Mode Switch Pill */}
-            {isDemoMode ? (
-              <Button
-                onClick={onSwitchToRegister}
-                variant="secondary"
-                size="sm"
-                icon={ArrowRightLeft}
-                className="hidden sm:inline-flex"
-              >
-                <span>{language === 'hi' ? 'असली पंजीकरण' : 'Real Registration'}</span>
-              </Button>
-            ) : currentShop && (
-              <Button
-                onClick={onSwitchToDemo}
-                variant="secondary"
-                size="sm"
-                icon={ArrowRightLeft}
-                className="hidden sm:inline-flex"
-              >
-                <span>{language === 'hi' ? 'जज डेमो' : 'Judge Demo'}</span>
-              </Button>
-            )}
+              {/* Notification Popover */}
+              {notificationOpen && (
+                <div className="absolute right-0 mt-2 w-72 sm:w-80 bg-white border border-stone-200 rounded-2xl p-3.5 shadow-xl z-50 space-y-2.5 text-xs">
+                  <div className="flex items-center justify-between pb-2 border-b border-stone-100 font-bold text-stone-900 font-serif">
+                    <span>{language === 'hi' ? 'सूचनाएं' : 'Notifications'}</span>
+                    <span className="text-[10px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full font-sans">1 New</span>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="p-2.5 rounded-xl bg-emerald-50/60 border border-emerald-100 flex items-start gap-2">
+                      <span className="w-2 h-2 rounded-full bg-emerald-600 mt-1 shrink-0" />
+                      <div>
+                        <div className="font-bold text-stone-800">PM MUDRA Kishor Scheme Matched</div>
+                        <div className="text-[10px] text-stone-500 mt-0.5">Pre-eligible for up to ₹5,00,000 working capital loan under RBI PSL norms.</div>
+                      </div>
+                    </div>
+                    <div className="p-2.5 rounded-xl bg-stone-50 border border-stone-100 flex items-start gap-2">
+                      <span className="w-2 h-2 rounded-full bg-amber-500 mt-1 shrink-0" />
+                      <div>
+                        <div className="font-bold text-stone-800">Daily Udhaar Reminder Sent</div>
+                        <div className="text-[10px] text-stone-500 mt-0.5">WhatsApp reminder queued for Sunil (₹1,250).</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
 
-            {/* Quick Demo Reset Pill (only when in demo mode) */}
-            {isDemoMode && (
-              <Button
-                onClick={handleResetDemo}
-                disabled={resetting}
-                variant="secondary"
-                size="sm"
-                icon={RotateCcw}
-                className="hidden sm:inline-flex"
-              >
-                <span>{resetting ? '...' : (language === 'hi' ? 'रीसेट' : 'Reset')}</span>
-              </Button>
-            )}
-
-            {/* Language Switcher Pill */}
-            <Button
-              onClick={toggleLanguage}
-              variant="outline"
-              size="sm"
-              icon={Globe}
-              className="!px-2 sm:!px-3"
-            >
-              <span>{language === 'hi' ? 'HI' : 'EN'}</span>
-            </Button>
-
-            {/* Log Out Button */}
-            {currentShop && (
-              <Button
-                onClick={onLogout}
-                variant="outline"
-                size="sm"
-                icon={LogOut}
-                className="hidden sm:inline-flex !text-terracotta-700 hover:!text-terracotta-900 !border-terracotta-200 hover:!bg-terracotta-50 shadow-2xs font-extrabold"
-                title={language === 'hi' ? 'दुकान से लॉग आउट करें' : 'Log out from active session'}
-              >
-                <span>{language === 'hi' ? 'लॉग आउट' : 'Log Out'}</span>
-              </Button>
-            )}
-
-            {/* Mobile Menu Toggle */}
+            {/* Language Switcher: हिन्दी | English */}
             <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden p-2 rounded-xl text-indigoRural-700 hover:bg-paper-200 active:bg-paper-300 transition-all duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-terracotta-500/30"
-              aria-label="Toggle navigation menu"
+              type="button"
+              onClick={toggleLanguage}
+              className="px-2.5 py-1 rounded-lg bg-stone-200/70 hover:bg-stone-200 text-[11px] font-bold text-stone-800 transition-colors cursor-pointer border border-stone-300/50"
+              title="Toggle language"
             >
-              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              {language === 'hi' ? 'English' : 'हिंदी'}
             </button>
+
+            {/* Profile Chip & Dropdown */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setProfileOpen(!profileOpen)}
+                className="flex items-center gap-2 p-1 pr-2 rounded-full hover:bg-stone-200/50 transition-all cursor-pointer border border-transparent hover:border-stone-200"
+              >
+                {/* Dark Forest Green Initials Circle */}
+                <div className="w-8 h-8 rounded-full bg-[#0F3E2E] text-white flex items-center justify-center font-bold text-xs shadow-2xs">
+                  {initials}
+                </div>
+
+                {/* Name & Store Lockup (Desktop) */}
+                <div className="hidden sm:flex flex-col text-left leading-none">
+                  <span className="font-serif font-bold text-xs text-stone-900 truncate max-w-[120px]">
+                    {ownerName}
+                  </span>
+                  <span className="text-[10px] text-stone-500 truncate max-w-[120px] mt-0.5">
+                    {shopName}
+                  </span>
+                </div>
+
+                <ChevronDown className="w-3.5 h-3.5 text-stone-500" />
+              </button>
+
+              {/* Dropdown Menu */}
+              {profileOpen && (
+                <div className="absolute right-0 mt-2 w-56 bg-white border border-stone-200 rounded-2xl p-1.5 shadow-2xl z-50 space-y-1 text-xs">
+                  <div className="px-3 py-2 border-b border-stone-100">
+                    <div className="font-bold text-stone-900 truncate">{ownerName}</div>
+                    <div className="text-[10px] text-stone-500 truncate">{shopName}</div>
+                    <div className="mt-1 flex items-center gap-1 text-[9px] font-bold text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded-full w-fit">
+                      <ShieldCheck className="w-3 h-3" />
+                      <span>Verified Udyam Merchant</span>
+                    </div>
+                  </div>
+
+                  {/* Evaluator & Demo Tools */}
+                  <button
+                    type="button"
+                    onClick={() => { onStartDemoTour?.(); setProfileOpen(false); }}
+                    className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-stone-700 hover:bg-stone-100 hover:text-stone-900 text-left transition-colors"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                    <span>{language === 'hi' ? 'लाइव टूर देखें' : 'Start Demo Tour'}</span>
+                  </button>
+
+                  {isDemoMode ? (
+                    <button
+                      type="button"
+                      onClick={() => { onSwitchToRegister?.(); setProfileOpen(false); }}
+                      className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-stone-700 hover:bg-stone-100 hover:text-stone-900 text-left transition-colors"
+                    >
+                      <ArrowRightLeft className="w-3.5 h-3.5 text-stone-500" />
+                      <span>{language === 'hi' ? 'असली खाता बनाएं' : 'Switch to Real Account'}</span>
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => { onSwitchToDemo?.(); setProfileOpen(false); }}
+                      className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-stone-700 hover:bg-stone-100 hover:text-stone-900 text-left transition-colors"
+                    >
+                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-700" />
+                      <span>{language === 'hi' ? 'जज डेमो स्टोर' : 'Switch to Judge Demo'}</span>
+                    </button>
+                  )}
+
+                  {isDemoMode && (
+                    <button
+                      type="button"
+                      onClick={() => { handleResetDemo(); setProfileOpen(false); }}
+                      disabled={resetting}
+                      className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-stone-700 hover:bg-stone-100 hover:text-stone-900 text-left transition-colors"
+                    >
+                      <RotateCcw className={`w-3.5 h-3.5 ${resetting ? 'animate-spin' : ''}`} />
+                      <span>{resetting ? 'Resetting...' : (language === 'hi' ? 'डेमो रीसेट करें' : 'Reset Demo Data')}</span>
+                    </button>
+                  )}
+
+                  <div className="h-[1px] bg-stone-100 my-1" />
+
+                  {/* Logout Button */}
+                  <button
+                    type="button"
+                    onClick={() => { onLogout?.(); setProfileOpen(false); }}
+                    className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-red-700 hover:bg-red-50 text-left transition-colors"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                    <span>{language === 'hi' ? 'लॉग आउट' : 'Log Out'}</span>
+                  </button>
+                </div>
+              )}
+            </div>
 
           </div>
 
         </div>
       </div>
-
-      {/* Mobile Drawer Menu */}
-      {mobileMenuOpen && (
-        <div className="lg:hidden border-t border-paper-300 bg-white/95 backdrop-blur-2xl p-3 sm:p-4 space-y-2 animate-fadeIn shadow-[0_14px_35px_rgba(12,19,34,0.10)]">
-          <div className="grid grid-cols-2 gap-2 pb-3 border-b border-paper-200">
-            {navItems.map(item => {
-              const Icon = item.icon;
-              const isActive = activeTab === item.id;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => {
-                    setActiveTab(item.id);
-                    setMobileMenuOpen(false);
-                  }}
-                  className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-bold transition cursor-pointer ${
-                    isActive 
-                      ? 'bg-terracotta-600 text-white shadow-2xs' 
-                      : 'bg-paper-50 text-indigoRural-800 hover:bg-paper-100'
-                  }`}
-                >
-                  <Icon className="w-4 h-4" />
-                  <span>{item.label}</span>
-                </button>
-              );
-            })}
-          </div>
-
-          <div className="flex items-center justify-between pt-2 text-xs border-t border-paper-100">
-            <span className="text-indigoRural-500 font-medium flex items-center gap-1">
-              <MapPin className="w-3 h-3 text-indigoRural-400 shrink-0" />
-              <span>{currentShop?.village || '—'}, {currentShop?.district || '—'}</span>
-            </span>
-            <div className="flex items-center gap-3">
-              {isDemoMode ? (
-                <button
-                  onClick={() => {
-                    onSwitchToRegister?.();
-                    setMobileMenuOpen(false);
-                  }}
-                  className="text-xs font-bold text-terracotta-700 hover:underline cursor-pointer"
-                >
-                  {language === 'hi' ? 'असली पंजीकरण' : 'Real Registration'}
-                </button>
-              ) : (
-                <button
-                  onClick={() => {
-                    onSwitchToDemo?.();
-                    setMobileMenuOpen(false);
-                  }}
-                  className="text-xs font-bold text-terracotta-700 hover:underline cursor-pointer"
-                >
-                  {language === 'hi' ? 'जज डेमो' : 'Judge Demo'}
-                </button>
-              )}
-
-              {currentShop && (
-                <button
-                  onClick={() => {
-                    onLogout?.();
-                    setMobileMenuOpen(false);
-                  }}
-                  className="flex items-center gap-1 text-xs font-black text-terracotta-700 hover:text-terracotta-900 bg-terracotta-50 px-2 py-1 rounded-md border border-terracotta-200 cursor-pointer"
-                >
-                  <LogOut className="w-3 h-3" />
-                  <span>{language === 'hi' ? 'लॉग आउट' : 'Log Out'}</span>
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
     </header>
   );
 }

@@ -14,6 +14,7 @@ import {
   X 
 } from 'lucide-react';
 import { api } from '../utils/api';
+import { safeStorage } from '../utils/safeStorage';
 import { useTranslation } from '../i18n/LanguageContext';
 import { WarliBorder } from '../components/WarliMotif';
 import { Card, Badge, SectionHeader, Button } from '../components/ui';
@@ -28,11 +29,9 @@ export function ShopProfilePage({ shop, onShopUpdated, onReloadDemo }) {
   const [district, setDistrict] = useState(shop?.district || '');
   const [state, setState] = useState(findStandardState(shop?.state) || 'Uttar Pradesh');
   const [vintage, setVintage] = useState(shop?.vintage_years ?? 1);
-  const [apiKey, setApiKey] = useState(
-    localStorage.getItem('vyapaar_claude_api_key') ||
-    localStorage.getItem('vyapaar_gemini_api_key') ||
-    ''
-  );
+  const [bank, setBank] = useState(shop?.bank_account_type || 'State Bank of India');
+  const [apiKey, setApiKey] = useState(() => safeStorage.getItem('vyapaar_gemini_api_key', ''));
+  const [savedSuccess, setSavedSuccess] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -100,10 +99,9 @@ export function ShopProfilePage({ shop, onShopUpdated, onReloadDemo }) {
     setErrorMsg('');
     try {
       if (apiKey) {
-        localStorage.setItem('vyapaar_claude_api_key', apiKey);
+        safeStorage.setItem('vyapaar_gemini_api_key', apiKey);
       } else {
-        localStorage.removeItem('vyapaar_claude_api_key');
-        localStorage.removeItem('vyapaar_gemini_api_key');
+        safeStorage.removeItem('vyapaar_gemini_api_key');
       }
 
       if (!shop?.id) {
@@ -170,71 +168,71 @@ export function ShopProfilePage({ shop, onShopUpdated, onReloadDemo }) {
             </div>
           )}
           
-          <div className="border-b border-paper-200 pb-3">
-            <h2 className="text-xs font-black text-indigoRural-900 uppercase tracking-wider font-display">
+          <div className="border-b border-stone-200 pb-3">
+            <h2 className="text-xs font-black text-stone-900 uppercase tracking-wider font-display">
               {language === 'hi' ? 'मूल विवरण' : 'Primary Information'}
             </h2>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold text-indigoRural-700 mb-1.5">
+              <label className="block text-xs font-bold text-stone-700 mb-1.5">
                 {language === 'hi' ? 'दुकान का नाम' : 'Enterprise Name'}
               </label>
               <input
                 type="text"
                 value={shopName}
                 onChange={(e) => setShopName(e.target.value)}
-                className="w-full px-3.5 py-2.5 bg-paper-50 focus:bg-white rounded-xl border border-paper-300 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-terracotta-500/20 focus:border-terracotta-500 transition text-indigoRural-900"
+                className="w-full px-3.5 py-2.5 bg-stone-50 focus:bg-white rounded-xl border border-stone-300 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-terracotta-500/20 focus:border-terracotta-500 transition text-stone-900"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-indigoRural-700 mb-1.5">
+              <label className="block text-xs font-bold text-stone-700 mb-1.5">
                 {language === 'hi' ? 'दुकानदार / स्वामी का नाम' : 'Proprietor Name'}
               </label>
               <input
                 type="text"
                 value={ownerName}
                 onChange={(e) => setOwnerName(e.target.value)}
-                className="w-full px-3.5 py-2.5 bg-paper-50 focus:bg-white rounded-xl border border-paper-300 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-terracotta-500/20 focus:border-terracotta-500 transition text-indigoRural-900"
+                className="w-full px-3.5 py-2.5 bg-stone-50 focus:bg-white rounded-xl border border-stone-300 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-terracotta-500/20 focus:border-terracotta-500 transition text-stone-900"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
-              <label className="block text-xs font-bold text-indigoRural-700 mb-1.5">
+              <label className="block text-xs font-bold text-stone-700 mb-1.5">
                 {language === 'hi' ? 'गांव / मोहल्ला' : 'Village'}
               </label>
               <input
                 type="text"
                 value={village}
                 onChange={(e) => setVillage(e.target.value)}
-                className="w-full px-3.5 py-2.5 bg-paper-50 focus:bg-white rounded-xl border border-paper-300 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-terracotta-500/20 focus:border-terracotta-500 transition text-indigoRural-900"
+                className="w-full px-3.5 py-2.5 bg-stone-50 focus:bg-white rounded-xl border border-stone-300 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-terracotta-500/20 focus:border-terracotta-500 transition text-stone-900"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-indigoRural-700 mb-1.5">
+              <label className="block text-xs font-bold text-stone-700 mb-1.5">
                 {language === 'hi' ? 'जिला (District)' : 'District'}
               </label>
               <input
                 type="text"
                 value={district}
                 onChange={(e) => setDistrict(e.target.value)}
-                className="w-full px-3.5 py-2.5 bg-paper-50 focus:bg-white rounded-xl border border-paper-300 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-terracotta-500/20 focus:border-terracotta-500 transition text-indigoRural-900"
+                className="w-full px-3.5 py-2.5 bg-stone-50 focus:bg-white rounded-xl border border-stone-300 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-terracotta-500/20 focus:border-terracotta-500 transition text-stone-900"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-indigoRural-700 mb-1.5">
+              <label className="block text-xs font-bold text-stone-700 mb-1.5">
                 {language === 'hi' ? 'राज्य / UT (State / UT)' : 'State / Union Territory'}
               </label>
               <select
                 value={findStandardState(state)}
                 onChange={(e) => setState(e.target.value)}
-                className="w-full px-3.5 py-2.5 bg-paper-50 focus:bg-white rounded-xl border border-paper-300 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-terracotta-500/20 focus:border-terracotta-500 transition text-indigoRural-900"
+                className="w-full px-3.5 py-2.5 bg-stone-50 focus:bg-white rounded-xl border border-stone-300 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-terracotta-500/20 focus:border-terracotta-500 transition text-stone-900"
               >
                 <option value="">
                   {language === 'hi' ? '-- राज्य / केंद्र शासित प्रदेश चुनें --' : '-- Select State / UT --'}
@@ -250,7 +248,7 @@ export function ShopProfilePage({ shop, onShopUpdated, onReloadDemo }) {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold text-indigoRural-700 mb-1.5">
+              <label className="block text-xs font-bold text-stone-700 mb-1.5">
                 {language === 'hi' ? 'व्यापार अनुभव (वर्ष)' : 'Vintage (Years)'}
               </label>
               <input
@@ -258,12 +256,12 @@ export function ShopProfilePage({ shop, onShopUpdated, onReloadDemo }) {
                 step="0.5"
                 value={vintage}
                 onChange={(e) => setVintage(e.target.value)}
-                className="w-full px-3.5 py-2.5 bg-paper-50 focus:bg-white rounded-xl border border-paper-300 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-terracotta-500/20 focus:border-terracotta-500 transition text-indigoRural-900"
+                className="w-full px-3.5 py-2.5 bg-stone-50 focus:bg-white rounded-xl border border-stone-300 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-terracotta-500/20 focus:border-terracotta-500 transition text-stone-900"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-indigoRural-700 mb-1.5">
+              <label className="block text-xs font-bold text-stone-700 mb-1.5">
                 {language === 'hi' ? 'बैंक खाता विवरण' : 'Bank Account Type'}
               </label>
               <input
@@ -271,30 +269,30 @@ export function ShopProfilePage({ shop, onShopUpdated, onReloadDemo }) {
                 value={bank}
                 onChange={(e) => setBank(e.target.value)}
                 placeholder="उदा. Aryavart Gramin Bank"
-                className="w-full px-3.5 py-2.5 bg-paper-50 focus:bg-white rounded-xl border border-paper-300 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-terracotta-500/20 focus:border-terracotta-500 transition text-indigoRural-900"
+                className="w-full px-3.5 py-2.5 bg-stone-50 focus:bg-white rounded-xl border border-stone-300 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-terracotta-500/20 focus:border-terracotta-500 transition text-stone-900"
               />
             </div>
           </div>
 
           {/* AI Settings Section */}
-          <div className="pt-4 border-t border-paper-200 space-y-3">
+          <div className="pt-4 border-t border-stone-200 space-y-3">
             <div className="flex items-center gap-2">
-              <Key className="w-4 h-4 text-ochre-600" />
-              <h2 className="text-xs font-black text-indigoRural-900 uppercase tracking-wider font-display">
-                {language === 'hi' ? 'Anthropic Claude API (Claude 3.5 Sonnet)' : 'Anthropic Claude API (Claude 3.5 Sonnet)'}
+              <Key className="w-4 h-4 text-amber-600" />
+              <h2 className="text-xs font-black text-stone-900 uppercase tracking-wider font-display">
+                {language === 'hi' ? 'Google Gemini API (फ्री टियर)' : 'Google Gemini API (Free Tier via Google AI Studio)'}
               </h2>
             </div>
-            <p className="text-xs text-indigoRural-500 leading-relaxed">
+            <p className="text-xs text-stone-500 leading-relaxed">
               {language === 'hi'
-                ? 'व्यापार साथी बिना किसी एपीआई कुंजी के भी 6 पूर्व-निर्मित स्थानीय सलाह परिदृश्यों (Safety Net) पर पूरी तरह काम करता है। यदि आप लाइव Claude 3.5 Sonnet प्रतिक्रियाएं प्राप्त करना चाहते हैं तो अपनी Anthropic API कुंजी यहाँ दर्ज करें।'
-                : 'Vyapaar Saathi operates smoothly without an API key using 6 grounded rural fallback scenarios. To enable live Claude 3.5 Sonnet responses, paste your Anthropic API key below.'}
+                ? 'साख सेतु बिना किसी एपीआई कुंजी के भी 6 पूर्व-निर्मित स्थानीय सलाह परिदृश्यों (Safety Net) पर पूरी तरह काम करता है। यदि आप लाइव जेमिनी 2.5 फ्लैश टेस्ट करना चाहते हैं तो अपनी निःशुल्क Google AI Studio कुंजी यहाँ दर्ज करें।'
+                : 'SaakhSetu operates smoothly without an API key using 6 grounded rural fallback scenarios. To enable live gemini-2.5-flash responses, paste your free Google AI Studio key below.'}
             </p>
             <input
               type="password"
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
-              placeholder="sk-ant-api03-..."
-              className="w-full px-3.5 py-2.5 bg-paper-50 focus:bg-white rounded-xl border border-paper-300 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-terracotta-500/20 focus:border-terracotta-500 transition text-indigoRural-900"
+              placeholder="AIzaSy..."
+              className="w-full px-3.5 py-2.5 bg-stone-50 focus:bg-white rounded-xl border border-stone-300 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-terracotta-500/20 focus:border-terracotta-500 transition text-stone-900"
             />
           </div>
 
@@ -325,16 +323,16 @@ export function ShopProfilePage({ shop, onShopUpdated, onReloadDemo }) {
 
       {/* DPI India Stack — Udyam MSME Verification Section */}
       <Card padding="lg" className="space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-paper-200 pb-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-stone-200 pb-3">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-forestRural-50 text-forestRural-700 border border-forestRural-200 shadow-2xs">
+            <div className="p-2 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-2xs">
               <ShieldCheck className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-sm font-black text-indigoRural-900 font-display">
+              <h2 className="text-sm font-black text-stone-900 font-display">
                 {language === 'hi' ? 'उद्यम एमएसएमई नंबर सत्यापन (सिमुलेटेड)' : 'Udyam MSME Verification (Simulated Check)'}
               </h2>
-              <p className="text-xs text-indigoRural-500">
+              <p className="text-xs text-stone-500">
                 {language === 'hi' ? 'उद्यम नंबर प्रारूप सत्यापन (सिमुलेटेड — किसी सरकारी प्रणाली से जुड़ा नहीं)' : 'Udyam Number Format Check (Simulated — not connected to any government system)'}
               </p>
             </div>
@@ -345,8 +343,8 @@ export function ShopProfilePage({ shop, onShopUpdated, onReloadDemo }) {
         </div>
 
         {udyamSuccessMsg && (
-          <div className="bg-forestRural-50 border border-forestRural-200 text-forestRural-800 text-xs px-4 py-2.5 rounded-xl font-semibold flex items-center gap-2">
-            <Check className="w-4 h-4 text-forestRural-600 shrink-0" />
+          <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs px-4 py-2.5 rounded-xl font-semibold flex items-center gap-2">
+            <Check className="w-4 h-4 text-emerald-600 shrink-0" />
             <span>{udyamSuccessMsg}</span>
           </div>
         )}
@@ -359,7 +357,7 @@ export function ShopProfilePage({ shop, onShopUpdated, onReloadDemo }) {
         )}
 
         <div className="space-y-2">
-          <label className="block text-xs font-bold text-indigoRural-700">
+          <label className="block text-xs font-bold text-stone-700">
             {language === 'hi' ? 'उद्यम पंजीकरण संख्या' : 'Udyam Registration Number'}
           </label>
           <div className="flex flex-col sm:flex-row gap-2.5">
@@ -368,7 +366,7 @@ export function ShopProfilePage({ shop, onShopUpdated, onReloadDemo }) {
               value={udyamNumber}
               onChange={(e) => setUdyamNumber(e.target.value.toUpperCase())}
               placeholder="UDYAM-UP-01-0024891"
-              className="flex-1 px-3.5 py-2.5 bg-paper-50 focus:bg-white rounded-xl border border-paper-300 text-xs font-mono font-bold tracking-wider focus:outline-none focus:ring-2 focus:ring-forestRural-500/20 focus:border-forestRural-500 transition text-indigoRural-900 uppercase"
+              className="flex-1 px-3.5 py-2.5 bg-stone-50 focus:bg-white rounded-xl border border-stone-300 text-xs font-mono font-bold tracking-wider focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition text-stone-900 uppercase"
             />
             <Button
               type="button"
@@ -381,26 +379,26 @@ export function ShopProfilePage({ shop, onShopUpdated, onReloadDemo }) {
               <span>{udyamLoading ? (language === 'hi' ? 'सत्यापित किया जा रहा है...' : 'Checking format...') : (language === 'hi' ? 'सत्यापित करें' : 'Verify Udyam')}</span>
             </Button>
           </div>
-          <p className="text-[11px] text-indigoRural-400">
-            Format: <code className="font-mono text-indigoRural-600 font-bold">UDYAM-XX-00-0000000</code> (e.g. UDYAM-UP-01-0024891, UDYAM-MH-12-0049281)
+          <p className="text-[11px] text-stone-400">
+            Format: <code className="font-mono text-stone-600 font-bold">UDYAM-XX-00-0000000</code> (e.g. UDYAM-UP-01-0024891, UDYAM-MH-12-0049281)
           </p>
         </div>
 
         {isUdyamVerified && (
-          <div className="bg-paper-50 rounded-xl p-3.5 border border-paper-200 text-xs space-y-2">
-            <div className="flex justify-between items-center font-semibold text-indigoRural-600">
+          <div className="bg-stone-50 rounded-xl p-3.5 border border-stone-200 text-xs space-y-2">
+            <div className="flex justify-between items-center font-semibold text-stone-600">
               <span>Enterprise Classification:</span>
-              <strong className="text-forestRural-700 font-bold">Micro Enterprise (Internal PSL-Format Tier: A)</strong>
+              <strong className="text-emerald-700 font-bold">Micro Enterprise (Internal PSL-Format Tier: A)</strong>
             </div>
-            <div className="flex justify-between items-center font-semibold text-indigoRural-600">
+            <div className="flex justify-between items-center font-semibold text-stone-600">
               <span>Primary Business Activity:</span>
-              <strong className="text-indigoRural-900 font-bold">Retail Trade (NIC 4711)</strong>
+              <strong className="text-stone-900 font-bold">Retail Trade (NIC 4711)</strong>
             </div>
-            <div className="flex justify-between items-center font-semibold text-indigoRural-600">
+            <div className="flex justify-between items-center font-semibold text-stone-600">
               <span>District Industries Centre (DIC):</span>
-              <strong className="text-indigoRural-900 font-bold">{shop?.district || 'Varanasi'}, {shop?.state || 'Uttar Pradesh'}</strong>
+              <strong className="text-stone-900 font-bold">{shop?.district || 'Varanasi'}, {shop?.state || 'Uttar Pradesh'}</strong>
             </div>
-            <div className="text-[10px] text-indigoRural-400 pt-1 border-t border-paper-200/60 italic">
+            <div className="text-[10px] text-stone-400 pt-1 border-t border-stone-200/60 italic">
               Verification confirmed via DPI India Stack Mock Gateway conforming to Sahamati & MSME standards.
             </div>
           </div>

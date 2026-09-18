@@ -57,7 +57,7 @@ async function ensureIndexesAndMigrations(db) {
       { 
         $set: { 
           version: 2, 
-          name: 'Vyapaar Saathi Production Schema v2',
+          name: 'SaakhSetu Production Schema v2',
           updatedAt: new Date().toISOString() 
         } 
       },
@@ -127,12 +127,18 @@ export async function getMongoDb() {
       
       const isUnreachable = err.message.includes('ECONNREFUSED') || 
                             err.message.includes('ENOTFOUND') || 
-                            err.message.includes('querySrv');
+                            err.message.includes('querySrv') ||
+                            err.message.includes('timed out');
 
       if (attempt < maxAttempts && !isUnreachable) {
         await sleep(500);
       } else {
         console.warn('[MongoDB] Connection unavailable. Falling back immediately to local SQLite store.');
+        if (cachedClient) {
+          try {
+            await cachedClient.close();
+          } catch (_) {}
+        }
         cachedClient = null;
         cachedDb = null;
         lastFailureTimestamp = Date.now();
@@ -141,6 +147,12 @@ export async function getMongoDb() {
     }
   }
 
+  if (cachedClient) {
+    try {
+      await cachedClient.close();
+    } catch (_) {}
+    cachedClient = null;
+  }
   lastFailureTimestamp = Date.now();
   return null;
 }
@@ -164,3 +176,14 @@ export async function getBenchmarksCollection() {
   const db = await getMongoDb();
   return db ? db.collection('peer_benchmarks') : null;
 }
+
+export async function closeMongoConnection() {
+  if (cachedClient) {
+    try {
+      await cachedClient.close();
+    } catch (_) {}
+    cachedClient = null;
+    cachedDb = null;
+  }
+}
+

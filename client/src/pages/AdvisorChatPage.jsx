@@ -16,6 +16,7 @@ import { api } from '../utils/api';
 import { useTranslation } from '../i18n/LanguageContext';
 import { WarliBorder } from '../components/WarliMotif';
 import { Card, Badge, SectionHeader, Button } from '../components/ui';
+import { APP_ADVISOR_NAME_EN, APP_ADVISOR_NAME_HI } from '../config/brand';
 
 export function AdvisorChatPage({ shop, creditData, summaryData, initialPrompt = '', onPromptUsed }) {
   const { t, language } = useTranslation();
@@ -59,8 +60,8 @@ export function AdvisorChatPage({ shop, creditData, summaryData, initialPrompt =
           {
             role: 'assistant',
             content: language === 'hi' 
-              ? `राम राम ${shop?.owner_name || 'दुकानदार'} जी! 🙏\n\nमैं आपका साथी AI सलाहकार हूँ। मैंने आपकी दुकान (${shop?.name || 'दुकान'}) के बही-खाते और ${shop?.district || 'क्षेत्र'} के आगामी त्योहारी कैलेंडर का विश्लेषण कर लिया है।\n\nमुझसे कुछ भी पूछें — जैसे कि त्योहार पर कितना माल स्टॉक करना है, ग्राहकों का उधार कैसे समेटना है, या नया उपकरण लेने के लिए कौन सा मुद्रा लोन उपयुक्त है!`
-              : `Namaste ${shop?.owner_name || 'Partner'}! 🙏\n\nI am your Saathi AI Advisor. I have synchronized with your store (${shop?.name || 'Your Store'}) and the upcoming seasonal demand in ${shop?.district || 'your area'}.\n\nAsk me anything about seasonal inventory planning, managing udhaar recovery, or applying for a statutory MSME loan!`
+              ? `राम राम ${shop?.owner_name || 'दुकानदार'} जी! 🙏\n\nमैं आपका सेतु AI सलाहकार हूँ। मैंने आपकी दुकान (${shop?.name || 'दुकान'}) के बही-खाते और ${shop?.district || 'क्षेत्र'} के आगामी त्योहारी कैलेंडर का विश्लेषण कर लिया है।\n\nमुझसे कुछ भी पूछें — जैसे कि त्योहार पर कितना माल स्टॉक करना है, ग्राहकों का उधार कैसे समेटना है, या नया उपकरण लेने के लिए कौन सा मुद्रा लोन उपयुक्त है!`
+              : `Namaste ${shop?.owner_name || 'Partner'}! 🙏\n\nI am your Setu AI Advisor. I have synchronized with your store (${shop?.name || 'Your Store'}) and the upcoming seasonal demand in ${shop?.district || 'your area'}.\n\nAsk me anything about seasonal inventory planning, managing udhaar recovery, or applying for a statutory MSME loan!`
           }
         ]);
       }
@@ -130,19 +131,19 @@ export function AdvisorChatPage({ shop, creditData, summaryData, initialPrompt =
       <Card padding="md" className="space-y-3">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-terracotta-600 flex items-center justify-center text-white shadow-2xs">
-              <Sparkles className="w-5 h-5 text-ochre-200" />
+            <div className="w-10 h-10 rounded-xl bg-stone-900 flex items-center justify-center text-white shadow-apple-card">
+              <Sparkles className="w-5 h-5 text-amber-400" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-base font-black text-indigoRural-900 tracking-tight font-display">
-                  {language === 'hi' ? 'साथी AI' : 'Saathi AI'}
+                <h1 className="text-base font-black text-stone-900 tracking-tight font-display">
+                  {language === 'hi' ? APP_ADVISOR_NAME_HI : APP_ADVISOR_NAME_EN}
                 </h1>
                 <Badge variant="brand" size="sm">
                   Claude Grounded
                 </Badge>
               </div>
-              <p className="text-xs text-indigoRural-500">
+              <p className="text-xs text-stone-500">
                 {language === 'hi' ? `${shop?.district || 'बलरामपुर'} मंडी एवं आपकी दुकान के वास्तविक आंकड़ों पर आधारित` : 'Hyper-local business intelligence grounded in your verified shop ledger'}
               </p>
             </div>
@@ -162,29 +163,29 @@ export function AdvisorChatPage({ shop, creditData, summaryData, initialPrompt =
 
         {/* Collapsible Grounding Data Panel */}
         {showContext && (
-          <div className="bg-paper-100 rounded-xl p-4 border border-paper-300 text-xs space-y-2 animate-fadeIn">
-            <div className="flex items-center justify-between font-bold text-indigoRural-800 border-b border-paper-200 pb-1.5">
+          <div className="bg-[#FAF8F5] rounded-xl p-4 border border-stone-300 text-xs space-y-2 animate-fadeIn">
+            <div className="flex items-center justify-between font-bold text-stone-800 border-b border-stone-200 pb-1.5">
               <span>Live Grounding Context Fed to Model:</span>
-              <span className="text-[10px] text-forestRural-700 font-extrabold flex items-center gap-1">
-                <ShieldCheck className="w-3.5 h-3.5 text-forestRural-600" />
+              <span className="text-[10px] text-emerald-700 font-extrabold flex items-center gap-1">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
                 <span>Zero Hallucination Guardrails</span>
               </span>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-[11px]">
-              <div className="p-2.5 bg-white rounded-lg border border-paper-200">
-                <span className="text-indigoRural-400 block text-[10px] uppercase font-bold">Enterprise</span>
-                <strong className="text-indigoRural-900">{shop?.name || (language === 'hi' ? 'मेरी दुकान' : 'Registered Store')}{shop?.village ? ` (${shop.village})` : ''}</strong>
+              <div className="p-2.5 bg-white rounded-lg border border-stone-200">
+                <span className="text-stone-400 block text-[10px] uppercase font-bold">Enterprise</span>
+                <strong className="text-stone-900">{shop?.name || (language === 'hi' ? 'मेरी दुकान' : 'Registered Store')}{shop?.village ? ` (${shop.village})` : ''}</strong>
               </div>
-              <div className="p-2.5 bg-white rounded-lg border border-paper-200">
-                <span className="text-indigoRural-400 block text-[10px] uppercase font-bold">Audited Volume</span>
-                <strong className="text-indigoRural-900">
+              <div className="p-2.5 bg-white rounded-lg border border-stone-200">
+                <span className="text-stone-400 block text-[10px] uppercase font-bold">Audited Volume</span>
+                <strong className="text-stone-900">
                   {totalIncome ? `₹${totalIncome.toLocaleString('en-IN')}` : 'Audited Ledger'} 
                   {netSurplus ? ` (₹${netSurplus.toLocaleString('en-IN')} Surplus)` : ''}
                 </strong>
               </div>
-              <div className="p-2.5 bg-white rounded-lg border border-paper-200">
-                <span className="text-indigoRural-400 block text-[10px] uppercase font-bold">Credit Tier</span>
-                <strong className="text-forestRural-700">
+              <div className="p-2.5 bg-white rounded-lg border border-stone-200">
+                <span className="text-stone-400 block text-[10px] uppercase font-bold">Credit Tier</span>
+                <strong className="text-emerald-700">
                   {creditScore ? `${creditScore} / 850 Prime` : 'Prime Bankable Assessment'}
                 </strong>
               </div>
@@ -208,16 +209,16 @@ export function AdvisorChatPage({ shop, creditData, summaryData, initialPrompt =
                 className={`flex gap-2.5 ${isUser ? 'justify-end' : 'justify-start'}`}
               >
                 {!isUser && (
-                  <div className="w-8 h-8 rounded-full bg-terracotta-600 flex items-center justify-center text-white shrink-0 shadow-2xs mt-1">
-                    <Sparkles className="w-4 h-4 text-ochre-200" />
+                  <div className="w-8 h-8 rounded-full bg-stone-900 flex items-center justify-center text-white shrink-0 shadow-apple-card mt-1">
+                    <Sparkles className="w-4 h-4 text-amber-400" />
                   </div>
                 )}
 
                 <div
-                  className={`max-w-[85%] sm:max-w-[75%] rounded-2xl p-4 text-xs sm:text-sm leading-relaxed shadow-2xs ${
+                  className={`max-w-[85%] sm:max-w-[75%] rounded-2xl p-4 text-xs sm:text-sm leading-relaxed shadow-apple-card ${
                     isUser
-                      ? 'bg-terracotta-600 text-white rounded-br-xs'
-                      : 'bg-paper-50 text-indigoRural-900 border border-paper-200 rounded-bl-xs'
+                      ? 'bg-stone-900 text-white rounded-br-xs'
+                      : 'bg-white text-stone-900 border border-stone-200/80 rounded-bl-xs'
                   }`}
                 >
                   <div className="whitespace-pre-wrap font-sans">
@@ -230,13 +231,13 @@ export function AdvisorChatPage({ shop, creditData, summaryData, initialPrompt =
 
           {loading && (
             <div className="flex gap-2.5 justify-start animate-fadeIn">
-              <div className="w-8 h-8 rounded-full bg-terracotta-600 flex items-center justify-center text-white shrink-0 mt-1">
-                <Sparkles className="w-4 h-4 text-ochre-200" />
+              <div className="w-8 h-8 rounded-full bg-stone-900 flex items-center justify-center text-white shrink-0 mt-1">
+                <Sparkles className="w-4 h-4 text-amber-400" />
               </div>
-              <div className="bg-paper-50 border border-paper-200 rounded-2xl rounded-bl-xs p-4 text-xs text-indigoRural-500 flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-terracotta-500 animate-bounce" />
-                <span className="w-2 h-2 rounded-full bg-terracotta-500 animate-bounce [animation-delay:0.2s]" />
-                <span className="w-2 h-2 rounded-full bg-terracotta-500 animate-bounce [animation-delay:0.4s]" />
+              <div className="bg-white border border-stone-200/80 rounded-2xl rounded-bl-xs p-4 text-xs text-stone-500 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-amber-500 animate-bounce" />
+                <span className="w-2 h-2 rounded-full bg-amber-500 animate-bounce [animation-delay:0.2s]" />
+                <span className="w-2 h-2 rounded-full bg-amber-500 animate-bounce [animation-delay:0.4s]" />
                 <span className="ml-1 font-semibold">{language === 'hi' ? 'विश्लेषण हो रहा है...' : 'Analyzing Mandi & Shop Ledger...'}</span>
               </div>
             </div>
@@ -246,12 +247,12 @@ export function AdvisorChatPage({ shop, creditData, summaryData, initialPrompt =
         </div>
 
         {/* Suggested Quick Question Chips */}
-        <div className="px-4 py-2 bg-paper-50/70 border-t border-paper-200 flex items-center gap-1.5 overflow-x-auto">
+        <div className="px-4 py-2 bg-stone-50/70 border-t border-stone-200 flex items-center gap-1.5 overflow-x-auto">
           {sampleQuestions.map((q, i) => (
             <button
               key={i}
               onClick={() => handleSendMessage(language === 'hi' ? q.textHi : q.textEn)}
-              className="px-3 py-1 bg-white hover:bg-paper-100 text-indigoRural-700 text-xs font-semibold rounded-full border border-paper-300 shrink-0 transition active:scale-95 shadow-2xs cursor-pointer"
+              className="px-3 py-1 bg-white hover:bg-stone-100 text-stone-700 text-xs font-semibold rounded-full border border-stone-200 shrink-0 transition active:scale-95 shadow-2xs cursor-pointer"
             >
               {language === 'hi' ? q.textHi : q.textEn}
             </button>
@@ -259,7 +260,7 @@ export function AdvisorChatPage({ shop, creditData, summaryData, initialPrompt =
         </div>
 
         {/* Input Bar */}
-        <div className="p-3 bg-white border-t border-paper-200">
+        <div className="p-3 bg-white border-t border-stone-200">
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -272,12 +273,12 @@ export function AdvisorChatPage({ shop, creditData, summaryData, initialPrompt =
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               placeholder={language === 'hi' ? 'यहाँ अपना प्रश्न लिखें या पूछें...' : 'Ask about festival stock, loan schemes, or khata...'}
-              className="flex-1 px-4 py-3 bg-paper-100 focus:bg-white border border-paper-300 rounded-full text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-terracotta-500 transition text-indigoRural-900 placeholder:text-indigoRural-400"
+              className="flex-1 px-4 py-3 bg-[#FAF8F5] focus:bg-white border border-stone-200 rounded-full text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-stone-900/15 transition text-stone-900 placeholder:text-stone-400"
             />
             <button
               type="submit"
               disabled={loading || !inputText.trim()}
-              className="w-11 h-11 rounded-full bg-terracotta-600 hover:bg-terracotta-700 active:scale-90 disabled:opacity-40 disabled:cursor-not-allowed text-white flex items-center justify-center shadow-xs transition shrink-0 cursor-pointer"
+              className="w-11 h-11 rounded-full bg-stone-900 hover:bg-stone-800 active:scale-90 disabled:opacity-40 disabled:cursor-not-allowed text-white flex items-center justify-center shadow-apple-card transition shrink-0 cursor-pointer"
             >
               <Send className="w-4 h-4" />
             </button>
