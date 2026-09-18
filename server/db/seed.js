@@ -1,7 +1,7 @@
 import db from './database.js';
 
 export function seedDatabase() {
-  console.log('🌱 Seeding Vyapaar Saathi database: "Ramesh\'s Kirana Store" with 4 months of realistic rural transactions...');
+  console.log('🌱 Seeding Vyapaar Setu database: "Ramesh\'s Kirana Store" with 4 months of realistic rural transactions...');
 
   // 1. Seed Ramesh's Kirana Store
   const insertShop = db.prepare(`
@@ -356,7 +356,7 @@ export function seedDatabase() {
     'init-msg-1',
     'ramesh-kirana',
     'assistant',
-    `राम राम रमेश जी! 🙏 मैं आपका "व्यापार साथी" हूँ।
+    `राम राम रमेश जी! 🙏 मैं आपका "सेतु AI" हूँ।
 
 मैंने आपके **Ramesh's Kirana Store** (उतराउला देहात, बलरामपुर) के पिछले 4 महीनों के बही-खाते का विश्लेषण किया है:
 • **जुलाई में मानसून की मंदी**: भारी बारिश और रास्तों में कीचड़ के कारण बिक्री घटकर ₹34,800 रह गई थी।

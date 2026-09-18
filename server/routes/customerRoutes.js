@@ -35,6 +35,19 @@ router.get('/', async (req, res) => {
     // Filter udhaar transactions
     const udhaarTxs = txs.filter(t => t.type === 'udhaar_given' || t.type === 'udhaar_repaid');
 
+    // Count all transactions for each customer (sales, udhaar, expenses)
+    const allTxCountByCustomer = new Map();
+    txs.forEach(t => {
+      const nameKey = (t.customer_vendor_name || '').trim().toLowerCase();
+      const cId = (t.customer_id || '').trim();
+      if (nameKey) {
+        allTxCountByCustomer.set(nameKey, (allTxCountByCustomer.get(nameKey) || 0) + 1);
+      }
+      if (cId) {
+        allTxCountByCustomer.set(cId, (allTxCountByCustomer.get(cId) || 0) + 1);
+      }
+    });
+
     // Map transactions by customer name (normalized lowercase)
     const txByCustomer = new Map();
     udhaarTxs.forEach(t => {
@@ -66,6 +79,12 @@ router.get('/', async (req, res) => {
       if (balanceOwed > limit) status = 'overlimit';
       else if (usagePercent >= 80) status = 'attention';
 
+      const totalTxCount = Math.max(
+        agg.txCount, 
+        allTxCountByCustomer.get(c.id) || 0, 
+        allTxCountByCustomer.get(nameKey) || 0
+      );
+
       return {
         ...c,
         phone: c.phone || '',
@@ -77,7 +96,7 @@ router.get('/', async (req, res) => {
         usagePercent,
         status,
         lastTransactionDate: agg.lastDate,
-        txCount: agg.txCount,
+        txCount: totalTxCount,
         isRegistered: true
       };
     });
@@ -108,7 +127,7 @@ router.get('/', async (req, res) => {
           usagePercent,
           status: balanceOwed > limit ? 'overlimit' : usagePercent >= 80 ? 'attention' : 'safe',
           lastTransactionDate: agg.lastDate,
-          txCount: agg.txCount,
+          txCount: Math.max(agg.txCount, allTxCountByCustomer.get(nameKey) || 0),
           isRegistered: false
         });
       }

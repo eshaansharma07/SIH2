@@ -13,14 +13,16 @@ router.get('/', async (req, res) => {
     }
     const limit = Number(req.query.limit) || 100;
     const type = req.query.type; // optional filter: income, expense, udhaar_given, udhaar_repaid
+    const customerId = req.query.customerId || req.query.customer_id;
+    const customerName = req.query.customerName || req.query.customer_name;
 
-    let transactions = await dataStore.getTransactions(shopId, { type, limit });
+    let transactions = await dataStore.getTransactions(shopId, { type, limit, customerId, customerName });
     
     // Auto-seed safety net if demo shop transactions were not yet initialized in Lambda environment
     if ((!transactions || transactions.length === 0) && (shopId === 'ramesh-kirana' || String(shopId).includes('demo'))) {
       try {
         seedDatabase();
-        transactions = await dataStore.getTransactions(shopId, { type, limit });
+        transactions = await dataStore.getTransactions(shopId, { type, limit, customerId, customerName });
       } catch (e) {
         console.warn('Auto-seed on empty transactions notice:', e.message);
       }
@@ -92,6 +94,25 @@ router.post('/', async (req, res) => {
     const safeCustomerPhone = (req.body.customer_phone || req.body.customerPhone || '').trim().replace(/\D/g, '').slice(-10);
     const safeNotes = notes ? String(notes).trim().slice(0, 250) : '';
 
+    // Customer association
+    let assignedCustomerId = (req.body.customer_id || req.body.customerId || '').trim() || null;
+    if (!assignedCustomerId && (safeCustomerPhone || safeCustomerName)) {
+      try {
+        const existingCustomers = await dataStore.getCustomers(shopId);
+        if (safeCustomerPhone) {
+          const match = existingCustomers.find(c => {
+            const cPhone = (c.phone || '').replace(/\D/g, '').slice(-10);
+            return cPhone && cPhone === safeCustomerPhone;
+          });
+          if (match) assignedCustomerId = match.id;
+        }
+        if (!assignedCustomerId && safeCustomerName) {
+          const match = existingCustomers.find(c => (c.name || '').trim().toLowerCase() === safeCustomerName.toLowerCase());
+          if (match) assignedCustomerId = match.id;
+        }
+      } catch (_) {}
+    }
+
     const newTx = {
       id,
       shop_id: shopId,
@@ -103,6 +124,7 @@ router.post('/', async (req, res) => {
       payment_mode: assignedPaymentMode,
       customer_vendor_name: safeCustomerName,
       customer_phone: safeCustomerPhone,
+      customer_id: assignedCustomerId,
       notes: safeNotes,
       created_at: new Date().toISOString()
     };
@@ -324,6 +346,7 @@ router.post('/sync', async (req, res) => {
         payment_mode: assignedPaymentMode,
         customer_vendor_name: safeCustomerName,
         customer_phone: safeCustomerPhone,
+        customer_id: item.customer_id || item.customerId || null,
         notes: safeNotes,
         created_at: item.created_at || new Date().toISOString()
       };

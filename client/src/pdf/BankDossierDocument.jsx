@@ -324,11 +324,11 @@ export function BankDossierDocument({ data }) {
         {/* Header */}
         <View style={styles.headerContainer}>
           <View style={styles.titleBlock}>
-            <Text style={styles.brandName}>व्यापार साथी • VYAPAAR SAATHI</Text>
+            <Text style={styles.brandName}>व्यापार सेतु • VYAPAAR SETU</Text>
             <Text style={styles.subBrand}>Hyper-Local Business Advisory & Underwriting Stack for Rural Micro-Enterprises</Text>
             <Text style={styles.documentTitle}>CREDIT APPRAISAL MEMO & VERIFIED FINANCIAL DOSSIER</Text>
             <Text style={styles.complianceBadge}>
-              FORMATTED PER RBI PSL & NAYAK COMMITTEE GUIDELINES • SIH 2026 PROTOTYPE
+              FORMATTED PER RBI PSL & NAYAK COMMITTEE GUIDELINES • SOVEREIGN MSME ARCHITECTURE
             </Text>
           </View>
           <View style={styles.metaBlock}>
@@ -496,7 +496,7 @@ export function BankDossierDocument({ data }) {
                 Lending officers may scan this QR code to verify this Credit Appraisal Memo directly against live tamper-evident transactional logs and calculate updated debt covenants in real time.
               </Text>
               <Text style={styles.qrUrl}>
-                Verify at: https://vyapaar-saathi-nine.vercel.app/api/credit-score/{shop?.id || 'ramesh-kirana'}/cam
+                Verify at: https://saakhsetu.vercel.app/api/credit-score/{shop?.id || 'ramesh-kirana'}/cam
               </Text>
             </View>
           </View>
@@ -514,7 +514,7 @@ export function BankDossierDocument({ data }) {
 
         {/* Footer */}
         <View style={styles.footer}>
-          <Text style={styles.footerText}>Vyapaar Saathi • Prototype for Smart India Hackathon 2026 • Formatted per RBI PSL guidelines • Not an official government filing</Text>
+          <Text style={styles.footerText}>Vyapaar Setu • Priority Sector Lending & Micro-Enterprise Credit Architecture • Formatted per RBI PSL guidelines</Text>
           <Text style={styles.footerText}>Page 1 of 1 • System Generated Dossier</Text>
         </View>
 

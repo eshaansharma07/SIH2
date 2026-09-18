@@ -1,7 +1,8 @@
 import React from 'react';
+import { APP_NAME_HI, APP_ADVISOR_NAME_EN } from '../config/brand';
 
 /**
- * Saathi AI Avatar: Warm Earthen Terracotta Diya with Folded Hands Greeting
+ * Setu AI Avatar: Warm Earthen Terracotta Diya with Folded Hands Greeting
  * Strictly adheres to human, rural-first aesthetic — NO robots, glowing neon or circuits.
  */
 export function SaathiAvatar({ size = 'md', glowing = false, className = '' }) {
@@ -13,9 +14,11 @@ export function SaathiAvatar({ size = 'md', glowing = false, className = '' }) {
   }[size] || { width: 48, height: 48 };
 
   return (
-    <div className={`relative inline-flex items-center justify-center rounded-2xl bg-gradient-to-br from-terracotta-100 via-paper-200 to-ochre-100 border border-terracotta-300 shadow-paper ${className}`}
-         style={{ width: dimensions.width, height: dimensions.height }}>
-      
+    <div 
+      className={`relative inline-flex items-center justify-center rounded-2xl bg-gradient-to-br from-terracotta-100 via-paper-200 to-ochre-100 border border-terracotta-300 shadow-paper select-none ${className}`}
+      style={{ width: dimensions.width, height: dimensions.height }}
+      aria-label="Setu AI Advisor"
+    >
       {glowing && (
         <div className="absolute inset-0 rounded-2xl bg-ochre-400/20 blur-sm animate-pulse -z-10" />
       )}
@@ -64,7 +67,9 @@ export function SaathiAvatar({ size = 'md', glowing = false, className = '' }) {
   );
 }
 
-export function SaathiBadge({ text = "व्यापार साथी", subtext = "AI Advisor" }) {
+export const SetuAvatar = SaathiAvatar;
+
+export function SaathiBadge({ text = APP_NAME_HI, subtext = `${APP_ADVISOR_NAME_EN} Advisor` }) {
   return (
     <div className="inline-flex items-center gap-2.5 px-3 py-1.5 bg-terracotta-50 border border-terracotta-200 rounded-full shadow-sm">
       <SaathiAvatar size="sm" glowing={false} />
@@ -75,3 +80,5 @@ export function SaathiBadge({ text = "व्यापार साथी", subte
     </div>
   );
 }
+
+export const SetuBadge = SaathiBadge;

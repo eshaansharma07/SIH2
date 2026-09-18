@@ -120,7 +120,7 @@ export async function getGoogleCalendarEvents() {
     const response = await fetch(GOOGLE_CALENDAR_ICAL_URL, {
       signal: controller.signal,
       headers: {
-        'User-Agent': 'VyapaarSaathi-RuralAdvisor/1.0'
+        'User-Agent': 'SaakhSetu-RuralAdvisor/1.0'
       }
     });
     clearTimeout(timeout);

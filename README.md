@@ -10,7 +10,7 @@
   <em>An AI-powered, DPI-aligned sovereign micro-enterprise ledger, hyper-local demand forecasting radar, and transparent 4-pillar alternative credit underwriting engine for India's 63+ million rural micro-entrepreneurs.</em>
 </p>
 
-### 🌐 **Live Production App:** [https://vyapaar-saathi-nine.vercel.app](https://vyapaar-saathi-nine.vercel.app)
+### 🌐 **Live Production App:** [https://saakhsetu.vercel.app](https://saakhsetu.vercel.app) *(Mirror: [vyapaar-saathi-nine.vercel.app](https://vyapaar-saathi-nine.vercel.app))*
 
 [Architecture](#-architecture--data-flow) • [Dual Entry Modes](#-dual-entry-modes-judge-demo-vs-real-merchant) • [Core Modules](#-core-modules) • [Underwriting Engine](#-4-pillar-alternative-credit-scoring-math) • [Statutory Schemes](#-verified-statutory-schemes-library) • [Quick Start](#-quick-start-instructions)
 

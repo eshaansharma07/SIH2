@@ -1,8 +1,8 @@
 {
-  "name": "vyapaar-saathi-server",
+  "name": "saakhsetu-server",
   "version": "1.0.0",
   "type": "module",
-  "description": "Backend for Vyapaar Saathi - Hyper-Local Rural Business Advisor & Financial Structuring",
+  "description": "Backend for Vyapaar Setu - Hyper-Local Rural Business Advisor & Financial Structuring",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

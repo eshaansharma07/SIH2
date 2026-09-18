@@ -4,8 +4,8 @@ import { matchSchemesForShop } from './schemeMatcherService.js';
 import { getUpcomingFestivals } from './googleCalendarService.js';
 
 /**
- * Hyper-Local AI Advisory Service powered by Google Gemini API (Free Tier)
- * Uses gemini-2.5-flash or gemini-2.5-flash-lite via Google AI Studio.
+ * Hyper-Local AI Advisory Service powered by Anthropic Claude API
+ * Uses claude-3-5-sonnet-20241022 (or claude-3-5-haiku) via Anthropic API.
  * 
  * Strict System Prompt Grounding Rules:
  * Every response MUST reference at least one of:
@@ -84,7 +84,7 @@ According to your verified transactional ledger:
     keywords: ['loan', 'लोन', 'ऋण', 'मुद्रा', 'mudra', 'योजना', 'bank', 'बैंक', 'फ्रीजर', 'freezer', 'fridge', 'उपकरण'],
     responseHi: (ctx) => `हाँ ${ctx.ownerName} जी, आपको अपनी दुकान के लिए बिल्कुल बैंक लोन मिलेगा! 🏛️
 
-पारंपरिक बैंक अक्सर सिबिल न होने पर मना कर देते हैं, लेकिन व्यापार साथी पर **${ctx.location}** में आपकी **${ctx.tradeCategory}** का ट्रैक रिकॉर्ड ठोस है:
+पारंपरिक बैंक अक्सर सिबिल न होने पर मना कर देते हैं, लेकिन व्यापार सेतु पर **${ctx.location}** में आपकी **${ctx.tradeCategory}** का ट्रैक रिकॉर्ड ठोस है:
 - **संचालन अवधि**: ${ctx.monthsInOperation} महीने (4 वर्ष) से निरंतर व्यापार
 - **पिछले 30 दिनों की बिक्री**: ₹${ctx.last30DaysSummary.totalSales.toLocaleString('en-IN')} (${ctx.last30DaysSummary.momGrowthRate}% मासिक वृद्धि दर)
 - **वैकल्पिक क्रेडिट स्कोर**: **${ctx.creditScore} / 850** (${ctx.creditRating})
@@ -190,7 +190,7 @@ For your **${ctx.tradeCategory}** in **${ctx.location}** (${ctx.monthsInOperatio
 /**
  * Main Advisory Handler
  */
-export async function generateAdvisoryResponse(shopId, userQuestion) {
+export async function generateAdvisoryResponse(shopId, userQuestion, clientApiKey = null) {
   try {
     const shop = db.prepare('SELECT * FROM shops WHERE id = ?').get(shopId) || 
                  db.prepare('SELECT * FROM shops LIMIT 1').get();
@@ -283,21 +283,15 @@ export async function generateAdvisoryResponse(shopId, userQuestion) {
     const isEnglishQuery = /^[a-zA-Z0-9\s.,?!'"₹$%()-]+$/.test(userQuestion.trim()) &&
       !/(ramesh|namaste|ram|bhai|ji|kya|kaise|kitna|kitni|mera|meri|dukaan|paisa|bachat)/i.test(userQuestion);
 
-    // 4. Try Google Gemini API Call (Free Tier via Google AI Studio)
-    const geminiKey = process.env.GEMINI_API_KEY;
+    // 4. Try Google Gemini API Call (Free Tier via Google AI Studio) or Anthropic Claude API
+    const geminiKey = process.env.GEMINI_API_KEY || (clientApiKey && !clientApiKey.startsWith('sk-ant') ? clientApiKey : null);
+    const claudeKey = process.env.ANTHROPIC_API_KEY || process.env.CLAUDE_API_KEY || (clientApiKey && clientApiKey.startsWith('sk-ant') ? clientApiKey : null);
 
-    if (geminiKey) {
-      try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 14000); // 14-second timeout
+    const languageInstruction = isEnglishQuery 
+      ? 'Respond in clear, professional, warm Indian English tailored for rural micro-entrepreneurs.' 
+      : 'Respond in respectful, friendly Hindi (using आप, राम-राम/नमस्ते) with common trade terms (स्टॉक, नकदी, मुनाफा, लोन).';
 
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`;
-        
-        const languageInstruction = isEnglishQuery 
-          ? 'Respond in clear, professional, warm Indian English tailored for rural micro-entrepreneurs.' 
-          : 'Respond in respectful, friendly Hindi (using आप, राम-राम/नमस्ते) with common trade terms (स्टॉक, नकदी, मुनाफा, लोन).';
-
-        const systemInstruction = `You are "Vyapaar Saathi" (व्यापार साथी), a warm, trusted, wise rural business advisor for Indian micro-entrepreneurs.
+    const systemInstruction = `You are "Setu AI" (सेतु AI) in Vyapaar Setu (व्यापार सेतु), a warm, trusted, wise rural business advisor for Indian micro-entrepreneurs.
 ${languageInstruction}
 Never use robotic AI jargon, sterile corporate language, or generic advice like "consider stocking more inventory".
 
@@ -318,26 +312,85 @@ Every single response MUST reference at least ONE (and ideally multiple) of the 
 
 Provide practical, hyper-local advice: exact quantities to stock, wholesale mandi advice in Balrampur, udhaar recovery timing linked with paddy harvest, and loan steps. Keep advice in 2 to 4 readable paragraphs with clear bullet points.`;
 
-        const response = await fetch(url, {
+    // 4A. Primary: Google Gemini API (Free Tier via Google AI Studio)
+    if (geminiKey) {
+      const candidateModels = [process.env.GEMINI_MODEL || 'gemini-2.0-flash', 'gemini-1.5-flash'];
+      for (const model of candidateModels) {
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 15000); // 15-second timeout
+          const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`;
+
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            signal: controller.signal,
+            body: JSON.stringify({
+              system_instruction: {
+                parts: [{ text: systemInstruction }]
+              },
+              contents: [
+                {
+                  role: 'user',
+                  parts: [{ text: `Shopkeeper Question: "${userQuestion}"` }]
+                }
+              ],
+              generationConfig: {
+                temperature: 0.7,
+                maxOutputTokens: 1000
+              }
+            })
+          });
+
+          clearTimeout(timeoutId);
+
+          if (response.ok) {
+            const data = await response.json();
+            const candidate = data.candidates?.[0];
+            const content = candidate?.content?.parts?.find(p => p.text)?.text || candidate?.content?.parts?.[0]?.text;
+            if (content && content.trim()) {
+              saveChatMessage(shop.id, 'user', userQuestion);
+              saveChatMessage(shop.id, 'assistant', content);
+              return {
+                content,
+                source: `gemini-${model}`,
+                contextUsed: contextData
+              };
+            }
+          } else {
+            console.warn(`[Gemini API] Model ${model} returned non-200:`, response.status, await response.text().catch(() => ''));
+          }
+        } catch (modelErr) {
+          console.warn(`[Gemini API] Call timed out or failed for ${model}:`, modelErr.message);
+        }
+      }
+    }
+
+    // 4B. Secondary: Anthropic Claude API (if Claude key provided)
+    if (claudeKey) {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 16000);
+        const claudeModel = process.env.CLAUDE_MODEL || 'claude-3-5-sonnet-20241022';
+
+        const response = await fetch('https://api.anthropic.com/v1/messages', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': claudeKey,
+            'anthropic-version': '2023-06-01'
+          },
           signal: controller.signal,
           body: JSON.stringify({
-            contents: [
+            model: claudeModel,
+            max_tokens: 1000,
+            system: systemInstruction,
+            messages: [
               {
                 role: 'user',
-                parts: [
-                  { text: `${systemInstruction}\n\nShopkeeper Question: "${userQuestion}"` }
-                ]
+                content: `Shopkeeper Question: "${userQuestion}"`
               }
-            ],
-            generationConfig: {
-              temperature: 0.7,
-              maxOutputTokens: 800,
-              thinkingConfig: {
-                thinkingBudget: 0
-              }
-            }
+            ]
           })
         });
 
@@ -345,21 +398,22 @@ Provide practical, hyper-local advice: exact quantities to stock, wholesale mand
 
         if (response.ok) {
           const data = await response.json();
-          const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
+          const textBlock = data.content?.find(block => block.type === 'text');
+          const content = textBlock?.text || (typeof data.content?.[0] === 'string' ? data.content[0] : data.content?.[0]?.text);
           if (content && content.trim()) {
             saveChatMessage(shop.id, 'user', userQuestion);
             saveChatMessage(shop.id, 'assistant', content);
             return {
               content,
-              source: 'gemini-2.5-flash',
+              source: data.model || claudeModel,
               contextUsed: contextData
             };
           }
         } else {
-          console.warn('Gemini API returned non-200 status (rate-limit/error):', response.status, await response.text().catch(() => ''));
+          console.warn('Claude API returned non-200 status:', response.status, await response.text().catch(() => ''));
         }
       } catch (err) {
-        console.warn('Gemini API call timed out or failed, activating rural safety net fallback:', err.message);
+        console.warn('Claude API call timed out or failed:', err.message);
       }
     }
 
@@ -378,7 +432,7 @@ Provide practical, hyper-local advice: exact quantities to stock, wholesale mand
     console.error('Critical fallback in advisory service:', criticalErr);
     return {
       content: `राम राम Ramesh Kumar जी! 🙏\n\nउत्तर प्रदेश के **Utraula Dehat village, Balrampur district** में आपकी **Kirana & General Store** पिछले **48 महीनों** से सफलता से चल रही है।\n\nदीपावली पर तेल, घी और चीनी की मांग में 40% से 45% उछाल आने का अनुमान है। आपका वैकल्पिक क्रेडिट स्कोर **785/850** है, जिससे आप **PM MUDRA** कार्यशील पूंजी लोन के लिए बिना किसी बंधक (0% Collateral) के 100% पात्र हैं।`,
-      source: 'gemini-fallback-grounded',
+      source: 'claude-fallback-grounded',
       contextUsed: null
     };
   }

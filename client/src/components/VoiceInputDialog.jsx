@@ -28,7 +28,17 @@ import {
 } from '../utils/voiceParser';
 import { speak, stopSpeech, isSpeechSupported } from '../utils/speechService';
 import { api } from '../utils/api';
+import RubberStamp from './RubberStamp';
 import { Badge, Button } from './ui';
+import { 
+  findMatchingCustomer, 
+  searchCustomerSuggestions, 
+  cleanIndianPhone, 
+  maskIndianPhone,
+  getCustomerDetails,
+  getCachedCustomers,
+  setCachedCustomers
+} from '../utils/customerMatcher';
 
 export function VoiceInputDialog({ 
   isOpen, 
@@ -54,7 +64,10 @@ export function VoiceInputDialog({
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState('Daily Counter Sales');
   
-  const [customerList, setCustomerList] = useState(existingCustomers);
+  const [customerList, setCustomerList] = useState(() => {
+    if (existingCustomers && existingCustomers.length > 0) return existingCustomers;
+    return getCachedCustomers(shopId);
+  });
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -63,15 +76,23 @@ export function VoiceInputDialog({
   const stepRef = useRef(step);
   stepRef.current = step;
 
-  // Load shop customers if not passed
+  const voiceSuggestions = searchCustomerSuggestions(customerName, customerList, 5);
+
+  // Load shop customers if not passed (cached + network refresh)
   useEffect(() => {
     if (!isOpen || !shopId) return;
     if (existingCustomers && existingCustomers.length > 0) {
       setCustomerList(existingCustomers);
+      setCachedCustomers(shopId, existingCustomers);
     } else {
+      const cached = getCachedCustomers(shopId);
+      if (cached && cached.length > 0) {
+        setCustomerList(cached);
+      }
       api.getCustomers(shopId).then(res => {
         if (res?.customers && Array.isArray(res.customers)) {
           setCustomerList(res.customers);
+          setCachedCustomers(shopId, res.customers);
         }
       }).catch(() => {});
     }
@@ -246,8 +267,13 @@ export function VoiceInputDialog({
         setAmount(String(parsedFull.amount));
         if (parsedFull.customerName) setCustomerName(parsedFull.customerName);
         if (parsedFull.customerName) {
-          const match = customerList.find(c => (c.name || c.customerName || '').toLowerCase() === parsedFull.customerName.toLowerCase());
-          if (match?.phone) setCustomerPhone(match.phone.replace(/\D/g, '').slice(-10));
+          const match = findMatchingCustomer(parsedFull.customerName, customerList);
+          if (match) {
+            if (match.name) setCustomerName(match.name);
+            if (match.cleanPhone) setCustomerPhone(match.cleanPhone);
+          } else {
+            setCustomerName(parsedFull.customerName);
+          }
         }
         setStep('confirm');
         promptForStep('confirm', {
@@ -274,20 +300,15 @@ export function VoiceInputDialog({
     else if (activeStep === 'customer') {
       const extracted = extractCustomerName(rawText, customerList) || rawText;
       const cleanName = extracted.trim();
-      setCustomerName(cleanName);
 
-      // Match against known customers
-      const match = customerList.find(c => {
-        const cName = (c.name || c.customerName || '').toLowerCase();
-        return cName.includes(cleanName.toLowerCase()) || cleanName.toLowerCase().includes(cName);
-      });
+      // Match against known customers using unified customerMatcher
+      const match = findMatchingCustomer(cleanName, customerList);
 
       if (match) {
-        const matchedName = match.name || match.customerName;
+        const matchedName = match.name;
         setCustomerName(matchedName);
-        if (match.phone || match.cleanPhone) {
-          const cleanPhone = (match.phone || match.cleanPhone).replace(/\D/g, '').slice(-10);
-          setCustomerPhone(cleanPhone);
+        if (match.cleanPhone) {
+          setCustomerPhone(match.cleanPhone);
         }
         // Speak verbal confirmation of customer found
         if (!audioMuted && isSpeechSupported()) {
@@ -305,6 +326,7 @@ export function VoiceInputDialog({
         setStep('amount');
         promptForStep('amount', { customerName: matchedName });
       } else {
+        setCustomerName(cleanName);
         // New customer: if udhaar_given, require phone number
         if (type === 'udhaar_given') {
           setStep('phone');
@@ -447,7 +469,7 @@ export function VoiceInputDialog({
                 }}
                 className={`p-2 rounded-full border transition cursor-pointer ${
                   audioMuted 
-                    ? 'bg-paper-100 text-slate-400 border-paper-300 hover:bg-paper-200' 
+                    ? 'bg-paper-100 text-paper-400 border-paper-300 hover:bg-paper-200' 
                     : 'bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100'
                 }`}
                 title={audioMuted ? 'Unmute voice' : 'Mute spoken prompts'}
@@ -659,9 +681,35 @@ export function VoiceInputDialog({
                   type="text"
                   value={customerName}
                   onChange={(e) => setCustomerName(e.target.value)}
-                  placeholder={language === 'hi' ? 'उदा. रमेश कुमार, सीता देवी...' : 'e.g. Ramesh Kumar...'}
+                  placeholder={language === 'hi' ? 'उदा. रमेश कुमार, मास्टरजी...' : 'e.g. Ramesh Kumar, Masterji...'}
                   className="w-full pl-10 pr-4 py-2.5 bg-paper-50 border border-paper-300 rounded-xl text-sm font-bold text-indigoRural-900 focus:outline-hidden focus:border-terracotta-500"
                 />
+
+                {/* Suggestions dropdown in voice dialog */}
+                {customerName.trim().length > 0 && voiceSuggestions.length > 0 && (
+                  <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-paper-300 rounded-xl shadow-xl z-30 max-h-44 overflow-y-auto divide-y divide-paper-200">
+                    {voiceSuggestions.map((cust, idx) => (
+                      <button
+                        key={cust.id || cust.name || idx}
+                        type="button"
+                        onClick={() => {
+                          setCustomerName(cust.name);
+                          if (cust.cleanPhone) setCustomerPhone(cust.cleanPhone);
+                          setStep('amount');
+                          promptForStep('amount', { customerName: cust.name });
+                        }}
+                        className="w-full px-3 py-2 text-left hover:bg-paper-100 transition flex items-center justify-between gap-2 cursor-pointer"
+                      >
+                        <span className="text-xs font-bold text-indigoRural-900">{cust.name}</span>
+                        {cust.cleanPhone && (
+                          <span className="text-[10px] font-mono text-forestRural-700 font-semibold">
+                            📞 {maskIndianPhone(cust.cleanPhone)}
+                          </span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Known Customer Quick Pills */}
@@ -672,11 +720,12 @@ export function VoiceInputDialog({
                   </p>
                   <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto p-1">
                     {customerList.map((c, i) => {
-                      const name = c.name || c.customerName || `Customer ${i + 1}`;
-                      const phone = (c.phone || c.cleanPhone || '').replace(/\D/g, '').slice(-10);
+                      const details = getCustomerDetails(c);
+                      const name = details.name;
+                      const phone = details.cleanPhone;
                       return (
                         <button
-                          key={i}
+                          key={details.id || i}
                           type="button"
                           onClick={() => {
                             setCustomerName(name);
@@ -687,7 +736,11 @@ export function VoiceInputDialog({
                           className="px-3 py-1.5 rounded-full text-xs font-extrabold bg-white border border-paper-300 hover:border-terracotta-500 text-indigoRural-900 hover:bg-terracotta-50 transition cursor-pointer flex items-center gap-1.5"
                         >
                           <span>{name}</span>
-                          {phone && <span className="text-[10px] text-indigoRural-400 font-normal">({phone.slice(-4)})</span>}
+                          {phone && (
+                            <span className="text-[10px] text-forestRural-700 font-mono font-bold">
+                              ({maskIndianPhone(phone)})
+                            </span>
+                          )}
                         </button>
                       );
                     })}
@@ -698,13 +751,18 @@ export function VoiceInputDialog({
               {customerName && (
                 <Button
                   onClick={() => {
-                    const match = customerList.find(c => (c.name || c.customerName || '').toLowerCase() === customerName.toLowerCase());
-                    if (!match && type === 'udhaar_given') {
+                    const match = findMatchingCustomer(customerName, customerList);
+                    if (match) {
+                      setCustomerName(match.name);
+                      if (match.cleanPhone) setCustomerPhone(match.cleanPhone);
+                      setStep('amount');
+                      promptForStep('amount', { customerName: match.name });
+                    } else if (type === 'udhaar_given') {
                       setStep('phone');
-                      promptForStep('phone');
+                      promptForStep('phone', { customerName });
                     } else {
                       setStep('amount');
-                      promptForStep('amount');
+                      promptForStep('amount', { customerName });
                     }
                   }}
                   variant="primary"
@@ -1001,10 +1059,10 @@ export function VoiceInputDialog({
               {/* Transcript & Status text */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5">
-                  <span className={`w-2 h-2 rounded-full ${isListening ? 'bg-terracotta-600 animate-ping' : isSpeakingState ? 'bg-indigo-600 animate-pulse' : 'bg-slate-400'}`} />
+                  <span className={`w-2 h-2 rounded-full ${isListening ? 'bg-terracotta-600 animate-ping' : isSpeakingState ? 'bg-turmeric animate-pulse' : 'bg-paper-300'}`} />
                   <span className="text-[10px] font-black uppercase tracking-wider text-indigoRural-600 font-display">
                     {isSpeakingState 
-                      ? (language === 'hi' ? 'साथी बोल रहा है...' : 'Saathi is speaking...')
+                      ? (language === 'hi' ? 'सेतु AI बोल रहा है...' : 'Setu AI is speaking...')
                       : isListening 
                       ? (language === 'hi' ? 'सुन रहा हूँ... बोलिए' : 'Listening... speak now')
                       : (language === 'hi' ? 'माइक पर टैप करके बोलें' : 'Tap mic to speak')}
@@ -1031,6 +1089,17 @@ export function VoiceInputDialog({
         </div>
 
       </div>
+
+      {saveSuccess && (
+        <RubberStamp 
+          text={
+            parsedData?.type === 'income' ? 'जमा • RECORDED' :
+            parsedData?.type === 'expense' ? 'खर्च • RECORDED' :
+            parsedData?.type === 'udhaar_given' ? 'उधार • RECORDED' : 'वसूली • RECORDED'
+          }
+          subtext="व्यापार सेतु बही-खाता"
+        />
+      )}
     </div>
   );
 }

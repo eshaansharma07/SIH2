@@ -1,7 +1,7 @@
 import React from 'react';
 
 /**
- * Canonical Button component for Vyapaar Saathi
+ * Canonical Button component for SaakhSetu
  * Variants:
  * - 'primary': Terracotta solid button for main call-to-actions
  * - 'secondary': Paper/neutral button for secondary actions
@@ -23,12 +23,14 @@ export function Button({
   ...props
 }) {
   const variantStyles = {
-    primary: 'bg-terracotta-600 hover:bg-terracotta-700 active:bg-terracotta-800 text-white font-extrabold shadow-xs',
-    secondary: 'bg-paper-100 hover:bg-paper-200 active:bg-paper-300 text-indigoRural-900 font-bold border border-paper-300/90',
-    dark: 'bg-indigoRural-900 hover:bg-indigoRural-800 active:bg-indigoRural-950 text-white font-extrabold shadow-xs',
-    outline: 'bg-transparent hover:bg-paper-100 text-indigoRural-800 font-bold border border-paper-300 active:scale-98',
-    ghost: 'bg-transparent hover:bg-paper-100 active:bg-paper-200 text-indigoRural-700 font-semibold',
-    forest: 'bg-forestRural-600 hover:bg-forestRural-700 active:bg-forestRural-800 text-white font-extrabold shadow-xs'
+    primary: 'bg-stone-900 hover:bg-stone-800 active:bg-black text-white font-bold shadow-xs',
+    secondary: 'bg-white hover:bg-stone-50 active:bg-stone-100 text-stone-900 font-bold border border-stone-200/80 shadow-2xs',
+    dark: 'bg-stone-950 hover:bg-stone-900 active:bg-black text-white font-bold shadow-xs',
+    outline: 'bg-transparent hover:bg-stone-100/60 text-stone-800 font-bold border border-stone-300 active:scale-98',
+    ghost: 'bg-transparent hover:bg-stone-100/70 active:bg-stone-200/70 text-stone-700 font-semibold',
+    forest: 'bg-emerald-700 hover:bg-emerald-800 active:bg-emerald-900 text-white font-bold shadow-xs',
+    turmeric: 'bg-amber-600 hover:bg-amber-700 active:bg-amber-800 text-white font-bold shadow-xs',
+    vermillion: 'bg-red-700 hover:bg-red-800 active:bg-red-900 text-white font-bold shadow-xs'
   };
 
   const sizeStyles = {
@@ -44,7 +46,7 @@ export function Button({
       type={type}
       onClick={onClick}
       disabled={disabled}
-      className={`inline-flex items-center justify-center font-sans tracking-tight transition duration-150 active:scale-[0.98] cursor-pointer ${variantStyles[variant] || variantStyles.primary} ${sizeStyles[size] || sizeStyles.md} ${disabled ? disabledStyles : ''} ${className}`}
+      className={`inline-flex items-center justify-center font-sans tracking-tight btn-tactile hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] cursor-pointer ${variantStyles[variant] || variantStyles.primary} ${sizeStyles[size] || sizeStyles.md} ${disabled ? disabledStyles : ''} ${className}`}
       {...props}
     >
       {Icon && iconPosition === 'left' && <Icon className="w-4 h-4 shrink-0" />}

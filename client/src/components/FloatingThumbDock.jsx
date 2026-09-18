@@ -61,8 +61,8 @@ export function FloatingThumbDock({
   const rightNavItems = [
     { 
       id: 'advisor', 
-      labelHi: 'साथी AI', 
-      labelEn: 'Saathi AI', 
+      labelHi: 'सेतु AI', 
+      labelEn: 'Setu AI', 
       icon: Sparkles,
       highlight: true
     },
@@ -80,7 +80,7 @@ export function FloatingThumbDock({
       {/* Main 5-Slot Bottom Navigation Bar */}
       <nav 
         aria-label="Mobile Thumb Navigation Dock"
-        className="pointer-events-auto w-full bg-indigoRural-950/95 backdrop-blur-2xl border border-paper-300/20 shadow-2xl rounded-2xl sm:rounded-3xl p-1.5 flex items-center justify-between text-white ring-1 ring-black/40"
+        className="pointer-events-auto w-full bg-stone-900/90 backdrop-blur-2xl border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.35)] rounded-2xl sm:rounded-3xl p-1.5 flex items-center justify-between text-stone-200 ring-1 ring-black/30"
       >
         {/* Left Items: Home & Khata */}
         <div className="flex items-center justify-around flex-1">
@@ -97,18 +97,18 @@ export function FloatingThumbDock({
                 className={`flex flex-col items-center justify-center flex-1 py-1 px-1 rounded-xl transition-all cursor-pointer active:scale-95 ${
                   isActive 
                     ? 'text-white' 
-                    : 'text-indigoRural-300 hover:text-white'
+                    : 'text-stone-400 hover:text-stone-200'
                 }`}
               >
                 <div className={`p-1.5 rounded-xl transition-all ${
                   isActive 
-                    ? 'bg-white/15 text-terracotta-400 scale-105 shadow-inner' 
-                    : 'text-indigoRural-300'
+                    ? 'bg-white/15 text-amber-400 scale-105 shadow-inner' 
+                    : 'text-stone-400'
                 }`}>
                   <Icon className={`w-4 h-4 ${isActive ? 'stroke-[2.5]' : 'stroke-2'}`} />
                 </div>
                 <span className={`text-[10px] tracking-tight mt-0.5 transition-all ${
-                  isActive ? 'font-black text-white' : 'font-semibold text-paper-300/80'
+                  isActive ? 'font-black text-white' : 'font-semibold text-stone-400'
                 }`}>
                   {label}
                 </span>
@@ -123,11 +123,11 @@ export function FloatingThumbDock({
             type="button"
             onClick={onOpenKeypad}
             aria-label="Record transaction"
-            className="flex items-center justify-center w-11 h-11 rounded-full bg-gradient-to-tr from-terracotta-600 to-terracotta-500 hover:from-terracotta-500 hover:to-terracotta-400 text-white shadow-lg shadow-terracotta-600/40 ring-3 ring-indigoRural-950 active:scale-90 transition-all cursor-pointer -mt-4"
+            className="flex items-center justify-center w-11 h-11 rounded-full bg-gradient-to-tr from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-white shadow-lg shadow-amber-600/30 ring-4 ring-[#FAF8F5] active:scale-90 transition-all cursor-pointer -mt-3.5"
           >
             <Plus className="w-5 h-5 text-white stroke-[3]" />
           </button>
-          <span className="text-[9px] font-black text-terracotta-300 uppercase tracking-wider mt-0.5">
+          <span className="text-[9px] font-black text-amber-300 uppercase tracking-wider mt-0.5">
             {language === 'hi' ? 'दर्ज' : 'Record'}
           </span>
         </div>
@@ -147,20 +147,20 @@ export function FloatingThumbDock({
                 className={`flex flex-col items-center justify-center flex-1 py-1 px-1 rounded-xl transition-all cursor-pointer active:scale-95 ${
                   isActive 
                     ? 'text-white' 
-                    : 'text-indigoRural-300 hover:text-white'
+                    : 'text-stone-400 hover:text-stone-200'
                 }`}
               >
                 <div className={`p-1.5 rounded-xl transition-all ${
                   isActive 
-                    ? 'bg-white/15 text-terracotta-400 scale-105 shadow-inner' 
+                    ? 'bg-white/15 text-amber-400 scale-105 shadow-inner' 
                     : item.highlight 
-                    ? 'text-ochre-300' 
-                    : 'text-indigoRural-300'
+                    ? 'text-amber-400' 
+                    : 'text-stone-400'
                 }`}>
                   <Icon className={`w-4 h-4 ${isActive ? 'stroke-[2.5]' : 'stroke-2'}`} />
                 </div>
                 <span className={`text-[10px] tracking-tight mt-0.5 transition-all truncate max-w-[65px] ${
-                  isActive ? 'font-black text-white' : 'font-semibold text-paper-300/80'
+                  isActive ? 'font-black text-white' : 'font-semibold text-stone-400'
                 }`}>
                   {label}
                 </span>

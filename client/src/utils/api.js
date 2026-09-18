@@ -60,6 +60,14 @@ export const api = {
   // Shop profile
   getShopCurrent: (shopId = '') => request(`/shop/current${shopId ? `?shopId=${shopId}` : ''}`),
   setupShop: (data) => request('/shop/setup', { method: 'POST', body: JSON.stringify(data) }),
+  registerShop: (data) => {
+    const payload = {
+      ...data,
+      trade_type: data.trade_type || data.trade_name || 'kirana',
+      trade_name: data.trade_name || data.trade_type || 'Kirana & General Store',
+    };
+    return request('/shop/register', { method: 'POST', body: JSON.stringify(payload) });
+  },
   loginShop: (phone, password) => request('/shop/login', { method: 'POST', body: JSON.stringify({ phone, password }) }),
   resetDemoShop: () => request('/shop/reset-demo', { method: 'POST' }),
   updateShop: (id, data) => request(`/shop/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
@@ -131,8 +139,13 @@ export const api = {
   getSchemeDetail: (id) => request(`/schemes/${id}`),
 
   // Advisory
-  chatAdvisor: (shopId, question) => 
-    request('/advisor/chat', { method: 'POST', body: JSON.stringify({ shopId, question }) }),
+  chatAdvisor: (shopId, question, apiKey) => {
+    const key = apiKey || (typeof localStorage !== 'undefined' ? (localStorage.getItem('vyapaar_claude_api_key') || localStorage.getItem('vyapaar_gemini_api_key')) : null);
+    return request('/advisor/chat', { 
+      method: 'POST', 
+      body: JSON.stringify({ shopId, question, apiKey: key }) 
+    });
+  },
   getAdvisorHistory: (shopId) => request(`/advisor/history?shopId=${shopId}`),
   getSeasonalCues: (shopId) => request(`/advisor/cues?shopId=${shopId}`),
 

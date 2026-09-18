@@ -137,5 +137,7 @@ test('Shop Auth & Transaction Operations Suite', async (t) => {
 
     // Clean up
     db.prepare('DELETE FROM transactions WHERE id = ?').run(clientTxId);
+    const { closeMongoConnection } = await import('../db/mongoClient.js');
+    await closeMongoConnection();
   });
 });

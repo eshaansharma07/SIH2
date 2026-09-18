@@ -1,10 +1,10 @@
 {
-  "appName": "Vyapaar Saathi",
-  "appTagline": "AI Rural Business & Credit Advisor",
-  "hindiAppName": "व्यापार साथी",
+  "appName": "Vyapaar Setu",
+  "appTagline": "Your business ledger, bridged to credit",
+  "hindiAppName": "व्यापार सेतु",
   "nav": {
     "dashboard": "Dashboard",
-    "advisor": "Saathi AI",
+    "advisor": "Setu AI",
     "cashflow": "Bahi-Khata",
     "credit": "Credit Score",
     "schemes": "Govt Schemes",
@@ -27,14 +27,14 @@
     "digitalShare": "Digital (UPI) Share",
     "peerBenchTitle": "Balrampur District Peer Reality Check",
     "peerBenchSub": "Anonymized comparison with similar rural kirana stores",
-    "quickAskTitle": "Ask Saathi AI",
+    "quickAskTitle": "Ask Setu AI",
     "logSaleBtn": "Log Today's Sale"
   },
   "advisor": {
-    "title": "Saathi AI",
+    "title": "Setu AI",
     "subtitle": "Grounded in your shop's actual cash flow, village location, and festival calendar.",
     "placeholder": "Ask in plain language (e.g., Should I buy extra mustard oil for Diwali?)...",
-    "send": "Ask Saathi AI",
+    "send": "Ask Setu AI",
     "groundedBadge": "Grounded in Your Real Shop Data",
     "samplePromptsTitle": "Suggested Rural Inquiries",
     "dataContext": "Inspect Data Fed to AI",
@@ -43,10 +43,12 @@
   "cashflow": {
     "title": "Bahi-Khata & Cash Flow Ledger",
     "subtitle": "Simple numeric touch logging designed for rural micro-entrepreneurs. Minimal typing.",
-    "newEntryBtn": "+ Record Transaction",
-    "tabAll": "All Transactions",
-    "tabUdhaar": "Customer Udhaar Book",
-    "totalIncome": "Total Recorded Sales",
+    "tabDaily": "Daily Ledger",
+    "tabUdhaar": "Udhaar (Credit) Register",
+    "tabSummary": "Monthly Summary",
+    "addSale": "Record Sale (Aamad)",
+    "addExpense": "Record Expense (Kharcha)",
+    "totalIncome": "Total Sales",
     "totalExpense": "Stock & Expenses",
     "netProfit": "Net Surplus",
     "customer": "Customer / Vendor",
@@ -57,7 +59,7 @@
     "reminderSent": "WhatsApp payment reminder simulated!"
   },
   "credit": {
-    "title": "Vikasit Saathi Credit Score",
+    "title": "Vyapaar Setu Alternative Credit Score",
     "subtitle": "Transparent, explainable alternative credit built from your daily transaction discipline — not a black box.",
     "scoreLabel": "Alternative Credit Score",
     "factorsTitle": "Explainable Scoring Pillars",
@@ -84,7 +86,7 @@
     "title": "Bankable Financial Statement",
     "subtitle": "Official credit readiness dossier formatted for Bank Managers and Priority Sector Lending (PSL).",
     "printBtn": "Print / Save PDF Dossier",
-    "certifiedBadge": "Vyapaar Saathi Verified Statement",
+    "certifiedBadge": "Vyapaar Setu Verified Statement",
     "forBranch": "For Branch Manager & Credit Appraiser Review"
   }
 }
