@@ -236,7 +236,7 @@ export async function parseVoiceTranscriptWithFallback(transcript, { knownCustom
             type: parsed.type || parsedType,
             customerName: parsed.customerName || parsedCustomer,
             category: parsed.category || 'Daily Counter Sales',
-            method: 'claude-fallback',
+            method: 'gemini-fallback',
             confidence: 'high'
           };
         }

@@ -283,20 +283,15 @@ export async function generateAdvisoryResponse(shopId, userQuestion, clientApiKe
     const isEnglishQuery = /^[a-zA-Z0-9\s.,?!'"₹$%()-]+$/.test(userQuestion.trim()) &&
       !/(ramesh|namaste|ram|bhai|ji|kya|kaise|kitna|kitni|mera|meri|dukaan|paisa|bachat)/i.test(userQuestion);
 
-    // 4. Try Anthropic Claude API Call (or client-provided Claude key)
-    const claudeKey = clientApiKey || process.env.ANTHROPIC_API_KEY || process.env.CLAUDE_API_KEY;
-    const claudeModel = process.env.CLAUDE_MODEL || 'claude-3-5-sonnet-20241022';
+    // 4. Try Google Gemini API Call (Free Tier via Google AI Studio) or Anthropic Claude API
+    const geminiKey = process.env.GEMINI_API_KEY || (clientApiKey && !clientApiKey.startsWith('sk-ant') ? clientApiKey : null);
+    const claudeKey = process.env.ANTHROPIC_API_KEY || process.env.CLAUDE_API_KEY || (clientApiKey && clientApiKey.startsWith('sk-ant') ? clientApiKey : null);
 
-    if (claudeKey) {
-      try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 16000); // 16-second timeout
+    const languageInstruction = isEnglishQuery 
+      ? 'Respond in clear, professional, warm Indian English tailored for rural micro-entrepreneurs.' 
+      : 'Respond in respectful, friendly Hindi (using आप, राम-राम/नमस्ते) with common trade terms (स्टॉक, नकदी, मुनाफा, लोन).';
 
-        const languageInstruction = isEnglishQuery 
-          ? 'Respond in clear, professional, warm Indian English tailored for rural micro-entrepreneurs.' 
-          : 'Respond in respectful, friendly Hindi (using आप, राम-राम/नमस्ते) with common trade terms (स्टॉक, नकदी, मुनाफा, लोन).';
-
-        const systemInstruction = `You are "Setu AI" (सेतु AI) in SaakhSetu (साख सेतु), a warm, trusted, wise rural business advisor for Indian micro-entrepreneurs.
+    const systemInstruction = `You are "Setu AI" (सेतु AI) in SaakhSetu (साख सेतु), a warm, trusted, wise rural business advisor for Indian micro-entrepreneurs.
 ${languageInstruction}
 Never use robotic AI jargon, sterile corporate language, or generic advice like "consider stocking more inventory".
 
@@ -316,6 +311,67 @@ Every single response MUST reference at least ONE (and ideally multiple) of the 
 7. Top Loan Scheme: ${contextData.topMatchingScheme}
 
 Provide practical, hyper-local advice: exact quantities to stock, wholesale mandi advice in Balrampur, udhaar recovery timing linked with paddy harvest, and loan steps. Keep advice in 2 to 4 readable paragraphs with clear bullet points.`;
+
+    // 4A. Primary: Google Gemini API (Free Tier via Google AI Studio)
+    if (geminiKey) {
+      const candidateModels = [process.env.GEMINI_MODEL || 'gemini-2.0-flash', 'gemini-1.5-flash'];
+      for (const model of candidateModels) {
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 15000); // 15-second timeout
+          const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`;
+
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            signal: controller.signal,
+            body: JSON.stringify({
+              system_instruction: {
+                parts: [{ text: systemInstruction }]
+              },
+              contents: [
+                {
+                  role: 'user',
+                  parts: [{ text: `Shopkeeper Question: "${userQuestion}"` }]
+                }
+              ],
+              generationConfig: {
+                temperature: 0.7,
+                maxOutputTokens: 1000
+              }
+            })
+          });
+
+          clearTimeout(timeoutId);
+
+          if (response.ok) {
+            const data = await response.json();
+            const candidate = data.candidates?.[0];
+            const content = candidate?.content?.parts?.find(p => p.text)?.text || candidate?.content?.parts?.[0]?.text;
+            if (content && content.trim()) {
+              saveChatMessage(shop.id, 'user', userQuestion);
+              saveChatMessage(shop.id, 'assistant', content);
+              return {
+                content,
+                source: `gemini-${model}`,
+                contextUsed: contextData
+              };
+            }
+          } else {
+            console.warn(`[Gemini API] Model ${model} returned non-200:`, response.status, await response.text().catch(() => ''));
+          }
+        } catch (modelErr) {
+          console.warn(`[Gemini API] Call timed out or failed for ${model}:`, modelErr.message);
+        }
+      }
+    }
+
+    // 4B. Secondary: Anthropic Claude API (if Claude key provided)
+    if (claudeKey) {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 16000);
+        const claudeModel = process.env.CLAUDE_MODEL || 'claude-3-5-sonnet-20241022';
 
         const response = await fetch('https://api.anthropic.com/v1/messages', {
           method: 'POST',
@@ -354,10 +410,10 @@ Provide practical, hyper-local advice: exact quantities to stock, wholesale mand
             };
           }
         } else {
-          console.warn('Claude API returned non-200 status (rate-limit/error):', response.status, await response.text().catch(() => ''));
+          console.warn('Claude API returned non-200 status:', response.status, await response.text().catch(() => ''));
         }
       } catch (err) {
-        console.warn('Claude API call timed out or failed, activating rural safety net fallback:', err.message);
+        console.warn('Claude API call timed out or failed:', err.message);
       }
     }
 
@@ -369,7 +425,7 @@ Provide practical, hyper-local advice: exact quantities to stock, wholesale mand
 
     return {
       content: fallbackResponse,
-      source: 'claude-fallback-grounded',
+      source: 'gemini-fallback-grounded',
       contextUsed: contextData
     };
   } catch (criticalErr) {

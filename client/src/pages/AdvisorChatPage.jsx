@@ -140,7 +140,7 @@ export function AdvisorChatPage({ shop, creditData, summaryData, initialPrompt =
                   {language === 'hi' ? APP_ADVISOR_NAME_HI : APP_ADVISOR_NAME_EN}
                 </h1>
                 <Badge variant="brand" size="sm">
-                  Claude Grounded
+                  Gemini Grounded
                 </Badge>
               </div>
               <p className="text-xs text-stone-500">

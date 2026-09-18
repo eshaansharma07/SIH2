@@ -42,7 +42,7 @@ function advisoryRateLimiter(req, res, next) {
 router.post('/chat', advisoryRateLimiter, async (req, res) => {
   try {
     const { shopId, question, apiKey } = req.body;
-    const clientApiKey = apiKey || req.headers['x-api-key'] || req.headers['anthropic-api-key'];
+    const clientApiKey = apiKey || req.headers['x-gemini-key'] || req.headers['gemini-api-key'] || req.headers['x-api-key'] || req.headers['anthropic-api-key'];
 
     if (!shopId) {
       return res.status(400).json({ success: false, error: 'shopId is required' });
