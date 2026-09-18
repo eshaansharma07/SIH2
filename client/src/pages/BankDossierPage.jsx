@@ -3,24 +3,21 @@ import {
   Download, 
   Printer, 
   FileText, 
-  ShieldCheck, 
-  Award, 
-  Building2, 
   CheckCircle2, 
   ArrowRight,
   ChevronRight,
   User,
-  Users,
   BarChart3,
+  ShieldCheck,
+  Building2,
+  Share2,
+  TrendingUp,
   Lightbulb,
   Sprout,
-  Share2,
+  X,
   Copy,
   Check,
-  X,
-  ExternalLink,
-  MessageCircle,
-  HelpCircle
+  MessageCircle
 } from 'lucide-react';
 import { api } from '../utils/api';
 import { useTranslation } from '../i18n/LanguageContext';
@@ -35,7 +32,6 @@ export function BankDossierPage({ shop, isDemoMode, onNavigateTab, onBack }) {
   const [downloadingCam, setDownloadingCam] = useState(false);
   const [downloadingPdf, setDownloadingPdf] = useState(false);
   const [shareModalOpen, setShareModalOpen] = useState(false);
-  const [activeDetailSection, setActiveDetailSection] = useState(null);
   const [copiedLink, setCopiedLink] = useState(false);
 
   useEffect(() => {
@@ -213,7 +209,6 @@ export function BankDossierPage({ shop, isDemoMode, onNavigateTab, onBack }) {
       `*SaakhSetu Official Bank Dossier & CAM*\n` +
       `Business: ${shopName}\n` +
       `Owner: ${ownerName}\n` +
-      `Credit Rating: ${ratingBadge} (${creditScore}/900)\n` +
       `PSL Verified File: ${link}`
     );
     window.open(`https://wa.me/?text=${text}`, '_blank');
@@ -229,43 +224,42 @@ export function BankDossierPage({ shop, isDemoMode, onNavigateTab, onBack }) {
   }
 
   const d = dossierData || (isDemo ? DEMO_DOSSIER : null);
-  const netSurplus = d?.financialAudit?.netOperatingSurplus ?? (isDemo ? 68657 : 0);
-  const monthlySurplus = Math.round(netSurplus / 3);
-  const debtHeadroom = Math.round(monthlySurplus * 0.4);
-
   const shopName = d?.shop?.name || shop?.name || (isDemo ? DEMO_DOSSIER.shop.name : 'Ramesh’s Kirana Store');
   const ownerName = d?.shop?.ownerName || shop?.owner_name || (isDemo ? DEMO_DOSSIER.shop.ownerName : 'Ramesh Kumar');
   const tradeName = d?.shop?.tradeName || shop?.trade_name || (isDemo ? DEMO_DOSSIER.shop.tradeName : 'Kirana & General Store');
   const village = d?.shop?.village || shop?.village || (isDemo ? DEMO_DOSSIER.shop.village : 'Utraula Dehat');
   const district = d?.shop?.district || shop?.district || (isDemo ? DEMO_DOSSIER.shop.district : 'Balrampur');
   const state = d?.shop?.state || shop?.state || (isDemo ? DEMO_DOSSIER.shop.state : 'Uttar Pradesh');
-  const locationText = [village, district, state].filter(Boolean).join(', ');
   const vintageYears = d?.shop?.vintageYears ?? shop?.vintage_years ?? (isDemo ? DEMO_DOSSIER.shop.vintageYears : 4);
   const bankAccount = d?.shop?.bankAccount || shop?.bank_account_type || (isDemo ? DEMO_DOSSIER.shop.bankAccount : 'Aryavart Gramin Bank');
 
-  const creditScore = d?.creditEvaluation?.totalScore ?? (isDemo ? 745 : 740);
-  const ratingBadge = d?.creditEvaluation?.ratingBadge || (isDemo ? 'Loan Ready' : 'Prime Bankable');
-  const grossSales = d?.financialAudit?.totalGrossSales ?? (isDemo ? 230907 : 0);
-  const totalExpenses = d?.financialAudit?.totalExpenses ?? (isDemo ? 162250 : 0);
-  const digitalShare = d?.financialAudit?.digitalCollectionPercentage || (isDemo ? '38% UPI QR' : '38% UPI QR');
-
+  // Real timestamp logic: dynamic date formatting without hardcoded fallbacks for real shops
   const formattedDate = isDemo
     ? '18 Sep 2026, 09:41 AM'
-    : new Intl.DateTimeFormat('en-IN', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: true
-      }).format(new Date(d?.issueDate || Date.now()));
+    : (d?.issueDate
+        ? new Intl.DateTimeFormat('en-IN', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+          }).format(new Date(d.issueDate))
+        : new Intl.DateTimeFormat('en-IN', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+          }).format(new Date()));
 
   return (
     <div className="space-y-6 pb-12 animate-fadeIn max-w-[1360px] mx-auto text-stone-900">
       
-      {/* 1. EDITORIAL HERO SECTION */}
-      <section className="bg-[#FAF7F2] border border-stone-200/80 rounded-2xl p-6 sm:p-8 lg:p-10 relative overflow-hidden shadow-2xs">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8">
+      {/* 1. HERO SECTION (EDITORIAL, AIRY, MATCHING APPROVED REFERENCE) */}
+      <section className="relative overflow-hidden pt-2 pb-2">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 lg:gap-8">
           
           {/* Left Hero Copy */}
           <div className="max-w-xl z-10">
@@ -275,17 +269,17 @@ export function BankDossierPage({ shop, isDemoMode, onNavigateTab, onBack }) {
             <p className="text-xl sm:text-2xl font-bold text-stone-900 mt-2 font-display">
               One file. More opportunities.
             </p>
-            <p className="text-sm sm:text-base text-stone-600 mt-3.5 leading-relaxed font-normal">
+            <p className="text-sm sm:text-base text-stone-600 mt-3 leading-relaxed font-normal">
               Your verified business and financial information, prepared as per RBI Priority Sector Lending (PSL) guidelines, ready to share with banks.
             </p>
           </div>
 
           {/* Right Bespoke Artwork */}
-          <div className="lg:max-w-[440px] xl:max-w-[500px] w-full flex justify-center lg:justify-end shrink-0">
+          <div className="lg:max-w-[460px] xl:max-w-[520px] w-full flex justify-center lg:justify-end shrink-0">
             <img 
               src="/assets/saakhsetu/dossier-hero.png" 
               alt="Bank Dossier PSL Kirana Store Illustration"
-              className="w-full max-w-[420px] object-contain drop-shadow-sm rounded-xl"
+              className="w-full max-w-[440px] object-contain drop-shadow-sm rounded-xl"
               loading="eager"
             />
           </div>
@@ -305,12 +299,12 @@ export function BankDossierPage({ shop, isDemoMode, onNavigateTab, onBack }) {
               
               {/* Left Details */}
               <div className="flex items-start gap-4 sm:gap-5 min-w-0">
-                <div className="w-14 h-14 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-700 shrink-0 shadow-2xs">
+                <div className="w-14 h-14 rounded-2xl bg-[#EBF7EE] border border-emerald-100 flex items-center justify-center text-[#137333] shrink-0 shadow-2xs">
                   <FileText className="w-7 h-7" strokeWidth={1.75} />
                 </div>
 
                 <div className="min-w-0">
-                  <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/60 mb-2">
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#E6F4EA] text-[#137333] border border-emerald-200/60 mb-2">
                     <CheckCircle2 className="w-3.5 h-3.5" />
                     <span>PSL-Format Ready</span>
                   </div>
@@ -335,7 +329,7 @@ export function BankDossierPage({ shop, isDemoMode, onNavigateTab, onBack }) {
                   type="button"
                   onClick={handleDownloadPDF}
                   disabled={downloadingPdf}
-                  className="w-full bg-[#064E3B] hover:bg-[#043E2F] active:bg-[#022C22] text-white font-semibold text-xs sm:text-sm px-4 py-3 rounded-xl shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed"
+                  className="w-full bg-[#0F3E2E] hover:bg-[#0B2F23] active:bg-[#071F17] text-white font-semibold text-xs sm:text-sm px-4 py-3 rounded-xl shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed"
                 >
                   <Download className="w-4 h-4 shrink-0" />
                   <span>{downloadingPdf ? 'Generating PDF...' : 'Download Bank Dossier (PDF)'}</span>
@@ -364,7 +358,7 @@ export function BankDossierPage({ shop, isDemoMode, onNavigateTab, onBack }) {
             </div>
           </div>
 
-          {/* Card B: What's Included */}
+          {/* Card B: What's Included (Informational, No Financial Numbers Clutter) */}
           <div className="bg-white border border-stone-200/80 rounded-2xl p-6 sm:p-7 shadow-2xs">
             <div>
               <h3 className="text-lg sm:text-xl font-bold text-stone-900 font-display">
@@ -375,91 +369,59 @@ export function BankDossierPage({ shop, isDemoMode, onNavigateTab, onBack }) {
               </p>
             </div>
 
-            {/* 4 Feature Columns */}
+            {/* 4 Informational Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 mt-5">
               
               {/* 1. Business Profile */}
-              <div 
-                onClick={() => setActiveDetailSection('profile')}
-                className="bg-[#F0FDF4] border border-[#DCFCE7] hover:border-emerald-300 rounded-xl p-4 flex flex-col justify-between transition-all cursor-pointer group"
-              >
-                <div>
-                  <div className="w-9 h-9 rounded-full bg-white flex items-center justify-center text-emerald-600 shadow-2xs mb-3 group-hover:scale-105 transition-transform">
-                    <User className="w-4 h-4" />
-                  </div>
-                  <h4 className="font-bold text-stone-900 text-sm">
-                    Business Profile
-                  </h4>
-                  <p className="text-xs text-stone-600 mt-1 leading-snug">
-                    Basic business and owner details
-                  </p>
+              <div className="bg-[#F0FDF4] border border-[#DCFCE7] rounded-xl p-4 sm:p-5 flex flex-col justify-start">
+                <div className="w-9 h-9 rounded-full bg-white flex items-center justify-center text-[#16A34A] shadow-2xs mb-3">
+                  <User className="w-4 h-4" />
                 </div>
-                <div className="mt-3 text-[11px] font-semibold text-emerald-700 inline-flex items-center gap-1 group-hover:underline">
-                  View details <ChevronRight className="w-3 h-3" />
-                </div>
+                <h4 className="font-bold text-stone-900 text-sm">
+                  Business Profile
+                </h4>
+                <p className="text-xs text-stone-600 mt-1 leading-snug">
+                  Basic business and owner details
+                </p>
               </div>
 
               {/* 2. Transaction Summary */}
-              <div 
-                onClick={() => setActiveDetailSection('transactions')}
-                className="bg-[#FFFBEB] border border-[#FEF3C7] hover:border-amber-300 rounded-xl p-4 flex flex-col justify-between transition-all cursor-pointer group"
-              >
-                <div>
-                  <div className="w-9 h-9 rounded-full bg-white flex items-center justify-center text-amber-600 shadow-2xs mb-3 group-hover:scale-105 transition-transform">
-                    <FileText className="w-4 h-4" />
-                  </div>
-                  <h4 className="font-bold text-stone-900 text-sm">
-                    Transaction Summary
-                  </h4>
-                  <p className="text-xs text-stone-600 mt-1 leading-snug">
-                    Sales, purchases and cash flow records
-                  </p>
+              <div className="bg-[#FFFBEB] border border-[#FEF3C7] rounded-xl p-4 sm:p-5 flex flex-col justify-start">
+                <div className="w-9 h-9 rounded-full bg-white flex items-center justify-center text-[#D97706] shadow-2xs mb-3">
+                  <FileText className="w-4 h-4" />
                 </div>
-                <div className="mt-3 text-[11px] font-semibold text-amber-800 inline-flex items-center gap-1 group-hover:underline">
-                  View details <ChevronRight className="w-3 h-3" />
-                </div>
+                <h4 className="font-bold text-stone-900 text-sm">
+                  Transaction Summary
+                </h4>
+                <p className="text-xs text-stone-600 mt-1 leading-snug">
+                  Sales, purchases and cash flow records
+                </p>
               </div>
 
               {/* 3. Financial Statements */}
-              <div 
-                onClick={() => setActiveDetailSection('financials')}
-                className="bg-[#F0F9FF] border border-[#E0F2FE] hover:border-sky-300 rounded-xl p-4 flex flex-col justify-between transition-all cursor-pointer group"
-              >
-                <div>
-                  <div className="w-9 h-9 rounded-full bg-white flex items-center justify-center text-sky-600 shadow-2xs mb-3 group-hover:scale-105 transition-transform">
-                    <BarChart3 className="w-4 h-4" />
-                  </div>
-                  <h4 className="font-bold text-stone-900 text-sm">
-                    Financial Statements
-                  </h4>
-                  <p className="text-xs text-stone-600 mt-1 leading-snug">
-                    Key financial information as per PSL format
-                  </p>
+              <div className="bg-[#F0F9FF] border border-[#E0F2FE] rounded-xl p-4 sm:p-5 flex flex-col justify-start">
+                <div className="w-9 h-9 rounded-full bg-white flex items-center justify-center text-[#0284C7] shadow-2xs mb-3">
+                  <BarChart3 className="w-4 h-4" />
                 </div>
-                <div className="mt-3 text-[11px] font-semibold text-sky-700 inline-flex items-center gap-1 group-hover:underline">
-                  View details <ChevronRight className="w-3 h-3" />
-                </div>
+                <h4 className="font-bold text-stone-900 text-sm">
+                  Financial Statements
+                </h4>
+                <p className="text-xs text-stone-600 mt-1 leading-snug">
+                  Key financial information as per PSL format
+                </p>
               </div>
 
               {/* 4. Credit Readiness */}
-              <div 
-                onClick={() => setActiveDetailSection('credit')}
-                className="bg-[#F0FDF9] border border-[#CCFBF1] hover:border-teal-300 rounded-xl p-4 flex flex-col justify-between transition-all cursor-pointer group"
-              >
-                <div>
-                  <div className="w-9 h-9 rounded-full bg-white flex items-center justify-center text-teal-600 shadow-2xs mb-3 group-hover:scale-105 transition-transform">
-                    <ShieldCheck className="w-4 h-4" />
-                  </div>
-                  <h4 className="font-bold text-stone-900 text-sm">
-                    Credit Readiness
-                  </h4>
-                  <p className="text-xs text-stone-600 mt-1 leading-snug">
-                    Your credit profile and supporting documents
-                  </p>
+              <div className="bg-[#F0FDF9] border border-[#CCFBF1] rounded-xl p-4 sm:p-5 flex flex-col justify-start">
+                <div className="w-9 h-9 rounded-full bg-white flex items-center justify-center text-[#0D9488] shadow-2xs mb-3">
+                  <ShieldCheck className="w-4 h-4" />
                 </div>
-                <div className="mt-3 text-[11px] font-semibold text-teal-800 inline-flex items-center gap-1 group-hover:underline">
-                  View details <ChevronRight className="w-3 h-3" />
-                </div>
+                <h4 className="font-bold text-stone-900 text-sm">
+                  Credit Readiness
+                </h4>
+                <p className="text-xs text-stone-600 mt-1 leading-snug">
+                  Your credit profile and supporting documents
+                </p>
               </div>
 
             </div>
@@ -537,7 +499,7 @@ export function BankDossierPage({ shop, isDemoMode, onNavigateTab, onBack }) {
               >
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0 group-hover:bg-emerald-100 transition-colors">
-                    <BarChart3 className="w-4 h-4" />
+                    <TrendingUp className="w-4 h-4" />
                   </div>
                   <span className="font-medium text-xs sm:text-sm text-stone-800 truncate">
                     Showcase your business growth
@@ -606,7 +568,7 @@ export function BankDossierPage({ shop, isDemoMode, onNavigateTab, onBack }) {
           <button
             type="button"
             onClick={() => onNavigateTab ? onNavigateTab('schemes') : null}
-            className="bg-[#064E3B] hover:bg-[#043E2F] active:bg-[#022C22] text-white font-semibold text-xs sm:text-sm px-5 py-2.5 rounded-xl shadow-xs inline-flex items-center gap-2 shrink-0 transition-all cursor-pointer self-start md:self-auto"
+            className="bg-[#0F3E2E] hover:bg-[#0B2F23] active:bg-[#071F17] text-white font-semibold text-xs sm:text-sm px-5 py-2.5 rounded-xl shadow-xs inline-flex items-center gap-2 shrink-0 transition-all cursor-pointer self-start md:self-auto"
           >
             <span>Explore Schemes</span>
             <ArrowRight className="w-4 h-4" />
@@ -677,168 +639,7 @@ export function BankDossierPage({ shop, isDemoMode, onNavigateTab, onBack }) {
         </div>
       )}
 
-      {/* 5. MODAL: WHAT'S INCLUDED SECTION INSPECTION */}
-      {activeDetailSection && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fadeIn">
-          <div className="bg-white rounded-2xl border border-stone-200 p-6 max-w-lg w-full shadow-2xl relative">
-            <button 
-              onClick={() => setActiveDetailSection(null)}
-              className="absolute top-4 right-4 p-1 rounded-lg text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            {activeDetailSection === 'profile' && (
-              <div>
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center">
-                    <User className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-lg text-stone-900 font-display">Business Profile Dossier</h3>
-                    <p className="text-xs text-stone-500">Verified identity and establishment credentials</p>
-                  </div>
-                </div>
-                <div className="bg-stone-50 rounded-xl p-4 space-y-2.5 text-xs text-stone-700">
-                  <div className="flex justify-between py-1 border-b border-stone-200/60">
-                    <span className="text-stone-500">Shop Legal Name</span>
-                    <span className="font-semibold text-stone-900">{shopName}</span>
-                  </div>
-                  <div className="flex justify-between py-1 border-b border-stone-200/60">
-                    <span className="text-stone-500">Proprietor Name</span>
-                    <span className="font-semibold text-stone-900">{ownerName}</span>
-                  </div>
-                  <div className="flex justify-between py-1 border-b border-stone-200/60">
-                    <span className="text-stone-500">Trade Category</span>
-                    <span className="font-semibold text-stone-900">{tradeName}</span>
-                  </div>
-                  <div className="flex justify-between py-1 border-b border-stone-200/60">
-                    <span className="text-stone-500">Location</span>
-                    <span className="font-semibold text-stone-900">{locationText}</span>
-                  </div>
-                  <div className="flex justify-between py-1 border-b border-stone-200/60">
-                    <span className="text-stone-500">Vintage</span>
-                    <span className="font-semibold text-stone-900">{vintageYears} Years in Operation</span>
-                  </div>
-                  <div className="flex justify-between py-1">
-                    <span className="text-stone-500">Primary Bank Link</span>
-                    <span className="font-semibold text-stone-900">{bankAccount}</span>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeDetailSection === 'transactions' && (
-              <div>
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center">
-                    <FileText className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-lg text-stone-900 font-display">Transaction Summary</h3>
-                    <p className="text-xs text-stone-500">3-Month audited ledger breakdown</p>
-                  </div>
-                </div>
-                <div className="bg-stone-50 rounded-xl p-4 space-y-2.5 text-xs text-stone-700">
-                  <div className="flex justify-between py-1 border-b border-stone-200/60">
-                    <span className="text-stone-500">Total Gross Sales</span>
-                    <span className="font-semibold text-stone-900">₹{Number(grossSales).toLocaleString('en-IN')}</span>
-                  </div>
-                  <div className="flex justify-between py-1 border-b border-stone-200/60">
-                    <span className="text-stone-500">Operating Expenses</span>
-                    <span className="font-semibold text-stone-900">₹{Number(totalExpenses).toLocaleString('en-IN')}</span>
-                  </div>
-                  <div className="flex justify-between py-1 border-b border-stone-200/60">
-                    <span className="text-stone-500">Net Operating Surplus</span>
-                    <span className="font-bold text-emerald-700">₹{Number(netSurplus).toLocaleString('en-IN')}</span>
-                  </div>
-                  <div className="flex justify-between py-1">
-                    <span className="text-stone-500">Digital Payment Adoption</span>
-                    <span className="font-semibold text-stone-900">{digitalShare}</span>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeDetailSection === 'financials' && (
-              <div>
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-xl bg-sky-50 text-sky-700 flex items-center justify-center">
-                    <BarChart3 className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-lg text-stone-900 font-display">Financial Statements (PSL)</h3>
-                    <p className="text-xs text-stone-500">RBI Priority Sector Lending working capital capacity</p>
-                  </div>
-                </div>
-                <div className="bg-stone-50 rounded-xl p-4 space-y-2.5 text-xs text-stone-700">
-                  <div className="flex justify-between py-1 border-b border-stone-200/60">
-                    <span className="text-stone-500">Quarterly Net Surplus</span>
-                    <span className="font-semibold text-stone-900">₹{Number(netSurplus).toLocaleString('en-IN')}</span>
-                  </div>
-                  <div className="flex justify-between py-1 border-b border-stone-200/60">
-                    <span className="text-stone-500">Calculated Monthly Surplus</span>
-                    <span className="font-semibold text-stone-900">₹{Number(monthlySurplus).toLocaleString('en-IN')} / mo</span>
-                  </div>
-                  <div className="flex justify-between py-1 border-b border-stone-200/60">
-                    <span className="text-stone-500">Estimated Debt Service Headroom (40%)</span>
-                    <span className="font-bold text-sky-700">₹{Number(debtHeadroom).toLocaleString('en-IN')} / mo</span>
-                  </div>
-                  <div className="flex justify-between py-1">
-                    <span className="text-stone-500">Recommended Working Capital Limit</span>
-                    <span className="font-semibold text-stone-900">₹{Number(debtHeadroom * 12).toLocaleString('en-IN')}</span>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeDetailSection === 'credit' && (
-              <div>
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center">
-                    <ShieldCheck className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-lg text-stone-900 font-display">Credit Readiness Certification</h3>
-                    <p className="text-xs text-stone-500">SaakhSetu Alternative Credit Rating</p>
-                  </div>
-                </div>
-                <div className="bg-stone-50 rounded-xl p-4 space-y-2.5 text-xs text-stone-700">
-                  <div className="flex justify-between py-1 border-b border-stone-200/60">
-                    <span className="text-stone-500">Alternative Credit Score</span>
-                    <span className="font-bold text-teal-700 text-sm">{creditScore} / 900</span>
-                  </div>
-                  <div className="flex justify-between py-1 border-b border-stone-200/60">
-                    <span className="text-stone-500">Lending Tier Status</span>
-                    <span className="font-semibold text-stone-900">{ratingBadge}</span>
-                  </div>
-                  <div className="flex justify-between py-1 border-b border-stone-200/60">
-                    <span className="text-stone-500">PSL Eligibility Category</span>
-                    <span className="font-semibold text-stone-900">Priority Sector Lending — Micro Enterprise</span>
-                  </div>
-                  <div className="flex justify-between py-1">
-                    <span className="text-stone-500">Audit Status</span>
-                    <span className="font-semibold text-emerald-700 flex items-center gap-1">
-                      <CheckCircle2 className="w-3.5 h-3.5" /> Certified via Bahi-Khata Cashflows
-                    </span>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            <div className="mt-5 flex justify-end">
-              <button
-                onClick={() => setActiveDetailSection(null)}
-                className="bg-stone-900 hover:bg-black text-white text-xs font-semibold px-4 py-2 rounded-xl transition-colors"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 6. PRINT LAYOUT (Visible only when window.print() is called) */}
+      {/* 5. PRINT LAYOUT (Visible only when window.print() is called) */}
       <div className="hidden print:block text-black bg-white p-6 font-sans">
         <div className="border-b-2 border-stone-900 pb-4 mb-4 flex justify-between items-start">
           <div>
@@ -857,19 +658,19 @@ export function BankDossierPage({ shop, isDemoMode, onNavigateTab, onBack }) {
             <p><strong>Shop:</strong> {shopName}</p>
             <p><strong>Proprietor:</strong> {ownerName}</p>
             <p><strong>Category:</strong> {tradeName}</p>
-            <p><strong>Location:</strong> {locationText}</p>
+            <p><strong>Location:</strong> {[village, district, state].filter(Boolean).join(', ')}</p>
           </div>
           <div className="border border-stone-300 p-3 rounded">
-            <p className="font-bold mb-1">Alternative Credit Score</p>
-            <p className="text-base font-bold text-emerald-700">{creditScore} / 900 ({ratingBadge})</p>
-            <p><strong>3-Month Turnover:</strong> ₹{Number(grossSales).toLocaleString('en-IN')}</p>
-            <p><strong>Net Operating Surplus:</strong> ₹{Number(netSurplus).toLocaleString('en-IN')}</p>
-            <p><strong>Debt Headroom (40%):</strong> ₹{Number(debtHeadroom).toLocaleString('en-IN')} / month</p>
+            <p className="font-bold mb-1">PSL Dossier Summary</p>
+            <p><strong>Format:</strong> RBI Priority Sector Lending (Micro Enterprise)</p>
+            <p><strong>Vintage:</strong> {vintageYears} Years in Operation</p>
+            <p><strong>Primary Bank:</strong> {bankAccount}</p>
+            <p><strong>Verification:</strong> Certified via Bahi-Khata Cashflows</p>
           </div>
         </div>
 
         <p className="text-[10px] text-stone-500 text-center mt-6">
-          Official RBI PSL Ready Dossier generated by SaakhSetu. Tamper-evident verified document.
+          Official RBI PSL Ready Dossier prepared by SaakhSetu. Tamper-evident verified document.
         </p>
       </div>
 
