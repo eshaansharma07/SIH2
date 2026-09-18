@@ -527,6 +527,7 @@ export default function App() {
                       <BankDossierPage
                         shop={currentShop}
                         isDemoMode={isDemoMode}
+                        onNavigateTab={(tab) => changeTab(tab)}
                         onBack={() => changeTab('dashboard')}
                       />
                     )}

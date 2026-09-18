@@ -5,7 +5,6 @@ import {
   TrendingUp, 
   Landmark, 
   FileText, 
-  Sparkles, 
   Bell, 
   ChevronDown, 
   Menu, 
@@ -46,8 +45,7 @@ export function Navbar({
     { id: 'cashflow', label: language === 'hi' ? 'बही-खाता' : 'Bahi-Khata', icon: BookOpen },
     { id: 'credit', label: language === 'hi' ? 'क्रेडिट स्कोर' : 'Credit Score', icon: TrendingUp },
     { id: 'schemes', label: language === 'hi' ? 'सरकारी योजनाएं' : 'Schemes', icon: Landmark },
-    { id: 'dossier', label: language === 'hi' ? 'बैंक फाइल' : 'Bank Dossier', icon: FileText },
-    { id: 'showcase', label: language === 'hi' ? 'शोकेस' : 'Showcase', icon: Sparkles, isShowcase: true }
+    { id: 'dossier', label: language === 'hi' ? 'बैंक फाइल' : 'Bank Dossier', icon: FileText }
   ];
 
   const handleResetDemo = async () => {
@@ -90,21 +88,15 @@ export function Navbar({
           </div>
 
           {/* Desktop Navigation Tabs (Exact Reference Style) */}
-          <nav className="hidden lg:flex items-center gap-1">
+          <nav className="hidden lg:flex items-center gap-1.5">
             {navItems.map(item => {
               const Icon = item.icon;
-              const isActive = activeTab === item.id || (item.isShowcase && activeTab === 'onboarding');
+              const isActive = activeTab === item.id;
 
               return (
                 <button
                   key={item.id}
-                  onClick={() => {
-                    if (item.isShowcase) {
-                      setActiveTab('onboarding');
-                    } else {
-                      setActiveTab(item.id);
-                    }
-                  }}
+                  onClick={() => setActiveTab(item.id)}
                   className={`
                     flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all duration-150 cursor-pointer
                     ${isActive 
