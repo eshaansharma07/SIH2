@@ -50,12 +50,12 @@ export function Navbar({ activeTab, setActiveTab, currentShop, isDemoMode, onRel
   const udyamNumber = currentShop?.udyam_number || (currentShop?.id ? `UDYAM-${(currentShop.state || 'IN').substring(0, 2).toUpperCase()}-DEMO` : '');
 
   return (
-    <header className="sticky top-0 z-50 w-full backdrop-blur-2xl bg-white/95 border-b border-paper-300/90 shadow-2xs transition-all">
+    <header className="sticky top-0 z-50 w-full backdrop-blur-2xl bg-white/90 border-b border-paper-300/90 shadow-[0_4px_20px_rgba(12,19,34,0.06)] transition-all duration-300">
       {/* Tri-Color Micro-Rule */}
       <div className="h-[3px] w-full bg-gradient-to-r from-terracotta-500 via-paper-200 to-forestRural-600" />
 
       <div className="max-w-7xl xl:max-w-[1440px] mx-auto px-3 sm:px-6">
-        <div className="flex items-center justify-between h-16 gap-2 sm:gap-4">
+        <div className="flex items-center justify-between h-[4.25rem] gap-2 sm:gap-4">
           
           {/* Brand Mark: Rural Micro-Enterprise Ledger */}
           <div 
@@ -63,7 +63,7 @@ export function Navbar({ activeTab, setActiveTab, currentShop, isDemoMode, onRel
             className="flex items-center gap-2 sm:gap-3 cursor-pointer select-none group min-w-0 flex-1 sm:flex-initial"
           >
             {/* Folk / Bahi-Khata Geometric Mark */}
-            <div className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-terracotta-600 flex items-center justify-center text-white shadow-2xs group-hover:bg-terracotta-700 transition-all shrink-0">
+            <div className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-terracotta-600 flex items-center justify-center text-white shadow-2xs group-hover:bg-terracotta-700 group-hover:-translate-y-0.5 transition-all duration-200 shrink-0">
               <BookOpen className="w-4 h-4 sm:w-5 sm:h-5 text-paper-100 transition-transform duration-200 group-hover:scale-105" />
             </div>
 
@@ -117,8 +117,8 @@ export function Navbar({ activeTab, setActiveTab, currentShop, isDemoMode, onRel
                   onClick={() => setActiveTab(item.id)}
                   className={`relative flex items-center gap-1.5 xl:gap-2 px-2.5 xl:px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-150 cursor-pointer ${
                     isActive 
-                      ? 'bg-white text-indigoRural-950 shadow-2xs scale-[1.02]' 
-                      : 'text-indigoRural-600 hover:text-indigoRural-900 hover:bg-white/60'
+                      ? 'bg-white text-indigoRural-950 shadow-card scale-[1.01] ring-1 ring-paper-300/70' 
+                      : 'text-indigoRural-600 hover:text-indigoRural-900 hover:bg-white/80'
                   }`}
                 >
                   <Icon className={`w-3.5 h-3.5 ${
@@ -218,7 +218,7 @@ export function Navbar({ activeTab, setActiveTab, currentShop, isDemoMode, onRel
             {/* Mobile Menu Toggle */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden p-1.5 sm:p-2 rounded-xl text-indigoRural-700 hover:bg-paper-200 transition cursor-pointer"
+              className="lg:hidden p-2 rounded-xl text-indigoRural-700 hover:bg-paper-200 active:bg-paper-300 transition-all duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-terracotta-500/30"
               aria-label="Toggle navigation menu"
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -231,7 +231,7 @@ export function Navbar({ activeTab, setActiveTab, currentShop, isDemoMode, onRel
 
       {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
-        <div className="lg:hidden border-t border-paper-300 bg-white/95 backdrop-blur-2xl p-4 space-y-2 animate-fadeIn shadow-lg">
+        <div className="lg:hidden border-t border-paper-300 bg-white/95 backdrop-blur-2xl p-3 sm:p-4 space-y-2 animate-fadeIn shadow-[0_14px_35px_rgba(12,19,34,0.10)]">
           <div className="grid grid-cols-2 gap-2 pb-3 border-b border-paper-200">
             {navItems.map(item => {
               const Icon = item.icon;
