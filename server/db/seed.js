@@ -1,6 +1,14 @@
 import db from './database.js';
 
-export function seedDatabase() {
+export function seedDatabase(force = false) {
+  if (!force && (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME)) {
+    try {
+      const row = db.prepare("SELECT count(*) as count FROM transactions WHERE shop_id = 'ramesh-kirana'").get();
+      if (row && row.count > 0) {
+        return;
+      }
+    } catch (_) {}
+  }
   console.log('🌱 Seeding SaakhSetu database: "Ramesh\'s Kirana Store" with 4 months of realistic rural transactions...');
 
   // 1. Seed Ramesh's Kirana Store

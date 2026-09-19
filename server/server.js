@@ -68,6 +68,22 @@ app.get('/', (req, res) => {
   res.send('SaakhSetu API Server is running');
 });
 
+// Express error handling middleware
+app.use((err, req, res, next) => {
+  console.error('[SaakhSetu API Error]:', err);
+  if (!res.headersSent) {
+    res.status(500).json({ success: false, error: err?.message || 'Internal Server Error' });
+  }
+});
+
+// Process-level safety listeners
+process.on('unhandledRejection', (reason) => {
+  console.error('[Process Unhandled Rejection]:', reason);
+});
+process.on('uncaughtException', (err) => {
+  console.error('[Process Uncaught Exception]:', err);
+});
+
 // Auto seed if running fresh
 try {
   seedDatabase();

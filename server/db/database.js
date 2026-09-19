@@ -8,8 +8,10 @@ const __dirname = path.dirname(__filename);
 
 let dbPath = path.join(__dirname, 'vyapaar_saathi.db');
 
+const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+
 // Handle Vercel / AWS Lambda read-only filesystem by using /tmp
-if (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME) {
+if (isServerless) {
   const tmpPath = path.join('/tmp', 'vyapaar_saathi.db');
   try {
     if (!fs.existsSync(tmpPath) && fs.existsSync(dbPath)) {
@@ -23,11 +25,31 @@ if (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME) {
 
 const db = new Database(dbPath);
 
-// Enable WAL mode if supported
+// Caching Map for prepared statements to prevent V8 Garbage Collector from triggering
+// Statement::~Statement() / node::RemoveEnvironmentCleanupHook(env != nullptr) SIGABRT crashes
+// in serverless execution environments (Node 20+ on Vercel / AWS Lambda).
+const statementCache = new Map();
+const originalPrepare = db.prepare.bind(db);
+db.prepare = function(sql) {
+  let stmt = statementCache.get(sql);
+  if (!stmt) {
+    stmt = originalPrepare(sql);
+    statementCache.set(sql, stmt);
+  }
+  return stmt;
+};
+
+// Configure pragmas safely based on environment
 try {
-  db.pragma('journal_mode = WAL');
+  if (isServerless) {
+    db.pragma('journal_mode = MEMORY');
+    db.pragma('synchronous = OFF');
+    db.pragma('temp_store = MEMORY');
+  } else {
+    db.pragma('journal_mode = WAL');
+  }
 } catch (e) {
-  // Ignore in environments where WAL is restricted
+  // Ignore in environments where pragma is restricted
 }
 
 // Initialize tables

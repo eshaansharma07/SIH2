@@ -13,6 +13,7 @@ import { APP_NAME_EN, APP_NAME_HI, APP_TAGLINE_HI } from './config/brand';
 import { lazyRetry } from './utils/lazyRetry';
 import { safeStorage } from './utils/safeStorage';
 import { PageErrorBoundary } from './components/PageErrorBoundary';
+import { ModalErrorBoundary } from './components/ModalErrorBoundary';
 
 // Resilient lazy-loaded pages with auto-retry and chunk recovery
 const DashboardPage = lazyRetry(() => import('./pages/DashboardPage').then(m => ({ default: m.DashboardPage })), 'DashboardPage');
@@ -183,7 +184,8 @@ export default function App() {
   };
 
   const handleTransactionSaved = (newTx) => {
-    if (newTx) {
+    if (!newTx) return;
+    try {
       setLatestTx(newTx);
 
       // Optimistically update summaryData immediately (0ms delay)
@@ -269,6 +271,8 @@ export default function App() {
       if (activeId) {
         fetchFinancials(activeId);
       }
+    } catch (err) {
+      console.error('Error handling saved transaction in App:', err);
     }
   };
 
@@ -558,51 +562,79 @@ export default function App() {
       )}
 
       {/* Tactile Touch Numeric Keypad Modal */}
-      <NumericKeypadModal
-        isOpen={keypadOpen}
+      <ModalErrorBoundary 
+        isOpen={keypadOpen} 
         onClose={() => setKeypadOpen(false)}
-        onTransactionSaved={handleTransactionSaved}
-        shopId={currentShop?.id}
-        onOpenVoice={() => setVoiceModalOpen(true)}
-        initialType={keypadInitialType}
-        initialCategory={keypadInitialCategory}
-      />
+        modalName="Numeric Keypad"
+        title={language === 'hi' ? 'लेन-देन कीपैड में समस्या आई' : 'Transaction Keypad Error'}
+      >
+        <NumericKeypadModal
+          isOpen={keypadOpen}
+          onClose={() => setKeypadOpen(false)}
+          onTransactionSaved={handleTransactionSaved}
+          shopId={currentShop?.id}
+          onOpenVoice={() => setVoiceModalOpen(true)}
+          initialType={keypadInitialType}
+          initialCategory={keypadInitialCategory}
+        />
+      </ModalErrorBoundary>
 
       {/* Global Voice Bahi-Khata Input Dialog */}
       {voiceModalOpen && (
-        <Suspense fallback={null}>
-          <VoiceInputDialog
-            isOpen={voiceModalOpen}
-            onClose={() => setVoiceModalOpen(false)}
-            shopId={currentShop?.id}
-            onTransactionSaved={handleTransactionSaved}
-          />
-        </Suspense>
+        <ModalErrorBoundary
+          isOpen={voiceModalOpen}
+          onClose={() => setVoiceModalOpen(false)}
+          modalName="Voice Input"
+          title={language === 'hi' ? 'आवाज़ संवाद में समस्या आई' : 'Voice Input Error'}
+        >
+          <Suspense fallback={null}>
+            <VoiceInputDialog
+              isOpen={voiceModalOpen}
+              onClose={() => setVoiceModalOpen(false)}
+              shopId={currentShop?.id}
+              onTransactionSaved={handleTransactionSaved}
+            />
+          </Suspense>
+        </ModalErrorBoundary>
       )}
 
       {/* ONDC B2B Wholesale Price Discovery Modal */}
       {wholesaleModalOpen && (
-        <Suspense fallback={null}>
-          <WholesaleDiscoveryModal
-            isOpen={wholesaleModalOpen}
-            onClose={() => setWholesaleModalOpen(false)}
-          />
-        </Suspense>
+        <ModalErrorBoundary
+          isOpen={wholesaleModalOpen}
+          onClose={() => setWholesaleModalOpen(false)}
+          modalName="Wholesale Discovery"
+          title={language === 'hi' ? 'थोक बाज़ार विंडो में समस्या आई' : 'Wholesale Catalog Error'}
+        >
+          <Suspense fallback={null}>
+            <WholesaleDiscoveryModal
+              isOpen={wholesaleModalOpen}
+              onClose={() => setWholesaleModalOpen(false)}
+            />
+          </Suspense>
+        </ModalErrorBoundary>
       )}
 
       {/* Interactive Animated Guided Demo Tour for SIH Judges */}
       {demoTourOpen && (
-        <Suspense fallback={null}>
-          <InteractiveDemoTour
-            isOpen={demoTourOpen}
-            onClose={() => setDemoTourOpen(false)}
-            activeTab={activeTab}
-            setActiveTab={changeTab}
-            setKeypadOpen={setKeypadOpen}
-            setInitialAdvisorPrompt={setInitialAdvisorPrompt}
-            onReloadDemo={handleReloadDemo}
-          />
-        </Suspense>
+        <ModalErrorBoundary
+          isOpen={demoTourOpen}
+          onClose={() => setDemoTourOpen(false)}
+          modalName="Demo Tour"
+          title={language === 'hi' ? 'डेमो टूर में समस्या आई' : 'Demo Tour Error'}
+        >
+          <Suspense fallback={null}>
+            <InteractiveDemoTour
+              isOpen={demoTourOpen}
+              onClose={() => setDemoTourOpen(false)}
+              activeTab={activeTab}
+              setActiveTab={changeTab}
+              setKeypadOpen={setKeypadOpen}
+              setInitialAdvisorPrompt={setInitialAdvisorPrompt}
+              onReloadDemo={handleReloadDemo}
+            />
+          </Suspense>
+        </ModalErrorBoundary>
       )}
 
       {/* Mobile Thumb Action Dock */}

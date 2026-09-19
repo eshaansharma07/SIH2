@@ -7,6 +7,8 @@ import {
   isMongoConfigured
 } from './mongoClient.js';
 
+const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+
 /**
  * Normalizes MongoDB documents by removing _id and returning a clean object
  */
@@ -102,6 +104,7 @@ export const dataStore = {
       try {
         const col = await getShopsCollection();
         await col.updateOne({ id: shopData.id }, { $set: shopData }, { upsert: true });
+        if (isServerless) return shopData;
       } catch (err) {
         console.warn('[DataStore] Mongo upsertShop error:', err.message);
       }
@@ -134,6 +137,10 @@ export const dataStore = {
       try {
         const col = await getShopsCollection();
         await col.updateOne({ id }, { $set: updateData });
+        if (isServerless) {
+          const current = await this.getShopById(id);
+          return { ...current, ...updateData };
+        }
       } catch (err) {
         console.warn('[DataStore] Mongo updateShop error:', err.message);
       }
@@ -172,6 +179,7 @@ export const dataStore = {
         if (customerName) query.customer_vendor_name = { $regex: new RegExp(`^${customerName}$`, 'i') };
         const docs = await col.find(query).sort({ date: -1, created_at: -1 }).limit(Number(limit) || 100).toArray();
         if (docs && docs.length > 0) return docs.map(cleanDoc);
+        if (docs && isServerless) return [];
       } catch (err) {
         console.warn('[DataStore] Mongo getTransactions fallback:', err.message);
       }
@@ -236,6 +244,7 @@ export const dataStore = {
       try {
         const col = await getTransactionsCollection();
         await col.updateOne({ id: txData.id }, { $set: txData }, { upsert: true });
+        if (isServerless) return txData;
       } catch (err) {
         console.warn('[DataStore] Mongo createTransaction error:', err.message);
       }
@@ -266,6 +275,7 @@ export const dataStore = {
       try {
         const col = await getTransactionsCollection();
         await col.deleteOne({ id });
+        if (isServerless) return true;
       } catch (err) {
         console.warn('[DataStore] Mongo deleteTransaction error:', err.message);
       }
@@ -345,6 +355,7 @@ export const dataStore = {
         const col = await getCustomersCollection();
         const docs = await col.find({ shop_id: shopId }).sort({ created_at: -1 }).toArray();
         if (docs && docs.length > 0) return docs.map(cleanDoc);
+        if (docs && isServerless) return [];
       } catch (err) {
         console.warn('[DataStore] Mongo getCustomers fallback:', err.message);
       }
@@ -363,6 +374,7 @@ export const dataStore = {
       try {
         const col = await getCustomersCollection();
         await col.updateOne({ id: custData.id }, { $set: custData }, { upsert: true });
+        if (isServerless) return custData;
       } catch (err) {
         console.warn('[DataStore] Mongo createCustomer error:', err.message);
       }
@@ -389,6 +401,7 @@ export const dataStore = {
       try {
         const col = await getCustomersCollection();
         await col.updateOne({ id }, { $set: data });
+        if (isServerless) return { id, ...data };
       } catch (err) {
         console.warn('[DataStore] Mongo updateCustomer error:', err.message);
       }
@@ -409,6 +422,7 @@ export const dataStore = {
       try {
         const col = await getCustomersCollection();
         await col.deleteOne({ id });
+        if (isServerless) return true;
       } catch (err) {
         console.warn('[DataStore] Mongo deleteCustomer error:', err.message);
       }

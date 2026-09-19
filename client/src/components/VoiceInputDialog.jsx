@@ -379,7 +379,7 @@ export function VoiceInputDialog({
     }
 
     if (type === 'udhaar_given') {
-      const cleanPhone = customerPhone.replace(/\D/g, '').slice(-10);
+      const cleanPhone = String(customerPhone || '').replace(/\D/g, '').slice(-10);
       if (!cleanPhone || !/^[6-9]\d{9}$/.test(cleanPhone)) {
         setErrorMessage(
           language === 'hi'
@@ -394,7 +394,7 @@ export function VoiceInputDialog({
     setIsSaving(true);
     setErrorMessage('');
 
-    const safePhone = customerPhone.replace(/\D/g, '').slice(-10);
+    const safePhone = String(customerPhone || '').replace(/\D/g, '').slice(-10);
     const nowIso = new Date().toISOString();
     const newTx = {
       id: `tx-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`,
@@ -403,8 +403,8 @@ export function VoiceInputDialog({
       amount: numAmount,
       type,
       payment_mode: type.startsWith('udhaar') ? 'khata' : 'cash',
-      category: category || (type === 'income' ? 'Daily Counter Sales' : 'Monthly Grocery Khata'),
-      customer_vendor_name: customerName.trim() || (type.startsWith('udhaar') ? 'Village Customer' : ''),
+      category: category || (type === 'income' ? 'Daily Counter Sales' : type === 'expense' ? 'Stock Purchase' : 'Udhaar'),
+      customer_vendor_name: String(customerName || '').trim() || (type.startsWith('udhaar') ? 'Village Customer' : ''),
       customer_phone: safePhone,
       customerPhone: safePhone,
       notes: `Voice Conversational Entry: "${amount} ${type}"`,
@@ -944,7 +944,7 @@ export function VoiceInputDialog({
                     onClick={() => setStep('type')}
                     className="text-xs font-black text-terracotta-700 flex items-center gap-1 hover:underline cursor-pointer"
                   >
-                    <span className="capitalize">{type.replace('_', ' ')}</span>
+                    <span className="capitalize">{String(type || '').replace('_', ' ')}</span>
                     <Edit3 className="w-3 h-3" />
                   </button>
                 </div>
