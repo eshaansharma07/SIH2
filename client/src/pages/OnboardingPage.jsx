@@ -189,11 +189,20 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
       const res = await api.sendLoginOTP(cleanPhone);
       if (res && res.success) {
         setLoginStep('otp');
-        setOtpDigits(['', '', '', '', '', '']);
-        setAuthSuccessMsg(language === 'hi' ? 'ओटीपी सफलतापूर्वक आपके मोबाइल पर भेज दिया गया है' : 'OTP sent successfully to your mobile number');
+        if (res.isTrialFallback && res.sandboxCode) {
+          setOtpDigits(res.sandboxCode.split('').slice(0, 6));
+          setAuthSuccessMsg(
+            language === 'hi'
+              ? `⚡ ट्रायल / डेमो मोड: आपका सत्यापन कोड ${res.sandboxCode} है (स्वतः भरा गया)`
+              : `⚡ Trial Mode: Your verification code is ${res.sandboxCode} (auto-filled)`
+          );
+        } else {
+          setOtpDigits(['', '', '', '', '', '']);
+          setAuthSuccessMsg(language === 'hi' ? 'ओटीपी सफलतापूर्वक आपके मोबाइल पर भेज दिया गया है' : 'OTP sent successfully to your mobile number');
+        }
         startResendTimer();
         setTimeout(() => {
-          otpInputRefs.current[0]?.focus();
+          otpInputRefs.current[5]?.focus();
         }, 150);
       } else {
         throw new Error(res?.error || 'Failed to send OTP');
@@ -215,11 +224,20 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
       const cleanPhone = loginPhone.replace(/\D/g, '').slice(-10);
       const res = await api.sendLoginOTP(cleanPhone);
       if (res && res.success) {
-        setOtpDigits(['', '', '', '', '', '']);
-        setAuthSuccessMsg(language === 'hi' ? 'नया ओटीपी भेज दिया गया है' : 'New OTP sent successfully');
+        if (res.isTrialFallback && res.sandboxCode) {
+          setOtpDigits(res.sandboxCode.split('').slice(0, 6));
+          setAuthSuccessMsg(
+            language === 'hi'
+              ? `⚡ नया सत्यापन कोड: ${res.sandboxCode} (स्वतः भरा गया)`
+              : `⚡ New verification code: ${res.sandboxCode} (auto-filled)`
+          );
+        } else {
+          setOtpDigits(['', '', '', '', '', '']);
+          setAuthSuccessMsg(language === 'hi' ? 'नया ओटीपी भेज दिया गया है' : 'New OTP sent successfully');
+        }
         startResendTimer();
         setTimeout(() => {
-          otpInputRefs.current[0]?.focus();
+          otpInputRefs.current[5]?.focus();
         }, 100);
       } else {
         throw new Error(res?.error || 'Failed to resend OTP');
@@ -254,7 +272,7 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
         throw new Error(res?.error || 'Verification failed');
       }
     } catch (err) {
-      setAuthError(err.message || (language === 'hi' ? 'गलत ओटीपी। कृपया एसएमएस जांचें और पुनः प्रयास करें।' : 'Incorrect OTP. Please check the SMS and try again.'));
+      setAuthError(err.message || (language === 'hi' ? 'गलत ओटीपी। कृपया पुनः प्रयास करें।' : 'Incorrect OTP. Please try again.'));
     } finally {
       setAuthLoading(false);
     }
@@ -316,11 +334,20 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
       const res = await api.sendRegisterOTP(cleanPhone);
       if (res && res.success) {
         setRegStep('otp');
-        setRegOtpDigits(['', '', '', '', '', '']);
-        setAuthSuccessMsg(language === 'hi' ? 'ओटीपी सफलतापूर्वक आपके मोबाइल पर भेज दिया गया है' : 'OTP sent successfully to your mobile number');
+        if (res.isTrialFallback && res.sandboxCode) {
+          setRegOtpDigits(res.sandboxCode.split('').slice(0, 6));
+          setAuthSuccessMsg(
+            language === 'hi'
+              ? `⚡ ट्रायल / डेमो मोड: आपका सत्यापन कोड ${res.sandboxCode} है (स्वतः भरा गया)`
+              : `⚡ Trial Mode: Your verification code is ${res.sandboxCode} (auto-filled)`
+          );
+        } else {
+          setRegOtpDigits(['', '', '', '', '', '']);
+          setAuthSuccessMsg(language === 'hi' ? 'ओटीपी सफलतापूर्वक आपके मोबाइल पर भेज दिया गया है' : 'OTP sent successfully to your mobile number');
+        }
         startRegResendTimer();
         setTimeout(() => {
-          regOtpInputRefs.current[0]?.focus();
+          regOtpInputRefs.current[5]?.focus();
         }, 150);
       } else {
         throw new Error(res?.error || 'Failed to send OTP');
@@ -342,11 +369,20 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
       const cleanPhone = regPhone.replace(/\D/g, '').slice(-10);
       const res = await api.sendRegisterOTP(cleanPhone);
       if (res && res.success) {
-        setRegOtpDigits(['', '', '', '', '', '']);
-        setAuthSuccessMsg(language === 'hi' ? 'नया ओटीपी भेज दिया गया है' : 'New OTP sent successfully');
+        if (res.isTrialFallback && res.sandboxCode) {
+          setRegOtpDigits(res.sandboxCode.split('').slice(0, 6));
+          setAuthSuccessMsg(
+            language === 'hi'
+              ? `⚡ नया सत्यापन कोड: ${res.sandboxCode} (स्वतः भरा गया)`
+              : `⚡ New verification code: ${res.sandboxCode} (auto-filled)`
+          );
+        } else {
+          setRegOtpDigits(['', '', '', '', '', '']);
+          setAuthSuccessMsg(language === 'hi' ? 'नया ओटीपी भेज दिया गया है' : 'New OTP sent successfully');
+        }
         startRegResendTimer();
         setTimeout(() => {
-          regOtpInputRefs.current[0]?.focus();
+          regOtpInputRefs.current[5]?.focus();
         }, 100);
       } else {
         throw new Error(res?.error || 'Failed to resend OTP');

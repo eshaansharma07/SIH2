@@ -218,12 +218,16 @@ router.post('/send-otp', async (req, res) => {
     }
 
     // Dispatch SMS via Twilio Verify v2
-    await twilioVerifyService.sendVerification(normalizedPhone);
+    const verifyResult = await twilioVerifyService.sendVerification(normalizedPhone);
     rateLimiterService.recordOtpSent(normalizedPhone);
 
     return res.json({
       success: true,
-      message: 'OTP sent successfully'
+      message: verifyResult?.isTrialFallback 
+        ? `OTP generated (Trial Mode: ${verifyResult.sandboxCode})`
+        : 'OTP sent successfully',
+      isTrialFallback: Boolean(verifyResult?.isTrialFallback),
+      sandboxCode: verifyResult?.sandboxCode || null
     });
   } catch (err) {
     return res.status(500).json({
