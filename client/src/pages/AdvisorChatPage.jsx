@@ -86,12 +86,13 @@ export function AdvisorChatPage({ shop, creditData, summaryData, initialPrompt =
 
     try {
       const res = await api.chatAdvisor(shop.id, text);
-      if (res.success && res.response) {
+      const replyText = res?.response || res?.advice?.content || res?.content || res?.message;
+      if (res?.success && replyText) {
         setMessages(prev => [
           ...prev, 
           {
             role: 'assistant',
-            content: res.response,
+            content: replyText,
             timestamp: new Date().toISOString()
           }
         ]);

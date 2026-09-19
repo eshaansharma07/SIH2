@@ -57,7 +57,7 @@ export function FloatingSetuAI({
     try {
       const shopId = currentShop?.id || 'ramesh-kirana';
       const res = await api.chatAdvisor(shopId, text);
-      const reply = res?.response || res?.message || "Namaste! I have analyzed your query based on RBI PSL norms and your shop activity.";
+      const reply = res?.response || res?.advice?.content || res?.content || res?.message || "Namaste! I have analyzed your query based on RBI PSL norms and your shop activity.";
       
       setMessages(prev => [
         ...prev,

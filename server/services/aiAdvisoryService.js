@@ -190,7 +190,7 @@ For your **${ctx.tradeCategory}** in **${ctx.location}** (${ctx.monthsInOperatio
 /**
  * Main Advisory Handler
  */
-export async function generateAdvisoryResponse(shopId, userQuestion) {
+export async function generateAdvisoryResponse(shopId, userQuestion, clientApiKey = '') {
   try {
     const shop = db.prepare('SELECT * FROM shops WHERE id = ?').get(shopId) || 
                  db.prepare('SELECT * FROM shops LIMIT 1').get();
@@ -281,62 +281,95 @@ export async function generateAdvisoryResponse(shopId, userQuestion) {
 
     // Detect query language (English vs Hindi/Hinglish)
     const isEnglishQuery = /^[a-zA-Z0-9\s.,?!'"₹$%()-]+$/.test(userQuestion.trim()) &&
-      !/(ramesh|namaste|ram|bhai|ji|kya|kaise|kitna|kitni|mera|meri|dukaan|paisa|bachat)/i.test(userQuestion);
+      !/(ramesh|namaste|ram|bhai|ji|kya|kaise|kitna|kitni|mera|meri|dukaan|paisa|bachat|udhaar|udhar|kharcha|batao|diwali)/i.test(userQuestion);
 
     // 4. Try Google Gemini API Call (Free Tier via Google AI Studio)
-    const geminiKey = process.env.GEMINI_API_KEY;
+    const geminiKey = clientApiKey || process.env.GEMINI_API_KEY;
 
     if (geminiKey) {
       try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 14000); // 14-second timeout
+        const timeoutId = setTimeout(() => controller.abort(), 12000); // 12-second timeout
 
         const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`;
         
         const languageInstruction = isEnglishQuery 
           ? 'Respond in clear, professional, warm Indian English tailored for rural micro-entrepreneurs.' 
-          : 'Respond in respectful, friendly Hindi (using आप, राम-राम/नमस्ते) with common trade terms (स्टॉक, नकदी, मुनाफा, लोन).';
+          : 'Respond in respectful, friendly Hindi (using आप, राम-राम/नमस्ते) with natural market terms (स्टॉक, नकदी, मुनाफा, लोन, बही-खाता).';
 
-        const systemInstruction = `You are "Setu AI" (सेतु AI) in SaakhSetu (साख सेतु), a warm, trusted, wise rural business advisor for Indian micro-entrepreneurs.
+        const systemInstruction = `You are "Setu AI" (सेतु AI), the intelligent, friendly, and practical business advisor inside SaakhSetu (साख सेतु) for Indian micro-entrepreneurs and retail shopkeepers.
 ${languageInstruction}
-Never use robotic AI jargon, sterile corporate language, or generic advice like "consider stocking more inventory".
 
-CRITICAL MANDATORY REQUIREMENT:
-Every single response MUST reference at least ONE (and ideally multiple) of the following shop-specific parameters BY NAME AND EXACT NUMBER:
-1. User's Trade Category: "${contextData.tradeCategory}"
-2. State & Region: "${contextData.location}"
-3. Operating Vintage: "${contextData.monthsInOperation} months in operation"
-4. Last 30 Days Logged Transactions Summary:
-   - Total 30-day sales: ₹${contextData.last30DaysSummary.totalSales.toLocaleString('en-IN')} (Month-on-Month Growth: ${contextData.last30DaysSummary.momGrowthRate}%)
-   - Specific Category Sales: ${contextData.last30DaysSummary.topCategoriesText}
-   - Net Cash Surplus: ₹${contextData.metrics.netSurplus.toLocaleString('en-IN')}
-   - Customer Udhaar Pending: ₹${contextData.metrics.totalUdhaarPending.toLocaleString('en-IN')} (${contextData.metrics.udhaarRecoveryRate}% recovery rate)
-   - UPI Digital Share: ${contextData.metrics.digitalSharePct}%
-5. Current Month & Season: "${contextData.currentSeason}"
-6. Alternative Credit Score: ${contextData.creditScore} / 850 (${contextData.creditRating})
-7. Top Loan Scheme: ${contextData.topMatchingScheme}
+CRITICAL RULES:
+1. DIRECTLY ANSWER WHAT WAS ASKED: Address the shopkeeper's specific question directly, clearly, and thoughtfully first. Do NOT ignore what they asked. Do NOT recite generic boilerplate or irrelevant metrics.
+2. CONTEXTUAL RELEVANCE: You have access to the shop's verified profile and metrics below. Mention relevant details ONLY when they directly support answering the user's specific question (for instance, refer to sales when asked about revenue or inventory, refer to udhaar balance when asked about customer debt, refer to credit score when asked about loans). If the question is about general business, accounting, app features, or everyday queries, answer clearly without forcing unrelated stats.
+3. CONVERSATIONAL & RESPECTFUL: Be warm and polite. In Hindi, address the user respectfully ("आप", "जी") using standard Indian trade terms (स्टॉक, मुनाफा, उधार, बही-खाता). In English, use warm and encouraging phrasing. Use neat bullet points for multi-step advice.
 
-Provide practical, hyper-local advice: exact quantities to stock, wholesale mandi advice in Balrampur, udhaar recovery timing linked with paddy harvest, and loan steps. Keep advice in 2 to 4 readable paragraphs with clear bullet points.`;
+SHOP DATA (Use selectively when relevant to the user's question):
+- Shop Name: "${contextData.shopName}"
+- Proprietor: "${contextData.ownerName}"
+- Category: "${contextData.tradeCategory}"
+- Location: "${contextData.location}"
+- Vintage: ${contextData.monthsInOperation} months (${contextData.vintageYears} years)
+- Season: "${contextData.currentSeason}"
+- Verified 30-Day Sales: ₹${contextData.last30DaysSummary.totalSales.toLocaleString('en-IN')} (MoM: ${contextData.last30DaysSummary.momGrowthRate}%)
+- Top Categories: ${contextData.last30DaysSummary.topCategoriesText}
+- Net Operating Surplus: ₹${contextData.metrics.netSurplus.toLocaleString('en-IN')}
+- Customer Udhaar Pending: ₹${contextData.metrics.totalUdhaarPending.toLocaleString('en-IN')} (Recovery rate: ${contextData.metrics.udhaarRecoveryRate}%)
+- Digital UPI Share: ${contextData.metrics.digitalSharePct}%
+- SaakhSetu Credit Score: ${contextData.creditScore}/850 (${contextData.creditRating})
+- Top Loan Scheme Match: ${contextData.topMatchingScheme}`;
+
+        // Retrieve last 6 turns for conversational context
+        let historyContents = [];
+        try {
+          const recentRows = db.prepare(`
+            SELECT role, content FROM advisory_chat_history 
+            WHERE shop_id = ? 
+            ORDER BY timestamp DESC 
+            LIMIT 6
+          `).all(shop.id);
+
+          if (recentRows && recentRows.length > 0) {
+            recentRows.reverse().forEach(row => {
+              historyContents.push({
+                role: row.role === 'assistant' ? 'model' : 'user',
+                parts: [{ text: row.content }]
+              });
+            });
+          }
+        } catch (_) {}
+
+        historyContents.push({
+          role: 'user',
+          parts: [{ text: userQuestion }]
+        });
+
+        // Ensure alternating user/model sequence starting with user
+        const validatedContents = [];
+        let expectedRole = 'user';
+        for (const turn of historyContents) {
+          if (turn.role === expectedRole) {
+            validatedContents.push(turn);
+            expectedRole = expectedRole === 'user' ? 'model' : 'user';
+          }
+        }
+        const finalContents = (validatedContents.length > 0 && validatedContents[validatedContents.length - 1].role === 'user')
+          ? validatedContents
+          : [{ role: 'user', parts: [{ text: userQuestion }] }];
 
         const response = await fetch(url, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           signal: controller.signal,
           body: JSON.stringify({
-            contents: [
-              {
-                role: 'user',
-                parts: [
-                  { text: `${systemInstruction}\n\nShopkeeper Question: "${userQuestion}"` }
-                ]
-              }
-            ],
+            system_instruction: {
+              parts: [{ text: systemInstruction }]
+            },
+            contents: finalContents,
             generationConfig: {
-              temperature: 0.7,
-              maxOutputTokens: 800,
-              thinkingConfig: {
-                thinkingBudget: 0
-              }
+              temperature: 0.6,
+              maxOutputTokens: 900
             }
           })
         });
@@ -364,7 +397,7 @@ Provide practical, hyper-local advice: exact quantities to stock, wholesale mand
     }
 
     // 5. Graceful Fallback Safety Net:
-    // Serves deeply grounded pre-written rural advisory response tailored to user data in matching language
+    // Serves targeted rural advisory response tailored to the question asked
     const fallbackResponse = selectJudgingFallbackResponse(userQuestion, contextData, isEnglishQuery);
     saveChatMessage(shop.id, 'user', userQuestion);
     saveChatMessage(shop.id, 'assistant', fallbackResponse);
@@ -387,47 +420,66 @@ Provide practical, hyper-local advice: exact quantities to stock, wholesale mand
 function selectJudgingFallbackResponse(query, ctx, isEnglish = false) {
   const q = query.toLowerCase();
 
-  for (const scenarioKey of Object.keys(JUDGING_FALLBACK_SCENARIOS)) {
-    const scenario = JUDGING_FALLBACK_SCENARIOS[scenarioKey];
-    if (scenario.keywords.some(kw => q.includes(kw))) {
-      return isEnglish ? scenario.responseEn(ctx) : scenario.responseHi(ctx);
+  // 1. Reducing expenses / cost cutting
+  if (q.includes('खर्च') || q.includes('cost') || q.includes('expense') || q.includes('लागत') || q.includes('कट') || q.includes('reduce')) {
+    if (isEnglish) {
+      return `Namaste ${ctx.ownerName} ji! 🙏\n\nHere are 4 targeted ways to reduce expenses in your ${ctx.tradeCategory}:\n\n1. **Minimize Perishable Spoilage**: Track slow-moving items and stock only 3–5 days of inventory for perishables.\n2. **Energy Optimization**: Switch store lighting to LED and service refrigeration units regularly to save on electricity.\n3. **Wholesale Cash Discounts**: Leverage your ₹${ctx.metrics.netSurplus.toLocaleString('en-IN')} cash surplus to negotiate 2–4% upfront cash discounts at the mandi.\n4. **Tighten Loose Credit**: Prevent leakage by capping customer udhaar to avoid bad debts.`;
+    } else {
+      return `राम राम ${ctx.ownerName} जी! 🙏\n\nअपनी ${ctx.tradeCategory} में खर्च कम करने और बचत बढ़ाने के 4 व्यावहारिक सूत्र:\n\n1. **सामान की बर्बादी रोकें**: कम बिकने वाले सामान का स्टॉक सीमित रखें और केवल 3-5 दिन का माल मंगाएं।\n2. **बिजली खर्च पर नियंत्रण**: दुकान में एलईडी बल्ब लगाएं और फ्रीजर की नियमित सर्विसिंग करवाएं।\n3. **थोक नकद छूट**: आपके पास वर्तमान में ₹${ctx.metrics.netSurplus.toLocaleString('en-IN')} का शुद्ध अधिशेष है, जिसका उपयोग थोक मंडी में 2% से 4% नकद छूट पाने में करें।\n4. **उधार लीकेज रोकें**: ढीले उधार पर रोक लगाएं ताकि पूंजी न फंसे।`;
     }
   }
 
-  // If no keyword matches, generate a dynamic grounded response citing exact trade, location, months, and 30-day metrics
-  if (isEnglish) {
-    return `Namaste ${ctx.ownerName} ji! 🙏
-
-Your **${ctx.tradeCategory}** in **${ctx.location}** has been continuously serving the local community for **${ctx.monthsInOperation} months** (4 years).
-
-Key highlights from your verified 30-day transactional log during **${ctx.currentSeason}**:
-- **Monthly Revenue**: **₹${ctx.last30DaysSummary.totalSales.toLocaleString('en-IN')}** (${ctx.last30DaysSummary.momGrowthRate}% month-on-month festive surge).
-- **Top Product Categories**: ${ctx.last30DaysSummary.topCategoriesText}
-- **Net Operating Surplus**: **₹${ctx.metrics.netSurplus.toLocaleString('en-IN')}**
-- **Pending Customer Udhaar**: **₹${ctx.metrics.totalUdhaarPending.toLocaleString('en-IN')}** (${ctx.metrics.udhaarRecoveryRate}% recovery rate)
-- **Alternative Credit Score**: **${ctx.creditScore} / 850** (${ctx.creditRating})
-
-**Practical Advisory for Your Shop**:
-1. **Upcoming Festive Demand**: In Balrampur district, festival buying will drive staple and oil sales up by 35% to 45%.
-2. **Financing Eligibility**: Your credit score pre-qualifies you for **${ctx.topMatchingScheme}** with 0% collateral requirements.
-3. **Official Dossier**: Download your authenticated 90-day cash flow dossier from the **'Bank Dossier'** tab to present to your bank branch.`;
+  // 2. Loans & MUDRA
+  if (q.includes('loan') || q.includes('लोन') || q.includes('ऋण') || q.includes('mudra') || q.includes('मुद्रा') || q.includes('bank') || q.includes('बैंक') || q.includes('फ्रीजर') || q.includes('freezer')) {
+    if (isEnglish) {
+      return `Namaste ${ctx.ownerName} ji! 🏛️\n\nYes, your shop in **${ctx.location}** has strong loan eligibility:\n\n- **Alternative Credit Score**: **${ctx.creditScore}/850 (${ctx.creditRating})**\n- **Top Matched Scheme**: **${ctx.topMatchingScheme}** (Zero Collateral, 3-5 year tenure)\n- **Operating Vintage**: ${ctx.monthsInOperation} months verified track record\n\n**Next Steps**:\n1. Open the **'Bank Dossier'** tab to download your certified 90-day cash flow report.\n2. Present your dossier along with Aadhaar and PAN at your local bank branch for collateral-free sanction.`;
+    } else {
+      return `हाँ ${ctx.ownerName} जी, आपको बैंक से आसानी से व्यावसायिक लोन मिल सकता है! 🏛️\n\n**${ctx.location}** में आपकी दुकान का ट्रैक रिकॉर्ड मजबूत है:\n- **साख सेतु क्रेडिट स्कोर**: **${ctx.creditScore}/850 (${ctx.creditRating})**\n- **सर्वश्रेष्ठ योजना**: **${ctx.topMatchingScheme}** (0% बंधक/Collateral)\n- **अनुभव**: ${ctx.monthsInOperation} महीने निरंतर संचालन\n\n**आगे क्या करें**:\n1. हमारे **'बैंक डॉसियर'** टैब से अपना 90-दिवसीय प्रमाणित पत्रक डाउनलोड करें।\n2. अपने आधार कार्ड व पैन कार्ड के साथ स्थानीय बैंक शाखा में प्रबंधक को दिखाएं।`;
+    }
   }
 
-  return `राम राम ${ctx.ownerName} जी! 🙏
+  // 3. Customer Udhaar & Recovery
+  if (q.includes('उधार') || q.includes('udhaar') || q.includes('credit') || q.includes('khata') || q.includes('खाता') || q.includes('बकाया') || q.includes('recover') || q.includes('customer') || q.includes('ग्राहक')) {
+    if (isEnglish) {
+      return `Namaste ${ctx.ownerName} ji!\n\nHere is the status and strategy for customer udhaar in your ${ctx.tradeCategory}:\n\n- **Pending Udhaar**: **₹${ctx.metrics.totalUdhaarPending.toLocaleString('en-IN')}**\n- **Historical Recovery Rate**: **${ctx.metrics.udhaarRecoveryRate}%** (very healthy!)\n\n**3 Actionable Tips**:\n1. **Harvest Reminders**: Send polite WhatsApp or SMS reminders during ${ctx.currentSeason} when local agricultural earnings arrive.\n2. **Credit Limits**: Cap credit at ₹1,000–₹1,500 per customer to prevent overextension.\n3. **Score Impact**: Collecting remaining udhaar adds points to your credit score!`;
+    } else {
+      return `नमस्ते ${ctx.ownerName} जी!\n\nआपकी दुकान के ग्राहक उधार प्रबंधन के लिए महत्वपूर्ण सलाह:\n\n- **वर्तमान बकाया उधार**: **₹${ctx.metrics.totalUdhaarPending.toLocaleString('en-IN')}**\n- **ऐतिहासिक वसूली दर**: **${ctx.metrics.udhaarRecoveryRate}%** (उत्कृष्ट)\n\n**3 कदम**:\n1. **फसल भुगतान पर स्मरण**: **${ctx.currentSeason}** के समय जब ग्राहकों को भुगतान मिले, तब विनम्र व्हाट्सएप रिमाइंडर भेजें।\n2. **उधार सीमा तय करें**: प्रति ग्राहक ₹1,000 से ₹1,500 की अधिकतम सीमा रखें।\n3. **स्कोर में सुधार**: बकाया वसूल होते ही आपका क्रेडिट स्कोर और मजबूत होगा!`;
+    }
+  }
 
-उत्तर प्रदेश के **${ctx.location}** में आपकी **${ctx.tradeCategory}** को संचालित करते हुए **${ctx.monthsInOperation} महीने** हो चुके हैं। 
+  // 4. Profit & Margins
+  if (q.includes('बचत') || q.includes('मुनाफा') || q.includes('profit') || q.includes('margin') || q.includes('बढ़ाऊं') || q.includes('grow') || q.includes('earning') || q.includes('आय') || q.includes('sales')) {
+    if (isEnglish) {
+      return `Namaste ${ctx.ownerName} ji! 🙏\n\nTo increase profitability in your ${ctx.tradeCategory} (last 30 days: ₹${ctx.last30DaysSummary.totalSales.toLocaleString('en-IN')} sales):\n\n1. **Focus on High-Margin Products**: Branded spices, dry fruits, and packaged snacks yield 18–25% gross margins compared to staples (5–8%).\n2. **Front Counter Placement**: Place impulse-buy items right in front of the billing counter.\n3. **ONDC Wholesale Price Check**: Use the Wholesale tab to source commodities 5–10% cheaper from verified regional distributors.`;
+    } else {
+      return `राम राम ${ctx.ownerName} जी! 🙏\n\nअपनी ${ctx.tradeCategory} में मुनाफा 15% से 20% तक बढ़ाने के 3 अचूक तरीके:\n\n1. **हाई-मार्जिन सामान आगे रखें**: मसालों, नमकीन और ड्राई फ्रूट्स पर 18-25% का मार्जिन मिलता है (राशन आटे पर 5-8% होता है)। इन्हें काउंटर के सामने रखें।\n2. **त्योहारी कॉम्बो बनाएं**: ₹50 और ₹100 के तैयार पूजा किट या स्नैक पैकेट काउंटर पर रखें।\n3. **थोक भाव तुलना**: हमारे 'थोक खोज' (ONDC) विकल्प से सीधे वितरकों से 5-10% कम भाव पर माल खरीदें।`;
+    }
+  }
 
-वर्तमान **${ctx.currentSeason}** के संदर्भ में आपके पिछले 30 दिनों के बही-खाते के मुख्य बिंदु:
-- **मासिक बिक्री**: ₹${ctx.last30DaysSummary.totalSales.toLocaleString('en-IN')} (बिक्री में ${ctx.last30DaysSummary.momGrowthRate}% की मासिक वृद्धि)
-- **शीर्ष बिक्री श्रेणियां**: ${ctx.last30DaysSummary.topCategoriesText}
-- **शुद्ध नकदी अधिशेष**: ₹${ctx.metrics.netSurplus.toLocaleString('en-IN')}
-- **ग्राहक उधार स्थिति**: ₹${ctx.metrics.totalUdhaarPending.toLocaleString('en-IN')} बकाया (${ctx.metrics.udhaarRecoveryRate}% सुरक्षित वसूली दर)
-- **वैकल्पिक क्रेडिट स्कोर**: **${ctx.creditScore} / 850** (${ctx.creditRating})
+  // 5. Stock & Festival Planning
+  if (q.includes('stock') || q.includes('स्टॉक') || q.includes('त्योहार') || q.includes('दीवाली') || q.includes('diwali') || q.includes('सामान') || q.includes('माल') || q.includes('festiv') || q.includes('oil') || q.includes('sugar')) {
+    if (isEnglish) {
+      return `Namaste ${ctx.ownerName} ji! 🪔\n\nSeasonal demand advice for **${ctx.location}** during **${ctx.currentSeason}**:\n\n1. **High Priority Stock**: Edible oils, ghee, sugar, and puja essentials see 35%–45% surge in Balrampur.\n2. **Capital Allocation**: Your net surplus is ₹${ctx.metrics.netSurplus.toLocaleString('en-IN')}; invest 40–50% into fast-moving festive stock while keeping liquidity safe.\n3. **Wholesale Timing**: Lock in wholesale stock at least 2 weeks before peak festival week to avoid price spikes.`;
+    } else {
+      return `राम राम ${ctx.ownerName} जी! 🪔\n\n**${ctx.location}** में आगामी त्योहारों (**${ctx.currentSeason}**) के लिए स्टॉक योजना:\n\n1. **प्राथमिक सामान**: खाद्य तेल, शुद्ध घी, चीनी और पूजा सामग्री की मांग में 35% से 45% का उछाल आएगा।\n2. **पूंजी संतुलन**: आपके पास ₹${ctx.metrics.netSurplus.toLocaleString('en-IN')} का शुद्ध अधिशेष है; इसमें से आधा नए स्टॉक में लगाएं और रोजमर्रा की नकदी सुरक्षित रखें।\n3. **समय पर बुकिंग**: त्योहार से 10-15 दिन पहले थोक मंडी से माल उठा लें ताकि बढ़े हुए भाव से बच सकें।`;
+    }
+  }
 
-**आपके व्यापार के लिए व्यावहारिक सलाह**:
-1. **आगामी मांग**: बलरामपुर जिले में त्योहारों और धान फसल भुगतान के कारण राशन व तेल की मांग में 35% से अधिक उछाल अपेक्षित है।
-2. **ऋण सुविधा**: आपका 785 स्कोर आपको **${ctx.topMatchingScheme}** के लिए बिना किसी संपत्ति बंधक (Zero Collateral) के पात्र बनाता है।
-3. **डॉसियर**: बैंक प्रबंधक को प्रस्तुत करने के लिए हमारे 'बैंक डॉसियर' टैब से सत्यापित विवरण डाउनलोड करें।`;
+  // 6. UPI / Digital Payments
+  if (q.includes('upi') || q.includes('यूपीआई') || q.includes('digital') || q.includes('ऑनलाइन') || q.includes('qr') || q.includes('paytm') || q.includes('phonepe') || q.includes('gpay')) {
+    if (isEnglish) {
+      return `Namaste ${ctx.ownerName} ji! 📱\n\nYour shop currently has **${ctx.metrics.digitalSharePct}% UPI digital adoption**:\n\n1. **Bank Proof**: Every UPI payment creates an indisputable digital cashflow footprint that banks accept in place of formal audits.\n2. **No Loose Change Loss**: Eliminates rounding off losses on small ₹2/₹5 items.\n3. **Score Multiplier**: Achieving 50%+ digital share directly increases your SaakhSetu Credit Score by +15 points!`;
+    } else {
+      return `नमस्ते ${ctx.ownerName} जी! 📱\n\nआपकी दुकान में वर्तमान में **${ctx.metrics.digitalSharePct}% बिक्री यूपीआई (QR कोड)** द्वारा हो रही है:\n\n1. **बैंक ऋण में सुगमता**: यूपीआई से प्राप्त राशि बैंक खातों में स्वतः दर्ज होती है, जिसे बैंक अधिकारी बिना सीए ऑडिट के ऋण के लिए स्वीकार करते हैं।\n2. **चिल्लर की समस्या खत्म**: ₹2, ₹5 के खुल्ले न होने पर जो नुकसान या उधार होता था, वह पूरी तरह रुकता है।\n3. **क्रेडिट स्कोर वृद्धि**: 50% से अधिक डिजिटल बिक्री होने पर आपका क्रेडिट स्कोर तुरंत 15 अंक बढ़ जाता है!`;
+    }
+  }
+
+  // Default: Direct responsive answer
+  if (isEnglish) {
+    return `Namaste ${ctx.ownerName} ji! 🙏\n\nThank you for asking about your ${ctx.tradeCategory} in **${ctx.location}**.\n\nI am your Setu AI assistant, tuned to help your enterprise grow. Whether you need guidance on inventory management, credit score building (current: ${ctx.creditScore}/850), managing customer udhaar (current: ₹${ctx.metrics.totalUdhaarPending.toLocaleString('en-IN')}), or exploring schemes like ${ctx.topMatchingScheme} — feel free to ask anytime!`;
+  }
+
+  return `राम राम ${ctx.ownerName} जी! 🙏\n\n**${ctx.location}** में आपकी **${ctx.tradeCategory}** से संबंधित सवाल पूछने के लिए धन्यवाद।\n\nमैं आपका सेतु AI सलाहकार हूँ। आप मुझसे अपनी दुकान के स्टॉक, ग्राहक उधार (वर्तमान बकाया: ₹${ctx.metrics.totalUdhaarPending.toLocaleString('en-IN')}), क्रेडिट स्कोर (${ctx.creditScore}/850), या **${ctx.topMatchingScheme}** जैसी सरकारी योजनाओं के बारे में कोई भी प्रश्न पूछ सकते हैं। मैं आपकी हरसंभव सहायता के लिए तैयार हूँ!`;
 }
 
 function saveChatMessage(shopId, role, content) {

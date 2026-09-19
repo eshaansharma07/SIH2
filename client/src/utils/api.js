@@ -174,8 +174,20 @@ export const api = {
   getSchemeDetail: (id) => request(`/schemes/${id}`),
 
   // Advisory
-  chatAdvisor: (shopId, question) => 
-    request('/advisor/chat', { method: 'POST', body: JSON.stringify({ shopId, question }) }),
+  chatAdvisor: (shopId, question) => {
+    let userApiKey = '';
+    try {
+      userApiKey = safeStorage.getItem('vyapaar_gemini_api_key', '');
+    } catch (_) {}
+    return request('/advisor/chat', { 
+      method: 'POST', 
+      body: JSON.stringify({ 
+        shopId, 
+        question, 
+        apiKey: userApiKey || undefined 
+      }) 
+    });
+  },
   getAdvisorHistory: (shopId) => request(`/advisor/history?shopId=${shopId}`),
   getSeasonalCues: (shopId) => request(`/advisor/cues?shopId=${shopId}`),
 

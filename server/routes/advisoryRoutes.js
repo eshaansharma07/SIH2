@@ -41,7 +41,7 @@ function advisoryRateLimiter(req, res, next) {
 // Chat with Setu AI Advisor
 router.post('/chat', advisoryRateLimiter, async (req, res) => {
   try {
-    const { shopId, question } = req.body;
+    const { shopId, question, apiKey } = req.body;
 
     if (!shopId) {
       return res.status(400).json({ success: false, error: 'shopId is required' });
@@ -51,8 +51,16 @@ router.post('/chat', advisoryRateLimiter, async (req, res) => {
       return res.status(400).json({ success: false, error: 'Question is required' });
     }
 
-    const advice = await generateAdvisoryResponse(shopId, question);
-    res.json({ success: true, advice });
+    const advice = await generateAdvisoryResponse(shopId, question, apiKey);
+    const content = advice?.content || 'Namaste! How may I assist you with your enterprise?';
+
+    res.json({ 
+      success: true, 
+      advice,
+      response: content,
+      message: content,
+      content
+    });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
