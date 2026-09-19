@@ -40,9 +40,9 @@ India's 63+ million rural micro-entrepreneurs (kirana grocers, village tailors, 
    ┌───────────────────────────┐                   ┌───────────────────────────┐
    │  EVALUATOR DEMO MODE      │                   │  REAL ENTERPRISE MODE     │
    │  - Ramesh's Kirana Store  │                   │  - 2-Step SMS OTP Signup  │
-   │  - 48 Months Vintage      │                   │  - Clean Day-1 Onboarding │
-   │  - 4-Month Seeded Ledger  │                   │  - Dynamic Starter Score  │
-   │  - 809 / 850 Credit Score │                   │  - Real Shopkeeper Token  │
+   │  - 48 Months Vintage      │                   │  - Clean Day-1 Empty Slate│
+   │  - 120-Day Seeded Ledger  │                   │  - 50-Tx Milestone Audit  │
+   │  - 809 / 850 Credit Score │                   │  - Zero Fabricated Score  │
    └─────────────┬─────────────┘                   └─────────────┬─────────────┘
                  │                                               │
                  └───────────────────────┬───────────────────────┘
@@ -52,7 +52,7 @@ India's 63+ million rural micro-entrepreneurs (kirana grocers, village tailors, 
    ├──────────────────────────────┬────────────────────────────────────────────┤
    │ 1. Tactile Bahi-Khata Ledger │ Daily income, expenses, udhaar & UPI tracking │
    │ 2. Real-Time SMS OTP Auth    │ Twilio Verify v2 + Trial Sandbox Resilience│
-   │ 3. 4-Pillar Credit Scorer    │ Explainable 300-850 score based on cash flows │
+   │ 3. 4-Pillar Credit Scorer    │ 50-Tx Milestone Audit & Explainable 300-850 │
    │ 4. Verified Scheme Radar     │ Live portal probes + PIB RSS live feed scan   │
    │ 5. Scheme Ingestion Sandbox  │ Sub-30s dynamic AST parsing & shop matching   │
    │ 6. Saathi AI Advisor         │ Grounded Gemini 2.5 Flash with fallback net   │
@@ -148,17 +148,36 @@ To maintain technical due-diligence credibility during evaluations:
 - Visualizes the agricultural economy cycle: summer baseline, monsoon waterlogging dip, and pre-festival harvest recovery.
 - Dynamic summary metrics: gross sales, net surplus, working capital at risk, and digital payment ratio.
 
-### 2. 4-Pillar Alternative Credit Scoring Math
-The **Vikasit Saathi Score** (300–850) is fully deterministic and explainable:
+### 2. 4-Pillar Alternative Credit Scoring Math & 50-Transaction Audit Milestone
 
-$$\text{Total Score} = 300 + 550 \times \sum_{i=1}^{4} (w_i \times s_i)$$
+To preserve banking underwriting credibility, SaakhSetu enforces a strict **50-Transaction Minimum Threshold**:
 
-| Pillar | Weight | Metric Measured | Scoring Logic |
-| :--- | :---: | :--- | :--- |
-| **Pillar 1: Cash Flow Regularity** | 30% | Logging frequency & net operating margin | $\text{Min}(1, \frac{\text{Active Days}}{30}) \times 0.6 + \text{Min}(1, \frac{\text{Margin}}{0.25}) \times 0.4$ |
-| **Pillar 2: Revenue Stability** | 25% | Monthly revenue consistency & growth | $\text{Min}(1, \frac{\text{Current Month Sales}}{\text{Average Sales}}) \times 0.7 + \text{Bonus}$ |
-| **Pillar 3: Udhaar Discipline** | 25% | Working capital recovery & exposure | $(1 - \frac{\text{Pending Udhaar}}{\text{Total Income}}) \times 0.6 + \frac{\text{Repaid}}{\text{Given}} \times 0.4$ |
-| **Pillar 4: Vintage & Digital Footprint** | 20% | Business vintage & UPI QR share | $\text{Min}(1, \frac{\text{Vintage Months}}{36}) \times 0.6 + \text{UPI Share} \times 0.4$ |
+#### A. 50-Transaction Audit Milestone (< 50 Transactions)
+- **Zero Fabricated Scores**: Micro-enterprises lacking transaction history are classified as **Under Audit** (`isUnrated: true`, `totalScore: null`, `score: null`, `previousScore: null`, `scoreDelta: null`).
+- **Milestone Progress Tracker**: The UI renders an informative progress dial and linear tracker showing `X / 50 Transactions logged`, progress percentage, and remaining count.
+- **Credit Appraisal Memo (CAM)**: Automatically designates facility as `"Onboarding Evaluation (Requires 50 verified transactions)"` and marks score audit status as `UNDER_AUDIT`.
+- **Structured 3-Stage Progression Timeline**:
+  1. *Milestone 1: Merchant Registration* (Completed)
+  2. *Milestone 2: 50 Ledger Transactions* (In Progress: `X/50 logged`)
+  3. *Milestone 3: Alternative Credit Rating & Loan Eligibility* (Locked until Milestone 2 is achieved)
+
+#### B. 4-Pillar Transparent Underwriting Math ($\ge$ 50 Transactions or Evaluator Demo)
+Once 50 transactions are recorded, the **SaakhSetu Credit Score** (300–850) is computed across 4 explainable pillars:
+
+$$\text{Total Score} = 300 + 550 \times \left( \frac{\text{Consistency} + \text{Growth} + \text{Discipline} + \text{Vintage}}{850} \right)$$
+
+| Pillar | Weight | Max Pts | Metric Measured | Scoring Sub-Factors |
+| :--- | :---: | :---: | :--- | :--- |
+| **1. Cash Flow & Logging Regularity** | 30% | 255 pts | Daily ledger logging discipline & cash margin predictability | Daily logging regularity (160 pts) + Cash flow stability & low CV (95 pts) |
+| **2. Turnover Growth & Stability** | 25% | 212 pts | Turnover momentum & seasonal dip resilience | Revenue growth momentum (130 pts) + Monsoon/off-season resiliency (82 pts) |
+| **3. Working Capital & Udhaar Discipline** | 25% | 213 pts | Udhaar recovery cycle & digital payment adoption | Udhaar-to-income control (140 pts) + Timely collection cycle & UPI velocity (73 pts) |
+| **4. Business Vintage & Formal Linkage** | 20% | 170 pts | Commercial banking linkage & enterprise vintage | Operating vintage in locality (110 pts) + Commercial bank account & Udyam KYC (60 pts) |
+
+#### C. Rating Bands & Banking Tiers
+- **$\ge 750$ — Prime Bankable**: Tier 1 — Low Risk / Preferred PSL Micro-Enterprise (₹5,00,000 - ₹20,00,000 MUDRA Tarun)
+- **$680 - 749$ — Loan Ready**: Tier 2 — Moderate Risk / Standard MUDRA Kishor (₹50,000 - ₹5,00,000)
+- **$580 - 679$ — Fair Eligibility**: Tier 3 — Acceptable Risk / CGTMSE Credit Guarantee Recommended (₹10,000 - ₹50,000)
+- **$< 580$ — Needs Work**: Tier 4 — Early Stage / High Supervision (Micro-Credit Shishu)
 
 ### 3. Saathi AI Advisor (Google Gemini Multi-Model Failover)
 - **Strict Grounding**: Context injects trade category, location, vintage, 30-day turnover, and APMC mandi harvest dates.
@@ -204,7 +223,8 @@ npm --prefix server test
 - **Credit Scoring Service Suite** (4/4):
   - Ramesh Kirana baseline score within valid [300, 850] range.
   - Unpaid udhaar penalties on discipline factor.
-  - Score clamping within bounds and dynamic foundation score for new registrations.
+  - Score clamping within bounds [300, 850].
+  - 50-transaction threshold: shops with < 50 transactions remain locked under audit (`totalScore: null`); unlocks formal 4-pillar score at 50 transactions.
 - **Customer Credit & WhatsApp Reminders Suite** (5/5):
   - Customer records and credit limits.
   - Udhaar cycle and WhatsApp payment reminder deep link formatting.
