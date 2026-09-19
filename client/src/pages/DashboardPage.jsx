@@ -423,7 +423,7 @@ export function DashboardPage({
                   <CheckCircle2 className="w-6 h-6" />
                 </div>
                 <h3 className="font-serif font-bold text-lg text-stone-900">
-                  {language === 'hi' ? 'धन्यवाद रमेश जी!' : 'Thank you Ramesh Ji!'}
+                  {language === 'hi' ? `धन्यवाद ${shopOwner}!` : `Thank you ${shopOwner}!`}
                 </h3>
                 <p className="text-xs text-stone-600 max-w-xs mx-auto">
                   {language === 'hi'

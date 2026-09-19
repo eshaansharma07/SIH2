@@ -75,9 +75,28 @@ export function VoiceInputDialog({
   const recognitionRef = useRef(null);
   const stepRef = useRef(step);
   stepRef.current = step;
+  const isClosingRef = useRef(false);
 
   const isUdhaar = String(type || '').startsWith('udhaar');
   const voiceSuggestions = searchCustomerSuggestions(customerName, customerList, 5);
+
+  const handleSafeClose = () => {
+    isClosingRef.current = true;
+    stopSpeech();
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.onstart = null;
+        recognitionRef.current.onresult = null;
+        recognitionRef.current.onerror = null;
+        recognitionRef.current.onend = null;
+        recognitionRef.current.abort();
+      } catch (_) {}
+      recognitionRef.current = null;
+    }
+    setIsListening(false);
+    setIsSpeakingState(false);
+    onClose?.();
+  };
 
   // Load shop customers if not passed (cached + network refresh)
   useEffect(() => {
@@ -102,11 +121,22 @@ export function VoiceInputDialog({
   // Check Web Speech API support on open
   useEffect(() => {
     if (!isOpen) {
+      isClosingRef.current = true;
       stopSpeech();
-      try { recognitionRef.current?.abort(); } catch (_) {}
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.onstart = null;
+          recognitionRef.current.onresult = null;
+          recognitionRef.current.onerror = null;
+          recognitionRef.current.onend = null;
+          recognitionRef.current.abort();
+        } catch (_) {}
+        recognitionRef.current = null;
+      }
       return;
     }
 
+    isClosingRef.current = false;
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
       setIsSupported(false);
@@ -128,15 +158,34 @@ export function VoiceInputDialog({
     promptForStep('type', { type: 'income', customerName: '', amount: '' });
 
     return () => {
+      isClosingRef.current = true;
       stopSpeech();
-      try { recognitionRef.current?.abort(); } catch (_) {}
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.onstart = null;
+          recognitionRef.current.onresult = null;
+          recognitionRef.current.onerror = null;
+          recognitionRef.current.onend = null;
+          recognitionRef.current.abort();
+        } catch (_) {}
+        recognitionRef.current = null;
+      }
     };
   }, [isOpen]);
 
   // Speak prompt and start listening after speech finishes
   const promptForStep = (targetStep, currentValues = {}) => {
+    if (isClosingRef.current) return;
     stopSpeech();
-    try { recognitionRef.current?.abort(); } catch (_) {}
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.onstart = null;
+        recognitionRef.current.onresult = null;
+        recognitionRef.current.onerror = null;
+        recognitionRef.current.onend = null;
+        recognitionRef.current.abort();
+      } catch (_) {}
+    }
     setIsListening(false);
     setTranscript('');
 
@@ -190,20 +239,20 @@ export function VoiceInputDialog({
         lang: langCode,
         onEnd: () => {
           setIsSpeakingState(false);
-          // Don't auto-listen on phone step (requires touch keypad)
-          if (targetStep !== 'phone') {
+          // Don't auto-listen on phone step or when closing
+          if (!isClosingRef.current && targetStep !== 'phone') {
             startListeningForStep(targetStep);
           }
         },
         onError: () => {
           setIsSpeakingState(false);
-          if (targetStep !== 'phone') {
+          if (!isClosingRef.current && targetStep !== 'phone') {
             startListeningForStep(targetStep);
           }
         }
       });
     } else {
-      if (targetStep !== 'phone') {
+      if (!isClosingRef.current && targetStep !== 'phone') {
         startListeningForStep(targetStep);
       }
     }
@@ -211,10 +260,19 @@ export function VoiceInputDialog({
 
   // Start Web Speech Recognition
   const startListeningForStep = (currentStepName) => {
+    if (isClosingRef.current) return;
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) return;
 
-    try { recognitionRef.current?.abort(); } catch (_) {}
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.onstart = null;
+        recognitionRef.current.onresult = null;
+        recognitionRef.current.onerror = null;
+        recognitionRef.current.onend = null;
+        recognitionRef.current.abort();
+      } catch (_) {}
+    }
 
     const recognition = new SpeechRecognition();
     recognition.continuous = false;
@@ -422,7 +480,7 @@ export function VoiceInputDialog({
 
       setTimeout(() => {
         setSaveSuccess(false);
-        onClose();
+        handleSafeClose();
       }, 700);
     } catch (err) {
       console.warn('Network issue, applying local queue save:', err.message);
@@ -430,7 +488,7 @@ export function VoiceInputDialog({
       setSaveSuccess(true);
       setTimeout(() => {
         setSaveSuccess(false);
-        onClose();
+        handleSafeClose();
       }, 700);
     } finally {
       setIsSaving(false);
@@ -440,8 +498,14 @@ export function VoiceInputDialog({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-indigoRural-950/70 backdrop-blur-xs animate-fadeIn">
-      <div className="bg-white rounded-3xl border border-paper-300 shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[92vh]">
+    <div 
+      onClick={handleSafeClose}
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-indigoRural-950/70 backdrop-blur-xs animate-fadeIn"
+    >
+      <div 
+        onClick={(e) => e.stopPropagation()}
+        className="bg-white rounded-3xl border border-paper-300 shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[92vh]"
+      >
         
         {/* Header with Step Indicator and Audio Toggle */}
         <div className="p-4 sm:p-5 bg-gradient-to-r from-terracotta-50 via-paper-50 to-indigoRural-50 border-b border-paper-200">
@@ -481,11 +545,7 @@ export function VoiceInputDialog({
               {/* Close Dialog */}
               <button
                 type="button"
-                onClick={() => {
-                  stopSpeech();
-                  try { recognitionRef.current?.abort(); } catch (_) {}
-                  onClose();
-                }}
+                onClick={handleSafeClose}
                 className="p-2 rounded-full text-indigoRural-400 hover:text-indigoRural-800 hover:bg-paper-200 transition cursor-pointer"
               >
                 <X className="w-4 h-4" />
