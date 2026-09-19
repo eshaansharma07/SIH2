@@ -141,10 +141,13 @@ router.post('/reset-demo', async (req, res) => {
     seedDatabase();
     const shop = await dataStore.getShopById('ramesh-kirana');
     
-    // Sync freshly seeded transactions to MongoDB Atlas in background
+    // Sync freshly seeded transactions to MongoDB Atlas with timeout guard
     try {
       const { syncToMongoDB } = await import('../db/mongoSync.js');
-      syncToMongoDB().catch(e => console.warn('[MongoDB Atlas] Background sync on reset-demo error:', e.message));
+      await Promise.race([
+        syncToMongoDB(),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Sync timeout')), 2500))
+      ]).catch(e => console.warn('[MongoDB Atlas] Sync on reset-demo notice:', e.message));
     } catch (_) {}
 
     res.json({ success: true, message: 'Demo shop reloaded with 120 days of verified transactions', shop });
