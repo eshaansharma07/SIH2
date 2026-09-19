@@ -610,16 +610,17 @@ export function generateCAM(shopOrId, transactionsOverride = null) {
 
   const creditData = calculateCreditScore(shop, transactionsOverride);
   const m = creditData.metrics || {};
+  const isUnrated = Boolean(creditData.isUnrated);
 
-  const monthlySurplus = Math.round((m.netSurplus || 0) / 3);
-  const recommendedMaxLoan = Math.min(500000, Math.max(25000, monthlySurplus * 8));
-  const recommendedMaxEmi = Math.round(monthlySurplus * 0.4);
+  const monthlySurplus = isUnrated ? 0 : Math.round((m.netSurplus || 0) / 3);
+  const recommendedMaxLoan = isUnrated ? 0 : Math.min(500000, Math.max(25000, monthlySurplus * 8));
+  const recommendedMaxEmi = isUnrated ? 0 : Math.round(monthlySurplus * 0.4);
 
   // Nayak Committee Working Capital Norms (25% of projected turnover, 5% margin, 20% MPBF bank finance)
-  const projectedAnnualTurnover = Math.max(120000, Math.round((m.totalIncome || 0) * 3));
-  const workingCapitalRequirement25Pct = Math.round(projectedAnnualTurnover * 0.25);
-  const minimumBorrowerMargin5Pct = Math.round(projectedAnnualTurnover * 0.05);
-  const maximumPermissibleBankFinance20Pct = Math.round(projectedAnnualTurnover * 0.20);
+  const projectedAnnualTurnover = isUnrated ? 0 : Math.max(120000, Math.round((m.totalIncome || 0) * 3));
+  const workingCapitalRequirement25Pct = isUnrated ? 0 : Math.round(projectedAnnualTurnover * 0.25);
+  const minimumBorrowerMargin5Pct = isUnrated ? 0 : Math.round(projectedAnnualTurnover * 0.05);
+  const maximumPermissibleBankFinance20Pct = isUnrated ? 0 : Math.round(projectedAnnualTurnover * 0.20);
 
   const udyamStatus = shop.is_udyam_verified ? 'VERIFIED' : (shop.udyam_number ? 'SELF_DECLARED' : 'PENDING');
   const districtCode = (shop.district || 'IND').substring(0, 3).toUpperCase();
@@ -629,9 +630,21 @@ export function generateCAM(shopOrId, transactionsOverride = null) {
     documentType: 'CREDIT_APPRAISAL_MEMORANDUM',
     underwritingFramework: 'RBI Priority Sector Lending (PSL) & Nayak Committee Working Capital Norms',
     riskClassification: creditData.riskTier,
-    recommendedFacility: creditData.isUnrated 
+    recommendedFacility: isUnrated 
       ? 'Onboarding Evaluation (Requires 50 verified transactions)' 
       : (m.totalIncome > 50000 ? 'MUDRA Kishor (₹50,000 to ₹5,00,000)' : 'MUDRA Shishu (Up to ₹50,000)'),
+    creditAssessment: {
+      alternativeScore: creditData.totalScore,
+      isUnrated: isUnrated,
+      transactionCount: creditData.transactionCount || 0,
+      requiredTransactions: creditData.requiredTransactions || 50,
+      transactionsRemaining: creditData.transactionsRemaining || 0,
+      riskTier: creditData.riskTier,
+      recommendedFacility: isUnrated 
+        ? 'Onboarding Evaluation (Requires 50 verified transactions)' 
+        : (m.totalIncome > 50000 ? 'MUDRA Kishor (₹50,000 to ₹5,00,000)' : 'MUDRA Shishu (Up to ₹50,000)'),
+      factorBreakdown: creditData.factors
+    },
     memoMetadata: {
       memoId: memoNumber,
       standard: 'RBI Priority Sector Lending (PSL) Cash-Flow Underwriting Guidelines',
@@ -658,6 +671,10 @@ export function generateCAM(shopOrId, transactionsOverride = null) {
     },
     creditScoreAudit: {
       score: creditData.totalScore,
+      isUnrated: isUnrated,
+      transactionCount: creditData.transactionCount || 0,
+      requiredTransactions: creditData.requiredTransactions || 50,
+      transactionsRemaining: creditData.transactionsRemaining || 0,
       maxScale: 850,
       minScale: 300,
       ratingBand: creditData.ratingBand,
@@ -667,6 +684,10 @@ export function generateCAM(shopOrId, transactionsOverride = null) {
     },
     creditScoreSummary: {
       score: creditData.totalScore,
+      isUnrated: isUnrated,
+      transactionCount: creditData.transactionCount || 0,
+      requiredTransactions: creditData.requiredTransactions || 50,
+      transactionsRemaining: creditData.transactionsRemaining || 0,
       maxScale: 850,
       minScale: 300,
       ratingBand: creditData.ratingBand,
@@ -694,7 +715,7 @@ export function generateCAM(shopOrId, transactionsOverride = null) {
       debtServiceMetrics: {
         estimatedMonthlyOperatingSurplus: monthlySurplus,
         recommendedMaxMonthlyEmi: recommendedMaxEmi,
-        debtServiceCoverageRatio: '2.5x (Prudent > 1.5x)'
+        debtServiceCoverageRatio: isUnrated ? 'N/A (Pending 50 transactions)' : '2.5x (Prudent > 1.5x)'
       },
       scaMarginMoneyAssessment: {
         framework: 'State Channelizing Agencies (SCAs) & Apex Corporations (NSFDC / NBCFDC / NMDFC)',
@@ -720,25 +741,30 @@ export function generateCAM(shopOrId, transactionsOverride = null) {
       }
     },
     cashFlowAndWorkingCapitalAudit: {
-      observationPeriod: '90–120 Days Realistic Rural Micro-Retail Record',
-      grossTurnoverLogged: m.totalIncome,
-      operationalPurchasesAndExpenses: m.totalExpense,
-      netCashSurplus: m.netSurplus,
+      observationPeriod: isUnrated ? 'Onboarding Evaluation (Requires 50 verified transactions)' : '90–120 Days Realistic Rural Micro-Retail Record',
+      grossTurnoverLogged: m.totalIncome || 0,
+      operationalPurchasesAndExpenses: m.totalExpense || 0,
+      netCashSurplus: m.netSurplus || 0,
       averageMonthlySales: Math.round((m.totalIncome || 0) / 4),
-      operatingSurplusMargin: m.totalIncome > 0 ? `${((m.netSurplus / m.totalIncome) * 100).toFixed(1)}%` : '0%',
-      digitalCollectionVelocityUpi: `${m.digitalSharePct}%`,
-      customerUdhaarOwed: m.totalUdhaarPending,
-      historicalUdhaarRecoveryRate: `${m.udhaarRecoveryRate}%`
+      operatingSurplusMargin: (m.totalIncome || 0) > 0 ? `${((m.netSurplus / m.totalIncome) * 100).toFixed(1)}%` : '0%',
+      digitalCollectionVelocityUpi: `${m.digitalSharePct || 0}%`,
+      customerUdhaarOwed: m.totalUdhaarPending || 0,
+      historicalUdhaarRecoveryRate: `${m.udhaarRecoveryRate || 100}%`
     },
     underwritingRecommendation: {
       pslClassification: 'Micro-Enterprise (Trading) — Eligible for 7.5% RBI PSL sub-target',
-      recommendedProduct: m.totalIncome > 50000 ? 'MUDRA Kishor (₹50,000 to ₹5,00,000)' : 'MUDRA Shishu (Up to ₹50,000)',
+      recommendedProduct: isUnrated 
+        ? 'Onboarding Evaluation (Requires 50 verified transactions)'
+        : (m.totalIncome > 50000 ? 'MUDRA Kishor (₹50,000 to ₹5,00,000)' : 'MUDRA Shishu (Up to ₹50,000)'),
       recommendedMaxLoanExposure: recommendedMaxLoan,
-      recommendedTenureMonths: 36,
+      recommendedTenureMonths: isUnrated ? 0 : 36,
       recommendedMaxMonthlyEmi: recommendedMaxEmi,
       cgtmseCoverageApplicable: true,
-      interestRateRangeAnnual: '8.75% – 11.50% p.a. (Bank Base Rate + Spread)',
-      underwriterConditions: [
+      interestRateRangeAnnual: isUnrated ? 'N/A (Pending 50 transactions)' : '8.75% – 11.50% p.a. (Bank Base Rate + Spread)',
+      underwriterConditions: isUnrated ? [
+        'Mandatory completion of 50 ledger transactions before credit facility sanction',
+        'Audit verification of customer udhaar and digital sales history'
+      ] : [
         'Mandatory collateral-free underwriting under CGTMSE guarantee scheme',
         'End-use verification for inventory procurement / deep freezer capital equipment',
         'Monthly debt-service coverage ratio (DSCR) verified at >= 1.65x'
