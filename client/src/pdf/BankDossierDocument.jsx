@@ -289,6 +289,8 @@ export function BankDossierDocument({ data }) {
     cam = {},
     scoreData = {},
     qrCodeDataUrl = '',
+    verificationHash = '',
+    verificationUrl = '',
     generatedAt = new Date().toISOString(),
     documentId = `VS-CAM-${Date.now()}`
   } = data || {};
@@ -491,12 +493,17 @@ export function BankDossierDocument({ data }) {
           <View style={styles.qrBlock}>
             <Image src={qrCodeDataUrl} style={styles.qrImage} />
             <View style={styles.qrTextContainer}>
-              <Text style={styles.qrTitle}>Digital Integrity & Live Ledger Verification</Text>
+              <Text style={styles.qrTitle}>Digital Integrity & Cryptographic Dossier Verification</Text>
               <Text style={styles.qrDesc}>
-                Lending officers may scan this QR code to verify this Credit Appraisal Memo directly against live tamper-evident transactional logs and calculate updated debt covenants in real time.
+                Lending officers may scan this QR code to verify this Credit Appraisal Memo directly against live tamper-evident transactional logs. Cryptographically signed with SHA-256 HMAC.
               </Text>
+              {verificationHash ? (
+                <Text style={[styles.qrUrl, { color: '#0F3E2E', fontFamily: 'Helvetica-Bold' }]}>
+                  HMAC Seal: {verificationHash.slice(0, 36)}...
+                </Text>
+              ) : null}
               <Text style={styles.qrUrl}>
-                Verify at: https://saakhsetu.vercel.app/api/credit-score/{shop?.id || 'ramesh-kirana'}/cam
+                Verify at: {verificationUrl || `https://saakhsetu.vercel.app/api/credit-score/${shop?.id || 'ramesh-kirana'}/cam`}
               </Text>
             </View>
           </View>

@@ -75,6 +75,8 @@ export function isSpeaking() {
 export function speak({
   text,
   lang = 'hi-IN',
+  rate = 0.9,
+  pitch = 1.0,
   onStart,
   onEnd,
   onError
@@ -90,8 +92,8 @@ export function speak({
   try {
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = lang;
-    utterance.rate = 0.9; // Rural-friendly pacing
-    utterance.pitch = 1.0;
+    utterance.rate = rate; // Rural-friendly pacing
+    utterance.pitch = pitch;
 
     const voice = findMatchingVoice(lang);
     if (voice) {
@@ -124,4 +126,8 @@ export function speak({
     onError?.(err);
     return false;
   }
+}
+
+export function speakText(text, lang = 'hi-IN', options = {}) {
+  return speak({ text, lang, ...options });
 }

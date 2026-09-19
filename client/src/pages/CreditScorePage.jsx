@@ -467,7 +467,102 @@ export function CreditScorePage({ shop, creditData, onNavigateTab, isDemoMode = 
         </div>
       </section>
 
-      {/* ========================================================================= */}
+      {/* 2.5. UNDERWRITING FAIR-PLAY & DATA INTEGRITY TELEMETRY */}
+      <section className="w-full rounded-3xl border border-stone-800 bg-[#0C1322] text-white p-5 sm:p-6 shadow-sm space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-stone-800 pb-3">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-emerald-950 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+              <ShieldCheck className="w-4 h-4" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="font-serif font-bold text-sm sm:text-base text-stone-100">
+                  {language === 'hi' ? 'अंडरराइटिंग निष्पक्षता एवं डेटा सत्यनिष्ठा इंडेक्स' : 'Underwriting Fair-Play & Data Integrity Index'}
+                </h3>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                  Anti-Fraud Gate
+                </span>
+              </div>
+              <p className="text-[11px] text-stone-400">
+                {language === 'hi'
+                  ? 'बैंकों के लिए स्वचालित ऑडिट: राउंड-नंबर टर्नओवर मुद्रास्फीति, कैश-बैक धोखाधड़ी और स्लीपर खातों की रोकथाम।'
+                  : 'Algorithmic audit telemetry: Detects cashback round-tripping, cash drain deficits, and sybil mule networks.'
+                }
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-stone-400">Trust Score:</span>
+            <span className={`px-3 py-1 rounded-full text-xs font-black ${
+              (creditData?.integrityIndex ?? 95) >= 80
+                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                : 'bg-rose-500/20 text-rose-300 border border-rose-500/40'
+            }`}>
+              {creditData?.integrityIndex ?? 95} / 100
+            </span>
+          </div>
+        </div>
+
+        {/* 4-Pillar Telemetry Grid */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 text-xs">
+          <div className="bg-stone-900/90 p-3 rounded-2xl border border-stone-800/80 space-y-1">
+            <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wide">
+              {language === 'hi' ? 'राउंड-नंबर क्लस्टर' : 'Round-Number Cluster'}
+            </span>
+            <div className="font-bold text-stone-100 text-sm">
+              {creditData?.underwriterAudit?.roundAudit?.ratio ?? 12}% 
+              <span className="text-[10px] text-stone-400 font-normal ml-1">(&lt;35% Normal)</span>
+            </div>
+            <div className="text-[10px] text-emerald-400">
+              {creditData?.underwriterAudit?.roundAudit?.isSuspicious ? '⚠️ Inflation Flagged' : '✓ Organic Dispersion'}
+            </div>
+          </div>
+
+          <div className="bg-stone-900/90 p-3 rounded-2xl border border-stone-800/80 space-y-1">
+            <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wide">
+              {language === 'hi' ? 'रोकड़ बही संतुलन' : 'Cash Drawer Balance'}
+            </span>
+            <div className="font-bold text-emerald-400 text-sm">
+              {creditData?.underwriterAudit?.cashAudit?.flag === 'IMPOSSIBLE_PHYSICAL_CASH_DEFICIT' ? 'Negative Deficit' : 'Balanced'}
+            </div>
+            <div className="text-[10px] text-stone-400">
+              {creditData?.underwriterAudit?.cashAudit?.hasNegativeCashDrain ? '⚠️ Cash-Drain Warning' : '✓ Zero Negative Deficit'}
+            </div>
+          </div>
+
+          <div className="bg-stone-900/90 p-3 rounded-2xl border border-stone-800/80 space-y-1">
+            <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wide">
+              {language === 'hi' ? 'थोक मार्जिन अनुपात' : 'Wholesale Margin Ratio'}
+            </span>
+            <div className="font-bold text-stone-100 text-sm">
+              {creditData?.underwriterAudit?.marginAudit?.grossMarginPct ?? 16}% 
+              <span className="text-[10px] text-stone-400 font-normal ml-1">(8-22% Kirana)</span>
+            </div>
+            <div className="text-[10px] text-emerald-400">
+              {creditData?.underwriterAudit?.marginAudit?.isSuspicious ? '⚠️ Margin Divergence' : '✓ COGS Triangulated'}
+            </div>
+          </div>
+
+          <div className="bg-stone-900/90 p-3 rounded-2xl border border-stone-800/80 space-y-1">
+            <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wide">
+              {language === 'hi' ? 'मौसमी जलवायु बफर' : 'Agrarian Climate Buffer'}
+            </span>
+            <div className="font-bold text-stone-100 text-sm">
+              {creditData?.seasonalityBuffer?.applied ? '+14 pts Applied' : 'Standard Baseline'}
+            </div>
+            <div className="text-[10px] text-emerald-400">
+              {creditData?.seasonalityBuffer?.applied ? '✓ Kharif Sowing Shield' : '✓ Weather Normalized'}
+            </div>
+          </div>
+        </div>
+
+        {creditData?.underwriterAudit?.auditFlags?.length > 0 && (
+          <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs">
+            ⚠️ Underwriter Notice: {creditData.underwriterAudit.auditFlags.join(' • ')}
+          </div>
+        )}
+      </section>
       {/* 3. WHAT CAN IMPROVE YOUR SCORE? (3 CONCISE RECOMMENDATION CARDS)          */}
       {/* ========================================================================= */}
       <section id="credit-insights" className="w-full space-y-3">

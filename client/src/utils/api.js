@@ -191,6 +191,8 @@ export const api = {
     return request(`/schemes${q}`);
   },
   getSchemeDetail: (id) => request(`/schemes/${id}`),
+  getJanSamarthPacket: (schemeId, shopId = '') => 
+    request(`/schemes/${schemeId}/jan-samarth-packet${shopId ? `?shopId=${shopId}` : ''}`),
   syncSchemes: () => request('/schemes/sync', { method: 'POST' }),
   scrapeCustomScheme: (payload) => request('/schemes/scrape-custom', { 
     method: 'POST', 

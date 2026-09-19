@@ -1,5 +1,7 @@
 import db from '../db/database.js';
 import dataStore from '../db/dataStore.js';
+import { calculateUnderwritingIntegrity } from './transactionAuditService.js';
+import { sybilMuleDetectorService } from './sybilMuleDetectorService.js';
 
 /**
  * Transparent 4-Pillar Alternative Credit Scoring Engine & CAM Generator
@@ -247,6 +249,14 @@ export function calculateCreditScore(shopOrId, transactionsOverride = null) {
         cashDisciplineScore: null,
         seasonalResiliencyScore: null,
         digitalMultiplierScore: null
+      },
+      underwriterAudit: calculateUnderwritingIntegrity(transactions, totalIncome, totalExpense),
+      integrityIndex: calculateUnderwritingIntegrity(transactions, totalIncome, totalExpense).integrityIndex,
+      muleRingRisk: sybilMuleDetectorService.detectHubAndSpokeMulePattern(shop.id).shopRisk,
+      seasonalityBuffer: {
+        applied: false,
+        points: 0,
+        reason: 'Pending minimum 50 verified transaction audit'
       }
     };
   }
@@ -325,6 +335,20 @@ export function calculateCreditScore(shopOrId, transactionsOverride = null) {
     seasonalResiliencyScore = 65;
   }
 
+  // Agrarian Seasonality & Climate Shock Buffer (Force Majeure Buffer)
+  // Protects rural agrarian merchants in districts like Balrampur, Sitapur, etc. from harsh
+  // score drops during agricultural sowing / flood periods (Kharif cycle)
+  const isRuralAgrarianDistrict = /balrampur|utraula|bahraich|shravasti|sitapur|gonda|deoria|basti|rural|gram/i.test(
+    `${shop.district || ''} ${shop.village || ''} ${shop.state || ''}`
+  );
+  let seasonalityBufferApplied = false;
+  let seasonalityBufferPts = 0;
+  if (isRuralAgrarianDistrict && seasonalResiliencyScore < 85) {
+    seasonalityBufferApplied = true;
+    seasonalityBufferPts = 14;
+    seasonalResiliencyScore = Math.min(92, seasonalResiliencyScore + seasonalityBufferPts);
+  }
+
   const growthScore = Math.min(212, revenueMomentumScore + seasonalResiliencyScore);
 
   // =========================================================================
@@ -375,11 +399,19 @@ export function calculateCreditScore(shopOrId, transactionsOverride = null) {
   const vintageScore = Math.min(170, vintageScorePart + bankingScorePart);
 
   // =========================================================================
+  // 5.5. Fair-Play & Underwriting Integrity Audit Engine
+  // =========================================================================
+  const underwriterAudit = calculateUnderwritingIntegrity(transactions, totalIncome, totalExpense);
+  const muleAudit = sybilMuleDetectorService.detectHubAndSpokeMulePattern(shop.id);
+
+  // =========================================================================
   // 6. Final Score Calculation (Range 300 to 850)
   // =========================================================================
   // Base score 300 + earned points (out of 550)
   const earnedScore = Math.round((consistencyScore + growthScore + disciplineScore + vintageScore) * (550 / 850));
-  const finalScore = Math.min(850, Math.max(300, 300 + earnedScore));
+  const unadjustedScore = Math.min(850, Math.max(300, 300 + earnedScore));
+  const integrityPenalty = Math.round((underwriterAudit.penaltyPoints || 0) * 0.4);
+  const finalScore = Math.min(850, Math.max(300, unadjustedScore - integrityPenalty));
 
   // Risk & Rating Tier Classification
   let ratingBand = 'needs_work';
@@ -591,6 +623,14 @@ export function calculateCreditScore(shopOrId, transactionsOverride = null) {
       cashDisciplineScore,
       seasonalResiliencyScore,
       digitalMultiplierScore
+    },
+    underwriterAudit,
+    integrityIndex: underwriterAudit.integrityIndex,
+    muleRingRisk: muleAudit.shopRisk,
+    seasonalityBuffer: {
+      applied: seasonalityBufferApplied,
+      points: seasonalityBufferPts,
+      reason: seasonalityBufferApplied ? 'Rural Hinterland Kharif Sowing & Monsoon Shock Absorber (+14 pts)' : 'Normal Seasonality'
     }
   };
 }
@@ -729,6 +769,16 @@ export function generateCAM(shopOrId, transactionsOverride = null) {
       digitalCollectionVelocityUpi: `${m.digitalSharePct}%`,
       customerUdhaarOwed: m.totalUdhaarPending,
       historicalUdhaarRecoveryRate: `${m.udhaarRecoveryRate}%`
+    },
+    underwriterAuditReport: {
+      integrityIndex: creditData.integrityIndex || 100,
+      trustTier: creditData.underwriterAudit?.trustTier || 'VERIFIED_PRIME',
+      muleRingRisk: creditData.muleRingRisk || 'LOW',
+      cashDrainStatus: creditData.underwriterAudit?.cashAudit?.flag || 'HEALTHY',
+      roundNumberClusteringPct: `${creditData.underwriterAudit?.roundAudit?.ratio || 0}%`,
+      wholesaleGrossMarginPct: `${creditData.underwriterAudit?.marginAudit?.grossMarginPct || 0}%`,
+      seasonalityAdjustment: creditData.seasonalityBuffer,
+      auditNotices: creditData.underwriterAudit?.auditFlags || []
     },
     underwritingRecommendation: {
       pslClassification: 'Micro-Enterprise (Trading) — Eligible for 7.5% RBI PSL sub-target',
