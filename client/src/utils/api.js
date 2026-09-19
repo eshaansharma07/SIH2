@@ -18,6 +18,11 @@ async function request(endpoint, options = {}) {
     'Expires': '0',
   };
 
+  const authToken = safeStorage.getItem('vyapaar_auth_token');
+  if (authToken) {
+    defaultHeaders['Authorization'] = `Bearer ${authToken}`;
+  }
+
   const fetchOptions = {
     ...options,
     cache: 'no-store',
@@ -90,6 +95,9 @@ export const api = {
       return { success: true, shop: fallbackShop, offline: true };
     }
   },
+  sendLoginOTP: (phone) => request('/shop/send-otp', { method: 'POST', body: JSON.stringify({ phone }) }),
+  verifyLoginOTP: (phone, otp) => request('/shop/verify-otp', { method: 'POST', body: JSON.stringify({ phone, otp }) }),
+  demoLogin: () => request('/shop/demo-login', { method: 'POST' }),
   loginShop: async (phone, password) => {
     try {
       return await request('/shop/login', { method: 'POST', body: JSON.stringify({ phone, password }) });

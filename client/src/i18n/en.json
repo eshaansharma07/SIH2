@@ -88,5 +88,30 @@
     "printBtn": "Print / Save PDF Dossier",
     "certifiedBadge": "SaakhSetu Verified Statement",
     "forBranch": "For Branch Manager & Credit Appraiser Review"
+  },
+  "auth": {
+    "loginTitle": "Shopkeeper Login",
+    "loginSubtitle": "Access your validated ledger & credit files",
+    "registerTitle": "Register New Enterprise",
+    "mobileNumber": "Mobile Number",
+    "sendOtp": "Send OTP",
+    "sending": "Sending OTP...",
+    "enterOtp": "Enter OTP",
+    "verifyOtp": "Verify OTP",
+    "verifying": "Verifying...",
+    "resendOtp": "Resend OTP",
+    "resendIn": "Resend OTP in {sec}s",
+    "changeNumber": "Change Number",
+    "otpSent": "OTP sent successfully to your mobile number.",
+    "otpSentTo": "OTP sent to",
+    "wrongOtp": "Incorrect OTP. Please check the SMS and try again.",
+    "expiredOtp": "OTP expired. Please request a new OTP.",
+    "tooManyAttempts": "Too many verification attempts. Please wait and try again later.",
+    "invalidPhone": "Please enter a valid 10-digit mobile number.",
+    "shopNotFound": "No shop account found with this mobile number. Please register your shop first.",
+    "tryDemo": "Try Demo",
+    "launchDemo": "⚡ Launch Ramesh Kirana Demo",
+    "or": "OR",
+    "savedAccounts": "Saved Accounts on Device"
   }
 }

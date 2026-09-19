@@ -1,8 +1,11 @@
 import express from 'express';
 import { calculateCreditScore, generateCAM } from '../services/creditScoringService.js';
 import dataStore from '../db/dataStore.js';
+import { optionalAuth, requireShopAccess } from '../middleware/auth.js';
 
 const router = express.Router();
+router.use(optionalAuth);
+router.use(requireShopAccess);
 
 // Get current alternative credit score & factor breakdown
 router.get('/', async (req, res) => {

@@ -91,7 +91,7 @@ try {
   console.log('Seed check:', e.message);
 }
 
-if (!process.env.VERCEL) {
+if (!process.env.VERCEL && process.env.NODE_ENV !== 'test') {
   app.listen(PORT, () => {
     console.log(`🚀 SaakhSetu Backend Server running at http://localhost:${PORT}`);
   });
