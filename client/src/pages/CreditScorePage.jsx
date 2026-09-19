@@ -459,6 +459,231 @@ export function CreditScorePage({ shop, creditData, onNavigateTab }) {
       </section>
 
       {/* ========================================================================= */}
+      {/* 2B. ALTERNATIVE CREDIT ASSESSMENT (BELOW CIBIL PART)                      */}
+      {/* ========================================================================= */}
+      <section className="w-full rounded-3xl border border-stone-200/85 bg-[#FCFAF7] p-5 sm:p-7 shadow-2xs space-y-6">
+        
+        {/* Section Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-stone-200/60 pb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-amber-100 text-amber-900 flex items-center justify-center shrink-0 shadow-2xs">
+              <ShieldCheck className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="font-serif font-black text-xl sm:text-2xl text-stone-900 tracking-tight">
+                  {language === 'hi' ? 'वैकल्पिक क्रेडिट साख मूल्यांकन' : 'Alternative Credit Assessment'}
+                </h2>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
+                  {language === 'hi' ? 'कैश-फ्लो आधारित' : 'Cash Flow Underwriting'}
+                </span>
+              </div>
+              <p className="text-xs text-stone-600 mt-0.5 leading-relaxed">
+                {language === 'hi'
+                  ? 'पारंपरिक सिबिल या संपत्ति बंधक के बिना भी बैंक इन 4 पारदर्शी स्तंभों (Pillars) के आधार पर बिना गारंटी ऋण स्वीकृत करते हैं।'
+                  : 'Banks evaluate these 4 transparent ledger pillars to sanction collateral-free loans even without a prior credit card or property mortgage.'
+                }
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 self-start sm:self-auto">
+            <button
+              type="button"
+              onClick={() => setIsSimulatorModalOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition-all shadow-2xs cursor-pointer btn-tactile"
+            >
+              <Sliders className="w-3.5 h-3.5" />
+              <span>{language === 'hi' ? 'स्कोर सिमुलेटर' : 'Score Simulator'}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => onNavigateTab?.('dossier')}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-stone-300 bg-white hover:bg-stone-50 text-stone-800 text-xs font-bold transition-all shadow-2xs cursor-pointer"
+            >
+              <FileText className="w-3.5 h-3.5 text-stone-600" />
+              <span>{language === 'hi' ? 'बैंक डॉसियर (CAM)' : 'Bank Dossier (CAM)'}</span>
+            </button>
+          </div>
+        </div>
+
+        {/* 4 Quick Credit Health Ratios */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="p-3 rounded-2xl bg-white border border-stone-200/80 shadow-2xs">
+            <div className="text-[10px] font-bold text-stone-500 uppercase tracking-wider">
+              {language === 'hi' ? 'मासिक शुद्ध अधिशेष' : 'Net Operating Surplus'}
+            </div>
+            <div className="font-serif font-black text-base sm:text-lg text-[#0F3E2E] mt-0.5 tabular-nums">
+              ₹{(creditData?.metrics?.netSurplus ?? 63820).toLocaleString('en-IN')}
+            </div>
+            <div className="text-[10px] text-emerald-700 font-semibold mt-0.5">
+              {language === 'hi' ? 'सकारात्मक तरलता' : 'Positive Liquidity'}
+            </div>
+          </div>
+
+          <div className="p-3 rounded-2xl bg-white border border-stone-200/80 shadow-2xs">
+            <div className="text-[10px] font-bold text-stone-500 uppercase tracking-wider">
+              {language === 'hi' ? 'उधार वसूली दर' : 'Udhaar Recovery Rate'}
+            </div>
+            <div className="font-serif font-black text-base sm:text-lg text-stone-900 mt-0.5 tabular-nums">
+              {creditData?.metrics?.udhaarRecoveryRate ?? 87}%
+            </div>
+            <div className="text-[10px] text-emerald-700 font-semibold mt-0.5">
+              {language === 'hi' ? 'अनुशासित वसूली चक्र' : 'Healthy 18-Day Cycle'}
+            </div>
+          </div>
+
+          <div className="p-3 rounded-2xl bg-white border border-stone-200/80 shadow-2xs">
+            <div className="text-[10px] font-bold text-stone-500 uppercase tracking-wider">
+              {language === 'hi' ? 'डिजिटल यूपीआई शेयर' : 'UPI Digital Share'}
+            </div>
+            <div className="font-serif font-black text-base sm:text-lg text-stone-900 mt-0.5 tabular-nums">
+              {creditData?.metrics?.digitalSharePct ?? 37}%
+            </div>
+            <div className="text-[10px] text-stone-500 font-medium mt-0.5">
+              {language === 'hi' ? 'बैंक प्रमाणित बिक्री' : 'Verified QR Sales'}
+            </div>
+          </div>
+
+          <div className="p-3 rounded-2xl bg-white border border-stone-200/80 shadow-2xs">
+            <div className="text-[10px] font-bold text-stone-500 uppercase tracking-wider">
+              {language === 'hi' ? 'व्यापार संचालन अवधि' : 'Business Vintage'}
+            </div>
+            <div className="font-serif font-black text-base sm:text-lg text-stone-900 mt-0.5 tabular-nums">
+              {creditData?.metrics?.vintageYears ?? shop?.vintage_years ?? 4} {language === 'hi' ? 'वर्ष' : 'Years'}
+            </div>
+            <div className="text-[10px] text-emerald-700 font-semibold mt-0.5">
+              {language === 'hi' ? 'सत्यापित ट्रैक रिकॉर्ड' : 'Stable Bank Linkage'}
+            </div>
+          </div>
+        </div>
+
+        {/* 4 Pillars Underwriting Grid */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="font-serif font-bold text-sm text-stone-900">
+              {language === 'hi' ? '4 पारदर्शी मूल्यांकन स्तंभ (Underwriting Pillars)' : '4 Explainable Underwriting Pillars'}
+            </h3>
+            <span className="text-[11px] text-stone-500 font-medium">
+              {language === 'hi' ? 'प्रत्येक स्तंभ का क्रेडिट स्कोर में योगदान' : 'Contribution to composite credit rating'}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {(factors && factors.length > 0 ? factors : [
+              {
+                id: 'consistency',
+                name: 'Cash Flow & Logging Regularity',
+                nameHindi: 'दैनिक बही-खाता नियमितता',
+                weight: '30%',
+                score: 215,
+                maxScore: 255,
+                percentage: 84,
+                status: 'positive',
+                explanation: 'Logged 121 active transaction days with a net cash surplus of ₹63,820.',
+                explanationHindi: 'आपने 121 दिन बही-खाते में प्रविष्टि की है और दुकान का शुद्ध अधिशेष ₹63,820 रहा।',
+                tip: 'Log transactions daily to maximize cashflow consistency.'
+              },
+              {
+                id: 'growth',
+                name: 'Revenue Stability & Turnover',
+                nameHindi: 'बिक्री स्थिरता एवं मासिक आय',
+                weight: '25%',
+                score: 135,
+                maxScore: 212,
+                percentage: 64,
+                status: 'average',
+                explanation: 'Recorded cumulative sales with resilient seasonal management through festival season.',
+                explanationHindi: 'दुकान ने स्थिर बिक्री दर्ज की और त्योहारों में कारोबार बढ़ाया।',
+                tip: 'Stock high-margin festival goods to increase turnover.'
+              },
+              {
+                id: 'discipline',
+                name: 'Udhaar Discipline & Working Capital',
+                nameHindi: 'उधार नियंत्रण एवं अनुशासन',
+                weight: '25%',
+                score: 193,
+                maxScore: 213,
+                percentage: 91,
+                status: 'positive',
+                explanation: 'Customer credit recovery rate is an exceptional 87% with fast payback cycles.',
+                explanationHindi: 'ग्राहक उधार वसूली दर 87% है और समय पर पैसा वापस मिल रहा है।',
+                tip: 'Cap udhaar per customer to keep capital safe.'
+              },
+              {
+                id: 'vintage',
+                name: 'Business Vintage & Digital Adoption',
+                nameHindi: 'व्यापार का अनुभव एवं डिजिटल प्रमाण',
+                weight: '20%',
+                score: 145,
+                maxScore: 170,
+                percentage: 85,
+                status: 'positive',
+                explanation: 'Verified 4 years operating vintage with Aryavart Gramin Bank linkage and UPI QR footprint.',
+                explanationHindi: '4 वर्षों का निरंतर संचालन एवं ग्रामीण बैंक व यूपीआई क्यूआर कोड संबद्धता।',
+                tip: 'Encourage UPI payments on orders above ₹100.'
+              }
+            ]).map((factor) => {
+              const isPositive = factor.status === 'positive' || factor.percentage >= 70;
+              return (
+                <div 
+                  key={factor.id} 
+                  className="p-4 rounded-2xl bg-white border border-stone-200/85 hover:border-emerald-300 transition-all shadow-2xs space-y-2.5"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="font-bold text-xs sm:text-sm text-stone-900 truncate">
+                        {language === 'hi' ? factor.nameHindi : factor.name}
+                      </span>
+                      <span className="text-[10px] font-bold text-stone-500 bg-stone-100 border border-stone-200 px-2 py-0.5 rounded-md shrink-0">
+                        {factor.weight}
+                      </span>
+                    </div>
+                    <span className="font-serif font-black text-xs sm:text-sm text-[#0F3E2E] tabular-nums shrink-0 ml-2">
+                      {factor.score} / {factor.maxScore} pts
+                    </span>
+                  </div>
+
+                  <p className="text-[11px] text-stone-600 leading-relaxed">
+                    {language === 'hi' ? factor.explanationHindi : factor.explanation}
+                  </p>
+
+                  {/* Progress Bar */}
+                  <div className="w-full bg-stone-100 h-2 rounded-full overflow-hidden">
+                    <div 
+                      className={`h-full rounded-full transition-all duration-500 ${isPositive ? 'bg-emerald-600' : 'bg-amber-500'}`} 
+                      style={{ width: `${factor.percentage}%` }}
+                    />
+                  </div>
+
+                  {/* Sub-factors badges if available */}
+                  {factor.subFactors && factor.subFactors.length > 0 && (
+                    <div className="grid grid-cols-2 gap-1.5 pt-1.5 border-t border-stone-100">
+                      {factor.subFactors.map((sub, sIdx) => (
+                        <div key={sIdx} className="flex justify-between items-center text-[10px] text-stone-600 bg-stone-50 border border-stone-200/50 px-2 py-0.5 rounded-md">
+                          <span className="truncate">{sub.name}</span>
+                          <span className="font-bold tabular-nums ml-1">{sub.score}/{sub.maxScore}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Tip */}
+                  {factor.tip && (
+                    <div className="flex items-center gap-1.5 text-[10px] text-stone-500 font-medium pt-1">
+                      <Sparkles className="w-3 h-3 text-amber-600 shrink-0" />
+                      <span className="truncate">{factor.tip}</span>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+      </section>
+
+      {/* ========================================================================= */}
       {/* 3. WHAT CAN IMPROVE YOUR SCORE? (3 CONCISE RECOMMENDATION CARDS)          */}
       {/* ========================================================================= */}
       <section id="credit-insights" className="w-full space-y-3">
