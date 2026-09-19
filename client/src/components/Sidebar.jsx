@@ -11,7 +11,8 @@ import {
   X, 
   Sparkles,
   Phone,
-  MessageCircle
+  MessageCircle,
+  Calculator
 } from 'lucide-react';
 import { useTranslation } from '../i18n/LanguageContext';
 import { VyapaarVikasVishwas } from './VyapaarVikasVishwas';
@@ -33,6 +34,11 @@ export function Sidebar({
       id: 'dashboard', 
       label: t('nav.dashboard', 'Overview'), 
       icon: Home 
+    },
+    { 
+      id: 'accounting', 
+      label: language === 'hi' ? 'व्यापार अकाउंटिंग' : 'Accounting & Billing', 
+      icon: Calculator 
     },
     { 
       id: 'cashflow', 

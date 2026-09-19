@@ -281,4 +281,165 @@ try {
   // Table / index already exists
 }
 
+// Vyapaar Accounting Schema Initialization
+try {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS products (
+      id TEXT PRIMARY KEY,
+      shop_id TEXT NOT NULL,
+      name TEXT NOT NULL,
+      sku TEXT,
+      hsn_code TEXT,
+      category TEXT,
+      unit TEXT DEFAULT 'pcs',
+      purchase_price REAL DEFAULT 0,
+      selling_price REAL DEFAULT 0,
+      gst_rate REAL DEFAULT 0,
+      current_stock REAL DEFAULT 0,
+      reorder_level REAL DEFAULT 10,
+      is_active INTEGER DEFAULT 1,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY(shop_id) REFERENCES shops(id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_products_shop_id ON products(shop_id);
+    CREATE INDEX IF NOT EXISTS idx_products_sku ON products(shop_id, sku);
+
+    CREATE TABLE IF NOT EXISTS suppliers (
+      id TEXT PRIMARY KEY,
+      shop_id TEXT NOT NULL,
+      name TEXT NOT NULL,
+      phone TEXT,
+      gstin TEXT,
+      address TEXT,
+      state TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY(shop_id) REFERENCES shops(id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_suppliers_shop_id ON suppliers(shop_id);
+
+    CREATE TABLE IF NOT EXISTS invoices (
+      id TEXT PRIMARY KEY,
+      shop_id TEXT NOT NULL,
+      invoice_number TEXT NOT NULL,
+      customer_id TEXT,
+      customer_name TEXT,
+      customer_phone TEXT,
+      invoice_date TEXT NOT NULL,
+      due_date TEXT,
+      subtotal REAL NOT NULL,
+      discount REAL DEFAULT 0,
+      taxable_amount REAL NOT NULL,
+      cgst REAL DEFAULT 0,
+      sgst REAL DEFAULT 0,
+      igst REAL DEFAULT 0,
+      total_amount REAL NOT NULL,
+      paid_amount REAL DEFAULT 0,
+      balance_due REAL DEFAULT 0,
+      payment_status TEXT DEFAULT 'paid',
+      payment_mode TEXT DEFAULT 'cash',
+      is_interstate INTEGER DEFAULT 0,
+      notes TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY(shop_id) REFERENCES shops(id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_invoices_shop_id ON invoices(shop_id);
+    CREATE INDEX IF NOT EXISTS idx_invoices_invoice_number ON invoices(shop_id, invoice_number);
+    CREATE INDEX IF NOT EXISTS idx_invoices_customer_id ON invoices(customer_id);
+    CREATE INDEX IF NOT EXISTS idx_invoices_date ON invoices(shop_id, invoice_date);
+
+    CREATE TABLE IF NOT EXISTS invoice_items (
+      id TEXT PRIMARY KEY,
+      invoice_id TEXT NOT NULL,
+      product_id TEXT NOT NULL,
+      description TEXT,
+      quantity REAL NOT NULL,
+      unit_price REAL NOT NULL,
+      discount REAL DEFAULT 0,
+      taxable_amount REAL NOT NULL,
+      gst_rate REAL DEFAULT 0,
+      cgst REAL DEFAULT 0,
+      sgst REAL DEFAULT 0,
+      igst REAL DEFAULT 0,
+      total REAL NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY(invoice_id) REFERENCES invoices(id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_invoice_items_invoice_id ON invoice_items(invoice_id);
+
+    CREATE TABLE IF NOT EXISTS purchases (
+      id TEXT PRIMARY KEY,
+      shop_id TEXT NOT NULL,
+      supplier_id TEXT,
+      supplier_name TEXT,
+      purchase_number TEXT NOT NULL,
+      purchase_date TEXT NOT NULL,
+      subtotal REAL NOT NULL,
+      gst REAL DEFAULT 0,
+      total_amount REAL NOT NULL,
+      paid_amount REAL DEFAULT 0,
+      balance_due REAL DEFAULT 0,
+      payment_status TEXT DEFAULT 'paid',
+      payment_mode TEXT DEFAULT 'cash',
+      is_interstate INTEGER DEFAULT 0,
+      notes TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY(shop_id) REFERENCES shops(id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_purchases_shop_id ON purchases(shop_id);
+    CREATE INDEX IF NOT EXISTS idx_purchases_supplier_id ON purchases(supplier_id);
+    CREATE INDEX IF NOT EXISTS idx_purchases_date ON purchases(shop_id, purchase_date);
+
+    CREATE TABLE IF NOT EXISTS purchase_items (
+      id TEXT PRIMARY KEY,
+      purchase_id TEXT NOT NULL,
+      product_id TEXT NOT NULL,
+      quantity REAL NOT NULL,
+      purchase_price REAL NOT NULL,
+      gst_rate REAL DEFAULT 0,
+      total REAL NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY(purchase_id) REFERENCES purchases(id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_purchase_items_purchase_id ON purchase_items(purchase_id);
+
+    CREATE TABLE IF NOT EXISTS payments (
+      id TEXT PRIMARY KEY,
+      shop_id TEXT NOT NULL,
+      party_type TEXT NOT NULL,
+      party_id TEXT,
+      party_name TEXT,
+      reference_type TEXT,
+      reference_id TEXT,
+      amount REAL NOT NULL,
+      payment_mode TEXT DEFAULT 'cash',
+      payment_date TEXT NOT NULL,
+      reference TEXT,
+      notes TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY(shop_id) REFERENCES shops(id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_payments_shop_id ON payments(shop_id);
+    CREATE INDEX IF NOT EXISTS idx_payments_reference ON payments(reference_type, reference_id);
+
+    CREATE TABLE IF NOT EXISTS stock_movements (
+      id TEXT PRIMARY KEY,
+      shop_id TEXT NOT NULL,
+      product_id TEXT NOT NULL,
+      type TEXT NOT NULL,
+      quantity REAL NOT NULL,
+      unit_price REAL DEFAULT 0,
+      reference_type TEXT,
+      reference_id TEXT,
+      notes TEXT,
+      timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY(shop_id) REFERENCES shops(id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_stock_movements_product ON stock_movements(product_id);
+    CREATE INDEX IF NOT EXISTS idx_stock_movements_shop ON stock_movements(shop_id, timestamp);
+  `);
+} catch (e) {
+  console.warn('Accounting schema migration notice:', e.message);
+}
+
 export default db;

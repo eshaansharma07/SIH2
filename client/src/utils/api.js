@@ -225,5 +225,95 @@ export const api = {
 
   // Bank Dossier
   generateDossier: (shopId) => request(`/dossier/generate?shopId=${shopId}`),
+
+  // Vyapaar Accounting & Inventory
+  getAccountingDashboard: (shopId) => request(`/accounting/dashboard?shopId=${shopId}`),
+  
+  getProducts: (shopId, { search = '', category = '', lowStockOnly = false, limit = 100, offset = 0 } = {}) => {
+    let q = `?shopId=${shopId}`;
+    if (search) q += `&search=${encodeURIComponent(search)}`;
+    if (category) q += `&category=${encodeURIComponent(category)}`;
+    if (lowStockOnly) q += `&lowStockOnly=true`;
+    if (limit) q += `&limit=${limit}`;
+    if (offset) q += `&offset=${offset}`;
+    return request(`/accounting/products${q}`);
+  },
+  getProduct: (shopId, id) => request(`/accounting/products/${id}?shopId=${shopId}`),
+  createProduct: (data) => request('/accounting/products', { method: 'POST', body: JSON.stringify(data) }),
+  updateProduct: (id, data) => request(`/accounting/products/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteProduct: (id, shopId) => request(`/accounting/products/${id}?shopId=${shopId}`, { method: 'DELETE' }),
+
+  getInventorySummary: (shopId) => request(`/accounting/inventory?shopId=${shopId}`),
+  adjustStock: (data) => request('/accounting/inventory/adjust', { method: 'POST', body: JSON.stringify(data) }),
+  getStockMovements: (shopId, { productId = '', limit = 50, offset = 0 } = {}) => {
+    let q = `?shopId=${shopId}`;
+    if (productId) q += `&productId=${encodeURIComponent(productId)}`;
+    if (limit) q += `&limit=${limit}`;
+    if (offset) q += `&offset=${offset}`;
+    return request(`/accounting/inventory/movements${q}`);
+  },
+
+  getSuppliers: (shopId) => request(`/accounting/suppliers?shopId=${shopId}`),
+  getSupplier: (shopId, id) => request(`/accounting/suppliers/${id}?shopId=${shopId}`),
+  createSupplier: (data) => request('/accounting/suppliers', { method: 'POST', body: JSON.stringify(data) }),
+  updateSupplier: (id, data) => request(`/accounting/suppliers/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteSupplier: (id, shopId) => request(`/accounting/suppliers/${id}?shopId=${shopId}`, { method: 'DELETE' }),
+
+  getInvoices: (shopId, { search = '', status = '', paymentMode = '', from = '', to = '', limit = 50, offset = 0 } = {}) => {
+    let q = `?shopId=${shopId}`;
+    if (search) q += `&search=${encodeURIComponent(search)}`;
+    if (status) q += `&status=${encodeURIComponent(status)}`;
+    if (paymentMode) q += `&paymentMode=${encodeURIComponent(paymentMode)}`;
+    if (from) q += `&from=${from}`;
+    if (to) q += `&to=${to}`;
+    if (limit) q += `&limit=${limit}`;
+    if (offset) q += `&offset=${offset}`;
+    return request(`/accounting/invoices${q}`);
+  },
+  getInvoice: (shopId, id) => request(`/accounting/invoices/${id}?shopId=${shopId}`),
+  createInvoice: (data) => request('/accounting/invoices', { method: 'POST', body: JSON.stringify(data) }),
+
+  getPurchases: (shopId, { search = '', status = '', from = '', to = '', limit = 50, offset = 0 } = {}) => {
+    let q = `?shopId=${shopId}`;
+    if (search) q += `&search=${encodeURIComponent(search)}`;
+    if (status) q += `&status=${encodeURIComponent(status)}`;
+    if (from) q += `&from=${from}`;
+    if (to) q += `&to=${to}`;
+    if (limit) q += `&limit=${limit}`;
+    if (offset) q += `&offset=${offset}`;
+    return request(`/accounting/purchases${q}`);
+  },
+  getPurchase: (shopId, id) => request(`/accounting/purchases/${id}?shopId=${shopId}`),
+  createPurchase: (data) => request('/accounting/purchases', { method: 'POST', body: JSON.stringify(data) }),
+
+  getReceivables: (shopId) => request(`/accounting/receivables?shopId=${shopId}`),
+  recordPayment: (data) => request('/accounting/payments', { method: 'POST', body: JSON.stringify(data) }),
+
+  getGstReport: (shopId, { from = '', to = '' } = {}) => {
+    let q = `?shopId=${shopId}`;
+    if (from) q += `&from=${from}`;
+    if (to) q += `&to=${to}`;
+    return request(`/accounting/reports/gst${q}`);
+  },
+  getPnlReport: (shopId, { from = '', to = '' } = {}) => {
+    let q = `?shopId=${shopId}`;
+    if (from) q += `&from=${from}`;
+    if (to) q += `&to=${to}`;
+    return request(`/accounting/reports/pnl${q}`);
+  },
+  getSalesReport: (shopId, { from = '', to = '', limit = 1000 } = {}) => {
+    let q = `?shopId=${shopId}`;
+    if (from) q += `&from=${from}`;
+    if (to) q += `&to=${to}`;
+    if (limit) q += `&limit=${limit}`;
+    return request(`/accounting/reports/sales${q}`);
+  },
+  getPurchasesReport: (shopId, { from = '', to = '', limit = 1000 } = {}) => {
+    let q = `?shopId=${shopId}`;
+    if (from) q += `&from=${from}`;
+    if (to) q += `&to=${to}`;
+    if (limit) q += `&limit=${limit}`;
+    return request(`/accounting/reports/purchases${q}`);
+  },
 };
 

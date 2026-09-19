@@ -295,24 +295,62 @@ export function BankDossierDocument({ data }) {
     documentId = `VS-CAM-${Date.now()}`
   } = data || {};
 
-  const totalScore = cam?.creditAssessment?.alternativeScore ?? scoreData?.totalScore ?? 755;
-  const riskTier = cam?.creditAssessment?.riskTier || 'Tier 1 Prime (Low Risk)';
-  const wc = cam?.workingCapitalAssessment || {};
-  const turnover = wc?.auditedAnnualTurnover || shop?.monthly_revenue * 12 || 600000;
-  const mpbf = wc?.maximumPermissibleBankFinanceMPBF || Math.round(turnover * 0.20);
-  const wcReq = wc?.workingCapitalRequirement || Math.round(turnover * 0.25);
-  const margin = wc?.borrowerMarginRequired || Math.round(turnover * 0.05);
+  const isDemo = Boolean(shop?.id === 'ramesh-kirana' || shop?.is_demo === 1 || shop?.is_demo === true);
+  const txCount = scoreData?.transactionCount ?? cam?.creditScoreAudit?.transactionCount ?? cam?.creditAssessment?.transactionCount ?? 0;
+  const requiredTransactions = scoreData?.requiredTransactions ?? cam?.creditScoreAudit?.requiredTransactions ?? cam?.creditAssessment?.requiredTransactions ?? 50;
+  const isUnrated = !isDemo && (
+    scoreData?.isUnrated === true ||
+    cam?.creditScoreAudit?.isUnrated === true ||
+    cam?.creditScoreSummary?.isUnrated === true ||
+    cam?.creditAssessment?.isUnrated === true ||
+    scoreData?.totalScore === null ||
+    scoreData?.totalScore === undefined ||
+    cam?.creditScoreAudit?.score === null ||
+    txCount < requiredTransactions
+  );
 
-  const pillars = cam?.creditAssessment?.factorBreakdown || scoreData?.factors || [
-    { name: 'Consistency (30%)', score: 255, maxScore: 255, subFactors: 'Daily sales stability, cash discipline ratio CV' },
-    { name: 'Growth Momentum (25%)', score: 212, maxScore: 212, subFactors: 'Quarterly sales growth, seasonal resilience' },
-    { name: 'Financial Discipline (25%)', score: 188, maxScore: 213, subFactors: 'Udhaar recovery velocity, UPI digital deepening' },
-    { name: 'Vintage & Compliance (20%)', score: 100, maxScore: 170, subFactors: 'Operating tenure, MSME Udyam verification' }
+  const totalScore = isUnrated ? null : (cam?.creditAssessment?.alternativeScore ?? cam?.creditScoreAudit?.score ?? scoreData?.totalScore ?? (isDemo ? 745 : null));
+  const riskTier = isUnrated 
+    ? 'Under Audit' 
+    : (cam?.riskClassification || cam?.creditAssessment?.riskTier || scoreData?.riskTier || 'Tier 1 Prime (Low Risk)');
+  
+  const recommendedFacility = isUnrated 
+    ? 'Onboarding Evaluation'
+    : (cam?.recommendedFacility || cam?.creditAssessment?.recommendedFacility || cam?.underwritingRecommendation?.recommendedProduct || 'MUDRA Kishore / Shishu');
+  
+  const facilitySub = isUnrated
+    ? 'Locked (50 entries required)'
+    : (cam?.underwritingRecommendation?.recommendedMaxLoanExposure ? `Up to ₹${Number(cam.underwritingRecommendation.recommendedMaxLoanExposure).toLocaleString('en-IN')}` : '₹50,000 to ₹5,00,000');
+
+  const wc = cam?.workingCapitalAssessment || {};
+  const wcNorms = wc?.nayakCommitteeNorms || {};
+  const rawTurnover = wcNorms?.projectedAnnualTurnover ?? wc?.auditedAnnualTurnover;
+  const turnover = isUnrated ? 0 : (rawTurnover ?? (shop?.monthly_revenue ? shop.monthly_revenue * 12 : (isDemo ? 600000 : 0)));
+  const mpbf = isUnrated ? 0 : (wcNorms?.maximumPermissibleBankFinance20Pct ?? wc?.maximumPermissibleBankFinanceMPBF ?? Math.round(turnover * 0.20));
+  const wcReq = isUnrated ? 0 : (wcNorms?.workingCapitalRequirement25Pct ?? wc?.workingCapitalRequirement ?? Math.round(turnover * 0.25));
+  const margin = isUnrated ? 0 : (wcNorms?.minimumBorrowerMargin5Pct ?? wc?.borrowerMarginRequired ?? Math.round(turnover * 0.05));
+
+  const rawPillars = cam?.fourPillarsAppraisal?.map(f => ({
+    name: f.pillarName,
+    weight: f.weight,
+    score: f.awardedScore,
+    maxScore: f.maxScore,
+    subFactors: f.underwriterNote
+  })) || cam?.creditScoreAudit?.pillars || cam?.creditAssessment?.factorBreakdown || scoreData?.factors;
+
+  const pillars = (rawPillars && rawPillars.length > 0) ? rawPillars : [
+    { name: 'Consistency (30%)', score: isUnrated ? null : 255, maxScore: 255, subFactors: isUnrated ? 'Score locked during onboarding audit (50 transactions required)' : 'Daily sales stability, cash discipline ratio CV' },
+    { name: 'Growth Momentum (25%)', score: isUnrated ? null : 212, maxScore: 212, subFactors: isUnrated ? 'Score locked during onboarding audit (50 transactions required)' : 'Quarterly sales growth, seasonal resilience' },
+    { name: 'Financial Discipline (25%)', score: isUnrated ? null : 188, maxScore: 213, subFactors: isUnrated ? 'Score locked during onboarding audit (50 transactions required)' : 'Udhaar recovery velocity, UPI digital deepening' },
+    { name: 'Vintage & Compliance (20%)', score: isUnrated ? null : 100, maxScore: 170, subFactors: isUnrated ? 'Score locked during onboarding audit (50 transactions required)' : 'Operating tenure, MSME Udyam verification' }
   ];
 
-  const cashflow = cam?.cashflowProfile || {};
-  const netSurplus = cashflow?.netOperatingSurplus || 154000;
-  const udhaar = cam?.udhaarBook || {};
+  const cashflow = cam?.cashFlowAndWorkingCapitalAudit || cam?.cashflowProfile || {};
+  const netSurplus = isUnrated ? 0 : (cashflow?.netCashSurplus ?? cashflow?.netOperatingSurplus ?? (isDemo ? 154000 : 0));
+  const operatingMargin = isUnrated ? '0.0%' : (cashflow?.operatingSurplusMargin || `${cashflow?.operatingMarginPct || '22.2'}%`);
+  const digitalShare = isUnrated ? '0%' : (cashflow?.digitalCollectionVelocityUpi || `${cashflow?.digitalSharePct || '42'}%`);
+  const udhaarRecovered = isUnrated ? 0 : (cam?.udhaarBook?.totalRepaid ?? (isDemo ? 8000 : 0));
+  const recoveryRate = isUnrated ? 'N/A' : (cashflow?.historicalUdhaarRecoveryRate || `${cam?.udhaarBook?.recoveryRatePct || '72.7'}%`);
 
   const udyamNumber = shop?.udyam_number || (shop?.id ? `UDYAM-${(shop.state || 'IN').substring(0, 2).toUpperCase()}-0092478` : 'UDYAM-DEMO');
 
@@ -330,13 +368,18 @@ export function BankDossierDocument({ data }) {
             <Text style={styles.subBrand}>Hyper-Local Business Advisory & Underwriting Stack for Rural Micro-Enterprises</Text>
             <Text style={styles.documentTitle}>CREDIT APPRAISAL MEMO & VERIFIED FINANCIAL DOSSIER</Text>
             <Text style={styles.complianceBadge}>
-              FORMATTED PER RBI PSL & NAYAK COMMITTEE GUIDELINES • SOVEREIGN MSME ARCHITECTURE
+              {isUnrated 
+                ? 'ONBOARDING EVALUATION • 50 VERIFIED TRANSACTIONS REQUIRED FOR FORMAL CREDIT MEMO'
+                : 'FORMATTED PER RBI PSL & NAYAK COMMITTEE GUIDELINES • SOVEREIGN MSME ARCHITECTURE'
+              }
             </Text>
           </View>
           <View style={styles.metaBlock}>
             <Text style={styles.metaRef}>REF: {documentId}</Text>
             <Text style={styles.metaDate}>DATE: {new Date(generatedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</Text>
-            <Text style={styles.metaStatus}>VERIFIED DOSSIER</Text>
+            <Text style={[styles.metaStatus, isUnrated ? { color: '#B45309', borderColor: '#FCD34D' } : {}]}>
+              {isUnrated ? 'ONBOARDING AUDIT' : 'VERIFIED DOSSIER'}
+            </Text>
           </View>
         </View>
 
@@ -389,20 +432,26 @@ export function BankDossierDocument({ data }) {
           <Text style={styles.sectionTitle}>2. Non-CIBIL Alternative Credit Assessment (300 - 850)</Text>
           
           <View style={[styles.row, { marginBottom: 8 }]}>
-            <View style={[styles.col3, styles.metricCardHighlight]}>
+            <View style={[styles.col3, isUnrated ? styles.metricCard : styles.metricCardHighlight]}>
               <Text style={styles.metricLabel}>Alternative Score</Text>
-              <Text style={[styles.metricValue, { color: '#1E523A' }]}>{totalScore} / 850</Text>
-              <Text style={styles.metricSub}>PSL Prime Band</Text>
+              <Text style={[styles.metricValue, { color: isUnrated ? '#B45309' : '#1E523A', fontSize: isUnrated ? 11 : 13 }]}>
+                {isUnrated ? 'UNDER AUDIT' : `${totalScore} / 850`}
+              </Text>
+              <Text style={styles.metricSub}>
+                {isUnrated ? `${txCount}/50 Transactions Logged` : 'PSL Prime Band'}
+              </Text>
             </View>
             <View style={[styles.col3, styles.metricCard]}>
               <Text style={styles.metricLabel}>Risk Classification</Text>
-              <Text style={[styles.metricValue, { fontSize: 10 }]}>{riskTier}</Text>
-              <Text style={styles.metricSub}>Low Delinquency Probability</Text>
+              <Text style={[styles.metricValue, { fontSize: isUnrated ? 9.5 : 10 }]}>{riskTier}</Text>
+              <Text style={styles.metricSub}>
+                {isUnrated ? '50 Transactions Required' : 'Low Delinquency Probability'}
+              </Text>
             </View>
             <View style={[styles.col3, styles.metricCard]}>
               <Text style={styles.metricLabel}>Recommended Facility</Text>
-              <Text style={[styles.metricValue, { fontSize: 10 }]}>MUDRA Kishore / Shishu</Text>
-              <Text style={styles.metricSub}>₹50,000 to ₹5,00,000</Text>
+              <Text style={[styles.metricValue, { fontSize: isUnrated ? 9.5 : 10 }]}>{recommendedFacility}</Text>
+              <Text style={styles.metricSub}>{facilitySub}</Text>
             </View>
           </View>
 
@@ -419,10 +468,10 @@ export function BankDossierDocument({ data }) {
                 <Text style={[styles.tableCellBold, { width: '35%' }]}>{p.name || p.pillar}</Text>
                 <Text style={[styles.tableCell, { width: '15%', textAlign: 'center' }]}>{p.weight || '—'}</Text>
                 <Text style={[styles.tableCellBold, { width: '20%', textAlign: 'center' }]}>
-                  {p.score} / {p.maxScore}
+                  {p.score !== null && p.score !== undefined ? `${p.score} / ${p.maxScore}` : 'Locked (Audit)'}
                 </Text>
                 <Text style={[styles.tableCell, { width: '30%', fontSize: 7 }]}>
-                  {typeof p.subFactors === 'string' ? p.subFactors : (p.explanation || 'Verified behavioral cash ledger metric')}
+                  {typeof p.subFactors === 'string' ? p.subFactors : (p.explanation || 'Score locked during onboarding audit (50 transactions required)')}
                 </Text>
               </View>
             ))}
@@ -435,19 +484,21 @@ export function BankDossierDocument({ data }) {
           <View style={styles.row}>
             <View style={[styles.col4, styles.metricCard]}>
               <Text style={styles.metricLabel}>Audited Annual Sales</Text>
-              <Text style={styles.metricValue}>₹{Number(turnover).toLocaleString('en-IN')}</Text>
+              <Text style={styles.metricValue}>{isUnrated ? '₹0 (Under Audit)' : `₹${Number(turnover).toLocaleString('en-IN')}`}</Text>
             </View>
             <View style={[styles.col4, styles.metricCard]}>
               <Text style={styles.metricLabel}>25% WC Requirement</Text>
-              <Text style={styles.metricValue}>₹{Number(wcReq).toLocaleString('en-IN')}</Text>
+              <Text style={styles.metricValue}>{isUnrated ? '₹0' : `₹${Number(wcReq).toLocaleString('en-IN')}`}</Text>
             </View>
             <View style={[styles.col4, styles.metricCard]}>
               <Text style={styles.metricLabel}>5% Margin (Borrower)</Text>
-              <Text style={styles.metricValue}>₹{Number(margin).toLocaleString('en-IN')}</Text>
+              <Text style={styles.metricValue}>{isUnrated ? '₹0' : `₹${Number(margin).toLocaleString('en-IN')}`}</Text>
             </View>
             <View style={[styles.col4, styles.metricCardHighlight]}>
               <Text style={styles.metricLabel}>20% MPBF Bank Limit</Text>
-              <Text style={[styles.metricValue, { color: '#1E523A' }]}>₹{Number(mpbf).toLocaleString('en-IN')}</Text>
+              <Text style={[styles.metricValue, { color: isUnrated ? '#B45309' : '#1E523A' }]}>
+                {isUnrated ? 'Locked (Under Audit)' : `₹${Number(mpbf).toLocaleString('en-IN')}`}
+              </Text>
             </View>
           </View>
         </View>
@@ -459,30 +510,30 @@ export function BankDossierDocument({ data }) {
             <View style={styles.col2}>
               <View style={styles.kvRow}>
                 <Text style={styles.kLabel}>Net Operating Cash Surplus:</Text>
-                <Text style={styles.vValue}>₹{Number(netSurplus).toLocaleString('en-IN')}</Text>
+                <Text style={styles.vValue}>{isUnrated ? '₹0 (Under Audit)' : `₹${Number(netSurplus).toLocaleString('en-IN')}`}</Text>
               </View>
               <View style={styles.kvRow}>
                 <Text style={styles.kLabel}>Operating Surplus Margin:</Text>
-                <Text style={styles.vValue}>{cashflow?.operatingMarginPct || '22.2'}%</Text>
+                <Text style={styles.vValue}>{operatingMargin}</Text>
               </View>
               <View style={styles.kvRow}>
                 <Text style={styles.kLabel}>Estimated Debt Servicing Headroom:</Text>
-                <Text style={styles.vValue}>₹{Number(Math.round(netSurplus / 12 * 0.4)).toLocaleString('en-IN')} / mo</Text>
+                <Text style={styles.vValue}>{isUnrated ? '₹0 / mo (Under Audit)' : `₹${Number(Math.round(netSurplus / 12 * 0.4)).toLocaleString('en-IN')} / mo`}</Text>
               </View>
             </View>
 
             <View style={styles.col2}>
               <View style={styles.kvRow}>
                 <Text style={styles.kLabel}>Cumulative Udhaar Recovered:</Text>
-                <Text style={styles.vValue}>₹{Number(udhaar?.totalRepaid || 8000).toLocaleString('en-IN')}</Text>
+                <Text style={styles.vValue}>{isUnrated ? '₹0 (Under Audit)' : `₹${Number(udhaarRecovered).toLocaleString('en-IN')}`}</Text>
               </View>
               <View style={styles.kvRow}>
                 <Text style={styles.kLabel}>Recovery Rate Velocity:</Text>
-                <Text style={styles.vValue}>{udhaar?.recoveryRatePct || '72.7'}%</Text>
+                <Text style={styles.vValue}>{recoveryRate}</Text>
               </View>
               <View style={styles.kvRow}>
                 <Text style={styles.kLabel}>Digital Adoption (UPI Share):</Text>
-                <Text style={styles.vValue}>{cashflow?.digitalSharePct || '42'}% (PSL Benchmark Format)</Text>
+                <Text style={styles.vValue}>{digitalShare} (PSL Benchmark Format)</Text>
               </View>
             </View>
           </View>

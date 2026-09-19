@@ -26,7 +26,7 @@ import { APP_NAME_EN, APP_NAME_HI } from '../config/brand';
 
 export function BankDossierPage({ shop, isDemoMode, onNavigateTab, onBack }) {
   const { language } = useTranslation();
-  const isDemo = Boolean(isDemoMode || shop?.id === 'ramesh-kirana' || shop?.is_demo === 1 || !shop?.id);
+  const isDemo = Boolean(isDemoMode || shop?.id === 'ramesh-kirana' || shop?.is_demo === 1 || shop?.is_demo === true);
   const [dossierData, setDossierData] = useState(() => (isDemo ? DEMO_DOSSIER : null));
   const [loading, setLoading] = useState(() => !isDemo && Boolean(shop?.id));
   const [downloadingCam, setDownloadingCam] = useState(false);
@@ -101,7 +101,7 @@ export function BankDossierPage({ shop, isDemoMode, onNavigateTab, onBack }) {
   const handleDownloadPDF = async () => {
     setDownloadingPdf(true);
     try {
-      const activeShopId = shop?.id || 'ramesh-kirana';
+      const activeShopId = shop?.id || (isDemo ? 'ramesh-kirana' : null);
       const [
         camRes,
         scoreRes,
@@ -109,16 +109,16 @@ export function BankDossierPage({ shop, isDemoMode, onNavigateTab, onBack }) {
         { pdf },
         { BankDossierDocument }
       ] = await Promise.all([
-        api.getCAM(activeShopId).catch(() => null),
-        api.getCreditScore(activeShopId).catch(() => null),
+        activeShopId ? api.getCAM(activeShopId).catch(() => null) : null,
+        activeShopId ? api.getCreditScore(activeShopId).catch(() => null) : null,
         import('qrcode'),
         import('@react-pdf/renderer'),
         import('../pdf/BankDossierDocument')
       ]);
 
       const QRCode = QRCodeModule.default || QRCodeModule;
-      const cam = camRes?.cam || camRes || d?.cam || DEMO_DOSSIER;
-      const scoreData = scoreRes || d?.creditEvaluation || DEMO_DOSSIER.creditEvaluation;
+      const cam = camRes?.cam || camRes || d?.cam || (isDemo ? DEMO_DOSSIER : null);
+      const scoreData = scoreRes || d?.creditEvaluation || (isDemo ? DEMO_DOSSIER.creditEvaluation : null);
 
       const vHash = d?.verificationHash || 'SHA256-VERIFIED-SHT-2026';
       const baseUrl = typeof window !== 'undefined' && !window.location.origin.includes('localhost')
@@ -291,6 +291,39 @@ export function BankDossierPage({ shop, isDemoMode, onNavigateTab, onBack }) {
     );
   }
 
+  const d = dossierData || (isDemo ? DEMO_DOSSIER : null);
+  const shopName = d?.shop?.name || shop?.name || (isDemo ? DEMO_DOSSIER.shop.name : 'Ramesh’s Kirana Store');
+  const ownerName = d?.shop?.ownerName || shop?.owner_name || (isDemo ? DEMO_DOSSIER.shop.ownerName : 'Ramesh Kumar');
+  const tradeName = d?.shop?.tradeName || shop?.trade_name || (isDemo ? DEMO_DOSSIER.shop.tradeName : 'Kirana & General Store');
+  const village = d?.shop?.village || shop?.village || (isDemo ? DEMO_DOSSIER.shop.village : 'Utraula Dehat');
+  const district = d?.shop?.district || shop?.district || (isDemo ? DEMO_DOSSIER.shop.district : 'Balrampur');
+  const state = d?.shop?.state || shop?.state || (isDemo ? DEMO_DOSSIER.shop.state : 'Uttar Pradesh');
+  const vintageYears = d?.shop?.vintageYears ?? shop?.vintage_years ?? (isDemo ? DEMO_DOSSIER.shop.vintageYears : 4);
+  const bankAccount = d?.shop?.bankAccount || shop?.bank_account_type || (isDemo ? DEMO_DOSSIER.shop.bankAccount : 'Aryavart Gramin Bank');
+
+  // Real timestamp logic: dynamic date formatting without hardcoded fallbacks for real shops
+  const formattedDate = isDemo
+    ? '18 Sep 2026, 09:41 AM'
+    : (d?.issueDate
+        ? new Intl.DateTimeFormat('en-IN', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+          }).format(new Date(d.issueDate))
+        : new Intl.DateTimeFormat('en-IN', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+          }).format(new Date()));
+
+  const txCount = d?.creditEvaluation?.transactionCount ?? (isDemo ? 120 : 0);
+  const isUnrated = !isDemo && (d?.creditEvaluation?.isUnrated || !d?.creditEvaluation?.totalScore || txCount < 50);
   return (
     <div className="space-y-6 pb-12 animate-fadeIn max-w-[1360px] mx-auto text-stone-900">
       
@@ -336,15 +369,19 @@ export function BankDossierPage({ shop, isDemoMode, onNavigateTab, onBack }) {
               
               {/* Left Details */}
               <div className="flex items-start gap-4 sm:gap-5 min-w-0">
-                <div className="w-14 h-14 rounded-2xl bg-[#EBF7EE] border border-emerald-100 flex items-center justify-center text-[#137333] shrink-0 shadow-2xs">
+                <div className={`w-14 h-14 rounded-2xl ${isUnrated ? 'bg-amber-50 border-amber-100 text-amber-700' : 'bg-[#EBF7EE] border-emerald-100 text-[#137333]'} border flex items-center justify-center shrink-0 shadow-2xs`}>
                   <FileText className="w-7 h-7" strokeWidth={1.75} />
                 </div>
 
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 flex-wrap mb-2">
-                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#E6F4EA] text-[#137333] border border-emerald-200/60">
+                    <div className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                      isUnrated 
+                        ? 'bg-amber-50 text-amber-800 border border-amber-200' 
+                        : 'bg-[#E6F4EA] text-[#137333] border border-emerald-200/60'
+                    }`}>
                       <CheckCircle2 className="w-3.5 h-3.5" />
-                      <span>PSL-Format Ready</span>
+                      <span>{isUnrated ? `Onboarding Audit (${txCount}/50 Txs)` : 'PSL-Format Ready'}</span>
                     </div>
                     <button
                       type="button"
@@ -358,11 +395,14 @@ export function BankDossierPage({ shop, isDemoMode, onNavigateTab, onBack }) {
                   </div>
 
                   <h2 className="text-xl sm:text-2xl font-bold text-stone-900 font-display tracking-tight">
-                    Your Bank Dossier is Ready
+                    {isUnrated ? 'Your Onboarding Audit Dossier' : 'Your Bank Dossier is Ready'}
                   </h2>
 
                   <p className="text-xs sm:text-sm text-stone-600 mt-1 leading-normal max-w-md">
-                    Formatted as per RBI Priority Sector Lending (PSL) guidelines. Includes business profile, financial summary and credit readiness.
+                    {isUnrated
+                      ? 'Formatted per RBI PSL norms. Credit scores and loan facilities unlock automatically upon completing 50 verified ledger transactions.'
+                      : 'Formatted as per RBI Priority Sector Lending (PSL) guidelines. Includes business profile, financial summary and credit readiness.'
+                    }
                   </p>
 
                   <p className="text-xs text-stone-400 mt-3 font-medium">
@@ -380,7 +420,7 @@ export function BankDossierPage({ shop, isDemoMode, onNavigateTab, onBack }) {
                   className="w-full bg-[#0F3E2E] hover:bg-[#0B2F23] active:bg-[#071F17] text-white font-semibold text-xs sm:text-sm px-4 py-3 rounded-xl shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed"
                 >
                   <Download className="w-4 h-4 shrink-0" />
-                  <span>{downloadingPdf ? 'Generating PDF...' : 'Download Bank Dossier (PDF)'}</span>
+                  <span>{downloadingPdf ? 'Generating PDF...' : (isUnrated ? 'Download Audit Dossier (PDF)' : 'Download Bank Dossier (PDF)')}</span>
                 </button>
 
                 <button

@@ -19,6 +19,7 @@ import { ModalErrorBoundary } from './components/ModalErrorBoundary';
 const DashboardPage = lazyRetry(() => import('./pages/DashboardPage').then(m => ({ default: m.DashboardPage })), 'DashboardPage');
 const AdvisorChatPage = lazyRetry(() => import('./pages/AdvisorChatPage').then(m => ({ default: m.AdvisorChatPage })), 'AdvisorChatPage');
 const CashFlowPage = lazyRetry(() => import('./pages/CashFlowPage').then(m => ({ default: m.CashFlowPage })), 'CashFlowPage');
+const AccountingPage = lazyRetry(() => import('./pages/AccountingPage').then(m => ({ default: m.AccountingPage })), 'AccountingPage');
 const CreditScorePage = lazyRetry(() => import('./pages/CreditScorePage').then(m => ({ default: m.CreditScorePage })), 'CreditScorePage');
 const SchemeMatcherPage = lazyRetry(() => import('./pages/SchemeMatcherPage').then(m => ({ default: m.SchemeMatcherPage })), 'SchemeMatcherPage');
 const BankDossierPage = lazyRetry(() => import('./pages/BankDossierPage').then(m => ({ default: m.BankDossierPage })), 'BankDossierPage');
@@ -540,6 +541,18 @@ export default function App() {
                           refreshKey={refreshKey}
                           latestTx={latestTx}
                           onTransactionSaved={handleTransactionSaved}
+                        />
+                      )}
+
+                      {activeTab === 'accounting' && (
+                        <AccountingPage
+                          currentShop={currentShop}
+                          onOpenWholesale={() => setWholesaleModalOpen(true)}
+                          onOpenBahiKhata={() => changeTab('cashflow')}
+                          onRefreshLedger={() => {
+                            if (currentShop?.id) fetchFinancials(currentShop.id);
+                            setRefreshKey(k => k + 1);
+                          }}
                         />
                       )}
 

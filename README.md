@@ -10,7 +10,7 @@
 
 ### 🌐 **Live Production App:** [https://saakhsetu.vercel.app](https://saakhsetu.vercel.app) *(Mirror: [vyapaar-saathi-nine.vercel.app](https://vyapaar-saathi-nine.vercel.app))*
 
-[Architecture](#-architecture--data-flow) • [Dual Entry Modes](#-dual-entry-modes-evaluator-demo-vs-real-merchant) • [Core Modules](#-core-modules) • [SMS OTP & Security](#-real-time-sms-otp-authentication--jwt-security) • [Verified Scheme Pipeline](#-verified-scheme-database--structured-ingestion-pipeline) • [Underwriting Engine](#-4-pillar-alternative-credit-scoring-math) • [Test Suite (49/49)](#-automated-test-suite-4949-passing) • [Quick Start](#-quick-start-instructions)
+[Architecture](#-architecture--data-flow) • [Dual Entry Modes](#-dual-entry-modes-evaluator-demo-vs-real-merchant) • [Core Modules](#-core-modules) • [Vyapaar Accounting](#-vyapaar-accounting--billing-gst-ready-kirana-erp) • [SMS OTP & Security](#-real-time-sms-otp-authentication--jwt-security) • [Verified Scheme Pipeline](#-verified-scheme-database--structured-ingestion-pipeline) • [Underwriting Engine](#-4-pillar-alternative-credit-scoring-math) • [Test Suite (64/64)](#-automated-test-suite-6464-passing) • [Quick Start](#-quick-start-instructions)
 
 ---
 
@@ -58,8 +58,48 @@ India's 63+ million rural micro-entrepreneurs (kirana grocers, village tailors, 
    │ 6. Saathi AI Advisor         │ Grounded Gemini 2.5 Flash with fallback net   │
    │ 7. Bank Loan Dossier (CAM)   │ Printable official RBI PSL & Nayak memo       │
    │ 8. ONDC Wholesale Discovery  │ Direct commodity wholesale procurement quotes │
-   └───────────────────────────────────────────────────────────────────────────┘
+   │ 9. Vyapaar Accounting & ERP  │ GST-ready POS, inventory & 4-bucket aging     │
+   └──────────────────────────────┴────────────────────────────────────────────┘
 ```
+
+---
+
+## 💼 Vyapaar Accounting & Billing (GST-Ready Kirana ERP)
+
+Functionally inspired by **BUSY Accounting**, SaakhSetu embeds a lightweight, high-speed accounting and enterprise-resource engine engineered specifically for rural micro-merchants and kirana owners. It bridges the gap between everyday counter sales and formal, statutory tax accounting without requiring complex bookkeeping software:
+
+### 1. Products & Inventory Management
+- **Catalog Management**: Barcode/SKU, multilingual product names (Hindi & English), HSN codes, cost price, selling price, and stock levels.
+- **Statutory GST Presets**: Built-in tax tier presets (0% Exempt, 5%, 12%, 18%, 28%) with HSN auto-assignment (e.g., Atta/Flour: HSN `1101`, 5%; Basmati Rice: HSN `1006`, 5%; Mustard Oil: HSN `1508`, 5%; Detergent: HSN `3402`, 18%).
+- **Audit-Trail Stock Movements**: Automated stock decrement on sales invoices and increment on purchase GRNs, with manual physical stock adjustment recording reason codes (`physical_audit_loss`, `damage`, `initial_stock`, `vendor_return`).
+- **Low-Stock Threshold Alerts**: Visual indicators and automated alerts when quantity falls below min-stock levels.
+
+### 2. POS Billing & Invoicing
+- **Rapid Counter Sales**: 1-click product selector, instant quantity modifiers, barcode lookup, and ad-hoc item entry.
+- **Server-Side Tax Splitting**:
+  - **Intra-State Transactions (Within State)**: Automatically splits GST into equal parts (**50% CGST + 50% SGST**).
+  - **Inter-State Transactions**: Applies single **IGST** rate with CGST = 0, SGST = 0.
+- **Payment Modes**: Cash, UPI / QR, and Khata (Customer Udhaar / Credit).
+- **Thermal Receipt Printing & WhatsApp Sharing**: Generates standard 58mm / 80mm thermal receipt previews with printable layouts and pre-filled WhatsApp billing links for paperless counter checkout.
+
+### 3. Supplier Purchases & Inward ITC
+- **Supplier Directory**: Vendor profiles, GSTIN validation, payment terms, and contact details.
+- **Purchase Recording**: Logs supplier bills with batch/invoice numbers, cost price breakdown, tax components, and inward stock augmentation.
+- **Input Tax Credit (ITC)**: Automatically computes eligible input tax credits across purchases to offset output tax liability.
+
+### 4. Receivables Aging & Khata Management
+- **4-Bucket Aging Analysis**: Segmented into **0–30 Days**, **31–60 Days**, **61–90 Days**, and **90+ Days (Overdue)**.
+- **1-Click WhatsApp Reminders**: Direct WhatsApp intent links pre-formatted in respectful Hindi/English requesting pending balance settlement.
+- **Receivable Settlements**: Split or full balance clearance with automatic receipt voucher generation.
+
+### 5. Automated Ledger Synchronization & Credit Engine Coupling
+- **Zero Double-Entry**: Every cash sale invoice immediately logs an `income` transaction in the core bahi-khata ledger; credit invoices log `udhaar_given`; payments log `udhaar_repaid`; purchases log `expense`.
+- **Milestone & Underwriting Grounding**: Synchronized accounting transactions contribute directly to the 50-transaction milestone audit and factor into cash discipline and liquidity metrics in the 4-pillar credit engine.
+
+### 6. GST Summary & Profit & Loss Reports
+- **GSTR-1 & GSTR-3B Ready**: Summarizes total turnover, taxable sales, output CGST, SGST, IGST, input tax credit (ITC), and net payable tax.
+- **Comprehensive P&L Statement**: Real-time calculation of Sales Revenue, Cost of Goods Sold (COGS), Gross Profit, Operating Expenses, and Net Profit Margin.
+- **Export Capabilities**: 1-click CSV and JSON data export for tax practitioners and bank auditors.
 
 ---
 
@@ -204,15 +244,28 @@ $$\text{Total Score} = 300 + 550 \times \left( \frac{\text{Consistency} + \text{
 
 ---
 
-## 🧪 Automated Test Suite (49/49 Passing)
+## 🧪 Automated Test Suite (64/64 Passing)
 
-The project includes an automated test suite running with the Node.js built-in test runner:
+The project includes a comprehensive end-to-end automated test suite running with the Node.js built-in test runner:
 
 ```bash
 npm --prefix server test
 ```
 
-### 100% Pass Rate Across 8 Test Suites:
+### 100% Pass Rate Across 9 Test Suites:
+- **Vyapaar Accounting & Billing Domain Suite** (15/15):
+  - Product catalog CRUD, automated SKU generation, and price bounds validation.
+  - Audit-trailed stock adjustments with `stock_movements` ledger entries.
+  - Intra-state GST computation with 50/50 CGST + SGST equal split.
+  - Inter-state GST calculation with single IGST rate and CGST=0, SGST=0.
+  - Real-time inventory decrement on POS invoice completion.
+  - Bi-directional sync: cash sales log core `income` transactions; credit sales log `udhaar_given`.
+  - Supplier purchase recording with stock augmentation and core `expense` logging.
+  - Customer payment recording with balance settlement and core `udhaar_repaid` logging.
+  - 4-bucket receivables aging analysis (0-30, 31-60, 61-90, 90+ days).
+  - GSTR-1 / 3B tax summary (taxable turnover, output tax, ITC, and net tax payable).
+  - Profit & Loss calculations (Revenue, COGS, Gross Profit, and Net Margin).
+  - Security: `requireShopAccess` enforcement preventing cross-shop accounting tampering.
 - **AI Advisory Offline Fallback Suite** (2/2):
   - Festival queries trigger grounded festive stock advisory without API key.
   - Loan enquiries trigger MUDRA advisory with alternative credit score grounding.

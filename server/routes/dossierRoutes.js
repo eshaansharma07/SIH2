@@ -209,6 +209,11 @@ router.get('/generate', async (req, res) => {
       },
       creditEvaluation: {
         totalScore: creditData.totalScore,
+        isUnrated: Boolean(creditData.isUnrated),
+        transactionCount: creditData.transactionCount || 0,
+        requiredTransactions: creditData.requiredTransactions || 50,
+        transactionsRemaining: creditData.transactionsRemaining || 0,
+        riskTier: creditData.riskTier,
         maxScore: 850,
         ratingLabel: creditData.ratingLabel,
         ratingBadge: creditData.ratingBadge,
