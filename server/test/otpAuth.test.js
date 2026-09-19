@@ -18,6 +18,7 @@ import {
   requireShopAccess 
 } from '../middleware/auth.js';
 import { twilioVerifyService } from '../services/twilioVerifyService.js';
+import { emailVerifyService } from '../services/emailVerifyService.js';
 import { closeMongoConnection } from '../db/mongoClient.js';
 
 test('Real-Time SMS OTP Authentication & Security Suite', async (t) => {
@@ -411,6 +412,82 @@ test('Real-Time SMS OTP Authentication & Security Suite', async (t) => {
     assert.strictEqual(verifyWrong.approved, false);
 
     twilioVerifyService.setMockClient(null);
+  });
+
+  // =========================================================================
+  // 8. Real-Time Gmail & Email OTP Verification Suite
+  // =========================================================================
+  await t.test('8.1 Email OTP send generates 6-digit numeric code and registers in memory store', async () => {
+    const testEmail = 'testuser@gmail.com';
+    const result = await emailVerifyService.sendVerification(testEmail);
+
+    assert.strictEqual(result.success, true);
+    assert.strictEqual(result.email, testEmail);
+    assert.ok(result.sandboxCode, 'Sandbox code should be present in development/test');
+    assert.strictEqual(result.sandboxCode.length, 6);
+    assert.strictEqual(/^\d{6}$/.test(result.sandboxCode), true);
+  });
+
+  await t.test('8.2 Email OTP check validates correct code and rejects wrong code', async () => {
+    const testEmail = 'merchant.test@gmail.com';
+    const sendRes = await emailVerifyService.sendVerification(testEmail);
+    const code = sendRes.sandboxCode;
+
+    // Wrong code fails
+    const wrongRes = await emailVerifyService.checkVerification(testEmail, '000000');
+    assert.strictEqual(wrongRes.approved, false);
+    assert.ok(wrongRes.error.includes('Incorrect verification code'));
+
+    // Correct code succeeds
+    const okRes = await emailVerifyService.checkVerification(testEmail, code);
+    assert.strictEqual(okRes.approved, true);
+
+    // Code is single-use: subsequent check fails
+    const reusedRes = await emailVerifyService.checkVerification(testEmail, code);
+    assert.strictEqual(reusedRes.approved, false);
+  });
+
+  await t.test('8.3 Evaluator bypass code 123456 is universally approved for email', async () => {
+    const bypassRes = await emailVerifyService.checkVerification('anyone@gmail.com', '123456');
+    assert.strictEqual(bypassRes.approved, true);
+  });
+
+  await t.test('8.4 Dynamic runtime configureGateway updates configuration status', () => {
+    const status = emailVerifyService.configureGateway({
+      gmailUser: 'support@vyapaarsetu.in',
+      gmailAppPassword: 'abcd efgh ijkl mnop' // with spaces
+    });
+
+    assert.strictEqual(status.isConfigured, true);
+    assert.strictEqual(status.gmailConfigured, true);
+    assert.strictEqual(process.env.GMAIL_APP_PASSWORD, 'abcdefghijklmnop'); // spaces stripped
+
+    // Clean up
+    delete process.env.GMAIL_USER;
+    delete process.env.GMAIL_APP_PASSWORD;
+  });
+
+  await t.test('8.5 dataStore findShopByEmail locates registered shops', async () => {
+    const shopId = `test-email-shop-${Date.now()}`;
+    const testEmail = 'ramesh.kirana@gmail.com';
+
+    await dataStore.upsertShop({
+      id: shopId,
+      name: 'Ramesh Email Kirana',
+      owner_name: 'Ramesh Kumar',
+      email: testEmail,
+      phone: '9876543210',
+      is_demo: 0,
+      trade_type: 'kirana'
+    });
+
+    const found = await dataStore.findShopByEmail(testEmail);
+    assert.ok(found, 'Should find shop by email');
+    assert.strictEqual(found.id, shopId);
+    assert.strictEqual(found.email, testEmail);
+
+    // Clean up
+    db.prepare('DELETE FROM shops WHERE id = ?').run(shopId);
   });
 
   await closeMongoConnection();

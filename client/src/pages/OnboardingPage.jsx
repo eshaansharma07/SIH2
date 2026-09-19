@@ -137,6 +137,24 @@ export function OnboardingPage({ onComplete, onSelectDemo, onStartDemoTour }) {
   const [twilioVerifyInput, setTwilioVerifyInput] = useState('');
   const [gatewayConfigSaving, setGatewayConfigSaving] = useState(false);
 
+  // Email Gateway & Delivery States
+  const [emailConfigured, setEmailConfigured] = useState(false);
+  const [showEmailConfig, setShowEmailConfig] = useState(false);
+  const [gmailUserInput, setGmailUserInput] = useState('');
+  const [gmailAppPasswordInput, setGmailAppPasswordInput] = useState('');
+  const [resendApiKeyInput, setResendApiKeyInput] = useState('');
+  const [emailConfigSaving, setEmailConfigSaving] = useState(false);
+
+  // Probe live carrier & email gateway status
+  useEffect(() => {
+    api.getGatewaysStatus?.().then(res => {
+      if (res && res.success) {
+        if (res.sms?.isConfigured) setCarrierConfigured(true);
+        if (res.email?.isConfigured) setEmailConfigured(true);
+      }
+    }).catch(() => {});
+  }, []);
+
   const regOtpInputRefs = useRef([]);
   const regCountdownTimerRef = useRef(null);
 
@@ -255,6 +273,33 @@ export function OnboardingPage({ onComplete, onSelectDemo, onStartDemoTour }) {
     }
   };
 
+  // Auth: Dynamic Gmail / Email Gateway Configuration
+  const handleSaveEmailGateway = async (e) => {
+    e?.preventDefault();
+    setEmailConfigSaving(true);
+    setAuthError('');
+    try {
+      const res = await api.configureEmailGateway({
+        gmailUser: gmailUserInput.trim(),
+        gmailAppPassword: gmailAppPasswordInput.trim(),
+        resendApiKey: resendApiKeyInput.trim()
+      });
+      if (res && res.success) {
+        setEmailConfigured(true);
+        setAuthSuccessMsg(
+          language === 'hi' 
+            ? 'जीमेल गेटवे सक्रिय! कृपया पुनः सत्यापन कोड भेजें।' 
+            : 'Gmail Gateway activated! Please request a new OTP to receive in your inbox.'
+        );
+        setShowEmailConfig(false);
+      }
+    } catch (err) {
+      setAuthError(err.message || 'Failed to configure email gateway');
+    } finally {
+      setEmailConfigSaving(false);
+    }
+  };
+
   // Auth: Send Real SMS or Gmail OTP for Login
   const handleSendOtp = async (e) => {
     e?.preventDefault();
@@ -272,13 +317,22 @@ export function OnboardingPage({ onComplete, onSelectDemo, onStartDemoTour }) {
         if (res && res.success) {
           setLoginStep('otp');
           setOtpDigits(['', '', '', '', '', '']);
-          setAuthSuccessMsg(
-            language === 'hi' 
-              ? `सत्यापन कोड ${cleanEmail} पर भेज दिया गया है` 
-              : `Verification code sent to ${cleanEmail}`
-          );
+          setEmailConfigured(Boolean(res.emailDelivered));
           if (res.sandboxCode) {
             setSandboxCodeHint(res.sandboxCode);
+          }
+          if (res.emailDelivered) {
+            setAuthSuccessMsg(
+              language === 'hi' 
+                ? `सत्यापन कोड ${cleanEmail} के इनबॉक्स में भेज दिया गया है` 
+                : `Verification code sent to ${cleanEmail} inbox via Gmail`
+            );
+          } else {
+            setAuthSuccessMsg(
+              language === 'hi'
+                ? `सत्यापन कोड तैयार किया गया (${cleanEmail})`
+                : `Verification code ready for ${cleanEmail}`
+            );
           }
           startResendTimer();
           setTimeout(() => otpInputRefs.current[0]?.focus(), 150);
@@ -336,7 +390,12 @@ export function OnboardingPage({ onComplete, onSelectDemo, onStartDemoTour }) {
         const res = await api.sendEmailOTP(cleanEmail, 'login');
         if (res && res.success) {
           setOtpDigits(['', '', '', '', '', '']);
-          setAuthSuccessMsg(language === 'hi' ? 'नया सत्यापन कोड जीमेल पर भेजा गया' : 'New code sent to your email');
+          setEmailConfigured(Boolean(res.emailDelivered));
+          if (res.emailDelivered) {
+            setAuthSuccessMsg(language === 'hi' ? 'नया सत्यापन कोड जीमेल इनबॉक्स में भेजा गया' : 'New code sent to your Gmail inbox');
+          } else {
+            setAuthSuccessMsg(language === 'hi' ? 'नया सत्यापन कोड तैयार किया गया' : 'New verification code ready');
+          }
           if (res.sandboxCode) setSandboxCodeHint(res.sandboxCode);
           startResendTimer();
         } else {
@@ -459,13 +518,22 @@ export function OnboardingPage({ onComplete, onSelectDemo, onStartDemoTour }) {
         if (res && res.success) {
           setRegStep('otp');
           setRegOtpDigits(['', '', '', '', '', '']);
-          setAuthSuccessMsg(
-            language === 'hi'
-              ? `सत्यापन कोड ${cleanEmail} पर भेज दिया गया है`
-              : `Verification code sent to ${cleanEmail}`
-          );
+          setEmailConfigured(Boolean(res.emailDelivered));
           if (res.sandboxCode) {
             setRegSandboxCodeHint(res.sandboxCode);
+          }
+          if (res.emailDelivered) {
+            setAuthSuccessMsg(
+              language === 'hi'
+                ? `सत्यापन कोड ${cleanEmail} के इनबॉक्स में भेज दिया गया है`
+                : `Verification code sent to ${cleanEmail} inbox via Gmail`
+            );
+          } else {
+            setAuthSuccessMsg(
+              language === 'hi'
+                ? `सत्यापन कोड तैयार किया गया (${cleanEmail})`
+                : `Verification code ready for ${cleanEmail}`
+            );
           }
           startRegResendTimer();
           setTimeout(() => {
@@ -526,7 +594,12 @@ export function OnboardingPage({ onComplete, onSelectDemo, onStartDemoTour }) {
         const res = await api.sendEmailOTP(cleanEmail, 'register');
         if (res && res.success) {
           setRegOtpDigits(['', '', '', '', '', '']);
-          setAuthSuccessMsg(language === 'hi' ? 'नया सत्यापन कोड जीमेल पर भेजा गया' : 'New code sent to your email');
+          setEmailConfigured(Boolean(res.emailDelivered));
+          if (res.emailDelivered) {
+            setAuthSuccessMsg(language === 'hi' ? 'नया सत्यापन कोड जीमेल इनबॉक्स में भेजा गया' : 'New code sent to your Gmail inbox');
+          } else {
+            setAuthSuccessMsg(language === 'hi' ? 'नया सत्यापन कोड तैयार किया गया' : 'New verification code ready');
+          }
           if (res.sandboxCode) setRegSandboxCodeHint(res.sandboxCode);
           startRegResendTimer();
           setTimeout(() => {
@@ -2028,6 +2101,104 @@ export function OnboardingPage({ onComplete, onSelectDemo, onStartDemoTour }) {
                           )}
                         </div>
                       )}
+
+                      {authChannel === 'email' && (
+                        <div className="space-y-2 pt-2 text-left">
+                          {/* Direct Open Gmail Button */}
+                          <a
+                            href="https://mail.google.com"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-full py-2.5 px-3 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition shadow-xs cursor-pointer"
+                          >
+                            <Mail className="w-4 h-4" />
+                            <span>
+                              {language === 'hi'
+                                ? `जीमेल इनबॉक्स खोलें (${loginEmail})`
+                                : `Open Gmail Inbox (${loginEmail})`}
+                            </span>
+                            <ExternalLink className="w-3.5 h-3.5 opacity-80" />
+                          </a>
+
+                          {/* 1-Click Fill Code */}
+                          {sandboxCodeHint && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const digits = sandboxCodeHint.split('').slice(0, 6);
+                                setOtpDigits(digits);
+                              }}
+                              className="w-full py-2 px-3 bg-[#0F3E2E]/10 hover:bg-[#0F3E2E]/15 text-[#0F3E2E] border border-[#0F3E2E]/25 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer"
+                            >
+                              <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                              <span>
+                                {language === 'hi' ? 'सीधे कोड भरें:' : 'Click to Auto-Fill Code:'} <strong className="font-mono text-sm tracking-widest">{sandboxCodeHint}</strong>
+                              </span>
+                            </button>
+                          )}
+
+                          {/* Email Gateway Notice if unconfigured */}
+                          {!emailConfigured && (
+                            <div className="p-2.5 bg-amber-50/90 border border-amber-200/80 rounded-xl text-[11px] text-amber-900 space-y-1">
+                              <div className="flex items-center gap-1.5 font-bold text-amber-800">
+                                <AlertCircle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                                <span>{language === 'hi' ? 'जीमेल में ईमेल क्यों नहीं आया?' : 'Why is email not arriving in Gmail?'}</span>
+                              </div>
+                              <p className="text-[10.5px] text-amber-800/90 leading-relaxed">
+                                {language === 'hi'
+                                  ? 'गूगल के एसएमटीपी सर्वर से सीधे जीमेल भेजने के लिए एक निःशुल्क 16-अक्षरों का Google App Password आवश्यक होता है। आप ऊपर दिए गए सीधे कोड बटन से तुरंत लॉगिन कर सकते हैं, या नीचे अपनी जीमेल कुंजी जोड़ सकते हैं।'
+                                  : 'Sending real outbound emails via Google requires a free 16-character Google App Password (or Resend API key). You can auto-fill the code above to log in immediately, or configure Google App Password below.'}
+                              </p>
+                              <button
+                                type="button"
+                                onClick={() => setShowEmailConfig(!showEmailConfig)}
+                                className="text-[10px] font-bold text-[#0F3E2E] hover:underline cursor-pointer flex items-center gap-1 pt-0.5"
+                              >
+                                <Settings className="w-3 h-3" />
+                                <span>{showEmailConfig ? (language === 'hi' ? 'सेटिंग्स छुपाएं' : 'Hide Gmail Setup') : (language === 'hi' ? '⚙️ जीमेल ऐप पासवर्ड / Resend कुंजी जोड़ें' : '⚙️ Add Google App Password / Resend Key')}</span>
+                              </button>
+
+                              {showEmailConfig && (
+                                <div className="pt-2 border-t border-amber-200/60 mt-1 space-y-2">
+                                  <div className="text-[10px] text-stone-700 font-semibold">
+                                    Enter your Gmail &amp; 16-char App Password (generate free at <a href="https://myaccount.google.com/apppasswords" target="_blank" rel="noopener noreferrer" className="underline font-bold text-emerald-800">google.com/apppasswords</a>):
+                                  </div>
+                                  <input
+                                    type="email"
+                                    placeholder="Your Gmail (e.g. sender@gmail.com)"
+                                    value={gmailUserInput}
+                                    onChange={(e) => setGmailUserInput(e.target.value)}
+                                    className="w-full px-2.5 py-1.5 bg-white border border-stone-300 rounded-lg text-xs"
+                                  />
+                                  <input
+                                    type="password"
+                                    placeholder="16-character Google App Password"
+                                    value={gmailAppPasswordInput}
+                                    onChange={(e) => setGmailAppPasswordInput(e.target.value)}
+                                    className="w-full px-2.5 py-1.5 bg-white border border-stone-300 rounded-lg text-xs font-mono"
+                                  />
+                                  <div className="text-[10px] text-stone-500 text-center font-bold">OR RESEND API KEY</div>
+                                  <input
+                                    type="text"
+                                    placeholder="re_xxxxxxxxxxxx (Resend API Key)"
+                                    value={resendApiKeyInput}
+                                    onChange={(e) => setResendApiKeyInput(e.target.value)}
+                                    className="w-full px-2.5 py-1.5 bg-white border border-stone-300 rounded-lg text-xs font-mono"
+                                  />
+                                  <button
+                                    type="button"
+                                    disabled={emailConfigSaving || (!gmailAppPasswordInput && !resendApiKeyInput)}
+                                    onClick={handleSaveEmailGateway}
+                                    className="w-full py-1.5 bg-[#0F3E2E] text-white rounded-lg text-xs font-bold transition cursor-pointer disabled:opacity-50"
+                                  >
+                                    {emailConfigSaving ? 'Saving...' : 'Save & Enable Real Gmail Delivery'}
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     <button
@@ -2376,6 +2547,104 @@ export function OnboardingPage({ onComplete, onSelectDemo, onStartDemoTour }) {
                                     className="w-full py-1.5 bg-[#0F3E2E] text-white rounded-lg text-xs font-bold transition cursor-pointer disabled:opacity-50"
                                   >
                                     {gatewayConfigSaving ? 'Saving...' : 'Save & Enable Real SMS'}
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {authChannel === 'email' && (
+                        <div className="space-y-2 pt-2 text-left">
+                          {/* Direct Open Gmail Button */}
+                          <a
+                            href="https://mail.google.com"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-full py-2.5 px-3 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition shadow-xs cursor-pointer"
+                          >
+                            <Mail className="w-4 h-4" />
+                            <span>
+                              {language === 'hi'
+                                ? `जीमेल इनबॉक्स खोलें (${regEmail})`
+                                : `Open Gmail Inbox (${regEmail})`}
+                            </span>
+                            <ExternalLink className="w-3.5 h-3.5 opacity-80" />
+                          </a>
+
+                          {/* 1-Click Fill Code */}
+                          {regSandboxCodeHint && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const digits = regSandboxCodeHint.split('').slice(0, 6);
+                                setRegOtpDigits(digits);
+                              }}
+                              className="w-full py-2 px-3 bg-[#0F3E2E]/10 hover:bg-[#0F3E2E]/15 text-[#0F3E2E] border border-[#0F3E2E]/25 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer"
+                            >
+                              <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                              <span>
+                                {language === 'hi' ? 'सीधे कोड भरें:' : 'Click to Auto-Fill Code:'} <strong className="font-mono text-sm tracking-widest">{regSandboxCodeHint}</strong>
+                              </span>
+                            </button>
+                          )}
+
+                          {/* Email Gateway Notice if unconfigured */}
+                          {!emailConfigured && (
+                            <div className="p-2.5 bg-amber-50/90 border border-amber-200/80 rounded-xl text-[11px] text-amber-900 space-y-1">
+                              <div className="flex items-center gap-1.5 font-bold text-amber-800">
+                                <AlertCircle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                                <span>{language === 'hi' ? 'जीमेल में ईमेल क्यों नहीं आया?' : 'Why is email not arriving in Gmail?'}</span>
+                              </div>
+                              <p className="text-[10.5px] text-amber-800/90 leading-relaxed">
+                                {language === 'hi'
+                                  ? 'गूगल के एसएमटीपी सर्वर से सीधे जीमेल भेजने के लिए एक निःशुल्क 16-अक्षरों का Google App Password आवश्यक होता है। आप ऊपर दिए गए सीधे कोड बटन से तुरंत पंजीकरण पूरा कर सकते हैं, या नीचे अपनी जीमेल कुंजी जोड़ सकते हैं।'
+                                  : 'Sending real outbound emails via Google requires a free 16-character Google App Password (or Resend API key). You can auto-fill the code above to register immediately, or configure Google App Password below.'}
+                              </p>
+                              <button
+                                type="button"
+                                onClick={() => setShowEmailConfig(!showEmailConfig)}
+                                className="text-[10px] font-bold text-[#0F3E2E] hover:underline cursor-pointer flex items-center gap-1 pt-0.5"
+                              >
+                                <Settings className="w-3 h-3" />
+                                <span>{showEmailConfig ? (language === 'hi' ? 'सेटिंग्स छुपाएं' : 'Hide Gmail Setup') : (language === 'hi' ? '⚙️ जीमेल ऐप पासवर्ड / Resend कुंजी जोड़ें' : '⚙️ Add Google App Password / Resend Key')}</span>
+                              </button>
+
+                              {showEmailConfig && (
+                                <div className="pt-2 border-t border-amber-200/60 mt-1 space-y-2">
+                                  <div className="text-[10px] text-stone-700 font-semibold">
+                                    Enter your Gmail &amp; 16-char App Password (generate free at <a href="https://myaccount.google.com/apppasswords" target="_blank" rel="noopener noreferrer" className="underline font-bold text-emerald-800">google.com/apppasswords</a>):
+                                  </div>
+                                  <input
+                                    type="email"
+                                    placeholder="Your Gmail (e.g. sender@gmail.com)"
+                                    value={gmailUserInput}
+                                    onChange={(e) => setGmailUserInput(e.target.value)}
+                                    className="w-full px-2.5 py-1.5 bg-white border border-stone-300 rounded-lg text-xs"
+                                  />
+                                  <input
+                                    type="password"
+                                    placeholder="16-character Google App Password"
+                                    value={gmailAppPasswordInput}
+                                    onChange={(e) => setGmailAppPasswordInput(e.target.value)}
+                                    className="w-full px-2.5 py-1.5 bg-white border border-stone-300 rounded-lg text-xs font-mono"
+                                  />
+                                  <div className="text-[10px] text-stone-500 text-center font-bold">OR RESEND API KEY</div>
+                                  <input
+                                    type="text"
+                                    placeholder="re_xxxxxxxxxxxx (Resend API Key)"
+                                    value={resendApiKeyInput}
+                                    onChange={(e) => setResendApiKeyInput(e.target.value)}
+                                    className="w-full px-2.5 py-1.5 bg-white border border-stone-300 rounded-lg text-xs font-mono"
+                                  />
+                                  <button
+                                    type="button"
+                                    disabled={emailConfigSaving || (!gmailAppPasswordInput && !resendApiKeyInput)}
+                                    onClick={handleSaveEmailGateway}
+                                    className="w-full py-1.5 bg-[#0F3E2E] text-white rounded-lg text-xs font-bold transition cursor-pointer disabled:opacity-50"
+                                  >
+                                    {emailConfigSaving ? 'Saving...' : 'Save & Enable Real Gmail Delivery'}
                                   </button>
                                 </div>
                               )}

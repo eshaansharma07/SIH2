@@ -100,6 +100,31 @@ export const dataStore = {
     `).get(input, digitsOnly || input, input, input) || null;
   },
 
+  async findShopByEmail(email) {
+    if (!email) return null;
+    const cleanEmail = String(email).trim().toLowerCase();
+    const isMongo = await this.isPrimaryMongo();
+    if (isMongo) {
+      try {
+        const col = await getShopsCollection();
+        const doc = await col.findOne(
+          { email: { $regex: new RegExp(`^${cleanEmail}$`, 'i') } },
+          { sort: { is_demo: 1, created_at: -1 } }
+        );
+        if (doc) return cleanDoc(doc);
+      } catch (err) {
+        console.warn('[DataStore] Mongo findShopByEmail fallback:', err.message);
+      }
+    }
+
+    return db.prepare(`
+      SELECT * FROM shops 
+      WHERE LOWER(email) = ? 
+      ORDER BY is_demo ASC, created_at DESC 
+      LIMIT 1
+    `).get(cleanEmail) || null;
+  },
+
   async upsertShop(shopData) {
     const isMongo = await this.isPrimaryMongo();
     if (isMongo) {
@@ -117,14 +142,14 @@ export const dataStore = {
       db.prepare(`
         INSERT OR REPLACE INTO shops (
           id, name, owner_name, trade_type, trade_name, village, district, state,
-          vintage_years, monthly_revenue, ownership, bank_account_type, phone, password, owner_category, is_demo, is_udyam_verified, udyam_number, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          vintage_years, monthly_revenue, ownership, bank_account_type, phone, email, password, owner_category, is_demo, is_udyam_verified, udyam_number, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).run(
         shopData.id, shopData.name, shopData.owner_name, shopData.trade_type, shopData.trade_name || '',
         shopData.village || '', shopData.district || '', shopData.state || '',
         shopData.vintage_years || 0, shopData.monthly_revenue || 0,
         shopData.ownership || 'rented', shopData.bank_account_type || 'savings',
-        shopData.phone || '', shopData.password || '1234', shopData.owner_category || 'general',
+        shopData.phone || '', shopData.email || '', shopData.password || '1234', shopData.owner_category || 'general',
         shopData.is_demo ? 1 : 0, shopData.is_udyam_verified ? 1 : 0, shopData.udyam_number || '',
         shopData.created_at || new Date().toISOString()
       );

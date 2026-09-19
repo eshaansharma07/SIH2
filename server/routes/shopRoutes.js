@@ -359,7 +359,40 @@ router.post('/verify-otp', async (req, res) => {
   }
 });
 
-// Send Real-Time Gmail / Email OTP via Nodemailer
+// Dynamically Configure Email / Gmail Gateway at Runtime
+router.post('/configure-email', async (req, res) => {
+  try {
+    const { gmailUser, gmailAppPassword, resendApiKey, smtpHost, smtpPort, smtpUser, smtpPass } = req.body;
+    const status = emailVerifyService.configureGateway({
+      gmailUser,
+      gmailAppPassword,
+      resendApiKey,
+      smtpHost,
+      smtpPort,
+      smtpUser,
+      smtpPass
+    });
+    return res.json({ success: true, status });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Check Carrier & Email Gateways Live Status
+router.get('/gateways-status', (req, res) => {
+  return res.json({
+    success: true,
+    sms: {
+      isConfigured: twilioVerifyService.isConfigured(),
+      fast2sms: Boolean(process.env.FAST2SMS_API_KEY),
+      twilioSms: Boolean(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_PHONE_NUMBER),
+      twilioVerify: Boolean(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_VERIFY_SERVICE_SID)
+    },
+    email: emailVerifyService.getStatus()
+  });
+});
+
+// Send Real-Time Gmail / Email OTP via Nodemailer or Resend
 router.post('/send-email-otp', async (req, res) => {
   try {
     const { email, type = 'login' } = req.body;
@@ -378,11 +411,34 @@ router.post('/send-email-otp', async (req, res) => {
       });
     }
 
+    // Uniqueness & existence checks based on type
+    const shop = await dataStore.findShopByEmail(cleanEmail);
+    if (type === 'register') {
+      if (shop && shop.is_demo !== 1) {
+        return res.status(409).json({
+          success: false,
+          error: 'An account with this email address already exists. Please log in instead.'
+        });
+      }
+    } else {
+      if (!shop) {
+        return res.status(404).json({
+          success: false,
+          error: 'No shop account found with this email address. Please register your shop first.'
+        });
+      }
+    }
+
     const sendResult = await emailVerifyService.sendVerification(cleanEmail);
 
     return res.json({
       success: true,
-      message: `Verification code sent to ${cleanEmail}`,
+      emailDelivered: Boolean(sendResult.emailDelivered),
+      provider: sendResult.provider,
+      providerError: sendResult.providerError || null,
+      message: sendResult.emailDelivered
+        ? `Verification code delivered to ${cleanEmail} via ${sendResult.provider}`
+        : (sendResult.message || `Verification code prepared for ${cleanEmail}`),
       email: cleanEmail,
       sandboxCode: sendResult.sandboxCode || null
     });
@@ -422,8 +478,8 @@ router.post('/verify-email-otp', async (req, res) => {
       });
     }
 
-    // Try finding existing shop by email
-    const shop = db.prepare('SELECT * FROM shops WHERE LOWER(email) = ? LIMIT 1').get(cleanEmail);
+    // Try finding existing shop by email via dataStore
+    const shop = await dataStore.findShopByEmail(cleanEmail);
 
     if (!shop) {
       return res.json({
