@@ -190,7 +190,7 @@ export function CreditGauge({
               </div>
             </div>
             <div>
-              <div className="text-[11px] font-bold text-stone-900 tabular-nums">900</div>
+              <div className="text-[11px] font-bold text-stone-900 tabular-nums">{effectiveMax}</div>
               <div className="text-[9px] text-stone-500 font-medium leading-tight mt-0.5">
                 {language === 'hi' ? 'उत्कृष्ट' : 'Excellent'}
               </div>
@@ -273,7 +273,7 @@ export function CreditGauge({
           {/* Scale Labels in warm stone tones */}
           <text x={cx - radius} y={cy + 16} fontSize="10" fontWeight="700" fill="#78716C" textAnchor="middle" fontFamily="Plus Jakarta Sans, sans-serif">300</text>
           <text x={cx} y={cy - radius - 6} fontSize="9" fontWeight="700" fill="#78716C" textAnchor="middle" fontFamily="Plus Jakarta Sans, sans-serif">600</text>
-          <text x={cx + radius} y={cy + 16} fontSize="10" fontWeight="700" fill="#78716C" textAnchor="middle" fontFamily="Plus Jakarta Sans, sans-serif">900</text>
+          <text x={cx + radius} y={cy + 16} fontSize="10" fontWeight="700" fill="#78716C" textAnchor="middle" fontFamily="Plus Jakarta Sans, sans-serif">{effectiveMax}</text>
         </svg>
       </div>
 

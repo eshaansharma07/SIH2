@@ -109,9 +109,15 @@ export function CreditScorePage({ shop, creditData, onNavigateTab }) {
   const isDemo = !shop?.id || shop?.id === 'ramesh-kirana';
   const isUnrated = !isDemo && (creditData?.isUnrated && !creditData?.totalScore);
   const baseScore = isUnrated ? null : (creditData?.totalScore ?? (isDemo ? 786 : (creditData?.score ?? 615)));
-  const alternativeCreditScore = isUnrated ? null : (creditData?.alternativeScore || Math.round(300 + (((baseScore || 786) - 300) * 550 / 600)));
   const currentTier = getSchemeTier(baseScore);
   const factors = creditData?.factors || [];
+
+  // Alternative non-CIBIL credit score on standard 300 to 850 cash flow scale
+  const alternativeCreditScore = isUnrated 
+    ? null 
+    : (baseScore 
+        ? Math.min(850, Math.max(300, Math.round(300 + ((baseScore - 300) / 600) * 550))) 
+        : (isDemo ? 745 : 590));
 
   // Score change compared to last month: calculated dynamically or baseline
   const scoreDelta = isDemo ? 44 : (creditData?.scoreDelta ?? 15);
@@ -460,7 +466,7 @@ export function CreditScorePage({ shop, creditData, onNavigateTab }) {
       </section>
 
       {/* ========================================================================= */}
-      {/* 2B. ALTERNATIVE CREDIT ASSESSMENT (BELOW CIBIL PART)                      */}
+      {/* 2B. ALTERNATIVE CREDIT SCORE & ASSESSMENT (BELOW CIBIL PART)              */}
       {/* ========================================================================= */}
       <section className="w-full rounded-3xl border border-stone-200/85 bg-[#FCFAF7] p-5 sm:p-7 shadow-2xs space-y-6">
         
@@ -473,16 +479,16 @@ export function CreditScorePage({ shop, creditData, onNavigateTab }) {
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="font-serif font-black text-xl sm:text-2xl text-stone-900 tracking-tight">
-                  {language === 'hi' ? 'वैकल्पिक क्रेडिट साख मूल्यांकन' : 'Alternative Credit Assessment'}
+                  {language === 'hi' ? 'वैकल्पिक क्रेडिट स्कोर' : 'Alternative Credit Score'}
                 </h2>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
-                  {language === 'hi' ? 'कैश-फ्लो आधारित' : 'Cash Flow Underwriting'}
+                <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300">
+                  {language === 'hi' ? '300–850 पैमाना (Non-CIBIL)' : '300–850 Bureau-Free Scale'}
                 </span>
               </div>
               <p className="text-xs text-stone-600 mt-0.5 leading-relaxed">
                 {language === 'hi'
-                  ? 'पारंपरिक सिबिल या संपत्ति बंधक के बिना भी बैंक इन 4 पारदर्शी स्तंभों (Pillars) के आधार पर बिना गारंटी ऋण स्वीकृत करते हैं।'
-                  : 'Banks evaluate these 4 transparent ledger pillars to sanction collateral-free loans even without a prior credit card or property mortgage.'
+                  ? 'पारंपरिक सिबिल स्कोर या संपत्ति बंधक के बिना भी बैंक इन 4 पारदर्शी कैश-फ्लो आधारों पर ऋण स्वीकृत करते हैं।'
+                  : 'Cashflow-based alternative credit score evaluated across daily ledger logging, customer udhaar recovery, and digital sales velocity.'
                 }
               </p>
             </div>
@@ -508,159 +514,116 @@ export function CreditScorePage({ shop, creditData, onNavigateTab }) {
           </div>
         </div>
 
-        {/* Alternative Credit Score Dial Bento Card (Directly Below CIBIL Part) */}
-        <div className="w-full rounded-2xl bg-white border border-stone-200/80 p-5 sm:p-6 shadow-2xs">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
-            
-            {/* Left 5 Cols: Alternative Credit Score Dial */}
-            <div className="lg:col-span-5 flex flex-col justify-between space-y-3">
-              <div className="flex items-center justify-between flex-wrap gap-2">
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-lg bg-amber-50 text-amber-800 flex items-center justify-center border border-amber-200/60">
-                    <FileText className="w-3.5 h-3.5" />
-                  </div>
-                  <span className="font-sans font-bold text-xs sm:text-sm text-stone-900">
-                    {language === 'hi' ? 'वैकल्पिक क्रेडिट स्कोर' : 'Alternative Credit Score'}
-                  </span>
-                </div>
-                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 border border-amber-300 text-amber-900 text-[11px] font-bold">
-                  <Sparkles className="w-3.5 h-3.5 text-amber-700" />
-                  <span>300–850 PSL Scale</span>
-                </div>
+        {/* Alternative Credit Score Dial Card + Quick Health Highlights */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center bg-white rounded-2xl border border-stone-200/80 p-5 shadow-2xs">
+          
+          {/* Left Column: The Alternative Credit Score Dial */}
+          <div className="lg:col-span-5 flex flex-col items-center justify-center border-b lg:border-b-0 lg:border-r border-stone-100 pb-5 lg:pb-0 lg:pr-6">
+            <div className="flex items-center justify-between w-full mb-2">
+              <div className="flex items-center gap-1.5 text-stone-700 font-bold text-xs">
+                <FileText className="w-3.5 h-3.5 text-emerald-700" />
+                <span>{language === 'hi' ? 'वैकल्पिक क्रेडिट स्कोर' : 'Alternative Credit Score'}</span>
               </div>
-
-              <div className="w-full flex justify-center py-1">
-                {isUnrated ? (
-                  <div className="text-center p-4 border border-dashed border-stone-200 rounded-2xl bg-stone-50 w-full">
-                    <p className="text-xs text-stone-500">Record transactions to calculate credit score</p>
-                  </div>
-                ) : (
-                  <CreditGauge 
-                    score={alternativeCreditScore || 745} 
-                    maxScore={850} 
-                    minScore={300} 
-                    variant="editorial" 
-                    language={language}
-                    ratingLabel={language === 'hi' ? 'सक्षम एवं सुरक्षित (प्राइम बैंकेबल)' : 'Prime Bankable Assessment'}
-                  />
-                )}
-              </div>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">
+                {language === 'hi' ? 'प्राइम बैंकेबल' : 'Prime Bankable'}
+              </span>
             </div>
 
-            {/* Center 3 Cols: Cashflow Underwriting Health */}
-            <div className="lg:col-span-3 flex flex-col justify-between space-y-3 lg:border-l lg:border-stone-100 lg:pl-6">
-              <div>
-                <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">Underwriting Assessment</span>
-                <div className="font-serif font-black text-xl text-[#0F3E2E] mt-0.5">
-                  {language === 'hi' ? 'सक्षम एवं सुरक्षित' : 'Prime Bankable'}
-                </div>
-                <p className="text-xs text-stone-600 mt-1 leading-relaxed">
-                  {language === 'hi'
-                    ? 'दैनिक बही-खाता एवं यूपीआई कैश-फ्लो के आधार पर बैंक-स्वीकृत रेटिंग।'
-                    : 'Bank-verified rating based on daily bahi-khata and digital UPI flow.'
-                  }
-                </p>
-              </div>
+            <CreditGauge 
+              score={alternativeCreditScore || 745} 
+              maxScore={850}
+              minScore={300}
+              variant="editorial" 
+              language={language}
+              ratingLabel={language === 'hi' ? 'बहुत अच्छा (Prime Bankable)' : 'Very Good (Prime Bankable)'}
+            />
 
-              <div className="p-3 bg-[#FAF8F5] border border-stone-200/80 rounded-xl space-y-1">
-                <div className="text-[10px] font-bold text-stone-500 uppercase">Cash Flow Discipline</div>
-                <div className="text-xs font-bold text-stone-800">
-                  {language === 'hi' ? '121 सक्रिय दिन दर्ज • 87% उधार वसूली' : '121 Logged Days • 87% Recovery'}
-                </div>
-              </div>
+            <p className="text-[11px] text-stone-500 text-center mt-2 max-w-xs">
+              {language === 'hi'
+                ? 'नियमित बही-खाता, 87% उधारी वसूली और 4 वर्ष के व्यापार अनुभव पर आधारित स्कोर।'
+                : 'Calculated from 121 active bahi-khata days, healthy operating surplus, and disciplined udhaar settlement.'
+              }
+            </p>
+          </div>
 
-              <button
-                type="button"
-                onClick={() => setIsBreakdownModalOpen(true)}
-                className="w-full px-3 py-2 rounded-xl border border-stone-200 bg-white hover:bg-stone-50 text-stone-800 text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer"
-              >
-                <span>{language === 'hi' ? 'विस्तृत 4 स्तंभ देखें →' : 'View Pillar Breakdown →'}</span>
-              </button>
-            </div>
-
-            {/* Right 4 Cols: Collateral-Free Eligibility */}
-            <div className="lg:col-span-4 bg-[#FAF7F0] border border-[#EFE8DC] rounded-2xl p-5 flex flex-col justify-between space-y-3">
-              <div>
-                <div className="text-[10px] font-bold text-stone-500 uppercase tracking-wider">
-                  {language === 'hi' ? 'बिना बंधक कार्यशील पूंजी' : 'Collateral-Free Working Capital'}
-                </div>
-                <div className="font-serif font-black text-2xl text-[#0F3E2E] my-1">
-                  ₹50,000 – ₹5,00,000
-                </div>
-                <div className="inline-flex items-center gap-1.5 bg-white border border-emerald-300 text-emerald-800 px-2.5 py-0.5 rounded-full text-xs font-bold">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700" />
-                  <span>PM MUDRA Kishor & Shishu</span>
-                </div>
-              </div>
-
-              <p className="text-[11px] text-stone-600 leading-relaxed">
+          {/* Right Column: 4 Key Credit Ratios + Collateral Exemption */}
+          <div className="lg:col-span-7 space-y-4">
+            <div>
+              <h3 className="font-serif font-bold text-sm text-stone-900">
+                {language === 'hi' ? 'मुख्य क्रेडिट स्वास्थ्य संकेतक (Key Credit Health Metrics)' : 'Key Credit Health Metrics'}
+              </h3>
+              <p className="text-[11px] text-stone-500">
                 {language === 'hi'
-                  ? 'यह वैकल्पिक क्रेडिट स्कोर बैंकों को बिना पारंपरिक सिबिल के तुरंत मुद्रा ऋण स्वीकृति में सहायता करता है।'
-                  : 'This alternative credit score enables regional rural banks to sanction Mudra loans without a past credit card history.'
+                  ? 'बैंक अधिकारी इन वित्तीय संकेतकों के आधार पर सिबिल रहित ऋण का निर्णय लेते हैं।'
+                  : 'Core underwriting indicators verified for collateral-free bank sanctions.'
                 }
               </p>
+            </div>
 
-              <button
-                type="button"
-                onClick={() => onNavigateTab?.('dossier')}
-                className="w-full bg-[#0F3E2E] hover:bg-[#165640] text-white text-xs font-bold py-2 px-3 rounded-xl btn-tactile text-center cursor-pointer"
-              >
-                {language === 'hi' ? 'प्रमाणित बैंक डॉसियर डाउनलोड करें →' : 'Download Certified Bank Dossier →'}
-              </button>
+            {/* 4 Metrics Tiles */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="p-3 rounded-xl bg-[#FAF8F5] border border-stone-200/80">
+                <div className="text-[10px] font-bold text-stone-500 uppercase tracking-wider">
+                  {language === 'hi' ? 'मासिक शुद्ध अधिशेष' : 'Net Operating Surplus'}
+                </div>
+                <div className="font-serif font-black text-base text-[#0F3E2E] mt-0.5 tabular-nums">
+                  ₹{(creditData?.metrics?.netSurplus ?? 63820).toLocaleString('en-IN')}
+                </div>
+                <div className="text-[10px] text-emerald-700 font-semibold mt-0.5">
+                  {language === 'hi' ? 'सकारात्मक नकद तरलता' : 'Positive Liquidity'}
+                </div>
+              </div>
+
+              <div className="p-3 rounded-xl bg-[#FAF8F5] border border-stone-200/80">
+                <div className="text-[10px] font-bold text-stone-500 uppercase tracking-wider">
+                  {language === 'hi' ? 'उधार वसूली दर' : 'Udhaar Recovery Rate'}
+                </div>
+                <div className="font-serif font-black text-base text-stone-900 mt-0.5 tabular-nums">
+                  {creditData?.metrics?.udhaarRecoveryRate ?? 87}%
+                </div>
+                <div className="text-[10px] text-emerald-700 font-semibold mt-0.5">
+                  {language === 'hi' ? 'अनुशासित 18-दिवसीय चक्र' : 'Disciplined 18-Day Cycle'}
+                </div>
+              </div>
+
+              <div className="p-3 rounded-xl bg-[#FAF8F5] border border-stone-200/80">
+                <div className="text-[10px] font-bold text-stone-500 uppercase tracking-wider">
+                  {language === 'hi' ? 'डिजिटल यूपीआई शेयर' : 'UPI Digital Share'}
+                </div>
+                <div className="font-serif font-black text-base text-stone-900 mt-0.5 tabular-nums">
+                  {creditData?.metrics?.digitalSharePct ?? 37}%
+                </div>
+                <div className="text-[10px] text-stone-500 font-medium mt-0.5">
+                  {language === 'hi' ? 'बैंक प्रमाणित बिक्री' : 'Verified QR Sales'}
+                </div>
+              </div>
+
+              <div className="p-3 rounded-xl bg-[#FAF8F5] border border-stone-200/80">
+                <div className="text-[10px] font-bold text-stone-500 uppercase tracking-wider">
+                  {language === 'hi' ? 'व्यापार संचालन अवधि' : 'Business Vintage'}
+                </div>
+                <div className="font-serif font-black text-base text-stone-900 mt-0.5 tabular-nums">
+                  {creditData?.metrics?.vintageYears ?? shop?.vintage_years ?? 4} {language === 'hi' ? 'वर्ष' : 'Years'}
+                </div>
+                <div className="text-[10px] text-emerald-700 font-semibold mt-0.5">
+                  {language === 'hi' ? 'सत्यापित बैंक खाता' : 'Verified Bank Account'}
+                </div>
+              </div>
+            </div>
+
+            {/* Zero-Collateral Guarantee Highlight */}
+            <div className="p-3 rounded-xl bg-emerald-50/70 border border-emerald-200/80 flex items-center gap-2.5">
+              <CheckCircle2 className="w-4 h-4 text-emerald-700 shrink-0" />
+              <p className="text-xs text-emerald-900 font-medium leading-snug">
+                {language === 'hi'
+                  ? 'इस वैकल्पिक क्रेडिट स्कोर के साथ आपकी दुकान 0% बंधक (Collateral-Free) पर ₹5 लाख तक के पीएम मुद्रा ऋण के लिए योग्य है।'
+                  : 'With this Alternative Credit Score, your enterprise qualifies for 100% collateral-free bank sanctions up to ₹5,00,000 under PM MUDRA.'
+                }
+              </p>
             </div>
 
           </div>
-        </div>
 
-        {/* 4 Quick Credit Health Ratios */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <div className="p-3 rounded-2xl bg-white border border-stone-200/80 shadow-2xs">
-            <div className="text-[10px] font-bold text-stone-500 uppercase tracking-wider">
-              {language === 'hi' ? 'मासिक शुद्ध अधिशेष' : 'Net Operating Surplus'}
-            </div>
-            <div className="font-serif font-black text-base sm:text-lg text-[#0F3E2E] mt-0.5 tabular-nums">
-              ₹{(creditData?.metrics?.netSurplus ?? 63820).toLocaleString('en-IN')}
-            </div>
-            <div className="text-[10px] text-emerald-700 font-semibold mt-0.5">
-              {language === 'hi' ? 'सकारात्मक तरलता' : 'Positive Liquidity'}
-            </div>
-          </div>
-
-          <div className="p-3 rounded-2xl bg-white border border-stone-200/80 shadow-2xs">
-            <div className="text-[10px] font-bold text-stone-500 uppercase tracking-wider">
-              {language === 'hi' ? 'उधार वसूली दर' : 'Udhaar Recovery Rate'}
-            </div>
-            <div className="font-serif font-black text-base sm:text-lg text-stone-900 mt-0.5 tabular-nums">
-              {creditData?.metrics?.udhaarRecoveryRate ?? 87}%
-            </div>
-            <div className="text-[10px] text-emerald-700 font-semibold mt-0.5">
-              {language === 'hi' ? 'अनुशासित वसूली चक्र' : 'Healthy 18-Day Cycle'}
-            </div>
-          </div>
-
-          <div className="p-3 rounded-2xl bg-white border border-stone-200/80 shadow-2xs">
-            <div className="text-[10px] font-bold text-stone-500 uppercase tracking-wider">
-              {language === 'hi' ? 'डिजिटल यूपीआई शेयर' : 'UPI Digital Share'}
-            </div>
-            <div className="font-serif font-black text-base sm:text-lg text-stone-900 mt-0.5 tabular-nums">
-              {creditData?.metrics?.digitalSharePct ?? 37}%
-            </div>
-            <div className="text-[10px] text-stone-500 font-medium mt-0.5">
-              {language === 'hi' ? 'बैंक प्रमाणित बिक्री' : 'Verified QR Sales'}
-            </div>
-          </div>
-
-          <div className="p-3 rounded-2xl bg-white border border-stone-200/80 shadow-2xs">
-            <div className="text-[10px] font-bold text-stone-500 uppercase tracking-wider">
-              {language === 'hi' ? 'व्यापार संचालन अवधि' : 'Business Vintage'}
-            </div>
-            <div className="font-serif font-black text-base sm:text-lg text-stone-900 mt-0.5 tabular-nums">
-              {creditData?.metrics?.vintageYears ?? shop?.vintage_years ?? 4} {language === 'hi' ? 'वर्ष' : 'Years'}
-            </div>
-            <div className="text-[10px] text-emerald-700 font-semibold mt-0.5">
-              {language === 'hi' ? 'सत्यापित ट्रैक रिकॉर्ड' : 'Stable Bank Linkage'}
-            </div>
-          </div>
         </div>
 
         {/* 4 Pillars Underwriting Grid */}
