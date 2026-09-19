@@ -36,11 +36,28 @@ app.use((req, res, next) => {
 });
 
 // Health check
-app.get(['/api/health', '/health'], (req, res) => {
+app.get(['/api/health', '/health'], async (req, res) => {
+  let mongoStatus = 'unconfigured';
+  let shopCount = 0;
+  try {
+    const { getMongoDb } = await import('./db/mongoClient.js');
+    const db = await getMongoDb();
+    if (db) {
+      mongoStatus = 'connected';
+      shopCount = await db.collection('shops').countDocuments();
+    } else {
+      mongoStatus = 'fallback_sqlite';
+    }
+  } catch (err) {
+    mongoStatus = `error: ${err.message}`;
+  }
+
   res.json({
     status: 'ok',
     service: 'SaakhSetu API',
     version: '1.0.0',
+    mongoStatus,
+    shopCount,
     time: new Date().toISOString()
   });
 });

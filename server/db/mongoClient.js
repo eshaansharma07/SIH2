@@ -15,7 +15,7 @@ let cachedClient = globalThis.__saakhsetuMongoClient || null;
 let cachedDb = globalThis.__saakhsetuMongoDb || null;
 let indexesInitialized = globalThis.__saakhsetuIndexesInitialized || false;
 let lastFailureTimestamp = 0;
-const FAILURE_COOLDOWN_MS = 60000; // 1 minute cooldown after connection failure
+const FAILURE_COOLDOWN_MS = 5000; // 5 second cooldown after connection failure
 
 /**
  * Checks if MONGODB_URI is provided in environment.
@@ -109,8 +109,8 @@ export async function getMongoDb() {
   }
 
   const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
-  const maxAttempts = isServerless ? 1 : 2;
-  const timeoutMs = isServerless ? 1500 : 3000;
+  const maxAttempts = 2;
+  const timeoutMs = 6000;
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
