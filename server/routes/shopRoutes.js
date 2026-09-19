@@ -235,15 +235,18 @@ router.post('/send-otp', async (req, res) => {
       }
     }
 
-    // Dispatch SMS via Twilio Verify v2
+    // Dispatch SMS via Multi-Gateway SMS Service (Twilio / Fast2SMS)
     const verifyResult = await twilioVerifyService.sendVerification(normalizedPhone);
     rateLimiterService.recordOtpSent(normalizedPhone);
 
+    const isCarrierActive = !verifyResult?.isTrialFallback;
     return res.json({
       success: true,
-      message: verifyResult?.isTrialFallback 
-        ? `OTP generated (Trial Mode: ${verifyResult.sandboxCode})`
-        : 'OTP sent successfully',
+      carrierConfigured: isCarrierActive,
+      provider: verifyResult?.provider || (isCarrierActive ? 'twilio_verify' : 'sandbox'),
+      message: isCarrierActive 
+        ? `OTP dispatched successfully to ${normalizedPhone} via ${verifyResult?.provider || 'SMS'}`
+        : `SMS Gateway unconfigured. Resilient verification code generated for ${normalizedPhone}.`,
       isTrialFallback: Boolean(verifyResult?.isTrialFallback),
       sandboxCode: verifyResult?.sandboxCode || null
     });
@@ -252,6 +255,23 @@ router.post('/send-otp', async (req, res) => {
       success: false,
       error: err.message || "We couldn't send the OTP right now. Please try again shortly."
     });
+  }
+});
+
+// Dynamically Configure SMS Carrier Gateway (Twilio / Fast2SMS) at Runtime
+router.post('/configure-sms', async (req, res) => {
+  try {
+    const { twilioAccountSid, twilioAuthToken, twilioVerifySid, twilioPhoneNumber, fast2smsApiKey } = req.body;
+    const status = twilioVerifyService.configureGateway({
+      twilioAccountSid,
+      twilioAuthToken,
+      twilioVerifySid,
+      twilioPhoneNumber,
+      fast2smsApiKey
+    });
+    return res.json({ success: true, status });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
   }
 });
 

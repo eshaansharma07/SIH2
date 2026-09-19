@@ -33,7 +33,10 @@ import {
   Globe,
   ArrowLeft,
   RotateCw,
-  Mail
+  Mail,
+  Settings,
+  ExternalLink,
+  Smartphone
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../utils/api';
@@ -125,6 +128,15 @@ export function OnboardingPage({ onComplete, onSelectDemo, onStartDemoTour }) {
   const [regResendCountdown, setRegResendCountdown] = useState(0);
   const [regSandboxCodeHint, setRegSandboxCodeHint] = useState('');
 
+  // Carrier Gateway & Delivery States
+  const [carrierConfigured, setCarrierConfigured] = useState(false);
+  const [showSmsConfig, setShowSmsConfig] = useState(false);
+  const [fast2smsKeyInput, setFast2smsKeyInput] = useState('');
+  const [twilioSidInput, setTwilioSidInput] = useState('');
+  const [twilioTokenInput, setTwilioTokenInput] = useState('');
+  const [twilioVerifyInput, setTwilioVerifyInput] = useState('');
+  const [gatewayConfigSaving, setGatewayConfigSaving] = useState(false);
+
   const regOtpInputRefs = useRef([]);
   const regCountdownTimerRef = useRef(null);
 
@@ -215,6 +227,34 @@ export function OnboardingPage({ onComplete, onSelectDemo, onStartDemoTour }) {
     }, 150);
   };
 
+  // Auth: Dynamic Carrier SMS Gateway Configuration
+  const handleSaveSmsGateway = async (e) => {
+    e?.preventDefault();
+    setGatewayConfigSaving(true);
+    setAuthError('');
+    try {
+      const res = await api.configureSMSGateway({
+        fast2smsApiKey: fast2smsKeyInput.trim(),
+        twilioAccountSid: twilioSidInput.trim(),
+        twilioAuthToken: twilioTokenInput.trim(),
+        twilioVerifySid: twilioVerifyInput.trim()
+      });
+      if (res && res.success) {
+        setCarrierConfigured(true);
+        setAuthSuccessMsg(
+          language === 'hi' 
+            ? 'एसएमएस गेटवे सक्रिय! कृपया पुनः ओटीपी भेजें।' 
+            : 'SMS Gateway activated! Please request a new OTP to receive via cellular SMS.'
+        );
+        setShowSmsConfig(false);
+      }
+    } catch (err) {
+      setAuthError(err.message || 'Failed to configure gateway');
+    } finally {
+      setGatewayConfigSaving(false);
+    }
+  };
+
   // Auth: Send Real SMS or Gmail OTP for Login
   const handleSendOtp = async (e) => {
     e?.preventDefault();
@@ -254,13 +294,22 @@ export function OnboardingPage({ onComplete, onSelectDemo, onStartDemoTour }) {
         if (res && res.success) {
           setLoginStep('otp');
           setOtpDigits(['', '', '', '', '', '']);
-          setAuthSuccessMsg(
-            language === 'hi' 
-              ? `ओटीपी सफलतापूर्वक +91 ${cleanPhone} पर भेज दिया गया है` 
-              : `OTP sent successfully to +91 ${cleanPhone}`
-          );
+          setCarrierConfigured(Boolean(res.carrierConfigured));
           if (res.sandboxCode) {
             setSandboxCodeHint(res.sandboxCode);
+          }
+          if (res.carrierConfigured) {
+            setAuthSuccessMsg(
+              language === 'hi' 
+                ? `ओटीपी सफलतापूर्वक +91 ${cleanPhone} पर भेजा गया` 
+                : `OTP sent successfully to +91 ${cleanPhone} via SMS`
+            );
+          } else {
+            setAuthSuccessMsg(
+              language === 'hi'
+                ? `सत्यापन कोड तैयार किया गया (+91 ${cleanPhone})`
+                : `Verification code ready for +91 ${cleanPhone}`
+            );
           }
           startResendTimer();
           setTimeout(() => otpInputRefs.current[0]?.focus(), 150);
@@ -433,13 +482,22 @@ export function OnboardingPage({ onComplete, onSelectDemo, onStartDemoTour }) {
         if (res && res.success) {
           setRegStep('otp');
           setRegOtpDigits(['', '', '', '', '', '']);
-          setAuthSuccessMsg(
-            language === 'hi'
-              ? `ओटीपी सफलतापूर्वक +91 ${cleanPhone} पर भेज दिया गया है`
-              : `OTP sent successfully to +91 ${cleanPhone}`
-          );
+          setCarrierConfigured(Boolean(res.carrierConfigured));
           if (res.sandboxCode) {
             setRegSandboxCodeHint(res.sandboxCode);
+          }
+          if (res.carrierConfigured) {
+            setAuthSuccessMsg(
+              language === 'hi'
+                ? `ओटीपी सफलतापूर्वक +91 ${cleanPhone} पर एसएमएस द्वारा भेज दिया गया है`
+                : `OTP sent successfully to +91 ${cleanPhone} via cellular SMS`
+            );
+          } else {
+            setAuthSuccessMsg(
+              language === 'hi'
+                ? `सत्यापन कोड तैयार किया गया (+91 ${cleanPhone})`
+                : `Verification code ready for +91 ${cleanPhone}`
+            );
           }
           startRegResendTimer();
           setTimeout(() => {
@@ -1869,19 +1927,105 @@ export function OnboardingPage({ onComplete, onSelectDemo, onStartDemoTour }) {
                         ))}
                       </div>
 
-                      {sandboxCodeHint && (
-                        <div className="mt-2 text-center">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const digits = sandboxCodeHint.split('').slice(0, 6);
-                              setOtpDigits(digits);
-                            }}
-                            className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-full text-[11px] font-semibold transition cursor-pointer"
-                          >
-                            <Sparkles className="w-3 h-3 text-emerald-600" />
-                            <span>Click to fill code: <strong className="font-mono">{sandboxCodeHint}</strong></span>
-                          </button>
+                      {authChannel === 'phone' && (
+                        <div className="space-y-2 pt-2 text-left">
+                          {/* WhatsApp Instant Delivery Card */}
+                          {sandboxCodeHint && (
+                            <a
+                              href={`https://wa.me/91${loginPhone.replace(/\D/g, '').slice(-10)}?text=${encodeURIComponent(
+                                `Your Vyapaar Setu / SaakhSetu verification code is: ${sandboxCodeHint}. Valid for 10 minutes. Do not share this code with anyone.`
+                              )}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="w-full py-2.5 px-3 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition shadow-xs cursor-pointer"
+                            >
+                              <span className="text-sm">📲</span>
+                              <span>
+                                {language === 'hi'
+                                  ? `व्हाट्सएप पर कोड प्राप्त करें (+91 ${loginPhone.slice(-10)})`
+                                  : `Receive Code on WhatsApp (+91 ${loginPhone.slice(-10)})`}
+                              </span>
+                              <ExternalLink className="w-3.5 h-3.5 opacity-80" />
+                            </a>
+                          )}
+
+                          {/* 1-Click Fill Code */}
+                          {sandboxCodeHint && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const digits = sandboxCodeHint.split('').slice(0, 6);
+                                setOtpDigits(digits);
+                              }}
+                              className="w-full py-2 px-3 bg-[#0F3E2E]/10 hover:bg-[#0F3E2E]/15 text-[#0F3E2E] border border-[#0F3E2E]/25 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer"
+                            >
+                              <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                              <span>
+                                {language === 'hi' ? 'सीधे कोड भरें:' : 'Click to Auto-Fill Code:'} <strong className="font-mono text-sm tracking-widest">{sandboxCodeHint}</strong>
+                              </span>
+                            </button>
+                          )}
+
+                          {/* Carrier Notice if unconfigured */}
+                          {!carrierConfigured && (
+                            <div className="p-2.5 bg-amber-50/90 border border-amber-200/80 rounded-xl text-[11px] text-amber-900 space-y-1">
+                              <div className="flex items-center gap-1.5 font-bold text-amber-800">
+                                <AlertCircle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                                <span>{language === 'hi' ? 'फोन पर एसएमएस क्यों नहीं आया?' : 'Why is SMS not reaching the phone?'}</span>
+                              </div>
+                              <p className="text-[10.5px] text-amber-800/90 leading-relaxed">
+                                {language === 'hi'
+                                  ? 'सेलुलर नेटवर्क (टावर) से सीधे फोन पर एसएमएस भेजने के लिए Twilio या Fast2SMS एपीआई की आवश्यकता होती है। आप ऊपर दिए गए व्हाट्सएप बटन से सीधे अपने फोन पर कोड पा सकते हैं, या सर्वर में ट्विलियो/Fast2SMS कुंजी जोड़ सकते हैं।'
+                                  : 'Sending cellular SMS through carrier towers requires an SMS provider (Twilio or Fast2SMS API key). You can receive the code directly on your phone via WhatsApp above, or configure Twilio/Fast2SMS below.'}
+                              </p>
+                              <button
+                                type="button"
+                                onClick={() => setShowSmsConfig(!showSmsConfig)}
+                                className="text-[10px] font-bold text-[#0F3E2E] hover:underline cursor-pointer flex items-center gap-1 pt-0.5"
+                              >
+                                <Settings className="w-3 h-3" />
+                                <span>{showSmsConfig ? (language === 'hi' ? 'सेटिंग्स छुपाएं' : 'Hide SMS Setup') : (language === 'hi' ? '⚙️ ट्विलियो / Fast2SMS एपीआई कुंजी जोड़ें' : '⚙️ Add Twilio / Fast2SMS API Key')}</span>
+                              </button>
+
+                              {showSmsConfig && (
+                                <div className="pt-2 border-t border-amber-200/60 mt-1 space-y-2">
+                                  <div className="text-[10px] text-stone-700 font-semibold">
+                                    Enter your Twilio or Fast2SMS API key for real-time cellular SMS:
+                                  </div>
+                                  <input
+                                    type="text"
+                                    placeholder="Fast2SMS API Key"
+                                    value={fast2smsKeyInput}
+                                    onChange={(e) => setFast2smsKeyInput(e.target.value)}
+                                    className="w-full px-2.5 py-1.5 bg-white border border-stone-300 rounded-lg text-xs"
+                                  />
+                                  <div className="text-[10px] text-stone-500 text-center font-bold">OR TWILIO</div>
+                                  <input
+                                    type="text"
+                                    placeholder="Twilio Account SID"
+                                    value={twilioSidInput}
+                                    onChange={(e) => setTwilioSidInput(e.target.value)}
+                                    className="w-full px-2.5 py-1.5 bg-white border border-stone-300 rounded-lg text-xs"
+                                  />
+                                  <input
+                                    type="password"
+                                    placeholder="Twilio Auth Token"
+                                    value={twilioTokenInput}
+                                    onChange={(e) => setTwilioTokenInput(e.target.value)}
+                                    className="w-full px-2.5 py-1.5 bg-white border border-stone-300 rounded-lg text-xs"
+                                  />
+                                  <button
+                                    type="button"
+                                    disabled={gatewayConfigSaving || (!fast2smsKeyInput && !twilioSidInput)}
+                                    onClick={handleSaveSmsGateway}
+                                    className="w-full py-1.5 bg-[#0F3E2E] text-white rounded-lg text-xs font-bold transition cursor-pointer disabled:opacity-50"
+                                  >
+                                    {gatewayConfigSaving ? 'Saving...' : 'Save & Enable Real SMS'}
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
@@ -2138,19 +2282,105 @@ export function OnboardingPage({ onComplete, onSelectDemo, onStartDemoTour }) {
                         ))}
                       </div>
 
-                      {regSandboxCodeHint && (
-                        <div className="mt-2 text-center">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const digits = regSandboxCodeHint.split('').slice(0, 6);
-                              setRegOtpDigits(digits);
-                            }}
-                            className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-full text-[11px] font-semibold transition cursor-pointer"
-                          >
-                            <Sparkles className="w-3 h-3 text-emerald-600" />
-                            <span>Click to fill code: <strong className="font-mono">{regSandboxCodeHint}</strong></span>
-                          </button>
+                      {authChannel === 'phone' && (
+                        <div className="space-y-2 pt-2 text-left">
+                          {/* WhatsApp Instant Delivery Card */}
+                          {regSandboxCodeHint && (
+                            <a
+                              href={`https://wa.me/91${regPhone.replace(/\D/g, '').slice(-10)}?text=${encodeURIComponent(
+                                `Your Vyapaar Setu / SaakhSetu verification code is: ${regSandboxCodeHint}. Valid for 10 minutes. Do not share this code with anyone.`
+                              )}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="w-full py-2.5 px-3 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition shadow-xs cursor-pointer"
+                            >
+                              <span className="text-sm">📲</span>
+                              <span>
+                                {language === 'hi'
+                                  ? `व्हाट्सएप पर कोड प्राप्त करें (+91 ${regPhone.slice(-10)})`
+                                  : `Receive Code on WhatsApp (+91 ${regPhone.slice(-10)})`}
+                              </span>
+                              <ExternalLink className="w-3.5 h-3.5 opacity-80" />
+                            </a>
+                          )}
+
+                          {/* 1-Click Fill Code */}
+                          {regSandboxCodeHint && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const digits = regSandboxCodeHint.split('').slice(0, 6);
+                                setRegOtpDigits(digits);
+                              }}
+                              className="w-full py-2 px-3 bg-[#0F3E2E]/10 hover:bg-[#0F3E2E]/15 text-[#0F3E2E] border border-[#0F3E2E]/25 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer"
+                            >
+                              <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                              <span>
+                                {language === 'hi' ? 'सीधे कोड भरें:' : 'Click to Auto-Fill Code:'} <strong className="font-mono text-sm tracking-widest">{regSandboxCodeHint}</strong>
+                              </span>
+                            </button>
+                          )}
+
+                          {/* Carrier Notice if unconfigured */}
+                          {!carrierConfigured && (
+                            <div className="p-2.5 bg-amber-50/90 border border-amber-200/80 rounded-xl text-[11px] text-amber-900 space-y-1">
+                              <div className="flex items-center gap-1.5 font-bold text-amber-800">
+                                <AlertCircle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                                <span>{language === 'hi' ? 'फोन पर एसएमएस क्यों नहीं आया?' : 'Why is SMS not reaching the phone?'}</span>
+                              </div>
+                              <p className="text-[10.5px] text-amber-800/90 leading-relaxed">
+                                {language === 'hi'
+                                  ? 'सेलुलर नेटवर्क (टावर) से सीधे फोन पर एसएमएस भेजने के लिए Twilio या Fast2SMS एपीआई की आवश्यकता होती है। आप ऊपर दिए गए व्हाट्सएप बटन से सीधे अपने फोन पर कोड पा सकते हैं, या सर्वर में ट्विलियो/Fast2SMS कुंजी जोड़ सकते हैं।'
+                                  : 'Sending cellular SMS through carrier towers requires an SMS provider (Twilio or Fast2SMS API key). You can receive the code directly on your phone via WhatsApp above, or configure Twilio/Fast2SMS below.'}
+                              </p>
+                              <button
+                                type="button"
+                                onClick={() => setShowSmsConfig(!showSmsConfig)}
+                                className="text-[10px] font-bold text-[#0F3E2E] hover:underline cursor-pointer flex items-center gap-1 pt-0.5"
+                              >
+                                <Settings className="w-3 h-3" />
+                                <span>{showSmsConfig ? (language === 'hi' ? 'सेटिंग्स छुपाएं' : 'Hide SMS Setup') : (language === 'hi' ? '⚙️ ट्विलियो / Fast2SMS एपीआई कुंजी जोड़ें' : '⚙️ Add Twilio / Fast2SMS API Key')}</span>
+                              </button>
+
+                              {showSmsConfig && (
+                                <div className="pt-2 border-t border-amber-200/60 mt-1 space-y-2">
+                                  <div className="text-[10px] text-stone-700 font-semibold">
+                                    Enter your Twilio or Fast2SMS API key for real-time cellular SMS:
+                                  </div>
+                                  <input
+                                    type="text"
+                                    placeholder="Fast2SMS API Key"
+                                    value={fast2smsKeyInput}
+                                    onChange={(e) => setFast2smsKeyInput(e.target.value)}
+                                    className="w-full px-2.5 py-1.5 bg-white border border-stone-300 rounded-lg text-xs"
+                                  />
+                                  <div className="text-[10px] text-stone-500 text-center font-bold">OR TWILIO</div>
+                                  <input
+                                    type="text"
+                                    placeholder="Twilio Account SID"
+                                    value={twilioSidInput}
+                                    onChange={(e) => setTwilioSidInput(e.target.value)}
+                                    className="w-full px-2.5 py-1.5 bg-white border border-stone-300 rounded-lg text-xs"
+                                  />
+                                  <input
+                                    type="password"
+                                    placeholder="Twilio Auth Token"
+                                    value={twilioTokenInput}
+                                    onChange={(e) => setTwilioTokenInput(e.target.value)}
+                                    className="w-full px-2.5 py-1.5 bg-white border border-stone-300 rounded-lg text-xs"
+                                  />
+                                  <button
+                                    type="button"
+                                    disabled={gatewayConfigSaving || (!fast2smsKeyInput && !twilioSidInput)}
+                                    onClick={handleSaveSmsGateway}
+                                    className="w-full py-1.5 bg-[#0F3E2E] text-white rounded-lg text-xs font-bold transition cursor-pointer disabled:opacity-50"
+                                  >
+                                    {gatewayConfigSaving ? 'Saving...' : 'Save & Enable Real SMS'}
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
