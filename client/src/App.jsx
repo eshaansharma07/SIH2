@@ -29,6 +29,7 @@ const PublicPayPage = lazyRetry(() => import('./pages/PublicPayPage').then(m => 
 const VoiceInputDialog = lazyRetry(() => import('./components/VoiceInputDialog').then(m => ({ default: m.VoiceInputDialog })), 'VoiceInputDialog');
 const InteractiveDemoTour = lazyRetry(() => import('./components/InteractiveDemoTour').then(m => ({ default: m.InteractiveDemoTour })), 'InteractiveDemoTour');
 const WholesaleDiscoveryModal = lazyRetry(() => import('./components/WholesaleDiscoveryModal').then(m => ({ default: m.WholesaleDiscoveryModal })), 'WholesaleDiscoveryModal');
+const AdminDashboardPage = lazyRetry(() => import('./pages/AdminDashboardPage').then(m => ({ default: m.AdminDashboardPage })), 'AdminDashboardPage');
 
 function PageSkeleton() {
   return (
@@ -48,8 +49,9 @@ function PageSkeleton() {
 export default function App() {
   const { language } = useTranslation();
 
-  // Route check: Standalone /pay/:shopId customer UPI payment portal
+  // Route check: Standalone /pay/:shopId customer UPI payment portal, or /admin institutional command center
   const isPayRoute = typeof window !== 'undefined' && window.location.pathname.startsWith('/pay');
+  const isAdminRoute = typeof window !== 'undefined' && (window.location.pathname === '/admin' || window.location.pathname.startsWith('/admin'));
 
   // Read persisted state from safeStorage
   const savedShopId = safeStorage.getItem('vyapaar_active_shop_id');
@@ -59,7 +61,7 @@ export default function App() {
 
   const hasUserSession = Boolean(savedShopId || initialShop);
   const [activeTab, setActiveTab] = useState(
-    hasUserSession ? (savedTab && savedTab !== 'onboarding' ? savedTab : 'dashboard') : 'onboarding'
+    isAdminRoute ? 'admin' : (hasUserSession ? (savedTab && savedTab !== 'onboarding' ? savedTab : 'dashboard') : 'onboarding')
   );
   const [currentShop, setCurrentShop] = useState(initialShop);
   const [isDemoMode, setIsDemoMode] = useState(savedIsDemo);
@@ -564,6 +566,18 @@ export default function App() {
                             setRefreshKey(k => k + 1);
                           }}
                           onReloadDemo={handleReloadDemo}
+                        />
+                      )}
+
+                      {activeTab === 'admin' && (
+                        <AdminDashboardPage
+                          onSelectShop={(selected) => {
+                            setCurrentShop(selected);
+                            safeStorage.setJSON('vyapaar_active_shop', selected);
+                            safeStorage.setItem('vyapaar_active_shop_id', selected.id);
+                            fetchFinancials(selected.id);
+                          }}
+                          onNavigateTab={(tab) => changeTab(tab)}
                         />
                       )}
                     </Suspense>

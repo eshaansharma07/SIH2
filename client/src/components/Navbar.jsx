@@ -457,6 +457,34 @@ export function Navbar({
           }
         }
       ]
+    },
+    { 
+      id: 'admin', 
+      label: language === 'hi' ? 'कमान केंद्र' : 'Admin Portal', 
+      icon: ShieldCheck,
+      menuTitle: language === 'hi' ? 'प्रशासनिक कमान केंद्र' : 'Institutional Command Center',
+      menuTagline: language === 'hi' ? 'लीड बैंक एवं डीआईसी के लिए एमएसएमई निगरानी।' : 'District MSME underwriting and government scheme monitoring.',
+      menuDescription: language === 'hi' ? '50-लेन-देन ऑडिट सत्यापन एवं समग्र व्यापार निगरानी।' : 'Review district-wide merchant audit milestones, CAM dossiers, and statutory scheme feeds.',
+      items: [
+        {
+          id: 'adm-metrics',
+          title: language === 'hi' ? 'कमान अवलोकन' : 'District Command Pulse',
+          description: language === 'hi' ? 'सकल उद्यम व व्यापार प्रवाह' : 'Overall MSME and transaction metrics',
+          action: () => {
+            setActiveTab('admin');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }
+        },
+        {
+          id: 'adm-registry',
+          title: language === 'hi' ? 'सूक्ष्म उद्यम पंजी' : 'MSME Master Registry',
+          description: language === 'hi' ? 'पंजीकृत 70+ उद्यमों की सूची' : 'Searchable registered enterprises',
+          action: () => {
+            setActiveTab('admin');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }
+        }
+      ]
     }
   ];
 

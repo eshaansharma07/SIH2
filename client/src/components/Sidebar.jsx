@@ -12,7 +12,8 @@ import {
   Sparkles,
   Phone,
   MessageCircle,
-  Calculator
+  Calculator,
+  ShieldCheck
 } from 'lucide-react';
 import { useTranslation } from '../i18n/LanguageContext';
 import { VyapaarVikasVishwas } from './VyapaarVikasVishwas';
@@ -73,6 +74,12 @@ export function Sidebar({
       id: 'dossier', 
       label: language === 'hi' ? 'बैंक डॉसियर' : 'Bank Dossier', 
       icon: FileText 
+    },
+    { 
+      id: 'admin', 
+      label: language === 'hi' ? 'एडमिन पोर्टल' : 'Admin Portal', 
+      icon: ShieldCheck,
+      badge: 'DIC/Bank'
     }
   ];
 
@@ -191,7 +198,12 @@ export function Sidebar({
                   `}
                 >
                   <Icon className={`w-4 h-4 shrink-0 ${active ? 'text-[#0F3E2E]' : 'text-stone-500'}`} />
-                  <span className="truncate">{item.label}</span>
+                  <span className="truncate flex-1">{item.label}</span>
+                  {item.badge && (
+                    <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-amber-500/15 text-amber-800 border border-amber-500/30 shrink-0">
+                      {item.badge}
+                    </span>
+                  )}
                 </button>
               );
             })}

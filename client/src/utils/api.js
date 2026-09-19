@@ -300,5 +300,17 @@ export const api = {
     if (limit) q += `&limit=${limit}`;
     return request(`/accounting/reports/purchases${q}`);
   },
+
+  // Admin & Institutional Telemetry
+  getAdminMetrics: () => request('/admin/metrics'),
+  getAdminShops: ({ search = '', state = '', milestone = '', limit = 100, offset = 0 } = {}) => {
+    let q = `?limit=${limit}&offset=${offset}`;
+    if (search) q += `&search=${encodeURIComponent(search)}`;
+    if (state && state !== 'all') q += `&state=${encodeURIComponent(state)}`;
+    if (milestone && milestone !== 'all') q += `&milestone=${encodeURIComponent(milestone)}`;
+    return request(`/admin/shops${q}`);
+  },
+  syncAdminSchemes: () => request('/admin/sync-schemes', { method: 'POST' }),
 };
+
 

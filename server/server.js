@@ -11,6 +11,7 @@ import customerRoutes from './routes/customerRoutes.js';
 import dpiRoutes from './routes/dpiRoutes.js';
 import ondcRoutes from './routes/ondcRoutes.js';
 import accountingRoutes from './routes/accountingRoutes.js';
+import adminRoutes from './routes/adminRoutes.js';
 import { seedDatabase } from './db/seed.js';
 
 dotenv.config();
@@ -74,7 +75,8 @@ const routeMap = [
   ['/customers', customerRoutes],
   ['/dpi', dpiRoutes],
   ['/ondc', ondcRoutes],
-  ['/accounting', accountingRoutes]
+  ['/accounting', accountingRoutes],
+  ['/admin', adminRoutes]
 ];
 
 for (const [routePath, router] of routeMap) {

@@ -644,6 +644,232 @@ export const dataStore = {
     }
 
     return this.normalizeSchemeRow(schemeData);
+  },
+
+  // ==========================================
+  // 6. ADMIN & INSTITUTIONAL DASHBOARD
+  // ==========================================
+
+  async getAllShops({ search = '', state = '', milestone = '', limit = 100, offset = 0 } = {}) {
+    const isMongo = await this.isPrimaryMongo();
+    let shopsList = [];
+    const txAggMap = new Map();
+
+    if (isMongo) {
+      try {
+        const shopsCol = await getShopsCollection();
+        const txCol = await getTransactionsCollection();
+
+        const txAgg = await txCol.aggregate([
+          {
+            $group: {
+              _id: '$shop_id',
+              count: { $sum: 1 },
+              totalVolume: { $sum: '$amount' },
+              lastTxDate: { $max: '$date' }
+            }
+          }
+        ]).toArray();
+
+        txAgg.forEach(t => {
+          if (t._id) {
+            txAggMap.set(String(t._id), {
+              count: t.count || 0,
+              totalVolume: Math.round(t.totalVolume || 0),
+              lastTxDate: t.lastTxDate || null
+            });
+          }
+        });
+
+        const query = {};
+        if (state && state !== 'all') {
+          query.state = state;
+        }
+        if (search) {
+          const esc = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const regex = new RegExp(esc, 'i');
+          query.$or = [
+            { name: regex },
+            { owner_name: regex },
+            { phone: regex },
+            { village: regex },
+            { district: regex }
+          ];
+        }
+
+        const rawShops = await shopsCol.find(query).sort({ is_demo: -1, created_at: -1 }).toArray();
+        shopsList = rawShops.map(cleanDoc);
+      } catch (err) {
+        console.warn('[DataStore] Mongo getAllShops fallback:', err.message);
+      }
+    }
+
+    if (shopsList.length === 0) {
+      try {
+        let sql = 'SELECT * FROM shops WHERE 1=1';
+        const params = [];
+        if (state && state !== 'all') {
+          sql += ' AND state = ?';
+          params.push(state);
+        }
+        if (search) {
+          sql += ' AND (name LIKE ? OR owner_name LIKE ? OR phone LIKE ? OR village LIKE ? OR district LIKE ?)';
+          const p = `%${search}%`;
+          params.push(p, p, p, p, p);
+        }
+        sql += ' ORDER BY is_demo DESC, created_at DESC';
+        shopsList = db.prepare(sql).all(...params);
+
+        const txRows = db.prepare(`
+          SELECT shop_id, COUNT(*) as count, SUM(amount) as totalVolume, MAX(date) as lastTxDate
+          FROM transactions GROUP BY shop_id
+        `).all();
+        txRows.forEach(r => {
+          txAggMap.set(String(r.shop_id), {
+            count: Number(r.count) || 0,
+            totalVolume: Math.round(Number(r.totalVolume) || 0),
+            lastTxDate: r.lastTxDate || null
+          });
+        });
+      } catch (err) {
+        console.warn('[DataStore] SQLite getAllShops fallback error:', err.message);
+      }
+    }
+
+    const decorated = shopsList.map(shop => {
+      const stats = txAggMap.get(String(shop.id)) || { count: 0, totalVolume: 0, lastTxDate: null };
+      const txCount = stats.count;
+      const isScored = Boolean(shop.is_demo || txCount >= 50);
+      const progressPct = isScored ? 100 : Math.round((txCount / 50) * 100);
+
+      return {
+        id: shop.id,
+        name: shop.name || 'Unnamed Enterprise',
+        ownerName: shop.owner_name || 'Merchant',
+        phone: shop.phone || '',
+        tradeType: shop.trade_type || shop.trade_name || 'kirana',
+        village: shop.village || '',
+        district: shop.district || '',
+        state: shop.state || 'Uttar Pradesh',
+        vintageYears: Number(shop.vintage_years) || 1,
+        isDemo: Boolean(shop.is_demo || shop.id === 'ramesh-kirana'),
+        transactionCount: txCount,
+        transactionVolume: stats.totalVolume,
+        lastTransactionDate: stats.lastTxDate,
+        isScored,
+        milestoneStatus: isScored ? 'scored' : 'unrated',
+        progressPct,
+        createdAt: shop.created_at || null
+      };
+    });
+
+    let filtered = decorated;
+    if (milestone === 'scored') {
+      filtered = filtered.filter(s => s.isScored);
+    } else if (milestone === 'unrated') {
+      filtered = filtered.filter(s => !s.isScored);
+    }
+
+    const total = filtered.length;
+    const paginated = filtered.slice(Number(offset), Number(offset) + Number(limit));
+
+    return {
+      total,
+      limit: Number(limit),
+      offset: Number(offset),
+      shops: paginated
+    };
+  },
+
+  async getAdminMetrics() {
+    const isMongo = await this.isPrimaryMongo();
+    let totalShops = 0;
+    let totalTransactions = 0;
+    let totalVolume = 0;
+    let scoredShops = 0;
+    let unratedShops = 0;
+    const statesSet = new Set();
+    const tradesMap = {};
+
+    if (isMongo) {
+      try {
+        const shopsCol = await getShopsCollection();
+        const txCol = await getTransactionsCollection();
+
+        totalShops = await shopsCol.countDocuments();
+
+        const txSummary = await txCol.aggregate([
+          {
+            $group: {
+              _id: null,
+              totalCount: { $sum: 1 },
+              totalVolume: { $sum: '$amount' }
+            }
+          }
+        ]).toArray();
+
+        if (txSummary.length > 0) {
+          totalTransactions = txSummary[0].totalCount || 0;
+          totalVolume = Math.round(txSummary[0].totalVolume || 0);
+        }
+
+        const txPerShop = await txCol.aggregate([
+          { $group: { _id: '$shop_id', count: { $sum: 1 } } }
+        ]).toArray();
+
+        const shopsWith50 = new Set(txPerShop.filter(t => t.count >= 50).map(t => String(t._id)));
+        const allShops = await shopsCol.find({}, { projection: { id: 1, is_demo: 1, state: 1, trade_type: 1 } }).toArray();
+
+        allShops.forEach(s => {
+          if (s.state) statesSet.add(s.state);
+          const trade = s.trade_type || 'kirana';
+          tradesMap[trade] = (tradesMap[trade] || 0) + 1;
+          if (s.is_demo || shopsWith50.has(String(s.id))) {
+            scoredShops++;
+          } else {
+            unratedShops++;
+          }
+        });
+      } catch (err) {
+        console.warn('[DataStore] Mongo getAdminMetrics fallback:', err.message);
+      }
+    }
+
+    if (totalShops === 0) {
+      try {
+        const shops = db.prepare('SELECT * FROM shops').all();
+        totalShops = shops.length;
+        const txSummary = db.prepare('SELECT COUNT(*) as cnt, SUM(amount) as vol FROM transactions').get();
+        totalTransactions = Number(txSummary?.cnt) || 0;
+        totalVolume = Math.round(Number(txSummary?.vol) || 0);
+
+        const txCounts = db.prepare('SELECT shop_id, COUNT(*) as cnt FROM transactions GROUP BY shop_id').all();
+        const countMap = new Map(txCounts.map(r => [r.shop_id, r.cnt]));
+
+        shops.forEach(s => {
+          if (s.state) statesSet.add(s.state);
+          const trade = s.trade_type || 'kirana';
+          tradesMap[trade] = (tradesMap[trade] || 0) + 1;
+          const c = countMap.get(s.id) || 0;
+          if (s.is_demo || c >= 50) scoredShops++;
+          else unratedShops++;
+        });
+      } catch (err) {
+        console.warn('[DataStore] SQLite getAdminMetrics error:', err.message);
+      }
+    }
+
+    return {
+      totalShops,
+      totalTransactions,
+      totalVolume,
+      scoredShops,
+      unratedShops,
+      milestonePassRate: totalShops > 0 ? Math.round((scoredShops / totalShops) * 100) : 0,
+      coveredStatesCount: statesSet.size || 1,
+      states: Array.from(statesSet),
+      tradeDistribution: tradesMap
+    };
   }
 };
 
