@@ -41,14 +41,12 @@ function advisoryRateLimiter(req, res, next) {
 // Chat with Setu AI Advisor
 router.post('/chat', advisoryRateLimiter, async (req, res) => {
   try {
-    const { shopId, question, apiKey } = req.body;
+    const shopId = req.body.shopId || req.body.shop_id || 1;
+    const question = (req.body.question || req.body.message || req.body.query || '').trim();
+    const apiKey = req.body.apiKey;
 
-    if (!shopId) {
-      return res.status(400).json({ success: false, error: 'shopId is required' });
-    }
-
-    if (!question || !question.trim()) {
-      return res.status(400).json({ success: false, error: 'Question is required' });
+    if (!question) {
+      return res.status(400).json({ success: false, error: 'Question or message is required' });
     }
 
     const advice = await generateAdvisoryResponse(shopId, question, apiKey);

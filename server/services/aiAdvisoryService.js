@@ -1,7 +1,10 @@
+import dotenv from 'dotenv';
 import db from '../db/database.js';
 import { calculateCreditScore } from './creditScoringService.js';
 import { matchSchemesForShop } from './schemeMatcherService.js';
 import { getUpcomingFestivals } from './googleCalendarService.js';
+
+dotenv.config();
 
 /**
  * Hyper-Local AI Advisory Service powered by Google Gemini API (Free Tier)
@@ -284,25 +287,27 @@ export async function generateAdvisoryResponse(shopId, userQuestion, clientApiKe
       !/(ramesh|namaste|ram|bhai|ji|kya|kaise|kitna|kitni|mera|meri|dukaan|paisa|bachat|udhaar|udhar|kharcha|batao|diwali)/i.test(userQuestion);
 
     // 4. Try Google Gemini API Call (Free Tier via Google AI Studio)
+    const CANDIDATE_MODELS = [
+      'gemini-3.5-flash',
+      'gemini-3.5-flash-lite',
+      'gemini-flash-latest',
+      'gemini-flash-lite-latest',
+      'gemini-2.5-flash'
+    ];
+
     const geminiKey = clientApiKey || process.env.GEMINI_API_KEY;
 
     if (geminiKey) {
-      try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 12000); // 12-second timeout
+      const languageInstruction = isEnglishQuery 
+        ? 'Respond in clear, professional, warm Indian English tailored for rural micro-entrepreneurs.' 
+        : 'Respond in respectful, friendly Hindi (using आप, राम-राम/नमस्ते) with natural market terms (स्टॉक, नकदी, मुनाफा, लोन, बही-खाता).';
 
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`;
-        
-        const languageInstruction = isEnglishQuery 
-          ? 'Respond in clear, professional, warm Indian English tailored for rural micro-entrepreneurs.' 
-          : 'Respond in respectful, friendly Hindi (using आप, राम-राम/नमस्ते) with natural market terms (स्टॉक, नकदी, मुनाफा, लोन, बही-खाता).';
-
-        const systemInstruction = `You are "Setu AI" (सेतु AI), the intelligent, friendly, and practical business advisor inside SaakhSetu (साख सेतु) for Indian micro-entrepreneurs and retail shopkeepers.
+      const systemInstruction = `You are "Setu AI" (सेतु AI), the intelligent, friendly, and practical business advisor inside SaakhSetu (साख सेतु) for Indian micro-entrepreneurs and retail shopkeepers.
 ${languageInstruction}
 
 CRITICAL RULES:
 1. DIRECTLY ANSWER WHAT WAS ASKED: Address the shopkeeper's specific question directly, clearly, and thoughtfully first. Do NOT ignore what they asked. Do NOT recite generic boilerplate or irrelevant metrics.
-2. CONTEXTUAL RELEVANCE: You have access to the shop's verified profile and metrics below. Mention relevant details ONLY when they directly support answering the user's specific question (for instance, refer to sales when asked about revenue or inventory, refer to udhaar balance when asked about customer debt, refer to credit score when asked about loans). If the question is about general business, accounting, app features, or everyday queries, answer clearly without forcing unrelated stats.
+2. CONTEXTUAL RELEVANCE: You have access to the shop's verified profile and metrics below. Mention relevant details ONLY when they directly support answering the user's specific question (for instance, refer to sales when asked about revenue or inventory, refer to udhaar balance when asked about customer debt, refer to credit score when asked about loans). If the question is about general business, footfall, accounting, app features, or everyday queries, answer clearly without forcing unrelated stats.
 3. CONVERSATIONAL & RESPECTFUL: Be warm and polite. In Hindi, address the user respectfully ("आप", "जी") using standard Indian trade terms (स्टॉक, मुनाफा, उधार, बही-खाता). In English, use warm and encouraging phrasing. Use neat bullet points for multi-step advice.
 
 SHOP DATA (Use selectively when relevant to the user's question):
@@ -320,79 +325,87 @@ SHOP DATA (Use selectively when relevant to the user's question):
 - SaakhSetu Credit Score: ${contextData.creditScore}/850 (${contextData.creditRating})
 - Top Loan Scheme Match: ${contextData.topMatchingScheme}`;
 
-        // Retrieve last 6 turns for conversational context
-        let historyContents = [];
-        try {
-          const recentRows = db.prepare(`
-            SELECT role, content FROM advisory_chat_history 
-            WHERE shop_id = ? 
-            ORDER BY timestamp DESC 
-            LIMIT 6
-          `).all(shop.id);
+      // Retrieve last 6 turns for conversational context
+      let historyContents = [];
+      try {
+        const recentRows = db.prepare(`
+          SELECT role, content FROM advisory_chat_history 
+          WHERE shop_id = ? 
+          ORDER BY timestamp DESC 
+          LIMIT 6
+        `).all(shop.id);
 
-          if (recentRows && recentRows.length > 0) {
-            recentRows.reverse().forEach(row => {
-              historyContents.push({
-                role: row.role === 'assistant' ? 'model' : 'user',
-                parts: [{ text: row.content }]
-              });
+        if (recentRows && recentRows.length > 0) {
+          recentRows.reverse().forEach(row => {
+            historyContents.push({
+              role: row.role === 'assistant' ? 'model' : 'user',
+              parts: [{ text: row.content }]
             });
-          }
-        } catch (_) {}
-
-        historyContents.push({
-          role: 'user',
-          parts: [{ text: userQuestion }]
-        });
-
-        // Ensure alternating user/model sequence starting with user
-        const validatedContents = [];
-        let expectedRole = 'user';
-        for (const turn of historyContents) {
-          if (turn.role === expectedRole) {
-            validatedContents.push(turn);
-            expectedRole = expectedRole === 'user' ? 'model' : 'user';
-          }
+          });
         }
-        const finalContents = (validatedContents.length > 0 && validatedContents[validatedContents.length - 1].role === 'user')
-          ? validatedContents
-          : [{ role: 'user', parts: [{ text: userQuestion }] }];
+      } catch (_) {}
 
-        const response = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          signal: controller.signal,
-          body: JSON.stringify({
-            system_instruction: {
-              parts: [{ text: systemInstruction }]
-            },
-            contents: finalContents,
-            generationConfig: {
-              temperature: 0.6,
-              maxOutputTokens: 900
+      historyContents.push({
+        role: 'user',
+        parts: [{ text: userQuestion }]
+      });
+
+      // Ensure alternating user/model sequence starting with user
+      const validatedContents = [];
+      let expectedRole = 'user';
+      for (const turn of historyContents) {
+        if (turn.role === expectedRole) {
+          validatedContents.push(turn);
+          expectedRole = expectedRole === 'user' ? 'model' : 'user';
+        }
+      }
+      const finalContents = (validatedContents.length > 0 && validatedContents[validatedContents.length - 1].role === 'user')
+        ? validatedContents
+        : [{ role: 'user', parts: [{ text: userQuestion }] }];
+
+      for (const modelName of CANDIDATE_MODELS) {
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 9000); // 9-second timeout
+
+          const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${geminiKey}`;
+
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            signal: controller.signal,
+            body: JSON.stringify({
+              system_instruction: {
+                parts: [{ text: systemInstruction }]
+              },
+              contents: finalContents,
+              generationConfig: {
+                temperature: 0.6,
+                maxOutputTokens: 900
+              }
+            })
+          });
+
+          clearTimeout(timeoutId);
+
+          if (response.ok) {
+            const data = await response.json();
+            const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (content && content.trim()) {
+              saveChatMessage(shop.id, 'user', userQuestion);
+              saveChatMessage(shop.id, 'assistant', content);
+              return {
+                content,
+                source: modelName,
+                contextUsed: contextData
+              };
             }
-          })
-        });
-
-        clearTimeout(timeoutId);
-
-        if (response.ok) {
-          const data = await response.json();
-          const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
-          if (content && content.trim()) {
-            saveChatMessage(shop.id, 'user', userQuestion);
-            saveChatMessage(shop.id, 'assistant', content);
-            return {
-              content,
-              source: 'gemini-2.5-flash',
-              contextUsed: contextData
-            };
+          } else {
+            console.warn(`Gemini API candidate model ${modelName} returned status ${response.status}. Trying next.`);
           }
-        } else {
-          console.warn('Gemini API returned non-200 status (rate-limit/error):', response.status, await response.text().catch(() => ''));
+        } catch (err) {
+          console.warn(`Gemini API candidate model ${modelName} failed (${err.message}). Trying next.`);
         }
-      } catch (err) {
-        console.warn('Gemini API call timed out or failed, activating rural safety net fallback:', err.message);
       }
     }
 
@@ -420,7 +433,31 @@ SHOP DATA (Use selectively when relevant to the user's question):
 function selectJudgingFallbackResponse(query, ctx, isEnglish = false) {
   const q = query.toLowerCase();
 
-  // 1. Reducing expenses / cost cutting
+  // 1. Footfall / Weekend Customers / Walk-ins / Sales Growth
+  if (
+    q.includes('footfall') || q.includes('weekend') || q.includes('walkin') || q.includes('walk-in') ||
+    q.includes('भीड़') || q.includes('सप्ताहांत') || q.includes('ग्राहक बढ़ा') || q.includes('ग्राहक कैसे') ||
+    q.includes('दुकान पर ग्राहक') || q.includes('बिक्री कैसे बढ़ा') || q.includes('attract') ||
+    (q.includes('customer') && !q.includes('udhaar') && !q.includes('khata') && !q.includes('balance') && !q.includes('recover') && !q.includes('debt')) ||
+    (q.includes('ग्राहक') && !q.includes('उधार') && !q.includes('खाता') && !q.includes('बकाया'))
+  ) {
+    if (isEnglish) {
+      return `Namaste ${ctx.ownerName} ji! 🏪\n\nHere are 4 targeted strategies to increase customer footfall and weekend sales for your ${ctx.tradeCategory} in ${ctx.location}:\n\n1. **Weekend Impulse Display**: Set up high-margin festive snacks, sweets, and premium items right at eye level on your front counter.\n2. **Friday Evening WhatsApp Broadcast**: Send a polite WhatsApp message to regular customers showcasing fresh arrivals and weekly combo packs before Saturday.\n3. **Speedy Service at Peak Hours**: Family shopping peaks from 5 PM to 8 PM on weekends. Keep billing swift to ensure zero customer dropouts.\n4. **Loyalty Perks**: Offer modest token discounts or rounding benefits for complete weekly family grocery baskets to build lasting loyalty.`;
+    } else {
+      return `राम राम ${ctx.ownerName} जी! 🏪\n\n**${ctx.location}** में अपनी **${ctx.tradeCategory}** में सप्ताहांत (Weekends) पर ग्राहकों की आवाजाही और बिक्री बढ़ाने के 4 अचूक उपाय:\n\n1. **काउंटर पर स्पेशल डिस्प्ले**: शनिवार-रविवार को नमकीन, बिस्कुट, पूजा सामग्री और मौसमी सामान मुख्य काउंटर पर आगे रखें।\n2. **शुक्रवार शाम व्हाट्सएप संदेश**: अपने नियमित ग्राहकों को नए व ताज़ा स्टॉक की जानकारी पहले ही व्हाट्सएप पर भेजें।\n3. **शाम के पीक समय में गति**: शाम 5 से 8 बजे के दौरान त्वरित बिलिंग रखें ताकि ग्राहकों को कतार में इंतज़ार न करना पड़े।\n4. **नियमित ग्राहकों के लिए लाभ**: हर हफ्ते का राशन लेने वाले परिवारों को विशेष स्नेह और छोटा डिस्काउंट दें ताकि वे हमेशा आपकी ही दुकान चुनें।`;
+    }
+  }
+
+  // 2. Bank Accounts & Documentation
+  if (q.includes('current account') || q.includes('bank account') || q.includes('खाता खोल') || q.includes('दस्तावेज') || q.includes('document') || q.includes('कागजात') || q.includes('kyc') || q.includes('documents')) {
+    if (isEnglish) {
+      return `Namaste ${ctx.ownerName} ji! 🏛️\n\nTo open a Current Bank Account for your ${ctx.tradeCategory} in ${ctx.location}, you will need:\n\n1. **Identity & Address Proof**: Proprietor Aadhaar Card & PAN Card.\n2. **Business Proof (Any 2)**:\n   - Udyam Registration Certificate (Free via MSME portal)\n   - Shop & Establishment License (गुमास्ता)\n   - GSTIN certificate (if registered)\n3. **Shop Premises Proof**: Electricity bill or Rent agreement in business name.\n4. **Passport Photos & Cheque**: 2 photos and opening deposit cheque.\n\n*Pro-tip*: Download your certified **Bank Dossier** from SaakhSetu to show the branch manager your 90-day verified cash flow history!`;
+    } else {
+      return `राम राम ${ctx.ownerName} जी! 🏛️\n\n**${ctx.location}** में अपनी दुकान के लिए बैंक चालू खाता (Current Account) खोलने हेतु आवश्यक कागजात:\n\n1. **पहचान व पता प्रमाण**: प्रोपराइटर का आधार कार्ड व पैन कार्ड।\n2. **व्यापार पंजीकरण प्रमाण (कोई 2)**:\n   - उद्यम आधार पंजीकरण (MSME पोर्टल से)\n   - दुकान एवं स्थापना लाइसेंस (गुमास्ता)\n   - जीएसटी पंजीकरण प्रमाणपत्र (यदि हो)\n3. **दुकान का प्रमाण**: दुकान का बिजली बिल अथवा किरायानामा।\n4. **फोटो एवं चेक**: 2 पासपोर्ट साइज फोटो व प्रारंभिक जमा चेक।\n\n*सुझाव*: बैंक प्रबंधक को दिखाने के लिए साख सेतु के **'बैंक डॉसियर'** टैब से अपना प्रमाणित 90-दिवसीय वित्तीय पत्रक साथ ले जाएं!`;
+    }
+  }
+
+  // 3. Reducing expenses / cost cutting
   if (q.includes('खर्च') || q.includes('cost') || q.includes('expense') || q.includes('लागत') || q.includes('कट') || q.includes('reduce')) {
     if (isEnglish) {
       return `Namaste ${ctx.ownerName} ji! 🙏\n\nHere are 4 targeted ways to reduce expenses in your ${ctx.tradeCategory}:\n\n1. **Minimize Perishable Spoilage**: Track slow-moving items and stock only 3–5 days of inventory for perishables.\n2. **Energy Optimization**: Switch store lighting to LED and service refrigeration units regularly to save on electricity.\n3. **Wholesale Cash Discounts**: Leverage your ₹${ctx.metrics.netSurplus.toLocaleString('en-IN')} cash surplus to negotiate 2–4% upfront cash discounts at the mandi.\n4. **Tighten Loose Credit**: Prevent leakage by capping customer udhaar to avoid bad debts.`;
@@ -429,7 +466,7 @@ function selectJudgingFallbackResponse(query, ctx, isEnglish = false) {
     }
   }
 
-  // 2. Loans & MUDRA
+  // 4. Loans & MUDRA
   if (q.includes('loan') || q.includes('लोन') || q.includes('ऋण') || q.includes('mudra') || q.includes('मुद्रा') || q.includes('bank') || q.includes('बैंक') || q.includes('फ्रीजर') || q.includes('freezer')) {
     if (isEnglish) {
       return `Namaste ${ctx.ownerName} ji! 🏛️\n\nYes, your shop in **${ctx.location}** has strong loan eligibility:\n\n- **Alternative Credit Score**: **${ctx.creditScore}/850 (${ctx.creditRating})**\n- **Top Matched Scheme**: **${ctx.topMatchingScheme}** (Zero Collateral, 3-5 year tenure)\n- **Operating Vintage**: ${ctx.monthsInOperation} months verified track record\n\n**Next Steps**:\n1. Open the **'Bank Dossier'** tab to download your certified 90-day cash flow report.\n2. Present your dossier along with Aadhaar and PAN at your local bank branch for collateral-free sanction.`;
@@ -438,8 +475,21 @@ function selectJudgingFallbackResponse(query, ctx, isEnglish = false) {
     }
   }
 
-  // 3. Customer Udhaar & Recovery
-  if (q.includes('उधार') || q.includes('udhaar') || q.includes('credit') || q.includes('khata') || q.includes('खाता') || q.includes('बकाया') || q.includes('recover') || q.includes('customer') || q.includes('ग्राहक')) {
+  // 5. Credit Score Improvement
+  if (q.includes('credit score') || q.includes('क्रेडिट स्कोर') || q.includes('स्कोर') || q.includes('rating') || q.includes('750')) {
+    if (isEnglish) {
+      return `Namaste ${ctx.ownerName} ji! ⭐\n\nYour current SaakhSetu Credit Score is **${ctx.creditScore}/850 (${ctx.creditRating})**.\n\nHere is how to reach 750+ quickly:\n\n1. **Daily Khata Logging (+25 pts)**: Log daily cash and UPI transactions consistently for 30 consecutive days.\n2. **Recover Pending Udhaar (+20 pts)**: Collect the ₹${ctx.metrics.totalUdhaarPending.toLocaleString('en-IN')} pending balance from customers.\n3. **Boost Digital Payments (+15 pts)**: Increase your UPI QR share from ${ctx.metrics.digitalSharePct}% to 50%+ of total sales.\n4. **Positive Operating Surplus**: Maintain healthy net surplus (currently ₹${ctx.metrics.netSurplus.toLocaleString('en-IN')}) by keeping stock purchases aligned with sales.`;
+    } else {
+      return `नमस्ते ${ctx.ownerName} जी! ⭐\n\nआपकी दुकान का वर्तमान साख सेतु स्कोर **${ctx.creditScore}/850 (${ctx.creditRating})** है।\n\nस्कोर को 750+ तक ले जाने के 4 सरल कदम:\n\n1. **दैनिक बही-खाता प्रविष्टि (+25 अंक)**: लगातार 30 दिनों तक प्रतिदिन बिक्री और खर्च दर्ज करें।\n2. **बकाया उधार वसूली (+20 अंक)**: वर्तमान बकाया ₹${ctx.metrics.totalUdhaarPending.toLocaleString('en-IN')} को समय पर वसूलें।\n3. **डिजिटल भुगतान बढ़ाएं (+15 अंक)**: अपनी बिक्री में यूपीआई की हिस्सेदारी (वर्तमान: ${ctx.metrics.digitalSharePct}%) को 50% से ऊपर ले जाएं।\n4. **सकारात्मक अधिशेष**: नियमित लाभ बनाए रखें ताकि बैंक को आपकी वित्तीय सुदृढ़ता दिखे।`;
+    }
+  }
+
+  // 6. Customer Udhaar & Recovery
+  if (
+    q.includes('उधार') || q.includes('udhaar') || q.includes('khata') || q.includes('खाता') ||
+    q.includes('बकाया') || q.includes('recover') ||
+    (q.includes('credit') && !q.includes('score') && !q.includes('rating'))
+  ) {
     if (isEnglish) {
       return `Namaste ${ctx.ownerName} ji!\n\nHere is the status and strategy for customer udhaar in your ${ctx.tradeCategory}:\n\n- **Pending Udhaar**: **₹${ctx.metrics.totalUdhaarPending.toLocaleString('en-IN')}**\n- **Historical Recovery Rate**: **${ctx.metrics.udhaarRecoveryRate}%** (very healthy!)\n\n**3 Actionable Tips**:\n1. **Harvest Reminders**: Send polite WhatsApp or SMS reminders during ${ctx.currentSeason} when local agricultural earnings arrive.\n2. **Credit Limits**: Cap credit at ₹1,000–₹1,500 per customer to prevent overextension.\n3. **Score Impact**: Collecting remaining udhaar adds points to your credit score!`;
     } else {
@@ -447,7 +497,7 @@ function selectJudgingFallbackResponse(query, ctx, isEnglish = false) {
     }
   }
 
-  // 4. Profit & Margins
+  // 7. Profit & Margins
   if (q.includes('बचत') || q.includes('मुनाफा') || q.includes('profit') || q.includes('margin') || q.includes('बढ़ाऊं') || q.includes('grow') || q.includes('earning') || q.includes('आय') || q.includes('sales')) {
     if (isEnglish) {
       return `Namaste ${ctx.ownerName} ji! 🙏\n\nTo increase profitability in your ${ctx.tradeCategory} (last 30 days: ₹${ctx.last30DaysSummary.totalSales.toLocaleString('en-IN')} sales):\n\n1. **Focus on High-Margin Products**: Branded spices, dry fruits, and packaged snacks yield 18–25% gross margins compared to staples (5–8%).\n2. **Front Counter Placement**: Place impulse-buy items right in front of the billing counter.\n3. **ONDC Wholesale Price Check**: Use the Wholesale tab to source commodities 5–10% cheaper from verified regional distributors.`;
@@ -456,7 +506,7 @@ function selectJudgingFallbackResponse(query, ctx, isEnglish = false) {
     }
   }
 
-  // 5. Stock & Festival Planning
+  // 8. Stock & Festival Planning
   if (q.includes('stock') || q.includes('स्टॉक') || q.includes('त्योहार') || q.includes('दीवाली') || q.includes('diwali') || q.includes('सामान') || q.includes('माल') || q.includes('festiv') || q.includes('oil') || q.includes('sugar')) {
     if (isEnglish) {
       return `Namaste ${ctx.ownerName} ji! 🪔\n\nSeasonal demand advice for **${ctx.location}** during **${ctx.currentSeason}**:\n\n1. **High Priority Stock**: Edible oils, ghee, sugar, and puja essentials see 35%–45% surge in Balrampur.\n2. **Capital Allocation**: Your net surplus is ₹${ctx.metrics.netSurplus.toLocaleString('en-IN')}; invest 40–50% into fast-moving festive stock while keeping liquidity safe.\n3. **Wholesale Timing**: Lock in wholesale stock at least 2 weeks before peak festival week to avoid price spikes.`;
@@ -465,7 +515,7 @@ function selectJudgingFallbackResponse(query, ctx, isEnglish = false) {
     }
   }
 
-  // 6. UPI / Digital Payments
+  // 9. UPI / Digital Payments
   if (q.includes('upi') || q.includes('यूपीआई') || q.includes('digital') || q.includes('ऑनलाइन') || q.includes('qr') || q.includes('paytm') || q.includes('phonepe') || q.includes('gpay')) {
     if (isEnglish) {
       return `Namaste ${ctx.ownerName} ji! 📱\n\nYour shop currently has **${ctx.metrics.digitalSharePct}% UPI digital adoption**:\n\n1. **Bank Proof**: Every UPI payment creates an indisputable digital cashflow footprint that banks accept in place of formal audits.\n2. **No Loose Change Loss**: Eliminates rounding off losses on small ₹2/₹5 items.\n3. **Score Multiplier**: Achieving 50%+ digital share directly increases your SaakhSetu Credit Score by +15 points!`;
@@ -476,10 +526,10 @@ function selectJudgingFallbackResponse(query, ctx, isEnglish = false) {
 
   // Default: Direct responsive answer
   if (isEnglish) {
-    return `Namaste ${ctx.ownerName} ji! 🙏\n\nThank you for asking about your ${ctx.tradeCategory} in **${ctx.location}**.\n\nI am your Setu AI assistant, tuned to help your enterprise grow. Whether you need guidance on inventory management, credit score building (current: ${ctx.creditScore}/850), managing customer udhaar (current: ₹${ctx.metrics.totalUdhaarPending.toLocaleString('en-IN')}), or exploring schemes like ${ctx.topMatchingScheme} — feel free to ask anytime!`;
+    return `Namaste ${ctx.ownerName} ji! 🙏\n\nRegarding your question: *"${query}"*\n\nFor your ${ctx.tradeCategory} in **${ctx.location}**:\n- **Current Shop Health**: Last 30-day sales are ₹${ctx.last30DaysSummary.totalSales.toLocaleString('en-IN')} with a net operating surplus of ₹${ctx.metrics.netSurplus.toLocaleString('en-IN')}.\n- **Key Recommendation**: Regularly recording your daily bahi-khata entries and keeping customer credit capped helps build your SaakhSetu Credit Score (${ctx.creditScore}/850).\n- **Schemes**: You match ${ctx.topMatchingScheme} for low-interest expansion capital.\n\nFeel free to ask more specific questions on inventory, expenses, customer footfall, or loan applications!`;
   }
 
-  return `राम राम ${ctx.ownerName} जी! 🙏\n\n**${ctx.location}** में आपकी **${ctx.tradeCategory}** से संबंधित सवाल पूछने के लिए धन्यवाद।\n\nमैं आपका सेतु AI सलाहकार हूँ। आप मुझसे अपनी दुकान के स्टॉक, ग्राहक उधार (वर्तमान बकाया: ₹${ctx.metrics.totalUdhaarPending.toLocaleString('en-IN')}), क्रेडिट स्कोर (${ctx.creditScore}/850), या **${ctx.topMatchingScheme}** जैसी सरकारी योजनाओं के बारे में कोई भी प्रश्न पूछ सकते हैं। मैं आपकी हरसंभव सहायता के लिए तैयार हूँ!`;
+  return `राम राम ${ctx.ownerName} जी! 🙏\n\nआपके प्रश्न: *"${query}"* के संदर्भ में:\n\n**${ctx.location}** में आपकी **${ctx.tradeCategory}** के लिए:\n- **दुकान की स्थिति**: पिछले 30 दिनों में ₹${ctx.last30DaysSummary.totalSales.toLocaleString('en-IN')} की बिक्री और ₹${ctx.metrics.netSurplus.toLocaleString('en-IN')} का शुद्ध मुनाफा दर्ज है।\n- **मुख्य सलाह**: दैनिक बही-खाता नियमित रूप से दर्ज करें और उधार को समय पर वसूलें, जिससे आपका साख सेतु स्कोर (${ctx.creditScore}/850) और मजबूत हो।\n- **सरकारी योजना**: आप कम ब्याज पर व्यापार विस्तार के लिए **${ctx.topMatchingScheme}** के पात्र हैं।\n\nआप मुझसे स्टॉक, खर्च घटाने, ग्राहकों की संख्या बढ़ाने अथवा बैंक लोन के बारे में कभी भी पूछ सकते हैं!`;
 }
 
 function saveChatMessage(shopId, role, content) {
