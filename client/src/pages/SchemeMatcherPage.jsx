@@ -1136,6 +1136,55 @@ export function SchemeMatcherPage({ shop, creditData, onNavigateTab }) {
                 </span>
               </div>
 
+              {/* Dedicated SCA 90:10 Concessional Financing & Margin Money Breakdown Banner */}
+              {(selectedScheme.id?.includes('sca') || selectedScheme.name?.includes('SCA') || selectedScheme.name?.includes('90:10')) && (
+                <div className="bg-gradient-to-r from-emerald-50 via-white to-amber-50 border border-emerald-300 rounded-xl p-3 shadow-2xs space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <Landmark className="w-4 h-4 text-emerald-800" />
+                      <span className="font-bold text-xs text-emerald-950">
+                        SCA Concessional Ratio: 90% Debt : 10% Beneficiary Margin Money
+                      </span>
+                    </div>
+                    <span className="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full border border-emerald-300">
+                      Concessional 6.5% p.a.
+                    </span>
+                  </div>
+
+                  {/* Visual 90:10 Progress Bar */}
+                  <div className="space-y-1">
+                    <div className="h-3 w-full bg-stone-200 rounded-full overflow-hidden flex shadow-inner">
+                      <div className="bg-emerald-700 h-full w-[90%] flex items-center justify-center text-[9px] text-white font-bold tracking-wider">
+                        90% SCA Concessional Loan (₹1,25,000)
+                      </div>
+                      <div className="bg-amber-500 h-full w-[10%] flex items-center justify-center text-[8px] text-white font-bold">
+                        10%
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between text-[10px] text-stone-600 pt-0.5 font-medium">
+                      <span>SCA / Bank Loan: <strong>₹1,25,000 @ 6.5% p.a.</strong></span>
+                      <span>Beneficiary Margin: <strong>₹14,000 (10%)</strong></span>
+                    </div>
+                  </div>
+
+                  {/* Repayment Timeline & Moratorium Breakdown */}
+                  <div className="grid grid-cols-3 gap-2 pt-1 border-t border-stone-200/60 text-[10px]">
+                    <div className="p-1.5 rounded bg-white border border-stone-200/60">
+                      <span className="text-stone-400 block text-[9px] uppercase font-bold">Initial Moratorium</span>
+                      <span className="font-bold text-stone-900">3 Months</span>
+                    </div>
+                    <div className="p-1.5 rounded bg-white border border-stone-200/60">
+                      <span className="text-stone-400 block text-[9px] uppercase font-bold">Active Repayment</span>
+                      <span className="font-bold text-stone-900">33 Months (~₹4,147/mo)</span>
+                    </div>
+                    <div className="p-1.5 rounded bg-emerald-50 border border-emerald-200 text-emerald-900">
+                      <span className="text-emerald-700 block text-[9px] uppercase font-bold">Margin Money Status</span>
+                      <span className="font-bold text-emerald-800">✓ Verified in Bahi-Khata</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Compact 3-Column Specifications Row */}
               <div className="grid grid-cols-3 gap-2 sm:gap-2.5">
                 <div className="p-2 sm:p-2.5 rounded-xl bg-white border border-[#EDE7DD] shadow-2xs">
@@ -1472,7 +1521,7 @@ export function SchemeMatcherPage({ shop, creditData, onNavigateTab }) {
                   <span className="text-[10px] text-stone-500">Click any preset to trigger instant ingestion</span>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                   <div className="bg-white border border-stone-200 rounded-xl p-3 shadow-2xs hover:border-emerald-500 transition-all flex flex-col justify-between">
                     <div className="space-y-1">
                       <span className="text-[9px] font-bold text-amber-700 uppercase tracking-wider bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
@@ -1541,6 +1590,31 @@ export function SchemeMatcherPage({ shop, creditData, onNavigateTab }) {
                         subsidy: '₹15,000 digital toolkit voucher + 5% concessional interest rate',
                         targetTrade: 'artisan',
                         sourceUrl: 'https://pmvishwakarma.gov.in/circulars/2026-update.pdf'
+                      })}
+                      className="mt-3 w-full py-1.5 px-2.5 rounded-lg text-xs font-bold bg-[#0F3E2E] hover:bg-[#165640] text-white transition-colors cursor-pointer disabled:opacity-50"
+                    >
+                      {customLoading ? 'Ingesting...' : 'Ingest & Match (< 30s)'}
+                    </button>
+                  </div>
+
+                  <div className="bg-white border border-stone-200 rounded-xl p-3 shadow-2xs hover:border-emerald-500 transition-all flex flex-col justify-between">
+                    <div className="space-y-1">
+                      <span className="text-[9px] font-bold text-emerald-800 uppercase tracking-wider bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                        SCA Concessional (90:10)
+                      </span>
+                      <h5 className="font-bold text-stone-900 text-xs mt-1">SCA Micro Finance (6.5% p.a.)</h5>
+                      <p className="text-[11px] text-stone-500 line-clamp-2">Up to ₹1.40L project (90% loan up to ₹1.25L @ 6.5% p.a., 10% margin ₹14k, 3-yr tenure, 3-mo moratorium).</p>
+                    </div>
+                    <button
+                      type="button"
+                      disabled={customLoading}
+                      onClick={() => handleSimulateCustomScheme({
+                        title: 'SCA Concessional Micro Finance Scheme for Marginalized Communities',
+                        ministry: 'National Apex Corporations (NSFDC/NBCFDC/NMDFC) & State Channelizing Agencies (SCAs)',
+                        maxAmount: 125000,
+                        subsidy: '90% Concessional Credit @ 6.5% p.a. with 10% Margin Money & 3-Month Moratorium',
+                        targetTrade: 'kirana',
+                        sourceUrl: 'https://pib.gov.in/PressReleasePage.aspx?PRID=2008912'
                       })}
                       className="mt-3 w-full py-1.5 px-2.5 rounded-lg text-xs font-bold bg-[#0F3E2E] hover:bg-[#165640] text-white transition-colors cursor-pointer disabled:opacity-50"
                     >

@@ -416,6 +416,57 @@ export function seedDatabase(force = false) {
         'official_gazette'
       );
     }
+
+    // Seed SCA Concessional Micro Finance Scheme (90:10 Margin Money Framework)
+    insertScheme.run(
+      'sca-micro-finance-concessional',
+      'SCA Concessional Micro Finance Scheme for Marginalized Communities (राज्य चैनलाइजिंग एजेंसी रियायती सूक्ष्म वित्त योजना)',
+      'SCA Micro Finance (90:10)',
+      'National Apex Corporations (NSFDC/NBCFDC/NMDFC) & State Channelizing Agencies (SCAs)',
+      'Retail, Artisans & Small Services',
+      'central',
+      JSON.stringify([]),
+      125000,
+      'Projects up to ₹1,40,000 (90% Concessional Loan up to ₹1.25 Lakh | 10% Margin ₹14,000)',
+      '6.5% p.a. Concessional Fixed',
+      '90% Concessional Debt (Max ₹1.25 Lakh) with only 10% Beneficiary Margin Money Contribution; 3-Month Moratorium Included',
+      0,
+      'Zero Collateral (100% Backed by State Channelizing Agency / Apex Corporation)',
+      '3 years (36 months) with 3 months initial moratorium',
+      'Statutory concessional micro-credit scheme for marginalized communities (SC, ST, OBC, Safai Karamcharis, and Minorities). Beneficiaries contribute only 10% margin money, while State Channelizing Agencies (SCAs) fund 90% (up to ₹1.25 Lakh) at an ultra-low 6.5% interest rate over 3 years.',
+      'वंचित एवं पिछड़े वर्ग के सूक्ष्म उद्यमियों के लिए रियायती योजना। कुल लागत (₹1.40 लाख तक) का मात्र 10% मार्जिन मनी लाभार्थी को देना होता है, और राज्य चैनलाइजिंग एजेंसी (SCA) 90% ऋण मात्र 6.5% वार्षिक ब्याज दर पर 3 वर्ष (3 महीने की मोहलत सहित) के लिए उपलब्ध कराती है।',
+      '2026-03-01',
+      'https://pib.gov.in/PressReleasePage.aspx?PRID=2008912',
+      'National Apex Corporations & State Channelizing Agencies Operational Guidelines, 90:10 Margin Money Framework',
+      JSON.stringify({
+        minVintageYears: 0.5,
+        minMonthlyRevenue: 10000,
+        minCreditScore: 575,
+        targetTradeTypes: ['kirana', 'retail', 'general_store', 'artisan', 'dairy', 'repair', 'services', 'all'],
+        targetOwnerCategories: ['all'],
+        qualifyingReasons: [
+          '10% beneficiary margin money requirement (₹14,000) verified available in operating cash flow',
+          'Monthly cash surplus comfortably covers ₹4,147 concessional EMI (Debt Service Coverage > 2.0x)',
+          'Eligible for 6.5% p.a. ultra-low interest concessional lending under SCA priority guidelines',
+          'Zero formal collateral or third-party guarantee needed'
+        ]
+      }),
+      JSON.stringify([
+        'Aadhaar Card and Community/Caste Certificate (SC/ST/OBC/Minority/EWS)',
+        'SaakhSetu Verified Bahi-Khata 90-Day Cash Flow Statement (Proving 10% Margin Money Availability)',
+        'Project Cost Estimate / Wholesale Stock Quotation (Up to ₹1,40,000)',
+        'Bank Account Passbook / Mandate Form'
+      ]),
+      JSON.stringify([
+        'Generate SaakhSetu CAM with 10% Margin Money Viability Certificate',
+        'Submit application to District State Channelizing Agency (SCA) or nominated Lead District Bank',
+        'SCA verification of margin money and business activity (7–10 days)',
+        'Concessional loan disbursed with 3-month moratorium; 33 monthly EMIs @ 6.5% p.a.'
+      ]),
+      'https://www.myscheme.gov.in',
+      1,
+      'state_channelizing_agencies'
+    );
   } catch (err) {
     console.warn('[Seed] Schemes seed notice:', err.message);
   }

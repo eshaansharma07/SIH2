@@ -513,6 +513,28 @@ export function generateCAM(shopOrId, transactionsOverride = null) {
         estimatedMonthlyOperatingSurplus: monthlySurplus,
         recommendedMaxMonthlyEmi: recommendedMaxEmi,
         debtServiceCoverageRatio: '2.5x (Prudent > 1.5x)'
+      },
+      scaMarginMoneyAssessment: {
+        framework: 'State Channelizing Agencies (SCAs) & Apex Corporations (NSFDC / NBCFDC / NMDFC)',
+        statutoryRatio: '90% Concessional Loan : 10% Beneficiary Margin Money',
+        microFinanceTier: {
+          maxProjectCost: 140000,
+          beneficiaryMarginMoney10Pct: 14000,
+          scaConcessionalLoan90Pct: 125000,
+          concessionalInterestRate: '6.5% p.a.',
+          repaymentTenureMonths: 36,
+          moratoriumPeriodMonths: 3,
+          projectedMonthlyEmi: 4147,
+          dscrOnOperatingSurplus: monthlySurplus > 0 ? `${(monthlySurplus / 4147).toFixed(2)}x` : 'N/A',
+          marginMoneyViabilityStatus: (m.netSurplus || 0) >= 14000 ? 'VERIFIED_AVAILABLE' : 'PARTIALLY_FUNDED'
+        },
+        termLoanTier: {
+          sampleProjectCost: 1000000,
+          beneficiaryMarginMoney10Pct: 100000,
+          scaConcessionalLoan90Pct: 900000,
+          concessionalInterestRate: '6.0% – 8.0% p.a.',
+          repaymentTenureYears: 5
+        }
       }
     },
     cashFlowAndWorkingCapitalAudit: {
