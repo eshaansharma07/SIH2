@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   ShoppingCart, 
   Users, 
@@ -19,6 +19,7 @@ import { useTranslation } from '../i18n/LanguageContext';
 import { safeStorage } from '../utils/safeStorage';
 import { TricolorBrush } from '../components/TricolorBrush';
 import { SurveyChecklistIcon } from '../components/SurveyChecklistIcon';
+import { getHeroContent } from '../utils/greetingUtils';
 
 export function DashboardPage({ 
   shop, 
@@ -33,7 +34,13 @@ export function DashboardPage({
   const [surveyFeedback, setSurveyFeedback] = useState('');
   const [surveySubmitted, setSurveySubmitted] = useState(false);
 
-  const shopOwner = shop?.owner_name || 'Ramesh Ji';
+  const rawOwner = shop?.owner_name || 'Ramesh Ji';
+  const shopOwner = rawOwner ? (rawOwner.charAt(0).toUpperCase() + rawOwner.slice(1)) : 'Ramesh Ji';
+  
+  const heroContent = useMemo(() => {
+    return getHeroContent(language);
+  }, [language]);
+
   const currentDateFormatted = new Intl.DateTimeFormat('en-IN', {
     day: 'numeric',
     month: 'short',
@@ -171,7 +178,7 @@ export function DashboardPage({
           {/* Left Hero Typography */}
           <div className="lg:col-span-5 space-y-3 z-10">
             <span className="text-[11px] font-bold uppercase tracking-widest text-stone-500 block">
-              {language === 'hi' ? 'शुभ प्रभात,' : 'GOOD MORNING,'}
+              {heroContent.greeting}
             </span>
             
             <h1 className="font-serif font-black text-3xl sm:text-4xl xl:text-5xl text-stone-900 tracking-tight leading-none">
@@ -179,17 +186,11 @@ export function DashboardPage({
             </h1>
 
             <p className="font-sans font-bold text-stone-800 text-sm sm:text-base leading-snug pt-1">
-              {language === 'hi' 
-                ? 'अपने व्यापार को व्यवस्थित रखें, एक समय में एक कदम।' 
-                : 'Keep your business organized, one step at a time.'
-              }
+              {heroContent.tagline}
             </p>
 
             <p className="text-stone-600 text-xs sm:text-sm leading-relaxed max-w-sm">
-              {language === 'hi'
-                ? 'अपने लेन-देन ट्रैक करें, अपने ग्राहकों का प्रबंधन करें, सरकारी योजनाओं को जानें और व्यापार सेतु के साथ एक मजबूत कल बनाएं।'
-                : 'Track your transactions, manage your customers, explore government schemes, and build a stronger tomorrow with Vyapaar Setu.'
-              }
+              {heroContent.subtitle}
             </p>
 
             {/* Primary Single CTA: Record Sale */}
@@ -199,7 +200,7 @@ export function DashboardPage({
                 onClick={() => onOpenKeypad?.('income')}
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#0F3E2E] hover:bg-[#165640] text-white font-bold text-xs sm:text-sm btn-tactile cursor-pointer"
               >
-                <span>{language === 'hi' ? 'बिक्री दर्ज करें' : 'Record Sale'}</span>
+                <span>{heroContent.cta}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </div>
