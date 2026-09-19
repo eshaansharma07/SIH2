@@ -116,13 +116,13 @@ export async function getMongoDb() {
     try {
       if (!cachedClient) {
         cachedClient = new MongoClient(uri, {
-          maxPoolSize: isServerless ? 1 : 2,
+          maxPoolSize: 10,
           minPoolSize: 0,
-          maxIdleTimeMS: 5000,
-          serverSelectionTimeoutMS: timeoutMs,
-          socketTimeoutMS: 15000,
-          connectTimeoutMS: timeoutMs,
-          waitQueueTimeoutMS: 2000,
+          maxIdleTimeMS: 30000,
+          serverSelectionTimeoutMS: 10000,
+          socketTimeoutMS: 20000,
+          connectTimeoutMS: 10000,
+          waitQueueTimeoutMS: 10000,
         });
       }
 
