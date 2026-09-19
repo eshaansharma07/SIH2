@@ -9,7 +9,9 @@ test('Government Scheme Matcher Suite', async (t) => {
 
   await t.test('1. Library returns all 14 verified schemes with official source URLs', () => {
     const all = getAllSchemes();
-    assert.strictEqual(all.length, 14, 'Should load all 14 verified statutory schemes');
+    assert.ok(all.length >= 14, 'Should load all 14 verified statutory schemes');
+    const baseline = all.filter(s => !s.isScraped);
+    assert.strictEqual(baseline.length, 14, 'Must retain all 14 statutory baseline schemes');
     all.forEach(s => {
       assert.ok(s.id, 'Scheme must have an id');
       assert.ok(s.name, 'Scheme must have a name');

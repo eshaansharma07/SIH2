@@ -4,8 +4,10 @@ import {
   getTransactionsCollection,
   getCustomersCollection,
   getBenchmarksCollection,
+  getSchemesCollection,
   isMongoConfigured
 } from './mongoClient.js';
+import { SCHEMES } from './schemesData.js';
 
 const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
 
@@ -439,6 +441,161 @@ export const dataStore = {
     const nowIso = new Date().toISOString();
     await this.updateCustomer(id, { last_reminder_sent: nowIso });
     return nowIso;
+  },
+
+  // ==========================================
+  // 5. GOVERNMENT SCHEMES (DYNAMIC REGISTRY)
+  // ==========================================
+
+  normalizeSchemeRow(row) {
+    if (!row) return null;
+    return {
+      id: row.id,
+      name: row.name,
+      shortName: row.short_name || row.shortName || row.name,
+      ministry: row.ministry,
+      category: row.category,
+      scope: row.scope || 'central',
+      applicableStates: typeof row.applicable_states === 'string' ? JSON.parse(row.applicable_states || '[]') : (row.applicableStates || []),
+      maxLoanAmount: Number(row.max_loan_amount || row.maxLoanAmount || 0),
+      loanRangeText: row.loan_range_text || row.loanRangeText,
+      interestRate: row.interest_rate || row.interestRate,
+      subsidyText: row.subsidy_text || row.subsidyText,
+      collateralRequired: Boolean(row.collateral_required !== undefined ? row.collateral_required : row.collateralRequired),
+      collateralText: row.collateral_text || row.collateralText,
+      tenure: row.tenure,
+      plainLanguageSummary: row.plain_language_summary || row.plainLanguageSummary,
+      plainLanguageSummaryHi: row.plain_language_summary_hi || row.plainLanguageSummaryHi,
+      lastVerified: row.last_verified || row.lastVerified,
+      officialSourceUrl: row.official_source_url || row.officialSourceUrl,
+      statutoryReference: row.statutory_reference || row.statutoryReference,
+      whyYouQualifyRules: typeof row.why_you_qualify_rules === 'string' ? JSON.parse(row.why_you_qualify_rules || '{}') : (row.whyYouQualifyRules || {}),
+      requiredDocuments: typeof row.required_documents === 'string' ? JSON.parse(row.required_documents || '[]') : (row.requiredDocuments || []),
+      applicationSteps: typeof row.application_steps === 'string' ? JSON.parse(row.application_steps || '[]') : (row.applicationSteps || []),
+      officialPortal: row.official_portal || row.officialPortal,
+      isScraped: Boolean(row.is_scraped !== undefined ? row.is_scraped : row.isScraped),
+      sourcePortal: row.source_portal || row.sourcePortal || 'official',
+      scrapedAt: row.scraped_at || row.scrapedAt,
+      createdAt: row.created_at || row.createdAt
+    };
+  },
+
+  async getAllSchemes(filters = {}) {
+    const dynamicMap = new Map();
+
+    // 1. Seed statutory baseline schemes first
+    for (const s of SCHEMES) {
+      dynamicMap.set(s.id, { ...s, isScraped: false });
+    }
+
+    const isMongo = await this.isPrimaryMongo();
+    if (isMongo) {
+      try {
+        const col = await getSchemesCollection();
+        if (col) {
+          const docs = await col.find({}).sort({ is_scraped: -1, created_at: -1 }).toArray();
+          if (docs && docs.length > 0) {
+            docs.forEach(doc => {
+              const norm = this.normalizeSchemeRow(cleanDoc(doc));
+              dynamicMap.set(norm.id, norm);
+            });
+          }
+        }
+      } catch (err) {
+        console.warn('[DataStore] Mongo getAllSchemes fallback:', err.message);
+      }
+    }
+
+    try {
+      const rows = db.prepare('SELECT * FROM government_schemes ORDER BY is_scraped DESC, created_at DESC').all();
+      if (rows && rows.length > 0) {
+        rows.forEach(r => {
+          const norm = this.normalizeSchemeRow(r);
+          dynamicMap.set(norm.id, norm);
+        });
+      }
+    } catch (err) {
+      console.warn('[DataStore] SQLite getAllSchemes fallback:', err.message);
+    }
+
+    let results = Array.from(dynamicMap.values());
+
+    if (filters.category && filters.category !== 'all') {
+      const cat = filters.category.toLowerCase();
+      results = results.filter(s => (s.category || '').toLowerCase().includes(cat));
+    }
+
+    if (filters.maxAmount) {
+      results = results.filter(s => (s.maxLoanAmount || 0) <= Number(filters.maxAmount));
+    }
+
+    return results;
+  },
+
+  async getSchemeById(id) {
+    if (!id) return null;
+    const all = await this.getAllSchemes();
+    return all.find(s => s.id === id) || null;
+  },
+
+  async upsertScheme(schemeData) {
+    if (!schemeData || !schemeData.id) return null;
+    const isMongo = await this.isPrimaryMongo();
+    if (isMongo) {
+      try {
+        const col = await getSchemesCollection();
+        if (col) {
+          await col.updateOne({ id: schemeData.id }, { $set: schemeData }, { upsert: true });
+        }
+      } catch (err) {
+        console.warn('[DataStore] Mongo upsertScheme error:', err.message);
+      }
+    }
+
+    // Mirror to local SQLite
+    try {
+      db.prepare(`
+        INSERT OR REPLACE INTO government_schemes (
+          id, name, short_name, ministry, category, scope, applicable_states,
+          max_loan_amount, loan_range_text, interest_rate, subsidy_text,
+          collateral_required, collateral_text, tenure, plain_language_summary,
+          plain_language_summary_hi, last_verified, official_source_url, statutory_reference,
+          why_you_qualify_rules, required_documents, application_steps, official_portal,
+          is_scraped, source_portal, scraped_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        schemeData.id,
+        schemeData.name,
+        schemeData.shortName || schemeData.short_name || schemeData.name,
+        schemeData.ministry,
+        schemeData.category || 'Retail, Artisans & Small Services',
+        schemeData.scope || 'central',
+        JSON.stringify(schemeData.applicableStates || schemeData.applicable_states || []),
+        Number(schemeData.maxLoanAmount || schemeData.max_loan_amount || 0),
+        schemeData.loanRangeText || schemeData.loan_range_text || '',
+        schemeData.interestRate || schemeData.interest_rate || '',
+        schemeData.subsidyText || schemeData.subsidy_text || '',
+        schemeData.collateralRequired ? 1 : 0,
+        schemeData.collateralText || schemeData.collateral_text || '',
+        schemeData.tenure || '',
+        schemeData.plainLanguageSummary || schemeData.plain_language_summary || '',
+        schemeData.plainLanguageSummaryHi || schemeData.plain_language_summary_hi || '',
+        schemeData.lastVerified || schemeData.last_verified || new Date().toISOString().slice(0, 10),
+        schemeData.officialSourceUrl || schemeData.official_source_url || '',
+        schemeData.statutoryReference || schemeData.statutory_reference || '',
+        JSON.stringify(schemeData.whyYouQualifyRules || schemeData.why_you_qualify_rules || {}),
+        JSON.stringify(schemeData.requiredDocuments || schemeData.required_documents || []),
+        JSON.stringify(schemeData.applicationSteps || schemeData.application_steps || []),
+        schemeData.officialPortal || schemeData.official_portal || '',
+        schemeData.isScraped ? 1 : 0,
+        schemeData.sourcePortal || schemeData.source_portal || 'official',
+        schemeData.scrapedAt || schemeData.scraped_at || new Date().toISOString()
+      );
+    } catch (err) {
+      console.warn('[DataStore] SQLite upsertScheme error:', err.message);
+    }
+
+    return this.normalizeSchemeRow(schemeData);
   }
 };
 

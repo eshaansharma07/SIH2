@@ -172,6 +172,13 @@ export const api = {
     return request(`/schemes${q}`);
   },
   getSchemeDetail: (id) => request(`/schemes/${id}`),
+  syncSchemes: () => request('/schemes/sync', { method: 'POST' }),
+  scrapeCustomScheme: (payload) => request('/schemes/scrape-custom', { 
+    method: 'POST', 
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload) 
+  }),
+  getScraperStatus: () => request('/schemes/status'),
 
   // Advisory
   chatAdvisor: (shopId, question) => {

@@ -193,6 +193,11 @@ export async function getBenchmarksCollection() {
   return db ? db.collection('peer_benchmarks') : null;
 }
 
+export async function getSchemesCollection() {
+  const db = await getMongoDb();
+  return db ? db.collection('government_schemes') : null;
+}
+
 export async function closeMongoConnection() {
   const client = cachedClient || globalThis.__saakhsetuMongoClient;
   if (client) {

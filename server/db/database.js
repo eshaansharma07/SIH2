@@ -183,4 +183,42 @@ try {
   // Table / index already exists
 }
 
+try {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS government_schemes (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      short_name TEXT NOT NULL,
+      ministry TEXT NOT NULL,
+      category TEXT NOT NULL,
+      scope TEXT DEFAULT 'central',
+      applicable_states TEXT DEFAULT '[]',
+      max_loan_amount REAL DEFAULT 0,
+      loan_range_text TEXT,
+      interest_rate TEXT,
+      subsidy_text TEXT,
+      collateral_required INTEGER DEFAULT 0,
+      collateral_text TEXT,
+      tenure TEXT,
+      plain_language_summary TEXT,
+      plain_language_summary_hi TEXT,
+      last_verified TEXT,
+      official_source_url TEXT,
+      statutory_reference TEXT,
+      why_you_qualify_rules TEXT,
+      required_documents TEXT,
+      application_steps TEXT,
+      official_portal TEXT,
+      is_scraped INTEGER DEFAULT 0,
+      source_portal TEXT DEFAULT 'official',
+      scraped_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE INDEX IF NOT EXISTS idx_gov_schemes_category ON government_schemes(category);
+    CREATE INDEX IF NOT EXISTS idx_gov_schemes_scope ON government_schemes(scope);
+  `);
+} catch (_) {
+  // Table / index already exists
+}
+
 export default db;
