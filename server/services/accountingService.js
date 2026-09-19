@@ -534,48 +534,96 @@ export const accountingService = {
     }
 
     // Insert Invoice Record
-    db.prepare(`
-      INSERT INTO invoices (
-        id, shop_id, invoice_number, customer_id, customer_name, customer_phone,
-        invoice_date, due_date, subtotal, discount, taxable_amount,
-        cgst, sgst, igst, total_amount, paid_amount, balance_due,
-        payment_status, payment_mode, is_interstate, notes
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(
-      invoiceId, shopId, invoiceNumber, customerId, customerName, customerPhone,
-      invoiceDate, dueDate, calculatedSubtotal, calculatedDiscount + overallDiscount, finalTaxable,
-      calculatedCgst, calculatedSgst, calculatedIgst, grandTotal, paidAmount, balanceDue,
-      paymentStatus, paymentMode, isInterstate ? 1 : 0, notes
-    );
+    const invoiceDoc = {
+      id: invoiceId,
+      shop_id: shopId,
+      invoice_number: invoiceNumber,
+      customer_id: customerId,
+      customer_name: customerName,
+      customer_phone: customerPhone,
+      invoice_date: invoiceDate,
+      due_date: dueDate,
+      subtotal: calculatedSubtotal,
+      discount: calculatedDiscount + overallDiscount,
+      taxable_amount: finalTaxable,
+      cgst: calculatedCgst,
+      sgst: calculatedSgst,
+      igst: calculatedIgst,
+      total_amount: grandTotal,
+      paid_amount: paidAmount,
+      balance_due: balanceDue,
+      payment_status: paymentStatus,
+      payment_mode: paymentMode,
+      is_interstate: isInterstate ? 1 : 0,
+      notes,
+      items: processedItems,
+      created_at: new Date().toISOString()
+    };
 
-    // Insert Line Items & Deduct Stock
-    const insertItemStmt = db.prepare(`
-      INSERT INTO invoice_items (
-        id, invoice_id, product_id, description, quantity, unit_price,
-        discount, taxable_amount, gst_rate, cgst, sgst, igst, total
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `);
-
-    const updateStockStmt = db.prepare('UPDATE products SET current_stock = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?');
-
-    for (const item of processedItems) {
-      insertItemStmt.run(
-        item.id, item.invoiceId, item.productId, item.description, item.quantity, item.unitPrice,
-        item.discount, item.taxableAmount, item.gstRate, item.cgst, item.sgst, item.igst, item.total
+    try {
+      db.prepare(`
+        INSERT INTO invoices (
+          id, shop_id, invoice_number, customer_id, customer_name, customer_phone,
+          invoice_date, due_date, subtotal, discount, taxable_amount,
+          cgst, sgst, igst, total_amount, paid_amount, balance_due,
+          payment_status, payment_mode, is_interstate, notes
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        invoiceId, shopId, invoiceNumber, customerId, customerName, customerPhone,
+        invoiceDate, dueDate, calculatedSubtotal, calculatedDiscount + overallDiscount, finalTaxable,
+        calculatedCgst, calculatedSgst, calculatedIgst, grandTotal, paidAmount, balanceDue,
+        paymentStatus, paymentMode, isInterstate ? 1 : 0, notes
       );
 
-      // Decrement stock & log movement
-      const newStock = Math.max(0, item.currentStock - item.quantity);
-      updateStockStmt.run(newStock, item.productId);
+      const insertItemStmt = db.prepare(`
+        INSERT INTO invoice_items (
+          id, invoice_id, product_id, description, quantity, unit_price,
+          discount, taxable_amount, gst_rate, cgst, sgst, igst, total
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `);
 
-      await this.logStockMovement(shopId, item.productId, {
-        type: 'sale',
-        quantity: -item.quantity,
-        unitPrice: item.unitPrice,
-        referenceType: 'invoice',
-        referenceId: invoiceNumber,
-        notes: `Sales invoice #${invoiceNumber}`
-      });
+      const updateStockStmt = db.prepare('UPDATE products SET current_stock = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?');
+
+      for (const item of processedItems) {
+        insertItemStmt.run(
+          item.id, item.invoiceId, item.productId, item.description, item.quantity, item.unitPrice,
+          item.discount, item.taxableAmount, item.gstRate, item.cgst, item.sgst, item.igst, item.total
+        );
+
+        // Decrement stock & log movement
+        const newStock = Math.max(0, item.currentStock - item.quantity);
+        updateStockStmt.run(newStock, item.productId);
+
+        await this.logStockMovement(shopId, item.productId, {
+          type: 'sale',
+          quantity: -item.quantity,
+          unitPrice: item.unitPrice,
+          referenceType: 'invoice',
+          referenceId: invoiceNumber,
+          notes: `Sales invoice #${invoiceNumber}`
+        });
+      }
+    } catch (sqlErr) {
+      console.warn('[AccountingService] SQLite invoice write notice:', sqlErr.message);
+    }
+
+    try {
+      const dbMongo = await getMongoDb();
+      if (dbMongo) {
+        await dbMongo.collection('accounting_invoices').updateOne(
+          { shop_id: shopId, id: invoiceId },
+          { $set: invoiceDoc },
+          { upsert: true }
+        );
+        for (const item of processedItems) {
+          await dbMongo.collection('accounting_products').updateOne(
+            { shop_id: shopId, id: item.productId },
+            { $inc: { current_stock: -item.quantity }, $set: { updated_at: new Date().toISOString() } }
+          );
+        }
+      }
+    } catch (mErr) {
+      console.warn('[AccountingService] Mongo invoice sync notice:', mErr.message);
     }
 
     // =========================================================================
@@ -640,6 +688,29 @@ export const accountingService = {
   async getInvoices(shopId, { search = '', status = '', paymentMode = '', from = '', to = '', limit = 50, offset = 0 } = {}) {
     if (!shopId) return [];
 
+    try {
+      const dbMongo = await getMongoDb();
+      if (dbMongo) {
+        const query = { shop_id: shopId };
+        if (status && status !== 'all') query.payment_status = status;
+        if (paymentMode && paymentMode !== 'all') query.payment_mode = paymentMode;
+        if (search) {
+          const regex = new RegExp(search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+          query.$or = [{ invoice_number: regex }, { customer_name: regex }, { customer_phone: regex }];
+        }
+        if (from) query.invoice_date = { ...query.invoice_date, $gte: from };
+        if (to) query.invoice_date = { ...query.invoice_date, $lte: to };
+
+        let cursor = dbMongo.collection('accounting_invoices').find(query).sort({ invoice_date: -1, created_at: -1 });
+        if (offset) cursor = cursor.skip(Number(offset));
+        if (limit) cursor = cursor.limit(Number(limit));
+        const docs = await cursor.toArray();
+        if (docs && docs.length > 0) {
+          return docs.map(({ _id, ...rest }) => rest);
+        }
+      }
+    } catch (_) {}
+
     let query = 'SELECT * FROM invoices WHERE shop_id = ?';
     const params = [shopId];
 
@@ -677,6 +748,16 @@ export const accountingService = {
 
   async getInvoiceById(shopId, id) {
     if (!shopId || !id) return null;
+    try {
+      const dbMongo = await getMongoDb();
+      if (dbMongo) {
+        const doc = await dbMongo.collection('accounting_invoices').findOne({ shop_id: shopId, id });
+        if (doc) {
+          const { _id, ...rest } = doc;
+          return rest;
+        }
+      }
+    } catch (_) {}
     const invoice = db.prepare('SELECT * FROM invoices WHERE shop_id = ? AND id = ?').get(shopId, id);
     if (!invoice) return null;
 
@@ -757,41 +838,86 @@ export const accountingService = {
     const paidAmount = paymentStatus === 'paid' ? grandTotal : (Number(purchaseData.paidAmount) || 0);
     const balanceDue = Math.max(0, grandTotal - paidAmount);
 
-    db.prepare(`
-      INSERT INTO purchases (
-        id, shop_id, supplier_id, supplier_name, purchase_number, purchase_date,
-        subtotal, gst, total_amount, paid_amount, balance_due, payment_status, payment_mode, notes
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(
-      purchaseId, shopId, supplierId, supplierName, purchaseNumber, purchaseDate,
-      totalSubtotal, totalGst, grandTotal, paidAmount, balanceDue, paymentStatus, paymentMode, notes
-    );
+    const purchaseDoc = {
+      id: purchaseId,
+      shop_id: shopId,
+      supplier_id: supplierId,
+      supplier_name: supplierName,
+      purchase_number: purchaseNumber,
+      purchase_date: purchaseDate,
+      subtotal: totalSubtotal,
+      gst: totalGst,
+      total_amount: grandTotal,
+      paid_amount: paidAmount,
+      balance_due: balanceDue,
+      payment_status: paymentStatus,
+      payment_mode: paymentMode,
+      notes,
+      items: processedItems,
+      created_at: new Date().toISOString()
+    };
 
-    const insertItemStmt = db.prepare(`
-      INSERT INTO purchase_items (
-        id, purchase_id, product_id, quantity, purchase_price, gst_rate, total
-      ) VALUES (?, ?, ?, ?, ?, ?, ?)
-    `);
-
-    const updateStockStmt = db.prepare('UPDATE products SET current_stock = ?, purchase_price = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?');
-
-    for (const item of processedItems) {
-      insertItemStmt.run(
-        item.id, item.purchaseId, item.productId, item.quantity, item.purchasePrice, item.gstRate, item.total
+    try {
+      db.prepare(`
+        INSERT INTO purchases (
+          id, shop_id, supplier_id, supplier_name, purchase_number, purchase_date,
+          subtotal, gst, total_amount, paid_amount, balance_due, payment_status, payment_mode, notes
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        purchaseId, shopId, supplierId, supplierName, purchaseNumber, purchaseDate,
+        totalSubtotal, totalGst, grandTotal, paidAmount, balanceDue, paymentStatus, paymentMode, notes
       );
 
-      // Increment inventory & log movement
-      const newStock = item.currentStock + item.quantity;
-      updateStockStmt.run(newStock, item.purchasePrice, item.productId);
+      const insertItemStmt = db.prepare(`
+        INSERT INTO purchase_items (
+          id, purchase_id, product_id, quantity, purchase_price, gst_rate, total
+        ) VALUES (?, ?, ?, ?, ?, ?, ?)
+      `);
 
-      await this.logStockMovement(shopId, item.productId, {
-        type: 'purchase',
-        quantity: item.quantity,
-        unitPrice: item.purchasePrice,
-        referenceType: 'purchase',
-        referenceId: purchaseNumber,
-        notes: `Supplier stock procurement #${purchaseNumber}`
-      });
+      const updateStockStmt = db.prepare('UPDATE products SET current_stock = ?, purchase_price = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?');
+
+      for (const item of processedItems) {
+        insertItemStmt.run(
+          item.id, item.purchaseId, item.productId, item.quantity, item.purchasePrice, item.gstRate, item.total
+        );
+
+        // Increment inventory & log movement
+        const newStock = item.currentStock + item.quantity;
+        updateStockStmt.run(newStock, item.purchasePrice, item.productId);
+
+        await this.logStockMovement(shopId, item.productId, {
+          type: 'purchase',
+          quantity: item.quantity,
+          unitPrice: item.purchasePrice,
+          referenceType: 'purchase',
+          referenceId: purchaseNumber,
+          notes: `Supplier stock procurement #${purchaseNumber}`
+        });
+      }
+    } catch (sqlErr) {
+      console.warn('[AccountingService] SQLite purchase write warning:', sqlErr.message);
+    }
+
+    try {
+      const dbMongo = await getMongoDb();
+      if (dbMongo) {
+        await dbMongo.collection('accounting_purchases').updateOne(
+          { shop_id: shopId, id: purchaseId },
+          { $set: purchaseDoc },
+          { upsert: true }
+        );
+        for (const item of processedItems) {
+          await dbMongo.collection('accounting_products').updateOne(
+            { shop_id: shopId, id: item.productId },
+            { 
+              $inc: { current_stock: item.quantity },
+              $set: { purchase_price: item.purchasePrice, updated_at: new Date().toISOString() }
+            }
+          );
+        }
+      }
+    } catch (mErr) {
+      console.warn('[AccountingService] Mongo purchase sync notice:', mErr.message);
     }
 
     // Ledger Integration: Insert 'expense' transaction in Bahi-Khata ledger
@@ -814,6 +940,28 @@ export const accountingService = {
 
   async getPurchases(shopId, { search = '', status = '', from = '', to = '', limit = 50, offset = 0 } = {}) {
     if (!shopId) return [];
+
+    try {
+      const dbMongo = await getMongoDb();
+      if (dbMongo) {
+        const query = { shop_id: shopId };
+        if (status && status !== 'all') query.payment_status = status;
+        if (search) {
+          const regex = new RegExp(search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+          query.$or = [{ purchase_number: regex }, { supplier_name: regex }];
+        }
+        if (from) query.purchase_date = { ...query.purchase_date, $gte: from };
+        if (to) query.purchase_date = { ...query.purchase_date, $lte: to };
+
+        let cursor = dbMongo.collection('accounting_purchases').find(query).sort({ purchase_date: -1, created_at: -1 });
+        if (offset) cursor = cursor.skip(Number(offset));
+        if (limit) cursor = cursor.limit(Number(limit));
+        const docs = await cursor.toArray();
+        if (docs && docs.length > 0) {
+          return docs.map(({ _id, ...rest }) => rest);
+        }
+      }
+    } catch (_) {}
 
     let query = 'SELECT * FROM purchases WHERE shop_id = ?';
     const params = [shopId];
@@ -847,6 +995,16 @@ export const accountingService = {
 
   async getPurchaseById(shopId, id) {
     if (!shopId || !id) return null;
+    try {
+      const dbMongo = await getMongoDb();
+      if (dbMongo) {
+        const doc = await dbMongo.collection('accounting_purchases').findOne({ shop_id: shopId, id });
+        if (doc) {
+          const { _id, ...rest } = doc;
+          return rest;
+        }
+      }
+    } catch (_) {}
     const purchase = db.prepare('SELECT * FROM purchases WHERE shop_id = ? AND id = ?').get(shopId, id);
     if (!purchase) return null;
 

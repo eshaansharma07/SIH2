@@ -41,6 +41,7 @@ db.prepare = function(sql) {
 
 // Configure pragmas safely based on environment
 try {
+  db.pragma('foreign_keys = OFF');
   if (isServerless) {
     db.pragma('journal_mode = MEMORY');
     db.pragma('synchronous = OFF');

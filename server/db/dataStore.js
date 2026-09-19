@@ -34,6 +34,24 @@ export const dataStore = {
   // 1. SHOPS
   // ==========================================
 
+  syncShopToSqlite(shop) {
+    if (!shop || !shop.id) return;
+    try {
+      db.prepare(`
+        INSERT OR REPLACE INTO shops (
+          id, name, owner_name, trade_type, trade_name, village, district, state,
+          vintage_years, monthly_revenue, ownership, bank_account_type, phone, password, owner_category, is_demo
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        shop.id, shop.name || '', shop.owner_name || '', shop.trade_type || 'kirana', shop.trade_name || 'kirana',
+        shop.village || '', shop.district || '', shop.state || 'Uttar Pradesh',
+        Number(shop.vintage_years) || 1, Number(shop.monthly_revenue) || 0, shop.ownership || 'rented',
+        shop.bank_account_type || 'savings', shop.phone || '', shop.password || '1234',
+        shop.owner_category || 'general', shop.is_demo ? 1 : 0
+      );
+    } catch (_) {}
+  },
+
   async getShopById(id) {
     if (!id) return null;
     const isMongo = await this.isPrimaryMongo();
@@ -41,7 +59,11 @@ export const dataStore = {
       try {
         const col = await getShopsCollection();
         const doc = await col.findOne({ id });
-        if (doc) return cleanDoc(doc);
+        if (doc) {
+          const cleaned = cleanDoc(doc);
+          this.syncShopToSqlite(cleaned);
+          return cleaned;
+        }
       } catch (err) {
         console.warn('[DataStore] Mongo getShopById fallback:', err.message);
       }
@@ -92,7 +114,11 @@ export const dataStore = {
 
         const query = { $or: orConditions };
         const doc = await col.findOne(query, { sort: { is_demo: 1, created_at: -1 } });
-        if (doc) return cleanDoc(doc);
+        if (doc) {
+          const cleaned = cleanDoc(doc);
+          this.syncShopToSqlite(cleaned);
+          return cleaned;
+        }
       } catch (err) {
         console.warn('[DataStore] Mongo findShopByPhoneOrId fallback:', err.message);
       }
@@ -112,6 +138,7 @@ export const dataStore = {
   },
 
   async upsertShop(shopData) {
+    this.syncShopToSqlite(shopData);
     const isMongo = await this.isPrimaryMongo();
     if (isMongo) {
       try {
