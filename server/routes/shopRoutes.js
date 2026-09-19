@@ -52,7 +52,8 @@ router.post(['/setup', '/register'], async (req, res) => {
       bank_account_type,
       phone,
       password,
-      owner_category
+      owner_category,
+      otp
     } = req.body;
 
     if (!name || !name.trim()) {
@@ -66,9 +67,63 @@ router.post(['/setup', '/register'], async (req, res) => {
       return res.status(400).json({ success: false, error: 'Trade category is required' });
     }
 
+    const normalizedPhone = normalizeIndianPhone(phone);
+    if (!normalizedPhone) {
+      return res.status(400).json({
+        success: false,
+        error: 'Please enter a valid 10-digit mobile number.'
+      });
+    }
+
+    // Verify phone uniqueness for real shop accounts
+    const digitsOnly = extract10Digits(normalizedPhone);
+    const existingShop = await dataStore.findShopByPhoneOrId(normalizedPhone, digitsOnly);
+    if (existingShop && existingShop.is_demo !== 1) {
+      return res.status(409).json({
+        success: false,
+        error: 'An account with this mobile number already exists. Please log in instead.'
+      });
+    }
+
+    // If OTP is provided, verify it with Twilio Verify v2
+    if (otp) {
+      const cleanOtp = String(otp).trim();
+      if (!/^\d{6}$/.test(cleanOtp)) {
+        return res.status(400).json({
+          success: false,
+          error: 'Please enter a valid 6-digit OTP.'
+        });
+      }
+
+      // Check lockout status
+      const attemptCheck = rateLimiterService.checkVerifyAttempts(normalizedPhone);
+      if (!attemptCheck.allowed) {
+        return res.status(429).json({
+          success: false,
+          error: 'Too many verification attempts. Please wait and try again later.'
+        });
+      }
+
+      const verification = await twilioVerifyService.checkVerification(normalizedPhone, cleanOtp);
+      if (!verification.approved) {
+        rateLimiterService.recordVerifyFailure(normalizedPhone);
+        return res.status(400).json({
+          success: false,
+          error: 'Incorrect OTP. Please check the SMS and try again.'
+        });
+      }
+
+      // Reset verify attempts upon approval
+      rateLimiterService.resetVerifyAttempts(normalizedPhone);
+    } else if (twilioVerifyService.isConfigured() && process.env.NODE_ENV !== 'test') {
+      return res.status(400).json({
+        success: false,
+        error: 'OTP verification is required to complete registration.'
+      });
+    }
+
     const id = `shop-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`;
     const finalPassword = (password && String(password).trim()) || '1234';
-    const cleanPhone = phone ? String(phone).replace(/\D/g, '').trim() : '';
 
     const newShop = {
       id,
@@ -83,7 +138,7 @@ router.post(['/setup', '/register'], async (req, res) => {
       monthly_revenue: Math.max(0, Number(monthly_revenue) || 0),
       ownership: ownership || 'rented',
       bank_account_type: bank_account_type || 'savings',
-      phone: cleanPhone || (phone ? String(phone).trim() : ''),
+      phone: normalizedPhone,
       password: finalPassword,
       owner_category: owner_category || 'general',
       is_demo: 0,
@@ -108,7 +163,7 @@ router.post(['/setup', '/register'], async (req, res) => {
 // Send Real-Time SMS OTP via Twilio Verify v2
 router.post('/send-otp', async (req, res) => {
   try {
-    const { phone } = req.body;
+    const { phone, type = 'login' } = req.body;
     if (!phone || !String(phone).trim()) {
       return res.status(400).json({
         success: false,
@@ -142,15 +197,24 @@ router.post('/send-otp', async (req, res) => {
       });
     }
 
-    // Verify whether a shop exists for this phone number
+    // Verify whether a shop exists for this phone number based on auth type
     const digitsOnly = extract10Digits(normalizedPhone);
     const shop = await dataStore.findShopByPhoneOrId(normalizedPhone, digitsOnly);
 
-    if (!shop) {
-      return res.status(404).json({
-        success: false,
-        error: 'No shop account found with this phone number. Please register your shop first.'
-      });
+    if (type === 'register') {
+      if (shop && shop.is_demo !== 1) {
+        return res.status(409).json({
+          success: false,
+          error: 'An account with this mobile number already exists. Please log in instead.'
+        });
+      }
+    } else {
+      if (!shop) {
+        return res.status(404).json({
+          success: false,
+          error: 'No shop account found with this phone number. Please register your shop first.'
+        });
+      }
     }
 
     // Dispatch SMS via Twilio Verify v2

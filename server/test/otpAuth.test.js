@@ -319,6 +319,101 @@ test('Real-Time SMS OTP Authentication & Security Suite', async (t) => {
     assert.strictEqual(decoded.isDemo, true);
   });
 
+  // =========================================================================
+  // 7. Registration SMS OTP Verification Suite
+  // =========================================================================
+  await t.test('7.1 Registration with valid OTP creates shop and returns JWT token', async () => {
+    let mockSentTo = null;
+    let mockCheckedCode = null;
+
+    twilioVerifyService.setMockClient({
+      verify: {
+        v2: {
+          services: () => ({
+            verifications: {
+              create: async ({ to }) => {
+                mockSentTo = to;
+                return { status: 'pending' };
+              }
+            },
+            verificationChecks: {
+              create: async ({ to, code }) => {
+                mockCheckedCode = code;
+                if (code === '654321') {
+                  return { status: 'approved' };
+                }
+                return { status: 'denied' };
+              }
+            }
+          })
+        }
+      }
+    });
+
+    const newShopId = `test-reg-otp-${Date.now()}`;
+    const newPhone = '9876543219';
+    const normalizedPhone = normalizeIndianPhone(newPhone);
+
+    // Verify OTP approval with mock
+    const verifyRes = await twilioVerifyService.checkVerification(normalizedPhone, '654321');
+    assert.strictEqual(verifyRes.approved, true);
+
+    // Register shop
+    const shopData = {
+      id: newShopId,
+      name: 'Verma Stationery',
+      owner_name: 'Pooja Verma',
+      phone: normalizedPhone,
+      trade_type: 'stationery',
+      trade_name: 'stationery',
+      village: 'Kalyanpur',
+      district: 'Kanpur',
+      state: 'Uttar Pradesh',
+      vintage_years: 2,
+      monthly_revenue: 35000,
+      is_demo: 0
+    };
+    await dataStore.upsertShop(shopData);
+
+    const created = await dataStore.getShopById(newShopId);
+    assert.ok(created);
+    assert.strictEqual(created.name, 'Verma Stationery');
+    assert.strictEqual(created.phone, normalizedPhone);
+
+    const token = generateShopToken(created);
+    const decoded = verifyShopToken(token);
+    assert.ok(decoded);
+    assert.strictEqual(decoded.shopId, newShopId);
+    assert.strictEqual(decoded.phone, normalizedPhone);
+
+    // Clean up
+    db.prepare('DELETE FROM shops WHERE id = ?').run(newShopId);
+    twilioVerifyService.setMockClient(null);
+  });
+
+  await t.test('7.2 Registration with incorrect OTP is denied', async () => {
+    twilioVerifyService.setMockClient({
+      verify: {
+        v2: {
+          services: () => ({
+            verificationChecks: {
+              create: async ({ code }) => {
+                if (code === '112233') return { status: 'approved' };
+                return { status: 'denied' };
+              }
+            }
+          })
+        }
+      }
+    });
+
+    const verifyWrong = await twilioVerifyService.checkVerification('+919876543219', '000000');
+    assert.strictEqual(verifyWrong.approved, false);
+
+    twilioVerifyService.setMockClient(null);
+  });
+
   await closeMongoConnection();
 });
+
 

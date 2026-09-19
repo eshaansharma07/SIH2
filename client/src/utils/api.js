@@ -95,7 +95,9 @@ export const api = {
       return { success: true, shop: fallbackShop, offline: true };
     }
   },
-  sendLoginOTP: (phone) => request('/shop/send-otp', { method: 'POST', body: JSON.stringify({ phone }) }),
+  sendOTP: (phone, type = 'login') => request('/shop/send-otp', { method: 'POST', body: JSON.stringify({ phone, type }) }),
+  sendLoginOTP: (phone) => api.sendOTP(phone, 'login'),
+  sendRegisterOTP: (phone) => api.sendOTP(phone, 'register'),
   verifyLoginOTP: (phone, otp) => request('/shop/verify-otp', { method: 'POST', body: JSON.stringify({ phone, otp }) }),
   demoLogin: () => request('/shop/demo-login', { method: 'POST' }),
   loginShop: async (phone, password) => {

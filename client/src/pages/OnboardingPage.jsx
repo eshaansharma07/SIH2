@@ -99,14 +99,19 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
   const countdownTimerRef = useRef(null);
 
   // Register Form states
+  const [regStep, setRegStep] = useState('details'); // 'details' | 'otp'
   const [regShopName, setRegShopName] = useState('');
   const [regOwnerName, setRegOwnerName] = useState('');
   const [regPhone, setRegPhone] = useState('');
-  const [regPassword, setRegPassword] = useState('1234');
   const [regTradeType, setRegTradeType] = useState('kirana');
   const [regState, setRegState] = useState('Uttar Pradesh');
   const [regVillage, setRegVillage] = useState('Utraula Dehat');
   const [regDistrict, setRegDistrict] = useState('Balrampur');
+  const [regOtpDigits, setRegOtpDigits] = useState(['', '', '', '', '', '']);
+  const [regResendCountdown, setRegResendCountdown] = useState(0);
+
+  const regOtpInputRefs = useRef([]);
+  const regCountdownTimerRef = useRef(null);
 
   // Watch Demo Modal
   const [watchDemoOpen, setWatchDemoOpen] = useState(false);
@@ -122,12 +127,27 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
     } catch (_) {}
   }, []);
 
-  // Cleanup countdown timer on unmount
+  // Cleanup countdown timers on unmount
   useEffect(() => {
     return () => {
       if (countdownTimerRef.current) clearInterval(countdownTimerRef.current);
+      if (regCountdownTimerRef.current) clearInterval(regCountdownTimerRef.current);
     };
   }, []);
+
+  const startRegResendTimer = () => {
+    setRegResendCountdown(30);
+    if (regCountdownTimerRef.current) clearInterval(regCountdownTimerRef.current);
+    regCountdownTimerRef.current = setInterval(() => {
+      setRegResendCountdown(prev => {
+        if (prev <= 1) {
+          clearInterval(regCountdownTimerRef.current);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
 
   const startResendTimer = () => {
     setResendCountdown(30);
@@ -279,11 +299,12 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
     otpInputRefs.current[nextFocusIndex]?.focus();
   };
 
-  // Auth: handle Register
-  const handleRegisterSubmit = async (e) => {
+  // Auth: Send Real SMS OTP for Registration
+  const handleRegisterSendOtp = async (e) => {
     e?.preventDefault();
     setAuthLoading(true);
     setAuthError('');
+    setAuthSuccessMsg('');
     try {
       const cleanPhone = regPhone.replace(/\D/g, '').slice(-10);
       if (!cleanPhone || cleanPhone.length < 10) {
@@ -292,18 +313,75 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
       if (!regShopName.trim()) {
         throw new Error(language === 'hi' ? 'दुकान का नाम आवश्यक है' : 'Shop name is required');
       }
+      const res = await api.sendRegisterOTP(cleanPhone);
+      if (res && res.success) {
+        setRegStep('otp');
+        setRegOtpDigits(['', '', '', '', '', '']);
+        setAuthSuccessMsg(language === 'hi' ? 'ओटीपी सफलतापूर्वक आपके मोबाइल पर भेज दिया गया है' : 'OTP sent successfully to your mobile number');
+        startRegResendTimer();
+        setTimeout(() => {
+          regOtpInputRefs.current[0]?.focus();
+        }, 150);
+      } else {
+        throw new Error(res?.error || 'Failed to send OTP');
+      }
+    } catch (err) {
+      setAuthError(err.message || (language === 'hi' ? 'ओटीपी भेजने में असमर्थ। कृपया पुनः प्रयास करें।' : 'Failed to send OTP. Please try again.'));
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  // Auth: Resend SMS OTP for Registration
+  const handleRegisterResendOtp = async () => {
+    if (regResendCountdown > 0 || authLoading) return;
+    setAuthLoading(true);
+    setAuthError('');
+    setAuthSuccessMsg('');
+    try {
+      const cleanPhone = regPhone.replace(/\D/g, '').slice(-10);
+      const res = await api.sendRegisterOTP(cleanPhone);
+      if (res && res.success) {
+        setRegOtpDigits(['', '', '', '', '', '']);
+        setAuthSuccessMsg(language === 'hi' ? 'नया ओटीपी भेज दिया गया है' : 'New OTP sent successfully');
+        startRegResendTimer();
+        setTimeout(() => {
+          regOtpInputRefs.current[0]?.focus();
+        }, 100);
+      } else {
+        throw new Error(res?.error || 'Failed to resend OTP');
+      }
+    } catch (err) {
+      setAuthError(err.message || 'Failed to resend OTP');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  // Auth: Verify OTP & Complete Registration
+  const handleRegisterVerifyAndSubmit = async (e) => {
+    e?.preventDefault();
+    const enteredOtp = regOtpDigits.join('');
+    if (enteredOtp.length !== 6) {
+      setAuthError(language === 'hi' ? 'कृपया 6 अंकों का पूरा ओटीपी दर्ज करें' : 'Please enter the complete 6-digit OTP');
+      return;
+    }
+    setAuthLoading(true);
+    setAuthError('');
+    try {
+      const cleanPhone = regPhone.replace(/\D/g, '').slice(-10);
       const res = await api.registerShop({
         name: regShopName.trim(),
         owner_name: regOwnerName.trim() || regShopName.trim(),
         phone: cleanPhone,
-        password: regPassword || '1234',
         trade_type: regTradeType,
         trade_name: regTradeType,
         state: regState,
         district: regDistrict || 'Balrampur',
         village: regVillage || 'Utraula Dehat',
         vintage_years: 1,
-        bank_account_type: 'State Bank of India'
+        bank_account_type: 'State Bank of India',
+        otp: enteredOtp
       });
       if (res && res.shop) {
         if (res.token) {
@@ -315,10 +393,49 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
         throw new Error(res?.error || 'Registration failed');
       }
     } catch (err) {
-      setAuthError(err.message || 'Registration failed. Please check inputs.');
+      setAuthError(err.message || (language === 'hi' ? 'गलत ओटीपी। कृपया एसएमएस जांचें और पुनः प्रयास करें।' : 'Incorrect OTP or registration failed. Please try again.'));
     } finally {
       setAuthLoading(false);
     }
+  };
+
+  // Registration OTP Individual Digit Handlers
+  const handleRegOtpDigitChange = (index, value) => {
+    const cleaned = value.replace(/\D/g, '');
+    if (!cleaned) {
+      const copy = [...regOtpDigits];
+      copy[index] = '';
+      setRegOtpDigits(copy);
+      return;
+    }
+    const digit = cleaned.slice(-1);
+    const copy = [...regOtpDigits];
+    copy[index] = digit;
+    setRegOtpDigits(copy);
+
+    if (index < 5) {
+      regOtpInputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleRegOtpKeyDown = (index, e) => {
+    if (e.key === 'Backspace' && !regOtpDigits[index] && index > 0) {
+      regOtpInputRefs.current[index - 1]?.focus();
+    }
+  };
+
+  const handleRegOtpPaste = (e) => {
+    e.preventDefault();
+    const pasted = e.clipboardData?.getData('text') || '';
+    const digits = pasted.replace(/\D/g, '').slice(0, 6);
+    if (!digits) return;
+    const nextDigits = ['', '', '', '', '', ''];
+    for (let i = 0; i < digits.length; i++) {
+      nextDigits[i] = digits[i];
+    }
+    setRegOtpDigits(nextDigits);
+    const nextFocusIndex = Math.min(digits.length, 5);
+    regOtpInputRefs.current[nextFocusIndex]?.focus();
   };
 
   // Auth: fast login with saved shop
@@ -1279,7 +1396,9 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
                       ? (loginStep === 'otp'
                           ? (language === 'hi' ? 'ओटीपी सत्यापित करें' : 'Verify Mobile')
                           : (language === 'hi' ? 'दुकानदार लॉगिन' : 'Welcome back'))
-                      : (language === 'hi' ? 'नया उद्यम पंजीकरण' : 'Register New Enterprise')}
+                      : (regStep === 'otp'
+                          ? (language === 'hi' ? 'मोबाइल नंबर सत्यापित करें' : 'Verify Mobile Number')
+                          : (language === 'hi' ? 'नया उद्यम पंजीकरण' : 'Register New Enterprise'))}
                   </span>
                 </div>
                 <p className="text-xs text-[#57534E]">
@@ -1287,16 +1406,18 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
                     ? (loginStep === 'otp'
                         ? `${language === 'hi' ? 'ओटीपी भेजा गया:' : 'OTP sent to'} +91 ${loginPhone.slice(0, 2)}XXX XX${loginPhone.slice(7)}`
                         : (language === 'hi' ? 'सुरक्षित एसएमएस ओटीपी के साथ प्रवेश करें' : 'Enter your registered mobile number for SMS OTP login'))
-                    : (language === 'hi' ? 'अपने व्यापार के लिए डिजिटल बही-खाता बनाएं' : 'Access your validated ledger & credit files')}
+                    : (regStep === 'otp'
+                        ? `${language === 'hi' ? 'ओटीपी भेजा गया:' : 'OTP sent to'} +91 ${regPhone.slice(0, 2)}XXX XX${regPhone.slice(7)}`
+                        : (language === 'hi' ? 'अपने व्यापार के लिए डिजिटल बही-खाता बनाएं' : 'Access your validated ledger & credit files'))}
                 </p>
               </div>
 
-              {/* Mode Toggle Pills (only show in login/phone or register mode) */}
-              {loginStep !== 'otp' && (
+              {/* Mode Toggle Pills (only show when neither login nor register is in OTP step) */}
+              {(loginStep !== 'otp' && regStep !== 'otp') && (
                 <div className="flex p-1 bg-[#EAE3D2]/70 rounded-xl text-xs font-bold">
                   <button
                     type="button"
-                    onClick={() => { setAuthMode('login'); setAuthError(''); setAuthSuccessMsg(''); }}
+                    onClick={() => { setAuthMode('login'); setLoginStep('phone'); setAuthError(''); setAuthSuccessMsg(''); }}
                     className={`flex-1 py-2 rounded-lg transition-all cursor-pointer ${
                       authMode === 'login' ? 'bg-white text-[#1C1917] shadow-sm' : 'text-[#78716C] hover:text-[#1C1917]'
                     }`}
@@ -1305,7 +1426,7 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
                   </button>
                   <button
                     type="button"
-                    onClick={() => { setAuthMode('register'); setAuthError(''); setAuthSuccessMsg(''); }}
+                    onClick={() => { setAuthMode('register'); setRegStep('details'); setAuthError(''); setAuthSuccessMsg(''); }}
                     className={`flex-1 py-2 rounded-lg transition-all cursor-pointer ${
                       authMode === 'register' ? 'bg-white text-[#1C1917] shadow-sm' : 'text-[#78716C] hover:text-[#1C1917]'
                     }`}
@@ -1492,109 +1613,196 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
                   </form>
                 )
               ) : (
-                <form onSubmit={handleRegisterSubmit} className="space-y-3.5">
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-[#1C1917]">Enterprise Name</label>
-                    <input
-                      type="text"
-                      required
-                      value={regShopName}
-                      onChange={(e) => setRegShopName(e.target.value)}
-                      placeholder="e.g. Ramesh Kirana Store"
-                      className="w-full px-3.5 py-2 rounded-xl border border-[#D5CCBC] bg-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#0F3E2E]/20"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2">
+                regStep === 'details' ? (
+                  /* REGISTRATION STEP 1: SHOP DETAILS & PHONE */
+                  <form onSubmit={handleRegisterSendOtp} className="space-y-3.5">
                     <div className="space-y-1">
-                      <label className="text-xs font-bold text-[#1C1917]">Proprietor</label>
+                      <label className="text-xs font-bold text-[#1C1917]">
+                        {language === 'hi' ? 'उद्यम का नाम' : 'Enterprise Name'}
+                      </label>
                       <input
                         type="text"
-                        value={regOwnerName}
-                        onChange={(e) => setRegOwnerName(e.target.value)}
-                        placeholder="Ramesh Kumar"
-                        className="w-full px-3.5 py-2 rounded-xl border border-[#D5CCBC] bg-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#0F3E2E]/20"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-xs font-bold text-[#1C1917]">Mobile Number</label>
-                      <input
-                        type="tel"
                         required
-                        value={regPhone}
-                        onChange={(e) => setRegPhone(e.target.value)}
-                        placeholder="9876543210"
-                        className="w-full px-3.5 py-2 rounded-xl border border-[#D5CCBC] bg-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#0F3E2E]/20"
+                        value={regShopName}
+                        onChange={(e) => setRegShopName(e.target.value)}
+                        placeholder="e.g. Ramesh Kirana Store"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-[#D5CCBC] bg-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#0F3E2E]/20"
                       />
                     </div>
-                  </div>
 
-                  <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold text-[#1C1917]">
+                          {language === 'hi' ? 'मालिक का नाम' : 'Proprietor'}
+                        </label>
+                        <input
+                          type="text"
+                          value={regOwnerName}
+                          onChange={(e) => setRegOwnerName(e.target.value)}
+                          placeholder="Ramesh Kumar"
+                          className="w-full px-3.5 py-2.5 rounded-xl border border-[#D5CCBC] bg-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#0F3E2E]/20"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold text-[#1C1917]">
+                          {language === 'hi' ? 'मोबाइल नंबर' : 'Mobile Number'}
+                        </label>
+                        <div className="flex rounded-xl border border-[#D5CCBC] bg-white overflow-hidden focus-within:ring-2 focus-within:ring-[#0F3E2E]/20 focus-within:border-[#0F3E2E] transition">
+                          <span className="bg-[#EAE3D2]/70 text-[#1C1917] font-bold text-xs px-2.5 py-2 flex items-center border-r border-[#D5CCBC] select-none">
+                            +91
+                          </span>
+                          <input
+                            type="tel"
+                            inputMode="numeric"
+                            maxLength={10}
+                            required
+                            value={regPhone}
+                            onChange={(e) => {
+                              setRegPhone(e.target.value.replace(/\D/g, '').slice(0, 10));
+                              setAuthError('');
+                            }}
+                            placeholder="9876543210"
+                            className="w-full px-2.5 py-2 bg-transparent text-xs font-semibold text-[#1C1917] tracking-wider focus:outline-none"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
                     <div className="space-y-1">
-                      <label className="text-xs font-bold text-[#1C1917]">Trade Category</label>
+                      <label className="text-xs font-bold text-[#1C1917]">
+                        {language === 'hi' ? 'व्यापार श्रेणी' : 'Trade Category'}
+                      </label>
                       <select
                         value={regTradeType}
                         onChange={(e) => setRegTradeType(e.target.value)}
                         className="w-full px-3 py-2 rounded-xl border border-[#D5CCBC] bg-white text-xs font-semibold"
                       >
-                        <option value="kirana">Kirana & Grocery</option>
-                        <option value="tailoring">Tailoring & Textiles</option>
-                        <option value="dairy">Dairy & Milk</option>
-                        <option value="agri">Fertilizer & Seeds</option>
-                        <option value="hardware">Hardware & Electrical</option>
+                        <option value="kirana">Kirana & Grocery (किराना)</option>
+                        <option value="tailoring">Tailoring & Textiles (सिलाई एवं वस्त्र)</option>
+                        <option value="dairy">Dairy & Milk (डेयरी एवं दुग्ध)</option>
+                        <option value="agri">Fertilizer & Seeds (कृषि व बीज)</option>
+                        <option value="hardware">Hardware & Electrical (हार्डवेयर)</option>
                       </select>
                     </div>
 
-                    <div className="space-y-1">
-                      <label className="text-xs font-bold text-[#1C1917]">4-Digit PIN</label>
-                      <input
-                        type="password"
-                        maxLength={4}
-                        value={regPassword}
-                        onChange={(e) => setRegPassword(e.target.value)}
-                        placeholder="1234"
-                        className="w-full px-3 py-2 rounded-xl border border-[#D5CCBC] bg-white text-xs font-semibold"
-                      />
-                    </div>
-                  </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold text-[#1C1917]">
+                          {language === 'hi' ? 'राज्य / केंद्र शासित प्रदेश' : 'State / UT'}
+                        </label>
+                        <select
+                          value={regState}
+                          onChange={(e) => setRegState(e.target.value)}
+                          className="w-full px-3 py-2 rounded-xl border border-[#D5CCBC] bg-white text-xs font-semibold"
+                        >
+                          {INDIAN_STATES_AND_UTS.map((s) => (
+                            <option key={s.id} value={s.id}>
+                              {s.labelEn}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
 
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="space-y-1">
-                      <label className="text-xs font-bold text-[#1C1917]">State / UT</label>
-                      <select
-                        value={regState}
-                        onChange={(e) => setRegState(e.target.value)}
-                        className="w-full px-3 py-2 rounded-xl border border-[#D5CCBC] bg-white text-xs font-semibold"
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold text-[#1C1917]">
+                          {language === 'hi' ? 'गांव / कस्बा' : 'Village / Town'}
+                        </label>
+                        <input
+                          type="text"
+                          value={regVillage}
+                          onChange={(e) => setRegVillage(e.target.value)}
+                          placeholder="Utraula Dehat"
+                          className="w-full px-3.5 py-2 rounded-xl border border-[#D5CCBC] bg-white text-xs font-semibold"
+                        />
+                      </div>
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={authLoading || regPhone.length < 10 || !regShopName.trim()}
+                      className="w-full py-3 rounded-xl bg-[#0F3E2E] hover:bg-[#144F3B] text-white text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer disabled:opacity-50 mt-2 shadow-sm"
+                    >
+                      {authLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Phone className="w-4 h-4" />}
+                      <span>{authLoading ? (language === 'hi' ? 'ओटीपी भेजा जा रहा है...' : 'Sending OTP...') : (language === 'hi' ? 'ओटीपी भेजें और आगे बढ़ें' : 'Send SMS OTP & Continue')}</span>
+                    </button>
+                  </form>
+                ) : (
+                  /* REGISTRATION STEP 2: 6-DIGIT OTP VERIFICATION */
+                  <form onSubmit={handleRegisterVerifyAndSubmit} className="space-y-5">
+                    <div className="space-y-2 text-center">
+                      <div className="text-xs text-[#57534E]">
+                        {language === 'hi' ? 'एसएमएस में प्राप्त 6-अंकों का ओटीपी दर्ज करें' : 'Enter the 6-digit verification code received via SMS'}
+                      </div>
+                      
+                      {/* 6 Discrete Digit Boxes */}
+                      <div 
+                        className="flex items-center justify-center gap-2 sm:gap-2.5 pt-1"
+                        onPaste={handleRegOtpPaste}
                       >
-                        {INDIAN_STATES_AND_UTS.map((s) => (
-                          <option key={s.id} value={s.id}>
-                            {s.labelEn}
-                          </option>
+                        {regOtpDigits.map((digit, idx) => (
+                          <input
+                            key={idx}
+                            ref={(el) => (regOtpInputRefs.current[idx] = el)}
+                            type="text"
+                            inputMode="numeric"
+                            maxLength={1}
+                            value={digit}
+                            onChange={(e) => handleRegOtpDigitChange(idx, e.target.value)}
+                            onKeyDown={(e) => handleRegOtpKeyDown(idx, e)}
+                            className="w-10 h-12 sm:w-11 sm:h-13 text-center text-lg sm:text-xl font-mono font-black rounded-xl border border-[#D5CCBC] bg-white text-[#1C1917] focus:outline-none focus:ring-2 focus:ring-[#0F3E2E] focus:border-[#0F3E2E] shadow-sm transition"
+                          />
                         ))}
-                      </select>
+                      </div>
                     </div>
 
-                    <div className="space-y-1">
-                      <label className="text-xs font-bold text-[#1C1917]">Village / Town</label>
-                      <input
-                        type="text"
-                        value={regVillage}
-                        onChange={(e) => setRegVillage(e.target.value)}
-                        placeholder="Utraula Dehat"
-                        className="w-full px-3.5 py-2 rounded-xl border border-[#D5CCBC] bg-white text-xs font-semibold"
-                      />
-                    </div>
-                  </div>
+                    <button
+                      type="submit"
+                      disabled={authLoading || regOtpDigits.join('').length !== 6}
+                      className="w-full py-3 rounded-xl bg-[#0F3E2E] hover:bg-[#144F3B] text-white text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer disabled:opacity-50 shadow-sm"
+                    >
+                      {authLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                      <span>{authLoading ? (language === 'hi' ? 'खाता बन रहा है...' : 'Creating Enterprise...') : (language === 'hi' ? 'ओटीपी सत्यापित करें और खाता बनाएं' : 'Verify OTP & Create Enterprise')}</span>
+                    </button>
 
-                  <button
-                    type="submit"
-                    disabled={authLoading}
-                    className="w-full py-3 rounded-xl bg-[#0F3E2E] hover:bg-[#144F3B] text-white text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer disabled:opacity-50 mt-2"
-                  >
-                    {authLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserPlus className="w-4 h-4" />}
-                    <span>{authLoading ? 'Registering...' : 'Create Enterprise Profile'}</span>
-                  </button>
-                </form>
+                    {/* Resend Countdown & Action */}
+                    <div className="flex flex-col items-center gap-2 text-xs pt-1">
+                      <div className="flex items-center gap-1.5 text-[#57534E]">
+                        <span>{language === 'hi' ? 'ओटीपी नहीं मिला?' : "Didn't receive the OTP?"}</span>
+                        {regResendCountdown > 0 ? (
+                          <span className="font-semibold text-[#78716C]">
+                            {language === 'hi' 
+                              ? `${regResendCountdown}s में पुनः भेजें` 
+                              : `Resend in ${regResendCountdown}s`}
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            disabled={authLoading}
+                            onClick={handleRegisterResendOtp}
+                            className="font-bold text-[#0F3E2E] hover:underline cursor-pointer flex items-center gap-1"
+                          >
+                            <RotateCw className="w-3 h-3" />
+                            <span>{language === 'hi' ? 'ओटीपी दोबारा भेजें' : 'Resend OTP'}</span>
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Edit Details Option */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setRegStep('details');
+                          setAuthError('');
+                          setAuthSuccessMsg('');
+                        }}
+                        className="text-[11px] font-semibold text-[#78716C] hover:text-[#1C1917] cursor-pointer flex items-center gap-1 mt-1"
+                      >
+                        <ArrowLeft className="w-3 h-3" />
+                        <span>{language === 'hi' ? 'विवरण बदलें' : 'Edit Details'}</span>
+                      </button>
+                    </div>
+                  </form>
+                )
               )}
 
             </motion.div>
