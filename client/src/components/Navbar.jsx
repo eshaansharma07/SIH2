@@ -16,7 +16,8 @@ import {
   ShieldCheck,
   Sparkles,
   ChevronRight,
-  ArrowRight
+  ArrowRight,
+  Receipt
 } from 'lucide-react';
 import { useTranslation } from '../i18n/LanguageContext';
 import { api } from '../utils/api';
@@ -245,6 +246,66 @@ export function Navbar({
             try { sessionStorage.setItem('saakhsetu_cashflow_tab', 'customers'); } catch (_) {}
             setActiveTab('cashflow');
             window.dispatchEvent(new CustomEvent('saakhsetu:switch-tab', { detail: { tab: 'customers' } }));
+          }
+        }
+      ]
+    },
+    { 
+      id: 'accounting', 
+      label: language === 'hi' ? 'व्यापार अकाउंटिंग' : 'Accounting & Billing', 
+      icon: Receipt,
+      menuTitle: language === 'hi' ? 'व्यापार अकाउंटिंग व बिलिंग' : 'Vyapaar Accounting & Billing',
+      menuTagline: language === 'hi' ? 'पक्की बिलिंग, इन्वेंटरी, सप्लायर व जीएसटी सारांश।' : 'Invoicing, stock, suppliers & GST summary.',
+      menuDescription: language === 'hi' ? 'ग्रामीण दुकानों के लिए सरल व संपूर्ण अकाउंटिंग प्रणाली।' : 'Complete accounting, inventory and GST suite for rural retail.',
+      items: [
+        {
+          id: 'acc-billing',
+          title: language === 'hi' ? 'त्वरित बिलिंग (POS)' : 'Rapid Billing / POS',
+          description: language === 'hi' ? '15 सेकंड में पक्का बिल या पर्ची' : 'Create instant customer invoices',
+          action: () => {
+            try { sessionStorage.setItem('saakhsetu_accounting_tab', 'invoices'); } catch (_) {}
+            setActiveTab('accounting');
+            window.dispatchEvent(new CustomEvent('saakhsetu:accounting-tab', { detail: { tab: 'invoices', action: 'new_invoice' } }));
+          }
+        },
+        {
+          id: 'acc-inventory',
+          title: language === 'hi' ? 'स्टॉक व इन्वेंट्री' : 'Inventory & Stock',
+          description: language === 'hi' ? 'कम स्टॉक चेतावनी व रीऑर्डर' : 'Stock levels & low stock alerts',
+          action: () => {
+            try { sessionStorage.setItem('saakhsetu_accounting_tab', 'inventory'); } catch (_) {}
+            setActiveTab('accounting');
+            window.dispatchEvent(new CustomEvent('saakhsetu:accounting-tab', { detail: { tab: 'inventory' } }));
+          }
+        },
+        {
+          id: 'acc-receivables',
+          title: language === 'hi' ? 'उधार आयु व वसूली' : 'Receivables Aging',
+          description: language === 'hi' ? '0-90+ दिन बकाया व व्हाट्सएप स्मरण' : 'Aging buckets & reminders',
+          action: () => {
+            try { sessionStorage.setItem('saakhsetu_accounting_tab', 'receivables'); } catch (_) {}
+            setActiveTab('accounting');
+            window.dispatchEvent(new CustomEvent('saakhsetu:accounting-tab', { detail: { tab: 'receivables' } }));
+          }
+        },
+        {
+          id: 'acc-purchases',
+          title: language === 'hi' ? 'थोक खरीद व सप्लायर' : 'Purchases & Suppliers',
+          description: language === 'hi' ? 'सप्लायर पर्ची व इनपुट टैक्स क्रेडिट' : 'Procurement & vendor management',
+          action: () => {
+            try { sessionStorage.setItem('saakhsetu_accounting_tab', 'purchases'); } catch (_) {}
+            setActiveTab('accounting');
+            window.dispatchEvent(new CustomEvent('saakhsetu:accounting-tab', { detail: { tab: 'purchases' } }));
+          }
+        },
+        {
+          id: 'acc-gst',
+          title: language === 'hi' ? 'जीएसटी व पीएंडएल रिपोर्ट' : 'GST & P&L Reports',
+          description: language === 'hi' ? 'टैक्स सारांश एवं नफा-नुकसान पत्रक' : 'GST summary & Profit/Loss',
+          action: () => {
+            try { sessionStorage.setItem('saakhsetu_accounting_tab', 'reports'); } catch (_) {}
+            setActiveTab('accounting');
+            window.dispatchEvent(new CustomEvent('saakhsetu:accounting-tab', { detail: { tab: 'reports' } }));
           }
         }
       ]

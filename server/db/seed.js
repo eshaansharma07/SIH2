@@ -472,7 +472,150 @@ export function seedDatabase(force = false) {
     console.warn('[Seed] Schemes seed notice:', err.message);
   }
 
+  // 6. Seed Realistic Vyapaar Accounting Data for Ramesh Kirana
+  seedAccountingData();
+
   console.log('✅ Database seeded: 4 months of realistic rural transactions & 14 statutory government schemes verified.');
+}
+
+function seedAccountingData() {
+  try {
+    const shopId = 'ramesh-kirana';
+    // Clear old accounting seed records
+    db.prepare(`DELETE FROM invoice_items WHERE invoice_id IN (SELECT id FROM invoices WHERE shop_id = ?)`).run(shopId);
+    db.prepare(`DELETE FROM invoices WHERE shop_id = ?`).run(shopId);
+    db.prepare(`DELETE FROM purchase_items WHERE purchase_id IN (SELECT id FROM purchases WHERE shop_id = ?)`).run(shopId);
+    db.prepare(`DELETE FROM purchases WHERE shop_id = ?`).run(shopId);
+    db.prepare(`DELETE FROM stock_movements WHERE shop_id = ?`).run(shopId);
+    db.prepare(`DELETE FROM products WHERE shop_id = ?`).run(shopId);
+    db.prepare(`DELETE FROM suppliers WHERE shop_id = ?`).run(shopId);
+
+    // 1. Insert Products
+    const insertProd = db.prepare(`
+      INSERT INTO products (
+        id, shop_id, name, sku, hsn_code, category, unit,
+        purchase_price, selling_price, gst_rate, current_stock,
+        reorder_level, is_active
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
+    `);
+
+    const products = [
+      ['prod-1', shopId, 'Sharbati Wheat Flour (Atta) 10kg', 'SKU-ATT-10K', '1101', 'Staples', 'bag', 340, 385, 5, 45, 15],
+      ['prod-2', shopId, 'Fortune Kachi Ghani Mustard Oil 1L', 'SKU-OIL-01L', '1514', 'Edible Oils', 'bottle', 128, 145, 5, 32, 10],
+      ['prod-3', shopId, 'Tata Salt Iodized 1kg', 'SKU-SLT-01K', '2501', 'Daily Essentials', 'pkt', 21, 28, 0, 60, 20],
+      ['prod-4', shopId, 'Madhur Pure Refined Sugar 5kg', 'SKU-SGR-05K', '1701', 'Staples', 'bag', 205, 230, 5, 24, 8],
+      ['prod-5', shopId, 'Royal Toor Dal Unpolished 1kg', 'SKU-DAL-01K', '0713', 'Pulses', 'pkt', 138, 162, 0, 28, 10],
+      ['prod-6', shopId, 'MDH Deggi Mirch Powder 100g', 'SKU-SPC-100', '0910', 'Spices', 'box', 68, 82, 5, 18, 10],
+      ['prod-7', shopId, 'Parle-G Gold Biscuits Pack', 'SKU-BSC-GLD', '1905', 'Snacks', 'pkt', 8.5, 10, 18, 85, 25],
+      ['prod-8', shopId, 'Dettol Original Bath Soap 75g', 'SKU-SOP-075', '3401', 'Personal Care', 'pcs', 32, 40, 18, 42, 12],
+      ['prod-9', shopId, 'Ghadi Detergent Powder 1kg', 'SKU-DET-01K', '3402', 'Cleaning', 'pkt', 52, 62, 18, 35, 15],
+      ['prod-10', shopId, 'Brooke Bond Red Label Tea 250g', 'SKU-TEA-250', '0902', 'Beverages', 'box', 110, 130, 5, 22, 8],
+      ['prod-11', shopId, 'Amul Taaza Toned Milk Tetra 1L', 'SKU-MLK-01L', '0401', 'Dairy', 'tetra', 62, 72, 0, 4, 10],
+      ['prod-12', shopId, 'Basmati Rice Rozana 5kg', 'SKU-RIC-05K', '1006', 'Staples', 'bag', 360, 420, 0, 5, 8]
+    ];
+
+    for (const p of products) {
+      insertProd.run(...p);
+    }
+
+    // 2. Insert Suppliers
+    const insertSupp = db.prepare(`
+      INSERT INTO suppliers (
+        id, shop_id, name, phone, gstin, address, state
+      ) VALUES (?, ?, ?, ?, ?, ?, ?)
+    `);
+
+    const suppliers = [
+      ['supp-1', shopId, 'Balrampur Galla Mandi Wholesale', '9839011223', '09AABCU9603R1ZM', 'Shop 14, Galla Mandi, Balrampur', 'Uttar Pradesh'],
+      ['supp-2', shopId, 'Awadh Agro & FMCG Distributors', '9876123456', '09AAECR1029K1Z4', 'Plot 4, Industrial Area, Gonda', 'Uttar Pradesh'],
+      ['supp-3', shopId, 'Purvanchal Dairy & Provisions', '9918234567', '09AAGFD8821P1Z9', 'Kisan Bazar, Utraula Road', 'Uttar Pradesh']
+    ];
+
+    for (const s of suppliers) {
+      insertSupp.run(...s);
+    }
+
+    // 3. Insert Recent Invoices
+    const insertInv = db.prepare(`
+      INSERT INTO invoices (
+        id, shop_id, invoice_number, customer_id, customer_name, customer_phone,
+        invoice_date, due_date, subtotal, discount, taxable_amount,
+        cgst, sgst, igst, total_amount, paid_amount, balance_due,
+        payment_status, payment_mode, is_interstate, notes
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+
+    const insertInvItem = db.prepare(`
+      INSERT INTO invoice_items (
+        id, invoice_id, product_id, description, quantity, unit_price,
+        discount, taxable_amount, gst_rate, cgst, sgst, igst, total
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+
+    const today = new Date().toISOString().split('T')[0];
+    const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+    const twoDaysAgo = new Date(Date.now() - 172800000).toISOString().split('T')[0];
+
+    // Invoice 1: Counter Cash Sale
+    insertInv.run(
+      'inv-seed-1', shopId, 'INV-2026-0001', null, 'Walk-in Customer (नकदी)', '',
+      today, today, 600, 0, 575.5,
+      12.25, 12.25, 0, 600, 600, 0,
+      'paid', 'cash', 0, 'Counter walk-in grocery purchase'
+    );
+    insertInvItem.run('ii-1-1', 'inv-seed-1', 'prod-1', 'Sharbati Wheat Flour (Atta) 10kg', 1, 385, 0, 366.67, 5, 9.17, 9.17, 0, 385);
+    insertInvItem.run('ii-1-2', 'inv-seed-1', 'prod-2', 'Fortune Kachi Ghani Mustard Oil 1L', 1, 145, 0, 138.10, 5, 3.45, 3.45, 0, 145);
+    insertInvItem.run('ii-1-3', 'inv-seed-1', 'prod-7', 'Parle-G Gold Biscuits Pack', 7, 10, 0, 59.32, 18, 5.34, 5.34, 0, 70);
+
+    // Invoice 2: Masterji Ramswaroop (Monthly Grocery Udhaar)
+    insertInv.run(
+      'inv-seed-2', shopId, 'INV-2026-0002', 'cust-ramesh-1', 'Masterji Ramswaroop', '9876543210',
+      yesterday, new Date(Date.now() + 15 * 86400000).toISOString().split('T')[0], 1486, 0, 1445.62,
+      20.19, 20.19, 0, 1486, 500, 986,
+      'partial', 'khata', 0, 'Monthly family ration'
+    );
+    insertInvItem.run('ii-2-1', 'inv-seed-2', 'prod-1', 'Sharbati Wheat Flour (Atta) 10kg', 2, 385, 0, 733.33, 5, 18.33, 18.33, 0, 770);
+    insertInvItem.run('ii-2-2', 'inv-seed-2', 'prod-5', 'Royal Toor Dal Unpolished 1kg', 3, 162, 0, 486, 0, 0, 0, 0, 486);
+    insertInvItem.run('ii-2-3', 'inv-seed-2', 'prod-4', 'Madhur Pure Refined Sugar 5kg', 1, 230, 0, 219.05, 5, 5.48, 5.48, 0, 230);
+
+    // Invoice 3: Dharmendra Yadav (UPI payment)
+    insertInv.run(
+      'inv-seed-3', shopId, 'INV-2026-0003', 'cust-ramesh-2', 'Dharmendra Yadav', '9812345678',
+      twoDaysAgo, twoDaysAgo, 420, 0, 420,
+      0, 0, 0, 420, 420, 0,
+      'paid', 'upi', 0, 'Rice bag settlement'
+    );
+    insertInvItem.run('ii-3-1', 'inv-seed-3', 'prod-12', 'Basmati Rice Rozana 5kg', 1, 420, 0, 420, 0, 0, 0, 0, 420);
+
+    // 4. Insert Recent Purchases
+    const insertPurch = db.prepare(`
+      INSERT INTO purchases (
+        id, shop_id, purchase_number, supplier_id, supplier_name,
+        purchase_date, subtotal, gst, total_amount,
+        paid_amount, balance_due, payment_status, payment_mode,
+        is_interstate, notes
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+
+    const insertPurchItem = db.prepare(`
+      INSERT INTO purchase_items (
+        id, purchase_id, product_id, quantity, purchase_price, gst_rate, total
+      ) VALUES (?, ?, ?, ?, ?, ?, ?)
+    `);
+
+    insertPurch.run(
+      'pur-seed-1', shopId, 'PUR-2026-0001', 'supp-1', 'Balrampur Galla Mandi Wholesale',
+      yesterday, 12250, 612.5, 12862.5,
+      12862.5, 0, 'paid', 'bank_transfer',
+      0, 'Wheat flour & Sugar restocking'
+    );
+    insertPurchItem.run('pi-1-1', 'pur-seed-1', 'prod-1', 30, 340, 5, 10200);
+    insertPurchItem.run('pi-1-2', 'pur-seed-1', 'prod-4', 10, 205, 5, 2050);
+
+    console.log('✅ Seeded Vyapaar Accounting products, suppliers, invoices, and purchases for Ramesh Kirana.');
+  } catch (err) {
+    console.warn('[Seed] Accounting seed notice:', err.message);
+  }
 }
 
 // Auto-run if executed directly
