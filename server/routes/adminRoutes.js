@@ -1,7 +1,7 @@
 import express from 'express';
 import dataStore from '../db/dataStore.js';
 import { getScraperStatus, syncGovernmentSchemes } from '../services/schemeScraperService.js';
-import { getAllSchemes } from '../db/schemesData.js';
+import { SCHEMES } from '../db/schemesData.js';
 
 const router = express.Router();
 
@@ -13,7 +13,7 @@ router.get('/metrics', async (req, res) => {
   try {
     const metrics = await dataStore.getAdminMetrics();
     const scraperStatus = await getScraperStatus().catch(() => null);
-    const statutorySchemes = getAllSchemes() || [];
+    const statutorySchemes = SCHEMES || [];
 
     res.json({
       success: true,
