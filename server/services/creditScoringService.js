@@ -28,11 +28,16 @@ export function calculateCreditScore(shopOrId, transactionsOverride = null) {
   }
 
   // Fetch transactions from the last 120 days (use override if supplied)
-  const transactions = transactionsOverride || db.prepare(`
-    SELECT * FROM transactions 
-    WHERE shop_id = ? 
-    ORDER BY date DESC
-  `).all(shop.id);
+  const transactions = Array.isArray(transactionsOverride)
+    ? transactionsOverride
+    : db.prepare(`
+        SELECT * FROM transactions 
+        WHERE shop_id = ? 
+        ORDER BY date DESC
+      `).all(shop.id);
+
+  const isDemo = Boolean(shop.id === 'ramesh-kirana' || shop.is_demo);
+  const REQUIRED_TRANSACTIONS = 50;
 
   // 1. Calculate Core Financial Metrics
   let totalIncome = 0;
@@ -76,8 +81,177 @@ export function calculateCreditScore(shopOrId, transactionsOverride = null) {
   const digitalSharePct = totalIncome > 0 ? (totalDigitalSales / totalIncome) * 100 : 0;
   const udhaarToIncomePct = totalIncome > 0 ? (totalUdhaarGiven / totalIncome) * 100 : 0;
   const udhaarRecoveryRate = totalUdhaarGiven > 0 ? Math.min(100, (totalUdhaarRepaid / totalUdhaarGiven) * 100) : 100;
+  const vintage = Number(shop.vintage_years) || 1;
 
-  // Dynamic Credit Scoring Calculation (Works for brand-new and established shops)
+  // Strict Threshold: Real accounts with under 50 transactions are locked under audit
+  if (!isDemo && transactions.length < REQUIRED_TRANSACTIONS) {
+    const txCount = transactions.length;
+    const remaining = Math.max(0, REQUIRED_TRANSACTIONS - txCount);
+    const progressPct = Math.round((txCount / REQUIRED_TRANSACTIONS) * 100);
+
+    return {
+      shopId: shop.id,
+      shopName: shop.name,
+      totalScore: null,
+      score: null,
+      previousScore: null,
+      scoreDelta: null,
+      isUnrated: true,
+      transactionCount: txCount,
+      requiredTransactions: REQUIRED_TRANSACTIONS,
+      transactionsRemaining: remaining,
+      progressPct,
+      ratingBand: 'unrated',
+      ratingLabel: 'समीक्षाधीन (Under Audit)',
+      ratingBadge: 'Under Audit',
+      ratingColor: 'text-stone-600 bg-stone-100 border-stone-300',
+      riskTier: 'Pending Verification (Requires 50 verified transactions)',
+      factors: [
+        {
+          id: 'consistency',
+          name: 'Cash Flow & Logging Regularity',
+          nameHindi: 'दैनिक बही-खाता नियमितता',
+          weight: '30%',
+          score: null,
+          maxScore: 255,
+          percentage: progressPct,
+          status: 'pending',
+          explanation: `Score locked during onboarding audit. Logged ${txCount}/50 transactions (${remaining} remaining to unlock formal credit rating).`,
+          explanationHindi: `ऑनलॉगिंग समीक्षाधीन है। ${txCount}/50 लेन-देन दर्ज किए गए हैं (क्रेडिट रेटिंग अनलॉक करने के लिए ${remaining} शेष)।`,
+          tip: 'Log all daily transactions to complete the 50-transaction verification milestone.',
+          subFactors: [
+            {
+              id: 'daily_logging',
+              name: 'Daily Logging Regularity',
+              nameHindi: 'दैनिक बही-खाता प्रविष्टि',
+              score: null,
+              maxScore: 160,
+              status: 'pending'
+            },
+            {
+              id: 'cash_discipline',
+              name: 'Cash Inflow Discipline & Volatility',
+              nameHindi: 'दैनिक नकद अनुशासन',
+              score: null,
+              maxScore: 95,
+              status: 'pending'
+            }
+          ]
+        },
+        {
+          id: 'growth',
+          name: 'Turnover Growth & Stability',
+          nameHindi: 'कारोबार वृद्धि एवं स्थिरता',
+          weight: '25%',
+          score: null,
+          maxScore: 212,
+          percentage: progressPct,
+          status: 'pending',
+          explanation: `Turnover stability and revenue momentum require a minimum 50-transaction history.`,
+          explanationHindi: `कारोबार स्थिरता और राजस्व गति के लिए न्यूनतम 50 लेन-देन आवश्यक हैं।`,
+          tip: 'Continue recording daily counter cash and digital sales.',
+          subFactors: [
+            {
+              id: 'turnover_momentum',
+              name: 'Turnover Growth Momentum',
+              nameHindi: 'कारोबार वृद्धि गति',
+              score: null,
+              maxScore: 130,
+              status: 'pending'
+            },
+            {
+              id: 'seasonal_resiliency',
+              name: 'Monsoon & Seasonal Dip Resiliency',
+              nameHindi: 'मौसमी लचीलापन',
+              score: null,
+              maxScore: 82,
+              status: 'pending'
+            }
+          ]
+        },
+        {
+          id: 'discipline',
+          name: 'Working Capital & Khata Discipline',
+          nameHindi: 'उधार एवं कार्यशील पूंजी अनुशासन',
+          weight: '25%',
+          score: null,
+          maxScore: 213,
+          percentage: progressPct,
+          status: 'pending',
+          explanation: `Udhaar recovery cycles and digital payments share will be calculated after 50 transactions.`,
+          explanationHindi: `उधार वसूली चक्र और डिजिटल भुगतान अनुपात की गणना 50 लेन-देन के बाद की जाएगी।`,
+          tip: 'Record udhaar given and collections promptly.',
+          subFactors: [
+            {
+              id: 'udhaar_recovery',
+              name: 'Udhaar Book Recovery Cycle',
+              nameHindi: 'उधार वसूली चक्र',
+              score: null,
+              maxScore: 140,
+              status: 'pending'
+            },
+            {
+              id: 'digital_adoption',
+              name: 'Digital Payments Multiplier',
+              nameHindi: 'डिजिटल भुगतान अनुपात',
+              score: null,
+              maxScore: 73,
+              status: 'pending'
+            }
+          ]
+        },
+        {
+          id: 'vintage',
+          name: 'Business Vintage & Formal Linkage',
+          nameHindi: 'दुकान की अवधि एवं बैंक लिंकेज',
+          weight: '20%',
+          score: null,
+          maxScore: 170,
+          percentage: progressPct,
+          status: 'pending',
+          explanation: `Business vintage and KYC credentials will be verified once transactional activity reaches 50 logs.`,
+          explanationHindi: `व्यापार अवधि एवं बैंक विवरण 50 लेन-देन के बाद सत्यापित किए जाएंगे।`,
+          tip: 'Ensure your Udyam and bank account details are linked.',
+          subFactors: [
+            {
+              id: 'operating_vintage',
+              name: 'Operating Vintage & Stability',
+              nameHindi: 'दुकान संचालन अवधि',
+              score: null,
+              maxScore: 110,
+              status: 'pending'
+            },
+            {
+              id: 'banking_linkage',
+              name: 'Commercial Banking Account Linkage',
+              nameHindi: 'बैंक खाता एवं एमएसएमई पंजीकरण',
+              score: null,
+              maxScore: 60,
+              status: 'pending'
+            }
+          ]
+        }
+      ],
+      metrics: {
+        totalIncome: Math.round(totalIncome),
+        totalExpense: Math.round(totalExpense),
+        netSurplus: Math.round(netSurplus),
+        totalUdhaarPending: Math.max(0, totalUdhaarGiven - totalUdhaarRepaid),
+        udhaarRecoveryRate: Math.round(udhaarRecoveryRate),
+        digitalSharePct: Math.round(digitalSharePct),
+        loggedDays: loggedDaysCount,
+        vintageYears: vintage,
+        totalTransactions: txCount,
+        requiredTransactions: REQUIRED_TRANSACTIONS,
+        transactionsRemaining: remaining,
+        cashDisciplineScore: null,
+        seasonalResiliencyScore: null,
+        digitalMultiplierScore: null
+      }
+    };
+  }
+
+  // Dynamic Credit Scoring Calculation (For verified shops with >= 50 transactions or Demo shop)
   // Sub-factor 1A: Daily Logging Regularity (Max 160 pts)
   const dailyLoggingScore = loggedDaysCount > 0 
     ? Math.min(160, 30 + Math.round((loggedDaysCount / 45) * 130))
@@ -180,7 +354,6 @@ export function calculateCreditScore(shopOrId, transactionsOverride = null) {
   // 5. FACTOR 4: Business Vintage & Institutional Footprint (Weight 20% -> Max 170 pts)
   // =========================================================================
   // Sub-factor 4A: Operating Vintage (Max 110 pts)
-  const vintage = Number(shop.vintage_years) || 1;
   let vintageScorePart = 50;
   if (vintage >= 5) vintageScorePart = 110;
   else if (vintage >= 3) vintageScorePart = 95;
@@ -383,7 +556,6 @@ export function calculateCreditScore(shopOrId, transactionsOverride = null) {
     }
   ];
 
-  const isDemo = shop.id === 'ramesh-kirana';
   const scoreDelta = isDemo ? 44 : (loggedDaysCount > 0 ? Math.min(50, 15 + loggedDaysCount * 8 + (totalDigitalSales > 0 ? 10 : 0)) : 15);
 
   return {
@@ -391,8 +563,13 @@ export function calculateCreditScore(shopOrId, transactionsOverride = null) {
     shopName: shop.name,
     totalScore: finalScore,
     score: finalScore,
+    previousScore: Math.max(300, finalScore - scoreDelta),
     scoreDelta,
     isUnrated: false,
+    transactionCount: transactions.length,
+    requiredTransactions: REQUIRED_TRANSACTIONS,
+    transactionsRemaining: 0,
+    progressPct: 100,
     ratingBand,
     ratingLabel,
     ratingBadge,
@@ -408,6 +585,9 @@ export function calculateCreditScore(shopOrId, transactionsOverride = null) {
       digitalSharePct: Math.round(digitalSharePct),
       loggedDays: loggedDaysCount,
       vintageYears: vintage,
+      totalTransactions: transactions.length,
+      requiredTransactions: REQUIRED_TRANSACTIONS,
+      transactionsRemaining: 0,
       cashDisciplineScore,
       seasonalResiliencyScore,
       digitalMultiplierScore
@@ -449,7 +629,9 @@ export function generateCAM(shopOrId, transactionsOverride = null) {
     documentType: 'CREDIT_APPRAISAL_MEMORANDUM',
     underwritingFramework: 'RBI Priority Sector Lending (PSL) & Nayak Committee Working Capital Norms',
     riskClassification: creditData.riskTier,
-    recommendedFacility: m.totalIncome > 50000 ? 'MUDRA Kishor (₹50,000 to ₹5,00,000)' : 'MUDRA Shishu (Up to ₹50,000)',
+    recommendedFacility: creditData.isUnrated 
+      ? 'Onboarding Evaluation (Requires 50 verified transactions)' 
+      : (m.totalIncome > 50000 ? 'MUDRA Kishor (₹50,000 to ₹5,00,000)' : 'MUDRA Shishu (Up to ₹50,000)'),
     memoMetadata: {
       memoId: memoNumber,
       standard: 'RBI Priority Sector Lending (PSL) Cash-Flow Underwriting Guidelines',

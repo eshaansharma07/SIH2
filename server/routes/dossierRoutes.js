@@ -38,7 +38,7 @@ router.get('/generate', async (req, res) => {
         txs = await dataStore.getTransactions(shopId, { limit: 1000 });
       } catch (e) {}
     }
-    const creditData = calculateCreditScore(shop, txs && txs.length > 0 ? txs : null);
+    const creditData = calculateCreditScore(shop, Array.isArray(txs) ? txs : null);
     const schemeData = matchSchemesForShop(shopId);
 
     const monthlySummary = {};

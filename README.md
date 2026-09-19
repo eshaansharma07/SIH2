@@ -128,7 +128,7 @@ To maintain technical due-diligence credibility during evaluations:
 ### 2. Live Micro-Enterprise Onboarding (Real Merchant Journey)
 - **Zero Demo Leakage**: Real registrations begin with an honest Day-1 empty slate.
 - **SMS OTP Verification**: Requires mobile verification via Twilio Verify or Sandbox Fallback.
-- **Dynamic Foundation Score**: Newly registered shops receive a realistic dynamic starter score (540–620 pts / Starter Tier) based on commercial banking linkage and vintage, dynamically compounding as transactions are logged.
+- **50-Transaction Audit Milestone**: To preserve alternative credit underwriting integrity, real merchant accounts remain locked as *Under Audit* (`isUnrated: true`, `totalScore: null`, zero fabricated baselines) until 50 bahi-khata ledger transactions are recorded. An interactive 50-transaction milestone progress bar guides merchants to log daily counter cash, expenses, and digital sales, unlocking the formal 4-pillar rating (300–850) and MUDRA loan eligibility upon reaching 50 entries.
 
 ---
 

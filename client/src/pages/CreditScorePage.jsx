@@ -101,14 +101,19 @@ export function CreditScorePage({ shop, creditData, onNavigateTab }) {
   const [activeRecommendationPillar, setActiveRecommendationPillar] = useState(null);
 
   // Score determination: use live creditData, shop foundation, or Ramesh baseline 809
-  const isDemo = !shop?.id || shop?.id === 'ramesh-kirana';
-  const isUnrated = !isDemo && (creditData?.isUnrated && !creditData?.totalScore);
-  const baseScore = isUnrated ? null : (creditData?.totalScore ?? (isDemo ? 809 : (creditData?.score ?? 615)));
-  const currentTier = getSchemeTier(baseScore);
+  const isDemo = Boolean(!shop?.id || shop?.id === 'ramesh-kirana' || shop?.is_demo);
+  const txCount = creditData?.transactionCount ?? creditData?.metrics?.totalTransactions ?? (isDemo ? 120 : (creditData?.metrics?.loggedDays ?? 0));
+  const requiredTransactions = creditData?.requiredTransactions || 50;
+  const transactionsRemaining = Math.max(0, requiredTransactions - txCount);
+  const progressPct = Math.min(100, Math.round((txCount / requiredTransactions) * 100));
+
+  const isUnrated = !isDemo && (creditData?.isUnrated || !creditData?.totalScore || txCount < requiredTransactions);
+  const baseScore = isUnrated ? null : (creditData?.totalScore ?? (isDemo ? 809 : null));
+  const currentTier = isUnrated ? null : getSchemeTier(baseScore);
   const factors = creditData?.factors || [];
 
   // Score change compared to last month: calculated dynamically or baseline
-  const scoreDelta = isDemo ? 44 : (creditData?.scoreDelta ?? 15);
+  const scoreDelta = isUnrated ? null : (isDemo ? 44 : (creditData?.scoreDelta ?? null));
 
   // External action listener from Top Navigation Mega-Menu
   useEffect(() => {
@@ -205,7 +210,7 @@ export function CreditScorePage({ shop, creditData, onNavigateTab }) {
   const activeProjectedScore = simulatedData?.projectedScore ?? localProjection.projectedScore ?? (baseScore || (isDemo ? 809 : 615));
   const activeDelta = simulatedData?.delta ?? localProjection.delta ?? (scoreDelta || 15);
   const projectedTier = getSchemeTier(activeProjectedScore);
-  const tierUpgraded = projectedTier.scheme !== currentTier.scheme && activeProjectedScore > (baseScore || 0);
+  const tierUpgraded = currentTier ? (projectedTier.scheme !== currentTier.scheme && activeProjectedScore > (baseScore || 0)) : false;
 
   return (
     <div className="w-full space-y-6 animate-in fade-in duration-300">
@@ -289,24 +294,55 @@ export function CreditScorePage({ shop, creditData, onNavigateTab }) {
             {/* Semicircular SVG Arc Gauge with Score inside & 4-Tier Scale Strip */}
             <div className="w-full flex justify-center py-1">
               {isUnrated ? (
-                <div className="text-center p-4 space-y-2 border border-dashed border-stone-200 rounded-2xl bg-stone-50 w-full">
-                  <ShieldCheck className="w-8 h-8 text-amber-600 mx-auto" />
-                  <h4 className="font-bold text-xs text-stone-800">
-                    {language === 'hi' ? 'क्रेडिट प्रोफाइल निर्माणाधीन है' : 'Credit Profile Under Evaluation'}
-                  </h4>
-                  <p className="text-[11px] text-stone-500 max-w-xs mx-auto">
+                <div className="p-4 space-y-3 border border-dashed border-stone-300 rounded-2xl bg-[#FAF9F6] w-full">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center">
+                        <ShieldCheck className="w-4 h-4 text-amber-700" />
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-xs text-stone-900">
+                          {language === 'hi' ? 'क्रेडिट स्कोर: समीक्षाधीन' : 'Credit Score: Under Audit'}
+                        </h4>
+                        <span className="text-[10px] text-stone-500 font-mono">
+                          {txCount} / {requiredTransactions} {language === 'hi' ? 'लेन-देन' : 'Transactions'}
+                        </span>
+                      </div>
+                    </div>
+                    <span className="text-[11px] font-bold text-amber-800 bg-amber-100/80 px-2.5 py-0.5 rounded-full border border-amber-200">
+                      {progressPct}%
+                    </span>
+                  </div>
+
+                  {/* Progress bar */}
+                  <div className="w-full bg-stone-200 h-2.5 rounded-full overflow-hidden">
+                    <div 
+                      className="bg-emerald-600 h-full rounded-full transition-all duration-500 ease-out" 
+                      style={{ width: `${Math.max(4, progressPct)}%` }}
+                    />
+                  </div>
+
+                  <p className="text-[11px] text-stone-600 leading-relaxed">
                     {language === 'hi' 
-                      ? 'पहला पारदर्शी स्कोर अनलॉक करने के लिए कम से कम 5 लेन-देन दर्ज करें।' 
-                      : 'Record at least 5 transactions across 3 days to calculate your verified score.'
+                      ? `क्रेडिट स्कोर और बैंक मूल्यांकन केवल 50 लेन-देन के बाद लागू होते हैं। अनलॉक करने के लिए अभी ${transactionsRemaining} और लेन-देन आवश्यक हैं।` 
+                      : `Credit score and bank appraisal unlock only after 50 transactions. ${transactionsRemaining} more transactions needed to unlock.`
                     }
                   </p>
+
+                  <button
+                    type="button"
+                    onClick={() => onNavigateTab?.('transactions')}
+                    className="w-full py-2 px-3 rounded-xl bg-[#0F3E2E] hover:bg-[#165640] text-white text-xs font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
+                  >
+                    <span>{language === 'hi' ? '+ लेन-देन दर्ज करें' : '+ Record Transactions'}</span>
+                  </button>
                 </div>
               ) : (
                 <CreditGauge 
                   score={baseScore || 809} 
                   variant="editorial" 
                   language={language}
-                  ratingLabel={language === 'hi' ? currentTier.tierNameHi : currentTier.tierName}
+                  ratingLabel={language === 'hi' ? currentTier?.tierNameHi : currentTier?.tierName}
                 />
               )}
             </div>
@@ -319,11 +355,17 @@ export function CreditScorePage({ shop, creditData, onNavigateTab }) {
               <div className="flex items-center gap-1.5 text-[#0F3E2E]">
                 <TrendingUp className="w-4 h-4 text-emerald-700" />
                 <span className="font-serif font-black text-xl sm:text-2xl tracking-tight">
-                  {scoreDelta !== null ? `+${scoreDelta} points` : 'Building history'}
+                  {isUnrated 
+                    ? (language === 'hi' ? 'समीक्षाधीन' : 'Under Audit')
+                    : (scoreDelta !== null ? `+${scoreDelta} points` : 'Building history')
+                  }
                 </span>
               </div>
               <p className="text-[11px] text-stone-500 mt-0.5">
-                {language === 'hi' ? 'पिछले महीने की तुलना में' : 'compared to last month'}
+                {isUnrated 
+                  ? (language === 'hi' ? `${txCount}/50 लेन-देन दर्ज (${transactionsRemaining} शेष)` : `${txCount}/50 transactions logged (${transactionsRemaining} remaining)`)
+                  : (language === 'hi' ? 'पिछले महीने की तुलना में' : 'compared to last month')
+                }
               </p>
             </div>
 
@@ -334,13 +376,22 @@ export function CreditScorePage({ shop, creditData, onNavigateTab }) {
                   <Sprout className="w-3.5 h-3.5" />
                 </div>
                 <span className="font-bold text-xs text-stone-900">
-                  {language === 'hi' ? 'आप सही राह पर हैं!' : "You're on the right track!"}
+                  {isUnrated 
+                    ? (language === 'hi' ? '50 लेन-देन का लक्ष्य' : '50-Transaction Milestone')
+                    : (language === 'hi' ? 'आप सही राह पर हैं!' : "You're on the right track!")
+                  }
                 </span>
               </div>
               <p className="text-[11px] text-stone-600 leading-relaxed">
-                {language === 'hi'
-                  ? 'दैनिक लेन-देन नियमित रखें और समय पर उधारी वसूलते रहें।'
-                  : 'Keep maintaining regular transactions and timely udhaar recovery.'
+                {isUnrated
+                  ? (language === 'hi'
+                      ? `स्कोर व ऋण पात्रता अनलॉक करने के लिए रोज के लेन-देन दर्ज करें। अभी ${transactionsRemaining} लेन-देन शेष हैं।`
+                      : `Log daily sales and counter expenses to establish your verified credit profile. ${transactionsRemaining} entries remaining.`
+                    )
+                  : (language === 'hi'
+                      ? 'दैनिक लेन-देन नियमित रखें और समय पर उधारी वसूलते रहें।'
+                      : 'Keep maintaining regular transactions and timely udhaar recovery.'
+                    )
                 }
               </p>
             </div>
@@ -351,7 +402,7 @@ export function CreditScorePage({ shop, creditData, onNavigateTab }) {
               onClick={() => setIsHistoryModalOpen(true)}
               className="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-stone-200 bg-white hover:bg-stone-50 hover:border-stone-300 text-stone-800 text-xs font-bold transition-all shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer"
             >
-              <span>{language === 'hi' ? 'स्कोर का इतिहास देखें →' : 'View Score History →'}</span>
+              <span>{isUnrated ? (language === 'hi' ? 'सत्यापन स्थिति देखें →' : 'View Audit Status →') : (language === 'hi' ? 'स्कोर का इतिहास देखें →' : 'View Score History →')}</span>
             </button>
           </div>
 
@@ -368,7 +419,10 @@ export function CreditScorePage({ shop, creditData, onNavigateTab }) {
                     {language === 'hi' ? 'ऋण पात्रता का अनुमान' : 'Loan Eligibility Estimate'}
                   </h3>
                   <p className="text-[10px] text-stone-500">
-                    {language === 'hi' ? 'वर्तमान स्कोर और प्रोफाइल पर आधारित (अनुमान)' : 'Based on your current score and profile'}
+                    {isUnrated 
+                      ? (language === 'hi' ? '50 लेन-देन के बाद पात्रता निर्धारित होगी' : 'Unlocks after 50 verified transactions')
+                      : (language === 'hi' ? 'वर्तमान स्कोर और प्रोफाइल पर आधारित (अनुमान)' : 'Based on your current score and profile')
+                    }
                   </p>
                 </div>
               </div>
@@ -376,8 +430,8 @@ export function CreditScorePage({ shop, creditData, onNavigateTab }) {
               {/* Big Facility Range */}
               <div className="font-serif font-black text-2xl sm:text-3xl text-[#0F3E2E] tracking-tight my-2.5">
                 {isUnrated 
-                  ? (language === 'hi' ? 'न्यूनतम ₹10,000 – ₹50,000' : '₹10,000 – ₹50,000')
-                  : (language === 'hi' ? currentTier.facilityHi : currentTier.facility)
+                  ? (language === 'hi' ? '50 लेन-देन के बाद अनलॉक होगा' : 'Unlocks after 50 transactions')
+                  : (language === 'hi' ? currentTier?.facilityHi : currentTier?.facility)
                 }
               </div>
 
@@ -385,7 +439,10 @@ export function CreditScorePage({ shop, creditData, onNavigateTab }) {
               <div className="inline-flex items-center gap-1.5 bg-white border border-emerald-300/80 text-emerald-800 px-3 py-1 rounded-full text-xs font-bold shadow-2xs max-w-full">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
                 <span className="truncate">
-                  {language === 'hi' ? currentTier.schemeHi : currentTier.scheme}
+                  {isUnrated 
+                    ? (language === 'hi' ? 'सत्यापन आवश्यक (50 लेन-देन)' : 'Audit Milestone: 50 Transactions')
+                    : (language === 'hi' ? currentTier?.schemeHi : currentTier?.scheme)
+                  }
                 </span>
               </div>
             </div>
@@ -619,21 +676,42 @@ export function CreditScorePage({ shop, creditData, onNavigateTab }) {
             {/* Score Delta Highlight */}
             <div className="bg-[#FAF8F5] border border-stone-200/80 rounded-2xl p-4 flex items-center justify-between">
               <div>
-                <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">Growth Trend</span>
+                <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">
+                  {isUnrated ? (language === 'hi' ? 'ऑडिट प्रगति' : 'Audit Progress') : 'Growth Trend'}
+                </span>
                 <div className="font-serif font-black text-2xl text-[#0F3E2E] mt-0.5">
-                  {scoreDelta !== null ? `+${scoreDelta} Points` : 'Initial Audit'}
+                  {isUnrated
+                    ? `${txCount} / ${requiredTransactions}`
+                    : (scoreDelta !== null ? `+${scoreDelta} Points` : 'Initial Audit')
+                  }
                 </div>
                 <p className="text-xs text-stone-600 mt-0.5">
-                  {language === 'hi' ? 'पिछले 30 दिनों में निरंतर सुधार' : 'Consistent improvement over last 30 days'}
+                  {isUnrated
+                    ? (language === 'hi' ? `क्रेडिट स्कोर अनलॉक करने के लिए ${transactionsRemaining} और लेन-देन आवश्यक हैं` : `${transactionsRemaining} more transactions needed to unlock credit rating`)
+                    : (language === 'hi' ? 'पिछले 30 दिनों में निरंतर सुधार' : 'Consistent improvement over last 30 days')
+                  }
                 </p>
               </div>
               <div className="text-right">
-                <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">Current Score</span>
+                <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">
+                  {isUnrated ? (language === 'hi' ? 'वर्तमान स्थिति' : 'Current Status') : 'Current Score'}
+                </span>
                 <div className="font-serif font-black text-2xl text-stone-900 mt-0.5">
-                  {baseScore} <span className="text-xs text-stone-400 font-normal">/ 850</span>
+                  {isUnrated ? (
+                    <span className="text-stone-700 text-lg sm:text-xl font-bold">
+                      {language === 'hi' ? 'समीक्षाधीन' : 'Under Audit'}
+                    </span>
+                  ) : (
+                    <>
+                      {baseScore} <span className="text-xs text-stone-400 font-normal">/ 850</span>
+                    </>
+                  )}
                 </div>
-                <span className="inline-block mt-0.5 text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
-                  {language === 'hi' ? currentTier.tierNameHi : currentTier.tierName}
+                <span className="inline-block mt-0.5 text-xs font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+                  {isUnrated 
+                    ? (language === 'hi' ? `${progressPct}% पूर्ण` : `${progressPct}% Complete`) 
+                    : (language === 'hi' ? currentTier?.tierNameHi : currentTier?.tierName)
+                  }
                 </span>
               </div>
             </div>
@@ -641,11 +719,73 @@ export function CreditScorePage({ shop, creditData, onNavigateTab }) {
             {/* Monthly Progression Timeline */}
             <div className="space-y-3">
               <h4 className="font-serif font-bold text-xs text-stone-800 tracking-wide uppercase">
-                {language === 'hi' ? 'मासिक ऑडिट रिकॉर्ड' : 'Audit Timeline'}
+                {isUnrated 
+                  ? (language === 'hi' ? 'सत्यापन मील के पत्थर' : 'Verification Milestones')
+                  : (language === 'hi' ? 'मासिक ऑडिट रिकॉर्ड' : 'Audit Timeline')
+                }
               </h4>
 
               <div className="space-y-2 text-xs">
-                {isDemo ? (
+                {isUnrated ? (
+                  <>
+                    {/* Milestone 1: Registration */}
+                    <div className="flex items-center justify-between p-3 rounded-xl bg-emerald-50/50 border border-emerald-200">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-2.5 h-2.5 rounded-full bg-emerald-600 ring-4 ring-emerald-100" />
+                        <div>
+                          <span className="font-bold text-stone-900">
+                            {language === 'hi' ? 'चरण 1: व्यापारी पंजीकरण' : 'Milestone 1: Merchant Registration'}
+                          </span>
+                          <span className="text-[10px] text-emerald-700 block font-medium">
+                            {language === 'hi' ? 'सफलतापूर्वक सत्यापित एवं सक्रिय' : 'Successfully Verified & Enrolled'}
+                          </span>
+                        </div>
+                      </div>
+                      <span className="text-xs font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-md">
+                        {language === 'hi' ? 'पूर्ण' : 'Completed'}
+                      </span>
+                    </div>
+
+                    {/* Milestone 2: 50 Transactions */}
+                    <div className="flex items-center justify-between p-3 rounded-xl bg-amber-50/60 border border-amber-200">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-2.5 h-2.5 rounded-full bg-amber-500 ring-4 ring-amber-100 animate-pulse" />
+                        <div>
+                          <span className="font-bold text-stone-900">
+                            {language === 'hi' ? 'चरण 2: 50 बही-खाता लेन-देन' : 'Milestone 2: 50 Ledger Transactions'}
+                          </span>
+                          <span className="text-[10px] text-stone-600 block">
+                            {language === 'hi' 
+                              ? `${txCount}/50 प्रविष्टियां दर्ज (${transactionsRemaining} शेष)`
+                              : `${txCount}/50 entries recorded (${transactionsRemaining} remaining)`
+                            }
+                          </span>
+                        </div>
+                      </div>
+                      <span className="text-xs font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-md">
+                        {progressPct}%
+                      </span>
+                    </div>
+
+                    {/* Milestone 3: Score & Formal Bank Appraisal */}
+                    <div className="flex items-center justify-between p-3 rounded-xl bg-stone-50 border border-stone-200/80 opacity-60">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-2.5 h-2.5 rounded-full bg-stone-300" />
+                        <div>
+                          <span className="font-semibold text-stone-700">
+                            {language === 'hi' ? 'चरण 3: साख सेतु क्रेडिट रेटिंग एवं ऋण पात्रता' : 'Milestone 3: Alternative Credit Rating & Loan Eligibility'}
+                          </span>
+                          <span className="text-[10px] text-stone-500 block">
+                            {language === 'hi' ? '50 लेन-देन के बाद स्वतः सक्रिय होगा' : 'Unlocks automatically after 50 transactions'}
+                          </span>
+                        </div>
+                      </div>
+                      <span className="text-xs font-medium text-stone-500 bg-stone-200/70 px-2 py-0.5 rounded-md">
+                        {language === 'hi' ? 'लॉक्ड' : 'Locked'}
+                      </span>
+                    </div>
+                  </>
+                ) : isDemo ? (
                   <>
                     {/* Month 4 (Current) */}
                     <div className="flex items-center justify-between p-3 rounded-xl bg-emerald-50/50 border border-emerald-200">
@@ -798,7 +938,10 @@ export function CreditScorePage({ shop, creditData, onNavigateTab }) {
                           </span>
                         </div>
                         <span className="font-serif font-black text-xs text-stone-900 tabular-nums">
-                          {factor.score} / {factor.maxScore} pts ({factor.percentage}%)
+                          {factor.score !== null 
+                            ? `${factor.score} / ${factor.maxScore} pts (${factor.percentage}%)`
+                            : (language === 'hi' ? `समीक्षाधीन (${factor.percentage || 0}% दर्ज)` : `Under Audit (${factor.percentage || 0}% logged)`)
+                          }
                         </span>
                       </div>
 
@@ -820,7 +963,9 @@ export function CreditScorePage({ shop, creditData, onNavigateTab }) {
                           {factor.subFactors.map((sub, sIdx) => (
                             <div key={sIdx} className="flex justify-between items-center text-[10px] text-stone-600 bg-white/80 border border-stone-200/50 px-2.5 py-1 rounded-lg">
                               <span className="font-medium truncate">• {sub.name}</span>
-                              <span className="font-bold tabular-nums shrink-0 ml-1">{sub.score}/{sub.maxScore}</span>
+                              <span className="font-bold tabular-nums shrink-0 ml-1">
+                                {sub.score !== null ? `${sub.score}/${sub.maxScore}` : (language === 'hi' ? 'समीक्षाधीन' : 'Locked')}
+                              </span>
                             </div>
                           ))}
                         </div>
@@ -834,64 +979,84 @@ export function CreditScorePage({ shop, creditData, onNavigateTab }) {
                   <div className="p-4 rounded-2xl border bg-[#FAF8F5] border-stone-200/80">
                     <div className="flex items-center justify-between mb-1.5">
                       <span className="font-bold text-xs text-stone-900">Cash Flow & Logging Regularity (दैनिक बही-खाता नियमितता)</span>
-                      <span className="font-serif font-black text-xs text-stone-900">{isDemo ? '210 / 255 pts (82%)' : '150 / 255 pts (59%)'}</span>
+                      <span className="font-serif font-black text-xs text-stone-900">
+                        {isUnrated ? (language === 'hi' ? 'समीक्षाधीन (50 लेन-देन आवश्यक)' : 'Under Audit (50 txs required)') : (isDemo ? '210 / 255 pts (82%)' : '150 / 255 pts (59%)')}
+                      </span>
                     </div>
                     <p className="text-[11px] text-stone-600 leading-relaxed mb-2">
-                      {isDemo 
-                        ? 'Logged 118 active transaction days with a healthy net cash surplus of ₹68,657.'
-                        : `Active transaction tracking configured for ${shop?.name || 'your enterprise'}. Log transactions daily to compound score.`
+                      {isUnrated
+                        ? (language === 'hi' ? `वर्तमान में ${txCount}/50 लेन-देन दर्ज हैं। रेटिंग अनलॉक करने के लिए ${transactionsRemaining} और लेन-देन दर्ज करें।` : `Currently ${txCount}/50 transactions logged. Log ${transactionsRemaining} more to unlock formal rating.`)
+                        : (isDemo 
+                          ? 'Logged 118 active transaction days with a healthy net cash surplus of ₹68,657.'
+                          : `Active transaction tracking configured for ${shop?.name || 'your enterprise'}. Log transactions daily to compound score.`
+                        )
                       }
                     </p>
                     <div className="w-full bg-stone-200/80 h-2 rounded-full overflow-hidden">
-                      <div className="h-full rounded-full bg-emerald-600" style={{ width: isDemo ? '82%' : '59%' }} />
+                      <div className="h-full rounded-full bg-emerald-600" style={{ width: isUnrated ? `${progressPct}%` : (isDemo ? '82%' : '59%') }} />
                     </div>
                   </div>
 
                   <div className="p-4 rounded-2xl border bg-[#FAF8F5] border-stone-200/80">
                     <div className="flex items-center justify-between mb-1.5">
                       <span className="font-bold text-xs text-stone-900">Revenue Stability & Turnover (बिक्री स्थिरता एवं मासिक आय)</span>
-                      <span className="font-serif font-black text-xs text-stone-900">{isDemo ? '135 / 212 pts (64%)' : '130 / 212 pts (61%)'}</span>
+                      <span className="font-serif font-black text-xs text-stone-900">
+                        {isUnrated ? (language === 'hi' ? 'समीक्षाधीन' : 'Under Audit') : (isDemo ? '135 / 212 pts (64%)' : '130 / 212 pts (61%)')}
+                      </span>
                     </div>
                     <p className="text-[11px] text-stone-600 leading-relaxed mb-2">
-                      {isDemo 
-                        ? 'Recorded cumulative sales with resilient seasonal management through monsoon.'
-                        : `Baseline turnover profile established for ${shop?.trade_type || shop?.trade_name || 'enterprise'}.`
+                      {isUnrated
+                        ? (language === 'hi' ? 'बिक्री स्थिरता और राजस्व गति का मूल्यांकन 50 लेन-देन के बाद किया जाएगा।' : 'Turnover stability and revenue momentum will be appraised after 50 transactions.')
+                        : (isDemo 
+                          ? 'Recorded cumulative sales with resilient seasonal management through monsoon.'
+                          : `Baseline turnover profile established for ${shop?.trade_type || shop?.trade_name || 'enterprise'}.`
+                        )
                       }
                     </p>
                     <div className="w-full bg-stone-200/80 h-2 rounded-full overflow-hidden">
-                      <div className="h-full rounded-full bg-amber-500" style={{ width: isDemo ? '64%' : '61%' }} />
+                      <div className="h-full rounded-full bg-amber-500" style={{ width: isUnrated ? `${progressPct}%` : (isDemo ? '64%' : '61%') }} />
                     </div>
                   </div>
 
                   <div className="p-4 rounded-2xl border bg-[#FAF8F5] border-stone-200/80">
                     <div className="flex items-center justify-between mb-1.5">
                       <span className="font-bold text-xs text-stone-900">Working Capital & Udhaar Discipline (उधार वसूली एवं पूंजी अनुशासन)</span>
-                      <span className="font-serif font-black text-xs text-stone-900">{isDemo ? '175 / 213 pts (82%)' : '185 / 213 pts (87%)'}</span>
+                      <span className="font-serif font-black text-xs text-stone-900">
+                        {isUnrated ? (language === 'hi' ? 'समीक्षाधीन' : 'Under Audit') : (isDemo ? '175 / 213 pts (82%)' : '185 / 213 pts (87%)')}
+                      </span>
                     </div>
                     <p className="text-[11px] text-stone-600 leading-relaxed mb-2">
-                      {isDemo 
-                        ? 'Customer udhaar collected within 18 days average settlement cycle.'
-                        : 'Clean credit discipline with zero overdue credit dues.'
+                      {isUnrated
+                        ? (language === 'hi' ? 'उधार वसूली चक्र और डिजिटल अनुपात का विश्लेषण 50 लेन-देन के बाद सक्रिय होगा।' : 'Udhaar recovery cycles and digital adoption will be analyzed after 50 transactions.')
+                        : (isDemo 
+                          ? 'Customer udhaar collected within 18 days average settlement cycle.'
+                          : 'Clean credit discipline with zero overdue credit dues.'
+                        )
                       }
                     </p>
                     <div className="w-full bg-stone-200/80 h-2 rounded-full overflow-hidden">
-                      <div className="h-full rounded-full bg-emerald-600" style={{ width: isDemo ? '82%' : '87%' }} />
+                      <div className="h-full rounded-full bg-emerald-600" style={{ width: isUnrated ? `${progressPct}%` : (isDemo ? '82%' : '87%') }} />
                     </div>
                   </div>
 
                   <div className="p-4 rounded-2xl border bg-[#FAF8F5] border-stone-200/80">
                     <div className="flex items-center justify-between mb-1.5">
                       <span className="font-bold text-xs text-stone-900">Business Vintage & Banking Linkage (व्यापार अनुभव एवं बैंकिंग संबंध)</span>
-                      <span className="font-serif font-black text-xs text-stone-900">{isDemo ? '150 / 170 pts (88%)' : '125 / 170 pts (74%)'}</span>
+                      <span className="font-serif font-black text-xs text-stone-900">
+                        {isUnrated ? (language === 'hi' ? 'समीक्षाधीन' : 'Under Audit') : (isDemo ? '150 / 170 pts (88%)' : '125 / 170 pts (74%)')}
+                      </span>
                     </div>
                     <p className="text-[11px] text-stone-600 leading-relaxed mb-2">
-                      {isDemo 
-                        ? '4 years verified operating vintage at same village location with Aryavart Gramin Bank linkage.'
-                        : `${shop?.vintage_years || 1} year(s) operating history with ${shop?.bank_account_type || 'State Bank of India'} linkage.`
+                      {isUnrated
+                        ? (language === 'hi' ? 'व्यापार अवधि एवं बैंक लिंकेज सत्यापन 50 लेन-देन के बाद औपचारिक रूप से दर्ज होगा।' : 'Business vintage and banking linkage will be formally appraised after 50 transactions.')
+                        : (isDemo 
+                          ? '4 years verified operating vintage at same village location with Aryavart Gramin Bank linkage.'
+                          : `${shop?.vintage_years || 1} year(s) operating history with ${shop?.bank_account_type || 'State Bank of India'} linkage.`
+                        )
                       }
                     </p>
                     <div className="w-full bg-stone-200/80 h-2 rounded-full overflow-hidden">
-                      <div className="h-full rounded-full bg-emerald-600" style={{ width: isDemo ? '88%' : '74%' }} />
+                      <div className="h-full rounded-full bg-emerald-600" style={{ width: isUnrated ? `${progressPct}%` : (isDemo ? '88%' : '74%') }} />
                     </div>
                   </div>
                 </div>

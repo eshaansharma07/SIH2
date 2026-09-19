@@ -34,7 +34,7 @@ router.get('/', async (req, res) => {
       return res.status(404).json({ success: false, error: 'Shop not found' });
     }
 
-    const scoreData = calculateCreditScore(shop, txs && txs.length > 0 ? txs : null);
+    const scoreData = calculateCreditScore(shop, Array.isArray(txs) ? txs : null);
     res.json({ success: true, ...scoreData });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
@@ -58,7 +58,7 @@ router.get(['/:shopId/cam', '/cam'], async (req, res) => {
       return res.status(404).json({ success: false, error: 'Shop not found' });
     }
 
-    const cam = generateCAM(shop, txs && txs.length > 0 ? txs : null);
+    const cam = generateCAM(shop, Array.isArray(txs) ? txs : null);
     res.json({ success: true, cam });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
@@ -87,7 +87,7 @@ router.post('/simulate', async (req, res) => {
       return res.status(404).json({ success: false, error: 'Shop not found' });
     }
 
-    const baseData = calculateCreditScore(shop, txs && txs.length > 0 ? txs : null);
+    const baseData = calculateCreditScore(shop, Array.isArray(txs) ? txs : null);
     let projectedDelta = 0;
 
     // Logging days impact
