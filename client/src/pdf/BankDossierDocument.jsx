@@ -384,12 +384,12 @@ export function BankDossierDocument({ data }) {
 
         {/* Section 2: Alternative Credit Score & 4-Pillar Breakdown */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>2. Non-CIBIL Alternative Credit Assessment (300 - 850)</Text>
+          <Text style={styles.sectionTitle}>2. Statutory Alternative CIBIL Assessment (300 - 900)</Text>
           
           <View style={[styles.row, { marginBottom: 8 }]}>
             <View style={[styles.col3, styles.metricCardHighlight]}>
-              <Text style={styles.metricLabel}>Alternative Score</Text>
-              <Text style={[styles.metricValue, { color: '#1E523A' }]}>{totalScore} / 850</Text>
+              <Text style={styles.metricLabel}>CIBIL Assessment</Text>
+              <Text style={[styles.metricValue, { color: '#1E523A' }]}>{totalScore} / 900</Text>
               <Text style={styles.metricSub}>PSL Prime Band</Text>
             </View>
             <View style={[styles.col3, styles.metricCard]}>

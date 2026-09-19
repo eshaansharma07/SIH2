@@ -2210,10 +2210,12 @@ export const DEMO_DOSSIER = {
     "phone": "+91 98391 24789"
   },
   "creditEvaluation": {
-    "totalScore": 745,
-    "maxScore": 850,
-    "ratingLabel": "सक्षम एवं सुरक्षित (Loan Ready)",
-    "ratingBadge": "Loan Ready",
+    "totalScore": 786,
+    "maxScore": 900,
+    "cmrRank": "CMR-2",
+    "cmrLabel": "Low Credit Risk (Prime Bankable)",
+    "ratingLabel": "सक्षम एवं सुरक्षित (Prime Bankable)",
+    "ratingBadge": "Prime Bankable",
     "factors": [
       {
         "id": "consistency",

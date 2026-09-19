@@ -68,11 +68,11 @@ Currently registered under ${ctx.shopName} in ${ctx.location}.`
 बलरामपुर जिले में आगामी त्योहारों पर तेल, घी और चीनी की मांग में 40% से 45% उछाल आने का अनुमान है:
 1. थोक मंडी अग्रिम बुकिंग: बलरामपुर गल्ला मंडी में भाव बढ़ने से पहले खाद्य तेल और शुद्ध देसी घी का 35% अतिरिक्त स्टॉक इस बुधवार तक सुरक्षित करें।
 2. नकदी संतुलन: आपके पास वर्तमान में ₹${ctx.metrics.netSurplus.toLocaleString('en-IN')} का शुद्ध अधिशेष है। इसमें से ₹20,000 से ₹25,000 ही नए स्टॉक में लगाएं ताकि रोजमर्रा की नकद तरलता न रुके।
-3. मुद्रा सहायता: आपका वैकल्पिक क्रेडिट स्कोर ${ctx.creditScore}/850 (${ctx.creditRating}) है, जिससे आप PM MUDRA शिशु (₹50,000) या Kishor कार्यशील पूंजी ऋण के लिए बिना किसी बंधक (0% Collateral) के 100% पात्र हैं।`
+3. मुद्रा सहायता: आपका साख (CIBIL) स्कोर ${ctx.creditScore}/900 (${ctx.creditRating}) है, जिससे आप PM MUDRA शिशु (₹50,000) या Kishor कार्यशील पूंजी ऋण के लिए बिना किसी बंधक (0% Collateral) के 100% पात्र हैं।`
       : `राम राम ${ctx.ownerName} जी! 🙏 आगामी त्योहारों के लिए 3 त्वरित सुझाव:
 1. बलरामपुर मंडी में भाव बढ़ने से पहले खाद्य तेल और शुद्ध घी का 35% अतिरिक्त स्टॉक बुक करें।
 2. ₹${ctx.metrics.netSurplus.toLocaleString('en-IN')} अधिशेष में से ₹20,000 नए स्टॉक में लगाएं (मासिक बिक्री: ₹${ctx.last30DaysSummary.totalSales.toLocaleString('en-IN')})।
-3. आपका क्रेडिट स्कोर ${ctx.creditScore}/850 है, जिससे आप 0% बंधक पर PM MUDRA शिशु (₹50,000) लोन के पात्र हैं।`,
+3. आपका साख (CIBIL) स्कोर ${ctx.creditScore}/900 है, जिससे आप 0% बंधक पर PM MUDRA शिशु (₹50,000) लोन के पात्र हैं।`,
     responseEn: (ctx, isDetailed = false) => isDetailed
       ? `Namaste ${ctx.ownerName} ji! 🙏
 
@@ -85,11 +85,11 @@ Based on your verified 30-day sales log during this ${ctx.currentSeason}:
 In Balrampur district, peak festival demand is projected to spike staple consumption by 40% to 45%:
 1. Advance Wholesale Mandi Booking: Lock in 35% additional inventory of cooking oil, pure ghee, and sugar at Balrampur Galla Mandi before wholesale prices climb.
 2. Working Capital Prudence: You have a net cash surplus of ₹${ctx.metrics.netSurplus.toLocaleString('en-IN')}. Allocate ₹20,000 to ₹25,000 towards festive stock while preserving baseline cash for daily liquidity.
-3. Collateral-Free Financing: Your Alternative Credit Score of ${ctx.creditScore}/850 (${ctx.creditRating}) makes you 100% pre-qualified for PM MUDRA Shishu (₹50,000) zero-collateral working capital credit.`
+3. Collateral-Free Financing: Your CIBIL Score of ${ctx.creditScore}/900 (${ctx.creditRating}) makes you 100% pre-qualified for PM MUDRA Shishu (₹50,000) zero-collateral working capital credit.`
       : `Namaste ${ctx.ownerName} ji! 🙏 3 quick festive inventory steps:
 1. Lock in 35% additional cooking oil and ghee at the Balrampur Mandi before prices rise.
 2. From your ₹${ctx.metrics.netSurplus.toLocaleString('en-IN')} net surplus, allocate around ₹20,000 for seasonal inventory (30-day sales: ₹${ctx.last30DaysSummary.totalSales.toLocaleString('en-IN')}).
-3. Your credit score of ${ctx.creditScore}/850 qualifies you for zero-collateral PM MUDRA financing.`
+3. Your CIBIL score of ${ctx.creditScore}/900 qualifies you for zero-collateral PM MUDRA financing.`
   },
 
   // Scenario 2: Managing Customer Udhaar & Credit Discipline
@@ -141,14 +141,14 @@ According to your verified transactional ledger:
 पारंपरिक बैंक अक्सर सिबिल न होने पर मना कर देते हैं, लेकिन व्यापार सेतु पर ${ctx.location} में आपकी ${ctx.tradeCategory} का ट्रैक रिकॉर्ड ठोस है:
 - संचालन अवधि: ${ctx.monthsInOperation} महीने (4 वर्ष) से निरंतर व्यापार
 - पिछले 30 दिनों की बिक्री: ₹${ctx.last30DaysSummary.totalSales.toLocaleString('en-IN')} (${ctx.last30DaysSummary.momGrowthRate}% मासिक वृद्धि दर)
-- वैकल्पिक क्रेडिट स्कोर: ${ctx.creditScore} / 850 (${ctx.creditRating})
+- साख (CIBIL) स्कोर: ${ctx.creditScore} / 900 (${ctx.creditRating})
 - डिजिटल प्रमाण: ${ctx.metrics.digitalSharePct}% बिक्री यूपीआई द्वारा बैंक में प्रमाणित है।
 
 आपके लिए सर्वश्रेष्ठ योजना:
 1. PM MUDRA Yojana: Kishor (₹50,000 से ₹5,00,000): दुकान में नया commercial deep-freezer लगाने के लिए यह सर्वोत्तम है। इसमें किसी बंधक (0% Collateral) की आवश्यकता नहीं है।
 2. अगला कदम: हमारे 'बैंक डॉसियर' टैब से अपना 90-दिन का मुहरबंद वित्तीय पत्रक डाउनलोड करें और अपनी स्थानीय आर्यावर्त ग्रामीण बैंक शाखा में प्रस्तुत करें।`
       : `हाँ ${ctx.ownerName} जी, आपको डीप-फ्रीजर या दुकान विस्तार के लिए PM MUDRA किशोर योजना (₹50,000 से ₹5 लाख) में बिना किसी बंधक (0% Collateral) लोन मिलेगा!
-- आपका वैकल्पिक क्रेडिट स्कोर: ${ctx.creditScore}/850 (${ctx.creditRating})
+- आपका साख (CIBIL) स्कोर: ${ctx.creditScore}/900 (${ctx.creditRating})
 - 30-दिवसीय प्रमाणित बिक्री: ₹${ctx.last30DaysSummary.totalSales.toLocaleString('en-IN')}
 - अगला कदम: 'बैंक डॉसियर' टैब से 90-दिन का मुहरबंद पत्रक डाउनलोड कर नजदीकी ग्रामीण बैंक में जमा करें।`,
     responseEn: (ctx, isDetailed = false) => isDetailed
@@ -157,14 +157,14 @@ According to your verified transactional ledger:
 While traditional lenders often hesitate without formal CIBIL scores, your verified track record for ${ctx.tradeCategory} in ${ctx.location} proves high bankability:
 - Operating Vintage: ${ctx.monthsInOperation} months (4.0 years continuous operations)
 - Verified 30-Day Turnover: ₹${ctx.last30DaysSummary.totalSales.toLocaleString('en-IN')} (${ctx.last30DaysSummary.momGrowthRate}% MoM growth)
-- Alternative Credit Score: ${ctx.creditScore} / 850 (${ctx.creditRating})
+- CIBIL Score: ${ctx.creditScore} / 900 (${ctx.creditRating})
 - Digital Cashflow: ${ctx.metrics.digitalSharePct}% of all transactions backed by UPI QR records.
 
 Best Matching Credit Pathway:
 1. PM MUDRA Scheme: Kishor Category (₹50,000 to ₹5,00,000): Ideal for purchasing a commercial display deep freezer with Zero Collateral.
 2. Next Step: Click on our 'Bank Dossier' tab to download your verified 90-day cash flow certificate ready for your local Aryavart Gramin Bank branch.`
       : `Yes ${ctx.ownerName} ji! You are eligible for zero-collateral PM MUDRA Kishor credit (₹50,000 to ₹5,00,000) for a commercial deep-freezer.
-- Credit Score: ${ctx.creditScore}/850 (${ctx.creditRating})
+- CIBIL Score: ${ctx.creditScore}/900 (${ctx.creditRating})
 - 30-Day Turnover: ₹${ctx.last30DaysSummary.totalSales.toLocaleString('en-IN')}
 - Next Step: Download your report from the 'Bank Dossier' tab to submit to your local Gramin Bank.`
   },
@@ -433,7 +433,8 @@ SHOP DATA (Use selectively when relevant to the user's question):
 - Net Operating Surplus: ₹${contextData.metrics.netSurplus.toLocaleString('en-IN')}
 - Customer Udhaar Pending: ₹${contextData.metrics.totalUdhaarPending.toLocaleString('en-IN')} (Recovery rate: ${contextData.metrics.udhaarRecoveryRate}%)
 - Digital UPI Share: ${contextData.metrics.digitalSharePct}%
-- SaakhSetu Credit Score: ${contextData.creditScore}/850 (${contextData.creditRating})
+- SaakhSetu CIBIL Score: ${contextData.creditScore}/900 (${contextData.creditRating})
+- CIBIL MSME Rank: ${contextData.cmrRank || 'CMR-1'} (${contextData.cmrLabel || 'Prime Bankable'})
 - Top Loan Scheme Match: ${contextData.topMatchingScheme}
 - Upcoming Festivals: ${contextData.upcomingFestivals}`;
 
@@ -612,7 +613,7 @@ SHOP DATA (Use selectively when relevant to the user's question):
     };
   } catch (criticalErr) {
     console.error('Critical fallback in advisory service:', criticalErr);
-    const safeErrorReply = cleanChatbotResponse(`राम राम Ramesh Kumar जी! 🙏\n\nउत्तर प्रदेश के Utraula Dehat village, Balrampur district में आपकी Kirana & General Store पिछले 48 महीनों से सफलता से चल रही है।\n\nदीपावली पर तेल, घी और चीनी की मांग में 40% से 45% उछाल आने का अनुमान है। आपका वैकल्पिक क्रेडिट स्कोर 785/850 है, जिससे आप PM MUDRA कार्यशील पूंजी लोन के लिए बिना किसी बंधक (0% Collateral) के 100% पात्र हैं।`);
+    const safeErrorReply = cleanChatbotResponse(`राम राम Ramesh Kumar जी! 🙏\n\nउत्तर प्रदेश के Utraula Dehat village, Balrampur district में आपकी Kirana & General Store पिछले 48 महीनों से सफलता से चल रही है।\n\nदीपावली पर तेल, घी और चीनी की मांग में 40% से 45% उछाल आने का अनुमान है। आपका साख (CIBIL) स्कोर 825/900 है, जिससे आप PM MUDRA कार्यशील पूंजी लोन के लिए बिना किसी बंधक (0% Collateral) के 100% पात्र हैं।`);
     return {
       content: safeErrorReply,
       source: 'claude-fallback-grounded',
@@ -691,18 +692,18 @@ function selectJudgingFallbackResponse(query, ctx, isEnglish = false) {
   // 4. Loans & MUDRA
   if (q.includes('loan') || q.includes('लोन') || q.includes('ऋण') || q.includes('mudra') || q.includes('मुद्रा') || q.includes('bank') || q.includes('बैंक') || q.includes('फ्रीजर') || q.includes('freezer')) {
     if (isEnglish) {
-      return `Namaste ${ctx.ownerName} ji! 🏛️\n\nYes, your shop in **${ctx.location}** has strong loan eligibility:\n\n- **Alternative Credit Score**: **${ctx.creditScore}/850 (${ctx.creditRating})**\n- **Top Matched Scheme**: **${ctx.topMatchingScheme}** (Zero Collateral, 3-5 year tenure)\n- **Operating Vintage**: ${ctx.monthsInOperation} months verified track record\n\n**Next Steps**:\n1. Open the **'Bank Dossier'** tab to download your certified 90-day cash flow report.\n2. Present your dossier along with Aadhaar and PAN at your local bank branch for collateral-free sanction.`;
+      return `Namaste ${ctx.ownerName} ji! 🏛️\n\nYes, your shop in **${ctx.location}** has strong loan eligibility:\n\n- **CIBIL Score**: **${ctx.creditScore}/900 (${ctx.creditRating})**\n- **Top Matched Scheme**: **${ctx.topMatchingScheme}** (Zero Collateral, 3-5 year tenure)\n- **Operating Vintage**: ${ctx.monthsInOperation} months verified track record\n\n**Next Steps**:\n1. Open the **'Bank Dossier'** tab to download your certified 90-day cash flow report.\n2. Present your dossier along with Aadhaar and PAN at your local bank branch for collateral-free sanction.`;
     } else {
-      return `हाँ ${ctx.ownerName} जी, आपको बैंक से आसानी से व्यावसायिक लोन मिल सकता है! 🏛️\n\n**${ctx.location}** में आपकी दुकान का ट्रैक रिकॉर्ड मजबूत है:\n- **साख सेतु क्रेडिट स्कोर**: **${ctx.creditScore}/850 (${ctx.creditRating})**\n- **सर्वश्रेष्ठ योजना**: **${ctx.topMatchingScheme}** (0% बंधक/Collateral)\n- **अनुभव**: ${ctx.monthsInOperation} महीने निरंतर संचालन\n\n**आगे क्या करें**:\n1. हमारे **'बैंक डॉसियर'** टैब से अपना 90-दिवसीय प्रमाणित पत्रक डाउनलोड करें।\n2. अपने आधार कार्ड व पैन कार्ड के साथ स्थानीय बैंक शाखा में प्रबंधक को दिखाएं।`;
+      return `हाँ ${ctx.ownerName} जी, आपको बैंक से आसानी से व्यावसायिक लोन मिल सकता है! 🏛️\n\n**${ctx.location}** में आपकी दुकान का ट्रैक रिकॉर्ड मजबूत है:\n- **साख सेतु (CIBIL) स्कोर**: **${ctx.creditScore}/900 (${ctx.creditRating})**\n- **सर्वश्रेष्ठ योजना**: **${ctx.topMatchingScheme}** (0% बंधक/Collateral)\n- **अनुभव**: ${ctx.monthsInOperation} महीने निरंतर संचालन\n\n**आगे क्या करें**:\n1. हमारे **'बैंक डॉसियर'** टैब से अपना 90-दिवसीय प्रमाणित पत्रक डाउनलोड करें।\n2. अपने आधार कार्ड व पैन कार्ड के साथ स्थानीय बैंक शाखा में प्रबंधक को दिखाएं।`;
     }
   }
 
   // 5. Credit Score Improvement
-  if (q.includes('credit score') || q.includes('क्रेडिट स्कोर') || q.includes('स्कोर') || q.includes('rating') || q.includes('750')) {
+  if (q.includes('credit score') || q.includes('क्रेडिट स्कोर') || q.includes('स्कोर') || q.includes('rating') || q.includes('750') || q.includes('cibil') || q.includes('सिबिल')) {
     if (isEnglish) {
-      return `Namaste ${ctx.ownerName} ji! ⭐\n\nYour current SaakhSetu Credit Score is **${ctx.creditScore}/850 (${ctx.creditRating})**.\n\nHere is how to reach 750+ quickly:\n\n1. **Daily Khata Logging (+25 pts)**: Log daily cash and UPI transactions consistently for 30 consecutive days.\n2. **Recover Pending Udhaar (+20 pts)**: Collect the ₹${ctx.metrics.totalUdhaarPending.toLocaleString('en-IN')} pending balance from customers.\n3. **Boost Digital Payments (+15 pts)**: Increase your UPI QR share from ${ctx.metrics.digitalSharePct}% to 50%+ of total sales.\n4. **Positive Operating Surplus**: Maintain healthy net surplus (currently ₹${ctx.metrics.netSurplus.toLocaleString('en-IN')}) by keeping stock purchases aligned with sales.`;
+      return `Namaste ${ctx.ownerName} ji! ⭐\n\nYour current SaakhSetu CIBIL Score is **${ctx.creditScore}/900 (${ctx.creditRating})**.\n\nHere is how to reach 750+ quickly:\n\n1. **Daily Khata Logging (+25 pts)**: Log daily cash and UPI transactions consistently for 30 consecutive days.\n2. **Recover Pending Udhaar (+20 pts)**: Collect the ₹${ctx.metrics.totalUdhaarPending.toLocaleString('en-IN')} pending balance from customers.\n3. **Boost Digital Payments (+15 pts)**: Increase your UPI QR share from ${ctx.metrics.digitalSharePct}% to 50%+ of total sales.\n4. **Positive Operating Surplus**: Maintain healthy net surplus (currently ₹${ctx.metrics.netSurplus.toLocaleString('en-IN')}) by keeping stock purchases aligned with sales.`;
     } else {
-      return `नमस्ते ${ctx.ownerName} जी! ⭐\n\nआपकी दुकान का वर्तमान साख सेतु स्कोर **${ctx.creditScore}/850 (${ctx.creditRating})** है।\n\nस्कोर को 750+ तक ले जाने के 4 सरल कदम:\n\n1. **दैनिक बही-खाता प्रविष्टि (+25 अंक)**: लगातार 30 दिनों तक प्रतिदिन बिक्री और खर्च दर्ज करें।\n2. **बकाया उधार वसूली (+20 अंक)**: वर्तमान बकाया ₹${ctx.metrics.totalUdhaarPending.toLocaleString('en-IN')} को समय पर वसूलें।\n3. **डिजिटल भुगतान बढ़ाएं (+15 अंक)**: अपनी बिक्री में यूपीआई की हिस्सेदारी (वर्तमान: ${ctx.metrics.digitalSharePct}%) को 50% से ऊपर ले जाएं।\n4. **सकारात्मक अधिशेष**: नियमित लाभ बनाए रखें ताकि बैंक को आपकी वित्तीय सुदृढ़ता दिखे।`;
+      return `नमस्ते ${ctx.ownerName} जी! ⭐\n\nआपकी दुकान का वर्तमान साख सेतु (CIBIL) स्कोर **${ctx.creditScore}/900 (${ctx.creditRating})** है।\n\nस्कोर को 750+ तक ले जाने के 4 सरल कदम:\n\n1. **दैनिक बही-खाता प्रविष्टि (+25 अंक)**: लगातार 30 दिनों तक प्रतिदिन बिक्री और खर्च दर्ज करें।\n2. **बकाया उधार वसूली (+20 अंक)**: वर्तमान बकाया ₹${ctx.metrics.totalUdhaarPending.toLocaleString('en-IN')} को समय पर वसूलें।\n3. **डिजिटल भुगतान बढ़ाएं (+15 अंक)**: अपनी बिक्री में यूपीआई की हिस्सेदारी (वर्तमान: ${ctx.metrics.digitalSharePct}%) को 50% से ऊपर ले जाएं।\n4. **सकारात्मक अधिशेष**: नियमित लाभ बनाए रखें ताकि बैंक को आपकी वित्तीय सुदृढ़ता दिखे।`;
     }
   }
 
@@ -748,10 +749,10 @@ function selectJudgingFallbackResponse(query, ctx, isEnglish = false) {
 
   // Default: Direct responsive answer
   if (isEnglish) {
-    return `Namaste ${ctx.ownerName} ji! 🙏\n\nRegarding your question: *"${query}"*\n\nFor your ${ctx.tradeCategory} in **${ctx.location}**:\n- **Current Shop Health**: Last 30-day sales are ₹${ctx.last30DaysSummary.totalSales.toLocaleString('en-IN')} with a net operating surplus of ₹${ctx.metrics.netSurplus.toLocaleString('en-IN')}.\n- **Key Recommendation**: Regularly recording your daily bahi-khata entries and keeping customer credit capped helps build your SaakhSetu Credit Score (${ctx.creditScore}/850).\n- **Schemes**: You match ${ctx.topMatchingScheme} for low-interest expansion capital.\n\nFeel free to ask more specific questions on inventory, expenses, customer footfall, or loan applications!`;
+    return `Namaste ${ctx.ownerName} ji! 🙏\n\nRegarding your question: *"${query}"*\n\nFor your ${ctx.tradeCategory} in **${ctx.location}**:\n- **Current Shop Health**: Last 30-day sales are ₹${ctx.last30DaysSummary.totalSales.toLocaleString('en-IN')} with a net operating surplus of ₹${ctx.metrics.netSurplus.toLocaleString('en-IN')}.\n- **Key Recommendation**: Regularly recording your daily bahi-khata entries and keeping customer credit capped helps build your SaakhSetu CIBIL Score (${ctx.creditScore}/900).\n- **Schemes**: You match ${ctx.topMatchingScheme} for low-interest expansion capital.\n\nFeel free to ask more specific questions on inventory, expenses, customer footfall, or loan applications!`;
   }
 
-  return `राम राम ${ctx.ownerName} जी! 🙏\n\nआपके प्रश्न: *"${query}"* के संदर्भ में:\n\n**${ctx.location}** में आपकी **${ctx.tradeCategory}** के लिए:\n- **दुकान की स्थिति**: पिछले 30 दिनों में ₹${ctx.last30DaysSummary.totalSales.toLocaleString('en-IN')} की बिक्री और ₹${ctx.metrics.netSurplus.toLocaleString('en-IN')} का शुद्ध मुनाफा दर्ज है।\n- **मुख्य सलाह**: दैनिक बही-खाता नियमित रूप से दर्ज करें और उधार को समय पर वसूलें, जिससे आपका साख सेतु स्कोर (${ctx.creditScore}/850) और मजबूत हो।\n- **सरकारी योजना**: आप कम ब्याज पर व्यापार विस्तार के लिए **${ctx.topMatchingScheme}** के पात्र हैं।\n\nआप मुझसे स्टॉक, खर्च घटाने, ग्राहकों की संख्या बढ़ाने अथवा बैंक लोन के बारे में कभी भी पूछ सकते हैं!`;
+  return `राम राम ${ctx.ownerName} जी! 🙏\n\nआपके प्रश्न: *"${query}"* के संदर्भ में:\n\n**${ctx.location}** में आपकी **${ctx.tradeCategory}** के लिए:\n- **दुकान की स्थिति**: पिछले 30 दिनों में ₹${ctx.last30DaysSummary.totalSales.toLocaleString('en-IN')} की बिक्री और ₹${ctx.metrics.netSurplus.toLocaleString('en-IN')} का शुद्ध मुनाफा दर्ज है।\n- **मुख्य सलाह**: दैनिक बही-खाता नियमित रूप से दर्ज करें और उधार को समय पर वसूलें, जिससे आपका साख सेतु (CIBIL) स्कोर (${ctx.creditScore}/900) और मजबूत हो।\n- **सरकारी योजना**: आप कम ब्याज पर व्यापार विस्तार के लिए **${ctx.topMatchingScheme}** के पात्र हैं।\n\nआप मुझसे स्टॉक, खर्च घटाने, ग्राहकों की संख्या बढ़ाने अथवा बैंक लोन के बारे में कभी भी पूछ सकते हैं!`;
 }
 
 function saveChatMessage(shopId, role, content) {

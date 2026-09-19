@@ -279,7 +279,7 @@ export function AdvisorChatPage({ shop, creditData, summaryData, initialPrompt =
               <div className="p-2.5 bg-white rounded-lg border border-stone-200">
                 <span className="text-stone-400 block text-[10px] uppercase font-bold">Credit Tier</span>
                 <strong className="text-emerald-700">
-                  {creditScore ? `${creditScore} / 850 Prime` : 'Prime Bankable Assessment'}
+                  {creditScore ? `${creditScore} / 900 Prime` : 'Prime Bankable Assessment'}
                 </strong>
               </div>
             </div>

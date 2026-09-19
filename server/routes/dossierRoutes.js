@@ -88,7 +88,10 @@ router.get('/generate', async (req, res) => {
         },
         creditEvaluation: {
           totalScore: creditData.totalScore,
-          maxScore: 850,
+          maxScore: 900,
+          cmrRank: creditData.cmrRank,
+          cmrLabel: creditData.cmrLabel,
+          statutoryGuidelines: creditData.statutoryGuidelines,
           ratingLabel: creditData.ratingLabel,
           ratingBadge: creditData.ratingBadge,
           factors: creditData.factors

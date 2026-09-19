@@ -262,13 +262,13 @@ export function Sidebar({
                 <span>{getSiteText(language, 'sidebar', 'creditScoreTitle', 'CIBIL Score')}</span>
               </span>
               <span className="text-[9px] bg-emerald-500/20 text-emerald-300 font-bold px-1.5 py-0.5 rounded-full border border-emerald-500/30">
-                {getSiteText(language, 'sidebar', 'primeBadge', 'Prime')}
+                {creditData?.cmrRank || 'CMR-2'} {getSiteText(language, 'sidebar', 'primeBadge', 'Prime')}
               </span>
             </div>
             
             <div className="flex items-baseline justify-between">
               <div className="font-serif font-black text-lg text-white">
-                785 <span className="text-[10px] font-normal text-stone-300">/ 850</span>
+                {creditData?.totalScore || 786} <span className="text-[10px] font-normal text-stone-300">/ 900</span>
               </div>
               <span className="text-[10px] text-amber-300 group-hover:underline flex items-center gap-0.5">
                 {getSiteText(language, 'sidebar', 'viewCam', 'View CAM')} <ChevronRight className="w-3 h-3" />

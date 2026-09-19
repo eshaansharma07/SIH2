@@ -287,8 +287,8 @@ export function FloatingSetuAI({
           : "To record a daily cash sale or customer credit, tap the 'Record Sale' button to open the touch keypad or speech input.";
       } else if (suggestedAction?.id === 'credit') {
         fallbackText += language === 'hi'
-          ? 'आपका वैकल्पिक साख स्कोर 753/850 (Prime Bankable) है। यह नियमित बही-खाता और यूपीआई लेनदेन पर आधारित है।'
-          : 'Your Alternative Credit Score is 753/850 (Prime Bankable), calculated from continuous transactions and customer recovery.';
+          ? 'आपका साख (CIBIL) स्कोर 805/900 (CMR-1 Prime Bankable) है। यह नियमित बही-खाता और यूपीआई लेनदेन पर आधारित है।'
+          : 'Your Saakh (CIBIL) Score is 805/900 (CMR-1 Prime Bankable), calculated from continuous transactions and customer recovery.';
       } else {
         fallbackText += language === 'hi'
           ? 'मैं व्यापार सेतु में आपकी हर सेवा तक पहुँचने में मदद कर सकता हूँ: बही-खाता, सरकारी योजना, क्रेडिट स्कोर, या नया रजिस्ट्रेशन।'

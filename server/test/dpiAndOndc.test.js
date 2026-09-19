@@ -12,7 +12,10 @@ test('DPI Gateway, Credit CAM & ONDC Wholesale Suite', async (t) => {
 
     assert.ok(cam, 'CAM memo must be generated');
     assert.strictEqual(cam.documentType, 'CREDIT_APPRAISAL_MEMORANDUM', 'Document type must match');
-    assert.strictEqual(cam.underwritingFramework, 'RBI Priority Sector Lending (PSL) & Nayak Committee Working Capital Norms');
+    assert.strictEqual(cam.underwritingFramework, 'RBI Priority Sector Lending (PSL), CICRA 2005 & Nayak Committee Working Capital Norms');
+    assert.strictEqual(cam.creditScoreAudit.maxScale, 900, 'Max score scale must be 900');
+    assert.ok(cam.creditScoreAudit.cmrRank, 'CAM must include CIBIL MSME Rank (CMR)');
+    assert.ok(cam.statutoryGuidelines, 'CAM must include statutory guidelines');
     assert.ok(cam.riskClassification, 'Risk classification must exist');
     assert.ok(cam.recommendedFacility, 'Facility recommendation must exist');
     assert.ok(cam.workingCapitalAssessment, 'Working capital assessment must exist');

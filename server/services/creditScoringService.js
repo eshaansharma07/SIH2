@@ -202,37 +202,77 @@ export function calculateCreditScore(shopOrId, transactionsOverride = null) {
   const vintageScore = Math.min(170, vintageScorePart + bankingScorePart);
 
   // =========================================================================
-  // 6. Final Score Calculation (Range 300 to 850)
+  // 6. Final Score Calculation (Official CIBIL Scale: Range 300 to 900)
+  // Aligned with RBI Master Direction on MSME Lending & CICRA 2005
   // =========================================================================
-  // Base score 300 + earned points (out of 550)
-  const earnedScore = Math.round((consistencyScore + growthScore + disciplineScore + vintageScore) * (550 / 850));
-  const finalScore = Math.min(850, Math.max(300, 300 + earnedScore));
+  // Base score 300 + earned points (out of 600)
+  const earnedScore = Math.round((consistencyScore + growthScore + disciplineScore + vintageScore) * (600 / 850));
+  const finalScore = Math.min(900, Math.max(300, 300 + earnedScore));
 
-  // Risk & Rating Tier Classification
+  // Official CIBIL MSME Rank (CMR-1 to CMR-10) mapping per RBI PSL Guidelines
+  let cmrRank = 'CMR-8';
+  let cmrLabel = 'High Supervision (उच्च निगरानी)';
+  let cmrBadge = 'CMR-8';
+
+  if (finalScore >= 800) {
+    cmrRank = 'CMR-1';
+    cmrLabel = 'Prime Micro-Enterprise (अति उत्कृष्ट)';
+    cmrBadge = 'CMR-1';
+  } else if (finalScore >= 750) {
+    cmrRank = 'CMR-2';
+    cmrLabel = 'Low Credit Risk (न्यूनतम जोखिम)';
+    cmrBadge = 'CMR-2';
+  } else if (finalScore >= 710) {
+    cmrRank = 'CMR-3';
+    cmrLabel = 'Standard Bankable (मानक पात्र)';
+    cmrBadge = 'CMR-3';
+  } else if (finalScore >= 660) {
+    cmrRank = 'CMR-4';
+    cmrLabel = 'Moderate-Low Risk (मध्यम-कम जोखिम)';
+    cmrBadge = 'CMR-4';
+  } else if (finalScore >= 610) {
+    cmrRank = 'CMR-5';
+    cmrLabel = 'Moderate Risk (मध्यम जोखिम)';
+    cmrBadge = 'CMR-5';
+  } else if (finalScore >= 560) {
+    cmrRank = 'CMR-6';
+    cmrLabel = 'Acceptable Risk (स्वीकार्य जोखिम)';
+    cmrBadge = 'CMR-6';
+  } else if (finalScore >= 500) {
+    cmrRank = 'CMR-7';
+    cmrLabel = 'Sub-Standard Risk (अल्प मानक जोखिम)';
+    cmrBadge = 'CMR-7';
+  } else {
+    cmrRank = 'CMR-8';
+    cmrLabel = 'Early Stage Supervision (प्रारंभिक निगरानी)';
+    cmrBadge = 'CMR-8';
+  }
+
+  // Risk & Rating Tier Classification (Aligned with CIBIL 300 to 900 benchmark)
   let ratingBand = 'needs_work';
   let ratingLabel = 'सुधार आवश्यक (Needs Improvement)';
   let ratingBadge = 'Needs Work';
   let ratingColor = 'text-amber-700 bg-amber-100 border-amber-300';
-  let riskTier = 'Tier 4 — Early Stage / High Supervision';
+  let riskTier = `Tier 4 (${cmrRank}) — Early Stage / High Supervision`;
 
   if (finalScore >= 750) {
     ratingBand = 'excellent';
     ratingLabel = 'अति उत्कृष्ट (Prime Bankable)';
     ratingBadge = 'Prime Bankable';
     ratingColor = 'text-emerald-800 bg-emerald-100 border-emerald-300';
-    riskTier = 'Tier 1 — Low Risk / Preferred PSL Micro-Enterprise';
+    riskTier = `Tier 1 (${cmrRank}) — Low Risk / Preferred PSL Micro-Enterprise`;
   } else if (finalScore >= 680) {
     ratingBand = 'good';
     ratingLabel = 'सक्षम एवं सुरक्षित (Loan Ready)';
     ratingBadge = 'Loan Ready';
     ratingColor = 'text-forestRural-700 bg-forestRural-100 border-forestRural-300';
-    riskTier = 'Tier 2 — Moderate Risk / Standard MUDRA Kishor';
+    riskTier = `Tier 2 (${cmrRank}) — Moderate Risk / Standard MUDRA Kishor`;
   } else if (finalScore >= 580) {
     ratingBand = 'fair';
     ratingLabel = 'मध्यम पात्रता (Fair Eligibility)';
     ratingBadge = 'Fair';
     ratingColor = 'text-ochre-700 bg-ochre-100 border-ochre-300';
-    riskTier = 'Tier 3 — Acceptable Risk / CGTMSE Guarantee Recommended';
+    riskTier = `Tier 3 (${cmrRank}) — Acceptable Risk / CGTMSE Guarantee Recommended`;
   }
 
   // Explainable Factors Breakdown with explicit Sub-Factors
@@ -398,6 +438,21 @@ export function calculateCreditScore(shopOrId, transactionsOverride = null) {
     ratingBadge,
     ratingColor,
     riskTier,
+    cmrRank,
+    cmrLabel,
+    cmrBadge,
+    maxScale: 900,
+    minScale: 300,
+    statutoryGuidelines: {
+      bureauScale: 'TransUnion CIBIL Standard Benchmark (300 to 900)',
+      regulatoryAuthority: 'Reserve Bank of India (RBI)',
+      primaryRegulation: 'RBI Master Direction - Lending to Micro, Small & Medium Enterprises (FIDD.MSME & NFS.BC.No.3/06.02.31/2020-21)',
+      act: 'Credit Information Companies (Regulation) Act, 2005 (CICRA 2005)',
+      workingCapitalFramework: 'RBI Nayak Committee Turnover Method (20% MPBF on Turnover)',
+      collateralExemption: 'CGTMSE Section 5(1) Collateral-Free Exemption up to ₹10 Lakhs (MUDRA) and ₹500 Lakhs (CGTMSE)',
+      cmrRank,
+      cmrLabel
+    },
     factors,
     metrics: {
       totalIncome: Math.round(totalIncome),
@@ -447,15 +502,19 @@ export function generateCAM(shopOrId, transactionsOverride = null) {
 
   return {
     documentType: 'CREDIT_APPRAISAL_MEMORANDUM',
-    underwritingFramework: 'RBI Priority Sector Lending (PSL) & Nayak Committee Working Capital Norms',
+    underwritingFramework: 'RBI Priority Sector Lending (PSL), CICRA 2005 & Nayak Committee Working Capital Norms',
     riskClassification: creditData.riskTier,
+    cmrRank: creditData.cmrRank,
+    cmrLabel: creditData.cmrLabel,
+    statutoryGuidelines: creditData.statutoryGuidelines,
     recommendedFacility: m.totalIncome > 50000 ? 'MUDRA Kishor (₹50,000 to ₹5,00,000)' : 'MUDRA Shishu (Up to ₹50,000)',
     memoMetadata: {
       memoId: memoNumber,
       standard: 'RBI Priority Sector Lending (PSL) Cash-Flow Underwriting Guidelines',
       framework: 'Nayak Committee Working Capital Norms (20% of Projected Turnover)',
+      statute: 'Credit Information Companies (Regulation) Act, 2005 (CICRA 2005)',
       generatedAt: new Date().toISOString(),
-      issuingEntity: 'Vyapaar Setu Credit Assessment Engine',
+      issuingEntity: 'Saakh Setu CIBIL Credit Assessment Engine',
       appraisalValidityDays: 90
     },
     borrowerProfile: {
@@ -476,8 +535,10 @@ export function generateCAM(shopOrId, transactionsOverride = null) {
     },
     creditScoreAudit: {
       score: creditData.totalScore,
-      maxScale: 850,
+      maxScale: 900,
       minScale: 300,
+      cmrRank: creditData.cmrRank,
+      cmrLabel: creditData.cmrLabel,
       ratingBand: creditData.ratingBand,
       ratingLabel: creditData.ratingLabel,
       riskClassification: creditData.riskTier,
@@ -485,8 +546,10 @@ export function generateCAM(shopOrId, transactionsOverride = null) {
     },
     creditScoreSummary: {
       score: creditData.totalScore,
-      maxScale: 850,
+      maxScale: 900,
       minScale: 300,
+      cmrRank: creditData.cmrRank,
+      cmrLabel: creditData.cmrLabel,
       ratingBand: creditData.ratingBand,
       ratingLabel: creditData.ratingLabel,
       riskClassification: creditData.riskTier

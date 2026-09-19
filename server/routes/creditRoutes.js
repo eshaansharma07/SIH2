@@ -104,7 +104,7 @@ router.post('/simulate', async (req, res) => {
     }
 
     const currentScore = baseData.totalScore;
-    const projectedScore = currentScore === null ? null : Math.min(850, currentScore + projectedDelta);
+    const projectedScore = currentScore === null ? null : Math.min(900, currentScore + projectedDelta);
 
     res.json({
       success: true,

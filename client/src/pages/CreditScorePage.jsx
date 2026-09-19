@@ -30,6 +30,7 @@ export function getSchemeTier(score) {
     return {
       tierName: 'Unrated (New Enterprise)',
       tierNameHi: 'अमूल्यांकित (नया उद्यम)',
+      cmrRank: 'CMR-10',
       scheme: 'PM SVANidhi Starter',
       schemeHi: 'पीएम स्वनिधि स्टार्टर',
       facility: 'Up to ₹10,000 – ₹50,000',
@@ -41,8 +42,9 @@ export function getSchemeTier(score) {
   }
   if (score >= 750) {
     return {
-      tierName: 'Very Good',
-      tierNameHi: 'बहुत अच्छा',
+      tierName: 'Prime Bankable',
+      tierNameHi: 'अति उत्कृष्ट (प्राइम बैंकेबल)',
+      cmrRank: score >= 820 ? 'CMR-1' : 'CMR-2',
       scheme: 'PM MUDRA Tarun & CGTMSE',
       schemeHi: 'पीएम मुद्रा तरुण एवं CGTMSE',
       facility: '₹5 Lakh – ₹20 Lakh',
@@ -55,7 +57,8 @@ export function getSchemeTier(score) {
   if (score >= 650) {
     return {
       tierName: 'Good',
-      tierNameHi: 'अच्छा',
+      tierNameHi: 'अच्छा (संतोषजनक)',
+      cmrRank: 'CMR-3 / CMR-4',
       scheme: 'PM MUDRA Kishor',
       schemeHi: 'पीएम मुद्रा किशोर',
       facility: '₹50,000 – ₹5,00,000',
@@ -69,6 +72,7 @@ export function getSchemeTier(score) {
     return {
       tierName: 'Fair',
       tierNameHi: 'सामान्य',
+      cmrRank: 'CMR-5 / CMR-6',
       scheme: 'PM MUDRA Shishu / PM SVANidhi',
       schemeHi: 'पीएम मुद्रा शिशु / पीएम स्वनिधि',
       facility: 'Up to ₹50,000 Working Capital',
@@ -81,6 +85,7 @@ export function getSchemeTier(score) {
   return {
     tierName: 'Needs Improvement',
     tierNameHi: 'सुधार आवश्यक',
+    cmrRank: 'CMR-7 / CMR-8',
     scheme: 'PM SVANidhi & Micro-Credit Starter',
     schemeHi: 'पीएम स्वनिधि एवं सूक्ष्म ऋण स्टार्टर',
     facility: '₹10,000 – ₹20,000 Micro-Advance',
@@ -100,10 +105,10 @@ export function CreditScorePage({ shop, creditData, onNavigateTab }) {
   const [isSimulatorModalOpen, setIsSimulatorModalOpen] = useState(false);
   const [activeRecommendationPillar, setActiveRecommendationPillar] = useState(null);
 
-  // Score determination: use live creditData, shop foundation, or Ramesh baseline 809
+  // Score determination: use live creditData, shop foundation, or Ramesh baseline 786
   const isDemo = !shop?.id || shop?.id === 'ramesh-kirana';
   const isUnrated = !isDemo && (creditData?.isUnrated && !creditData?.totalScore);
-  const baseScore = isUnrated ? null : (creditData?.totalScore ?? (isDemo ? 809 : (creditData?.score ?? 615)));
+  const baseScore = isUnrated ? null : (creditData?.totalScore ?? (isDemo ? 786 : (creditData?.score ?? 615)));
   const currentTier = getSchemeTier(baseScore);
   const factors = creditData?.factors || [];
 
@@ -155,13 +160,13 @@ export function CreditScorePage({ shop, creditData, onNavigateTab }) {
 
   // Local instant calculation for smooth 60fps slider drag
   const computeLocalProjection = (days, udhaar, upi) => {
-    const startScore = baseScore || (isDemo ? 809 : 615);
-    const loggingGain = Math.min(35, Math.round(days * 0.8));
-    const udhaarGain = udhaar > 0 ? Math.min(28, Math.round((udhaar / 5000) * 15)) : 0;
-    const digitalGain = Math.min(25, Math.round(Math.max(0, upi - (creditData?.metrics?.digitalSharePct || 20)) * 0.6));
+    const startScore = baseScore || (isDemo ? 786 : 615);
+    const loggingGain = Math.min(45, Math.round(days * 0.9));
+    const udhaarGain = udhaar > 0 ? Math.min(35, Math.round((udhaar / 5000) * 18)) : 0;
+    const digitalGain = Math.min(30, Math.round(Math.max(0, upi - (creditData?.metrics?.digitalSharePct || 20)) * 0.7));
     const delta = loggingGain + udhaarGain + digitalGain;
     return {
-      projectedScore: Math.min(850, startScore + delta),
+      projectedScore: Math.min(900, startScore + delta),
       delta
     };
   };
@@ -202,7 +207,7 @@ export function CreditScorePage({ shop, creditData, onNavigateTab }) {
     }
   };
 
-  const activeProjectedScore = simulatedData?.projectedScore ?? localProjection.projectedScore ?? (baseScore || (isDemo ? 809 : 615));
+  const activeProjectedScore = simulatedData?.projectedScore ?? localProjection.projectedScore ?? (baseScore || (isDemo ? 786 : 615));
   const activeDelta = simulatedData?.delta ?? localProjection.delta ?? (scoreDelta || 15);
   const projectedTier = getSchemeTier(activeProjectedScore);
   const tierUpgraded = projectedTier.scheme !== currentTier.scheme && activeProjectedScore > (baseScore || 0);
@@ -218,21 +223,26 @@ export function CreditScorePage({ shop, creditData, onNavigateTab }) {
           
           {/* Left Hero Typography */}
           <div className="lg:col-span-6 space-y-2 z-10">
+            <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-300 text-emerald-900 text-[11px] font-bold">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-700" />
+              <span>{language === 'hi' ? 'आरबीआई एवं CICRA 2005 वैधानिक मानक (300–900)' : 'RBI & CICRA 2005 Benchmark (300–900 Scale)'}</span>
+            </div>
+
             <h1 className="font-serif font-black text-3xl sm:text-4xl text-stone-900 tracking-tight leading-none">
-              {language === 'hi' ? 'क्रेडिट स्कोर' : 'Credit Score'}
+              {language === 'hi' ? 'साख (CIBIL) स्कोर' : 'Saakh (CIBIL) Score'}
             </h1>
 
             <p className="font-sans font-bold text-stone-800 text-sm sm:text-base leading-snug">
               {language === 'hi'
-                ? 'आज की मेहनत, कल की बड़ी सोच।'
-                : 'Aaj ki mehnat, kal ki badi soch.'
+                ? 'सरकारी मानकों के अनुरूप पारदर्शी वित्तीय मूल्यांकन।'
+                : 'Government & RBI compliant transparent credit evaluation.'
               }
             </p>
 
             <p className="text-stone-600 text-xs sm:text-sm leading-relaxed max-w-md">
               {language === 'hi'
-                ? 'आपके दैनिक लेन-देन, उधार प्रबंधन और डिजिटल अपनाने के आधार पर आपका व्यापार सेतु क्रेडिट स्कोर तैयार किया जाता है।'
-                : 'Your business performance is analysed using your transactions, udhaar management, and digital adoption to create your Vyapaar Setu Credit Score.'
+                ? 'भारतीय रिजर्व बैंक (RBI) के प्राथमिकता प्राप्त क्षेत्र उधारी (PSL) एवं सीआईसीआरए 2005 दिशा-निर्देशों के तहत 300 से 900 के मानक पैमाने पर आपकी दुकान का सिबिल स्कोर व CMR रैंक।'
+                : 'Your enterprise creditworthiness assessed on the official 300 to 900 bureau scale and CIBIL MSME Rank (CMR) per RBI Priority Sector Lending guidelines.'
               }
             </p>
           </div>
@@ -259,6 +269,34 @@ export function CreditScorePage({ shop, creditData, onNavigateTab }) {
       </section>
 
       {/* ========================================================================= */}
+      {/* 1B. STATUTORY COMPLIANCE & GOVERNMENT BENCHMARK STRIP                     */}
+      {/* ========================================================================= */}
+      <section className="w-full rounded-2xl bg-white border border-stone-200/90 p-4 shadow-2xs">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="p-2.5 rounded-xl bg-stone-50 border border-stone-200/70 space-y-0.5">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-stone-500">Bureau Scale Standard</div>
+            <div className="text-xs font-black text-stone-900">TransUnion CIBIL 300–900</div>
+            <div className="text-[10px] text-stone-500">CICRA 2005 Statutory Range</div>
+          </div>
+          <div className="p-2.5 rounded-xl bg-stone-50 border border-stone-200/70 space-y-0.5">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-stone-500">Regulatory Framework</div>
+            <div className="text-xs font-black text-stone-900">RBI Master Direction MSME</div>
+            <div className="text-[10px] text-stone-500">FIDD.MSME & NFS.BC.No.3/2020</div>
+          </div>
+          <div className="p-2.5 rounded-xl bg-stone-50 border border-stone-200/70 space-y-0.5">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-stone-500">Working Capital Norm</div>
+            <div className="text-xs font-black text-stone-900">RBI Nayak Committee (20% MPBF)</div>
+            <div className="text-[10px] text-stone-500">Turnover Method for Micro Units</div>
+          </div>
+          <div className="p-2.5 rounded-xl bg-stone-50 border border-stone-200/70 space-y-0.5">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-stone-500">Collateral Exemption</div>
+            <div className="text-xs font-black text-stone-900">CGTMSE Sec 5(1) & PMMY</div>
+            <div className="text-[10px] text-stone-500">0% Collateral up to ₹10–₹20 Lakh</div>
+          </div>
+        </div>
+      </section>
+
+      {/* ========================================================================= */}
       {/* 2. MAIN CREDIT SCORE + ELIGIBILITY BENTO CARD                             */}
       {/* ========================================================================= */}
       <section className="w-full rounded-3xl border border-stone-200/85 bg-white p-5 sm:p-7 shadow-2xs">
@@ -266,14 +304,14 @@ export function CreditScorePage({ shop, creditData, onNavigateTab }) {
 
           {/* LEFT 5 COLS: SCORE GAUGE */}
           <div className="lg:col-span-5 flex flex-col justify-between space-y-3">
-            {/* Header Badge with info button */}
-            <div className="flex items-center justify-between">
+            {/* Header Badge with info button & CMR Rank Badge */}
+            <div className="flex items-center justify-between flex-wrap gap-2">
               <div className="flex items-center gap-2">
                 <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-800 flex items-center justify-center border border-emerald-200/60">
                   <FileText className="w-3.5 h-3.5" />
                 </div>
                 <span className="font-sans font-bold text-xs sm:text-sm text-stone-900">
-                  {language === 'hi' ? 'आपका व्यापार सेतु क्रेडिट स्कोर' : 'Your Vyapaar Setu Credit Score'}
+                  {language === 'hi' ? 'साख (CIBIL) स्कोर' : 'Saakh (CIBIL) Score'}
                 </span>
                 <button
                   type="button"
@@ -283,6 +321,14 @@ export function CreditScorePage({ shop, creditData, onNavigateTab }) {
                 >
                   <Info className="w-3.5 h-3.5" />
                 </button>
+              </div>
+
+              {/* Official CIBIL MSME Rank (CMR) Badge */}
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-300 text-emerald-800 text-[11px] font-bold font-mono">
+                <Award className="w-3.5 h-3.5 text-emerald-700" />
+                <span>{creditData?.cmrRank || currentTier.cmrRank}</span>
+                <span>•</span>
+                <span className="font-sans font-semibold text-[10px]">{creditData?.cmrLabel || (language === 'hi' ? 'प्राइम बैंकेबल' : 'Prime Bankable')}</span>
               </div>
             </div>
 
@@ -303,7 +349,9 @@ export function CreditScorePage({ shop, creditData, onNavigateTab }) {
                 </div>
               ) : (
                 <CreditGauge 
-                  score={baseScore || 809} 
+                  score={baseScore || 786} 
+                  maxScore={900}
+                  minScore={300}
                   variant="editorial" 
                   language={language}
                   ratingLabel={language === 'hi' ? currentTier.tierNameHi : currentTier.tierName}
@@ -648,7 +696,7 @@ export function CreditScorePage({ shop, creditData, onNavigateTab }) {
               <div className="text-right">
                 <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">Current Score</span>
                 <div className="font-serif font-black text-2xl text-stone-900 mt-0.5">
-                  {baseScore} <span className="text-xs text-stone-400 font-normal">/ 850</span>
+                  {baseScore} <span className="text-xs text-stone-400 font-normal">/ 900</span>
                 </div>
                 <span className="inline-block mt-0.5 text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
                   {language === 'hi' ? currentTier.tierNameHi : currentTier.tierName}
@@ -975,7 +1023,7 @@ export function CreditScorePage({ shop, creditData, onNavigateTab }) {
               <div>
                 <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">Projected Score</span>
                 <div className="font-serif font-black text-2xl text-[#0F3E2E] mt-0.5">
-                  {activeProjectedScore} <span className="text-xs text-stone-400 font-normal">/ 850</span>
+                  {activeProjectedScore} <span className="text-xs text-stone-400 font-normal">/ 900</span>
                 </div>
               </div>
               <div className="text-right">
@@ -1062,8 +1110,8 @@ export function CreditScorePage({ shop, creditData, onNavigateTab }) {
                 </span>
                 <p className="text-[11px] text-stone-600 leading-relaxed mt-0.5">
                   {language === 'hi'
-                    ? `सिम्युलेटेड कार्यों से स्कोर बढ़कर ${activeProjectedScore}/850 हो जाएगा, जिससे आपकी दुकान '${projectedTier.schemeHi}' (${projectedTier.facilityHi}) के लिए योग्य बन जाती है।`
-                    : `Simulated actions raise score to ${activeProjectedScore}/850 (+${activeDelta} pts), qualifying for ${projectedTier.scheme} (${projectedTier.facility}) with collateral-free terms.`
+                    ? `सिम्युलेटेड कार्यों से स्कोर बढ़कर ${activeProjectedScore}/900 हो जाएगा, जिससे आपकी दुकान '${projectedTier.schemeHi}' (${projectedTier.facilityHi}) के लिए योग्य बन जाती है।`
+                    : `Simulated actions raise score to ${activeProjectedScore}/900 (+${activeDelta} pts), qualifying for ${projectedTier.scheme} (${projectedTier.facility}) with collateral-free terms.`
                   }
                 </p>
               </div>

@@ -3,13 +3,13 @@ import { useReducedMotion } from 'framer-motion';
 import { Badge } from './ui';
 
 /**
- * Authentic Folk & Ledger-inspired Alternative Credit Score Dial
- * Renders a warm, high-contrast arc (300 to 850) with rural/ledger color tokens.
+ * Authentic Folk & Ledger-inspired CIBIL & Alternative Credit Score Dial
+ * Renders a warm, high-contrast arc (300 to 900) with rural/ledger color tokens.
  * Features synchronized count-up sweep and turmeric leading edge marker.
  */
 export function CreditGauge({ 
   score = null, 
-  maxScore = 850, 
+  maxScore = 900, 
   minScore = 300, 
   ratingLabel = null, 
   compact = false,
@@ -18,7 +18,7 @@ export function CreditGauge({
 }) {
   const shouldReduceMotion = useReducedMotion();
   const isEditorial = variant === 'editorial' || variant === 'reference';
-  const effectiveMax = isEditorial ? 900 : maxScore;
+  const effectiveMax = maxScore || 900;
   const effectiveMin = minScore;
 
   const hasScore = score !== null && score !== undefined;
@@ -273,7 +273,7 @@ export function CreditGauge({
           {/* Scale Labels in warm stone tones */}
           <text x={cx - radius} y={cy + 16} fontSize="10" fontWeight="700" fill="#78716C" textAnchor="middle" fontFamily="Plus Jakarta Sans, sans-serif">300</text>
           <text x={cx} y={cy - radius - 6} fontSize="9" fontWeight="700" fill="#78716C" textAnchor="middle" fontFamily="Plus Jakarta Sans, sans-serif">600</text>
-          <text x={cx + radius} y={cy + 16} fontSize="10" fontWeight="700" fill="#78716C" textAnchor="middle" fontFamily="Plus Jakarta Sans, sans-serif">850</text>
+          <text x={cx + radius} y={cy + 16} fontSize="10" fontWeight="700" fill="#78716C" textAnchor="middle" fontFamily="Plus Jakarta Sans, sans-serif">900</text>
         </svg>
       </div>
 

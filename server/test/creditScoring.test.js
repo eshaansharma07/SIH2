@@ -7,11 +7,14 @@ import { calculateCreditScore } from '../services/creditScoringService.js';
 test('Credit Scoring Service Suite', async (t) => {
   seedDatabase();
 
-  await t.test('1. Ramesh Kirana baseline score is within valid [300, 850] range', () => {
+  await t.test('1. Ramesh Kirana baseline score is within valid [300, 900] range with CMR rank', () => {
     const result = calculateCreditScore('ramesh-kirana');
     assert.ok(result, 'Result should exist');
     assert.strictEqual(typeof result.totalScore, 'number', 'Total score must be a number');
-    assert.ok(result.totalScore >= 300 && result.totalScore <= 850, `Score ${result.totalScore} should be in [300, 850]`);
+    assert.strictEqual(result.maxScale, 900, 'Max scale must be 900');
+    assert.ok(result.totalScore >= 300 && result.totalScore <= 900, `Score ${result.totalScore} should be in [300, 900]`);
+    assert.strictEqual(typeof result.cmrRank, 'string', 'cmrRank must be a string (e.g. CMR-1)');
+    assert.ok(result.statutoryGuidelines, 'Statutory guidelines metadata must exist');
     assert.ok(Array.isArray(result.factors), 'Factors must be an array');
     assert.strictEqual(result.factors.length, 4, 'Must have exactly 4 explainable pillars');
 
@@ -48,15 +51,16 @@ test('Credit Scoring Service Suite', async (t) => {
     );
   });
 
-  await t.test('3. Total score is always clamped within [300, 850]', () => {
+  await t.test('3. Total score is always clamped within [300, 900]', () => {
     const mockHugeTxs = [];
     for (let i = 1; i <= 90; i++) {
       const day = i < 10 ? `0${i}` : `${i}`;
       mockHugeTxs.push({ id: `tx-h-${i}`, date: `2026-06-${day}`, type: 'income', amount: 100000, payment_mode: 'upi' });
     }
     const resultHuge = calculateCreditScore('ramesh-kirana', mockHugeTxs);
-    assert.ok(resultHuge.totalScore <= 850, `Score ${resultHuge.totalScore} must not exceed 850`);
+    assert.ok(resultHuge.totalScore <= 900, `Score ${resultHuge.totalScore} must not exceed 900`);
     assert.ok(resultHuge.totalScore >= 300, `Score ${resultHuge.totalScore} must be at least 300`);
+    assert.strictEqual(resultHuge.cmrRank, 'CMR-1', 'Top tier score must receive CMR-1 rank');
   });
 
   await t.test('4. Newly registered shop with zero or 1 transaction receives valid dynamic foundation score', () => {

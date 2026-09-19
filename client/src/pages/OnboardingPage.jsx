@@ -591,7 +591,7 @@ export function OnboardingPage({ onComplete, onSelectDemo, onStartDemoTour }) {
                         <span className="font-mono text-xs font-bold text-[#0F3E2E]">03</span>
                         <h4 className="font-bold text-sm text-[#1C1917]">Get Saakh Score</h4>
                         <p className="text-xs text-[#78716C] leading-relaxed">
-                          Receive validated 300–850 PSL-format alternative score.
+                          Receive validated 300–900 PSL-format alternative score.
                         </p>
                       </div>
                       <div className="space-y-1.5">
@@ -615,7 +615,7 @@ export function OnboardingPage({ onComplete, onSelectDemo, onStartDemoTour }) {
                         <p className="text-[11px] text-[#78716C]">In formal credit shadow</p>
                       </div>
                       <div className="space-y-1">
-                        <div className="font-serif font-black text-2xl sm:text-3xl text-[#0F3E2E]">300–850</div>
+                        <div className="font-serif font-black text-2xl sm:text-3xl text-[#0F3E2E]">300–900</div>
                         <div className="text-xs font-bold text-[#1C1917]">Saakh Score Range</div>
                         <p className="text-[11px] text-[#78716C]">Aligned to RBI PSL norms</p>
                       </div>
@@ -819,7 +819,7 @@ export function OnboardingPage({ onComplete, onSelectDemo, onStartDemoTour }) {
 
                 <div className="border-l border-[#E7DFD5] pl-4 sm:pl-8">
                   <div className="font-serif font-black text-2xl sm:text-3xl text-[#1C1917]">
-                    300–850
+                    300–900
                   </div>
                   <div className="text-[11px] sm:text-xs text-[#78716C] font-medium mt-0.5">
                     Saakh Score Range
@@ -995,7 +995,7 @@ export function OnboardingPage({ onComplete, onSelectDemo, onStartDemoTour }) {
                 Get Saakh Score
               </h3>
               <p className="text-xs sm:text-[13px] text-[#78716C] leading-relaxed">
-                Receive a validated credit profile (300–850).
+                Receive a validated credit profile (300–900).
               </p>
             </div>
 
@@ -1525,7 +1525,7 @@ export function OnboardingPage({ onComplete, onSelectDemo, onStartDemoTour }) {
                   Watch Vyapaar Setu in Action
                 </h3>
                 <p className="text-xs sm:text-sm text-[#57534E] leading-relaxed">
-                  Experience how Ramesh Yadav (a kirana shopkeeper in Balrampur, UP) logs everyday counter sales and unlocks a 785/850 prime credit score without a CIBIL history.
+                  Experience how Ramesh Yadav (a kirana shopkeeper in Balrampur, UP) logs everyday counter sales and unlocks a 786/900 prime CIBIL score aligned with RBI guidelines.
                 </p>
               </div>
 
