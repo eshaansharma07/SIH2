@@ -31,7 +31,7 @@ router.get('/current', async (req, res) => {
   }
 });
 
-// Setup / Register new real shop profile (Onboarding — is_demo = 0)
+// Setup new real shop profile (Onboarding: is_demo = 0)
 router.post(['/setup', '/register'], async (req, res) => {
   try {
     const {
@@ -55,17 +55,15 @@ router.post(['/setup', '/register'], async (req, res) => {
       return res.status(400).json({ success: false, error: 'Shop name is required' });
     }
 
-    const finalTradeType = (trade_type && String(trade_type).trim()) || (trade_name && String(trade_name).trim()) || 'kirana';
-    const finalTradeName = (trade_name && String(trade_name).trim()) || finalTradeType || 'Kirana & General Store';
-    const finalOwnerName = (owner_name && String(owner_name).trim()) || name.trim();
-    const cleanPhone = phone ? String(phone).trim() : '';
+    const finalOwnerName = (owner_name && String(owner_name).trim()) || (name && String(name).trim()) || 'Enterprise Owner';
+    const resolvedTradeType = (trade_type && String(trade_type).trim()) || (trade_name && String(trade_name).trim()) || 'kirana';
+    const finalTradeName = (trade_name && String(trade_name).trim()) || resolvedTradeType || 'Micro-Enterprise';
+    const cleanPhone = phone ? String(phone).replace(/\D/g, '').trim() : '';
 
     // Check if an existing real shop has this phone number
     if (cleanPhone) {
-      const digitsOnly = cleanPhone.replace(/\D/g, '');
-      const existing = await dataStore.findShopByPhoneOrId(cleanPhone, digitsOnly);
+      const existing = await dataStore.findShopByPhoneOrId(cleanPhone, cleanPhone);
       if (existing && existing.id !== 'ramesh-kirana') {
-        // Return existing shop or update details
         return res.json({ 
           success: true, 
           shop: existing, 
@@ -81,7 +79,7 @@ router.post(['/setup', '/register'], async (req, res) => {
       id,
       name: name.trim(),
       owner_name: finalOwnerName,
-      trade_type: finalTradeType,
+      trade_type: resolvedTradeType,
       trade_name: finalTradeName,
       village: village || 'Gram Panchayat',
       district: district || 'Balrampur',
@@ -152,10 +150,13 @@ router.post('/reset-demo', async (req, res) => {
     seedDatabase();
     const shop = await dataStore.getShopById('ramesh-kirana');
     
-    // Sync freshly seeded transactions to MongoDB Atlas in background
+    // Sync freshly seeded transactions to MongoDB Atlas with timeout guard
     try {
       const { syncToMongoDB } = await import('../db/mongoSync.js');
-      syncToMongoDB().catch(e => console.warn('[MongoDB Atlas] Background sync on reset-demo error:', e.message));
+      await Promise.race([
+        syncToMongoDB(),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Sync timeout')), 2500))
+      ]).catch(e => console.warn('[MongoDB Atlas] Sync on reset-demo notice:', e.message));
     } catch (_) {}
 
     res.json({ success: true, message: 'Demo shop reloaded with 120 days of verified transactions', shop });

@@ -26,7 +26,12 @@ export class ErrorBoundary extends React.Component {
       errorMsg.includes('Failed to fetch dynamically imported module') ||
       errorMsg.includes('Loading chunk') ||
       errorMsg.includes('ChunkLoadError') ||
-      errorMsg.includes('Importing a module script failed');
+      errorMsg.includes('dynamically imported module') ||
+      errorMsg.includes('error loading dynamically imported module') ||
+      errorMsg.includes('Importing a module script failed') ||
+      errorMsg.includes('Load failed') ||
+      errorMsg.includes('Failed to load') ||
+      errorMsg.includes('load script');
 
     if (isChunkError) {
       const lastAutoReload = Number(safeStorage.session.getItem('saakhsetu_auto_reload_ts') || 0);
@@ -42,8 +47,14 @@ export class ErrorBoundary extends React.Component {
     }
   }
 
-  handleReload = () => {
+  handleReload = async () => {
     this.setState({ hasError: false, error: null });
+    try {
+      if (typeof window !== 'undefined' && 'caches' in window) {
+        const keys = await caches.keys();
+        await Promise.all(keys.map(k => caches.delete(k)));
+      }
+    } catch (_) {}
     window.location.reload();
   };
 

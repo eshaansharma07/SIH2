@@ -254,7 +254,7 @@ export function FloatingSetuAI({
     try {
       const shopId = currentShop?.id || 'ramesh-kirana';
       const res = await api.chatAdvisor(shopId, text);
-      const rawReply = res?.response || res?.message || res?.reply || (language === 'hi' ? 'नमस्ते! आपके प्रश्न का विश्लेषण किया गया है।' : "Namaste! I've analyzed your query based on verified metrics.");
+      const rawReply = res?.response || res?.advice?.content || res?.content || res?.message || res?.reply || (language === 'hi' ? 'नमस्ते! आपके प्रश्न का विश्लेषण किया गया है।' : "Namaste! I've analyzed your query based on verified metrics.");
       const reply = String(rawReply).replace(/\*/g, '').replace(/\s*[\u2014\u2013]\s*/g, ': ').replace(/[\u2014\u2013]/g, ': ').replace(/\s*--\s*/g, ': ').trim();
       
       if (res?.updatedOwnerName) {

@@ -68,8 +68,8 @@ router.get('/', async (req, res) => {
 
     const registeredNames = new Set();
     const result = customers.map(c => {
-      const nameKey = c.name.trim().toLowerCase();
-      registeredNames.add(nameKey);
+      const nameKey = String(c?.name || '').trim().toLowerCase();
+      if (nameKey) registeredNames.add(nameKey);
       const agg = txByCustomer.get(nameKey) || { totalGiven: 0, totalRepaid: 0, lastDate: null, txCount: 0 };
       const balanceOwed = Math.max(0, agg.totalGiven - agg.totalRepaid);
       const limit = Number(c.credit_limit) || 5000;
@@ -105,8 +105,8 @@ router.get('/', async (req, res) => {
     for (const [nameKey, agg] of txByCustomer.entries()) {
       if (!registeredNames.has(nameKey)) {
         const balanceOwed = Math.max(0, agg.totalGiven - agg.totalRepaid);
-        const originalTx = udhaarTxs.find(t => (t.customer_vendor_name || '').trim().toLowerCase() === nameKey);
-        const displayName = originalTx ? originalTx.customer_vendor_name.trim() : nameKey;
+        const originalTx = udhaarTxs.find(t => String(t?.customer_vendor_name || '').trim().toLowerCase() === nameKey);
+        const displayName = originalTx ? String(originalTx.customer_vendor_name || '').trim() : nameKey;
         const limit = 5000;
         const usagePercent = Math.min(100, Math.round((balanceOwed / limit) * 100));
 

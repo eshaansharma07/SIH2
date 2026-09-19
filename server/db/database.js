@@ -1,3 +1,4 @@
+import Database from 'better-sqlite3';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
@@ -7,8 +8,10 @@ const __dirname = path.dirname(__filename);
 
 let dbPath = path.join(__dirname, 'vyapaar_saathi.db');
 
+const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+
 // Handle Vercel / AWS Lambda read-only filesystem by using /tmp
-if (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME) {
+if (isServerless) {
   const tmpPath = path.join('/tmp', 'vyapaar_saathi.db');
   try {
     if (!fs.existsSync(tmpPath) && fs.existsSync(dbPath)) {
@@ -20,60 +23,33 @@ if (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME) {
   dbPath = tmpPath;
 }
 
-let db;
-try {
-  const { default: Database } = await import('better-sqlite3');
-  db = new Database(dbPath);
-  try {
-    db.pragma('journal_mode = WAL');
-  } catch (e) {
-    // Ignore in environments where WAL is restricted
+const db = new Database(dbPath);
+
+// Caching Map for prepared statements to prevent V8 Garbage Collector from triggering
+// Statement::~Statement() / node::RemoveEnvironmentCleanupHook(env != nullptr) SIGABRT crashes
+// in serverless execution environments (Node 20+ on Vercel / AWS Lambda).
+const statementCache = new Map();
+const originalPrepare = db.prepare.bind(db);
+db.prepare = function(sql) {
+  let stmt = statementCache.get(sql);
+  if (!stmt) {
+    stmt = originalPrepare(sql);
+    statementCache.set(sql, stmt);
   }
-} catch (loadErr) {
-  // Graceful fallback to Node's built-in node:sqlite (Node 22.5+)
-  const { DatabaseSync } = await import('node:sqlite');
-  const rawDb = new DatabaseSync(dbPath);
-  const sanitize = (val) => {
-    if (val === undefined) return null;
-    if (typeof val === 'boolean') return val ? 1 : 0;
-    return val;
-  };
+  return stmt;
+};
 
-  const origPrepare = rawDb.prepare.bind(rawDb);
-  rawDb.prepare = function(sql) {
-    const stmt = origPrepare(sql);
-    return {
-      run: (...args) => stmt.run(...args.map(sanitize)),
-      get: (...args) => stmt.get(...args.map(sanitize)),
-      all: (...args) => stmt.all(...args.map(sanitize))
-    };
-  };
-
-  rawDb.pragma = (str) => {
-    try {
-      rawDb.exec(`PRAGMA ${str}`);
-    } catch (e) {}
-  };
-
-  rawDb.transaction = (fn) => {
-    return (...args) => {
-      rawDb.exec('BEGIN TRANSACTION');
-      try {
-        const result = fn(...args);
-        rawDb.exec('COMMIT');
-        return result;
-      } catch (err) {
-        rawDb.exec('ROLLBACK');
-        throw err;
-      }
-    };
-  };
-
-  try {
-    rawDb.pragma('journal_mode = WAL');
-  } catch (e) {}
-
-  db = rawDb;
+// Configure pragmas safely based on environment
+try {
+  if (isServerless) {
+    db.pragma('journal_mode = MEMORY');
+    db.pragma('synchronous = OFF');
+    db.pragma('temp_store = MEMORY');
+  } else {
+    db.pragma('journal_mode = WAL');
+  }
+} catch (e) {
+  // Ignore in environments where pragma is restricted
 }
 
 // Initialize tables
@@ -174,18 +150,6 @@ try {
 }
 
 try {
-  db.exec("ALTER TABLE shops ADD COLUMN is_udyam_verified INTEGER DEFAULT 0;");
-} catch (_) {
-  // Column already exists
-}
-
-try {
-  db.exec("ALTER TABLE shops ADD COLUMN udyam_number TEXT DEFAULT '';");
-} catch (_) {
-  // Column already exists
-}
-
-try {
   db.exec('ALTER TABLE transactions ADD COLUMN customer_phone TEXT;');
 } catch (_) {
   // Column already exists
@@ -214,6 +178,44 @@ try {
     );
     CREATE INDEX IF NOT EXISTS idx_customers_shop_id ON customers(shop_id);
     CREATE INDEX IF NOT EXISTS idx_customers_phone ON customers(phone);
+  `);
+} catch (_) {
+  // Table / index already exists
+}
+
+try {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS government_schemes (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      short_name TEXT NOT NULL,
+      ministry TEXT NOT NULL,
+      category TEXT NOT NULL,
+      scope TEXT DEFAULT 'central',
+      applicable_states TEXT DEFAULT '[]',
+      max_loan_amount REAL DEFAULT 0,
+      loan_range_text TEXT,
+      interest_rate TEXT,
+      subsidy_text TEXT,
+      collateral_required INTEGER DEFAULT 0,
+      collateral_text TEXT,
+      tenure TEXT,
+      plain_language_summary TEXT,
+      plain_language_summary_hi TEXT,
+      last_verified TEXT,
+      official_source_url TEXT,
+      statutory_reference TEXT,
+      why_you_qualify_rules TEXT,
+      required_documents TEXT,
+      application_steps TEXT,
+      official_portal TEXT,
+      is_scraped INTEGER DEFAULT 0,
+      source_portal TEXT DEFAULT 'official',
+      scraped_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE INDEX IF NOT EXISTS idx_gov_schemes_category ON government_schemes(category);
+    CREATE INDEX IF NOT EXISTS idx_gov_schemes_scope ON government_schemes(scope);
   `);
 } catch (_) {
   // Table / index already exists

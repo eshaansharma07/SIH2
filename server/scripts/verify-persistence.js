@@ -28,7 +28,7 @@ async function runCrossInstancePersistenceVerification() {
   // STEP 1: Simulate Lambda Container A (Instance 1) - Open connection and write
   // =========================================================================
   console.log('\n--- Step 1: Lambda Instance A (Cold Start #1) ---');
-  const clientA = new MongoClient(uri, { serverSelectionTimeoutMS: 5000 });
+  const clientA = new MongoClient(uri, { maxPoolSize: 1, minPoolSize: 0, maxIdleTimeMS: 5000, serverSelectionTimeoutMS: 5000 });
   await clientA.connect();
   console.log('✅ Instance A connected to MongoDB Atlas');
 
@@ -70,7 +70,7 @@ async function runCrossInstancePersistenceVerification() {
   // STEP 2: Simulate Lambda Container B (Instance 2) - Brand new connection
   // =========================================================================
   console.log('\n--- Step 2: Lambda Instance B (Cold Start #2 - Fresh Container) ---');
-  const clientB = new MongoClient(uri, { serverSelectionTimeoutMS: 5000 });
+  const clientB = new MongoClient(uri, { maxPoolSize: 1, minPoolSize: 0, maxIdleTimeMS: 5000, serverSelectionTimeoutMS: 5000 });
   await clientB.connect();
   console.log('✅ Instance B connected to MongoDB Atlas from fresh socket pool');
 

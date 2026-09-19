@@ -157,6 +157,8 @@ export function hasLanguageVoice(lang = 'hi-IN') {
   return isSpeechSupported();
 }
 
+let activeUtterance = null;
+
 export function stopSpeech() {
   if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
     if (speechTimeout) {
@@ -169,8 +171,16 @@ export function stopSpeech() {
     }
     isSpeechActive = false;
     try {
+      if (activeUtterance) {
+        activeUtterance.onstart = null;
+        activeUtterance.onend = null;
+        activeUtterance.onerror = null;
+        activeUtterance.onpause = null;
+        activeUtterance.onresume = null;
+      }
       window.speechSynthesis.cancel();
     } catch (_) {}
+    activeUtterance = null;
     if (typeof window !== 'undefined') {
       window._activeSpeechUtterance = null;
     }
@@ -205,102 +215,41 @@ export function speak({
     return false;
   }
 
-  const chunks = chunkText(cleaned, 160);
-  if (chunks.length === 0) {
-    onEnd?.();
+  try {
+    const utterance = new SpeechSynthesisUtterance(cleaned);
+    utterance.lang = lang;
+    utterance.rate = 0.9; // Rural-friendly pacing
+    utterance.pitch = 1.0;
+
+    const voice = findMatchingVoice(lang);
+    if (voice) {
+      utterance.voice = voice;
+    }
+
+    utterance.onstart = () => {
+      activeUtterance = utterance;
+      onStart?.();
+    };
+
+    utterance.onend = () => {
+      activeUtterance = null;
+      onEnd?.();
+    };
+
+    utterance.onerror = (e) => {
+      activeUtterance = null;
+      if (e.error !== 'canceled' && e.error !== 'interrupted') {
+        console.warn('[SaathiBol] Speech synthesis error:', e.error);
+        onError?.(e);
+      }
+      // When canceled or interrupted, do NOT trigger onEnd()
+    };
+
+    window.speechSynthesis.speak(utterance);
+    return true;
+  } catch (err) {
+    console.error('[SaathiBol] Failed to speak utterance:', err);
+    onError?.(err);
     return false;
   }
-
-  isSpeechActive = true;
-
-  // Asynchronous start to ensure window.speechSynthesis.cancel() completes in Chromium
-  speechTimeout = setTimeout(() => {
-    try {
-      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-        // Unlock audio context / unpause if frozen
-        if (window.speechSynthesis.paused) {
-          window.speechSynthesis.resume();
-        }
-      }
-
-      let chunkIndex = 0;
-
-      // Keep-alive interval for Chrome on Windows (resumes if Chrome pauses background speech)
-      keepAliveInterval = setInterval(() => {
-        if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-          if (window.speechSynthesis.speaking && window.speechSynthesis.paused) {
-            window.speechSynthesis.resume();
-          }
-        }
-      }, 3000);
-
-      const playNext = () => {
-        if (!isSpeechActive || chunkIndex >= chunks.length) {
-          stopSpeech();
-          onEnd?.();
-          return;
-        }
-
-        const chunkTextStr = chunks[chunkIndex];
-        const utterance = new SpeechSynthesisUtterance(chunkTextStr);
-        utterance.rate = 0.92;
-        utterance.pitch = 1.0;
-
-        const voice = findMatchingVoice(lang);
-        if (voice) {
-          utterance.voice = voice;
-          utterance.lang = voice.lang || lang;
-        } else {
-          utterance.lang = lang;
-        }
-
-        // Global reference prevents Chromium V8 garbage collection mid-speech
-        if (typeof window !== 'undefined') {
-          window._activeSpeechUtterance = utterance;
-        }
-
-        utterance.onstart = () => {
-          if (chunkIndex === 0) {
-            onStart?.();
-          }
-        };
-
-        utterance.onend = () => {
-          chunkIndex++;
-          playNext();
-        };
-
-        utterance.onerror = (e) => {
-          if (e.error === 'canceled' || e.error === 'interrupted') {
-            stopSpeech();
-            onEnd?.();
-          } else {
-            console.warn('[SaathiBol] Chunk speech notice:', e.error, chunkTextStr);
-            // Move to next chunk rather than silently failing the whole message
-            chunkIndex++;
-            playNext();
-          }
-        };
-
-        try {
-          window.speechSynthesis.speak(utterance);
-          if (window.speechSynthesis.paused) {
-            window.speechSynthesis.resume();
-          }
-        } catch (speakErr) {
-          console.warn('[SaathiBol] Direct speak error:', speakErr);
-          chunkIndex++;
-          playNext();
-        }
-      };
-
-      playNext();
-    } catch (err) {
-      console.error('[SaathiBol] Failed during speech execution:', err);
-      stopSpeech();
-      onError?.(err);
-    }
-  }, 60);
-
-  return true;
 }

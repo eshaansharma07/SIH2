@@ -9,8 +9,8 @@ import { safeStorage } from './safeStorage.js';
 
 // Strips common honorifics, titles, and extra whitespace for fuzzy matching
 export function normalizeCustomerName(rawName) {
-  if (!rawName || typeof rawName !== 'string') return '';
-  return rawName
+  if (!rawName) return '';
+  return String(rawName)
     .trim()
     .toLowerCase()
     .replace(/^(?:shri|smt|shrimati|mr|mrs|masterji|chacha|chachi|bhaiya|didi|panditji|sethji|dada|babu|ji)\b\s*/i, '')
@@ -20,8 +20,8 @@ export function normalizeCustomerName(rawName) {
 
 // Cleans phone to last 10 digits
 export function cleanIndianPhone(phone) {
-  if (!phone || typeof phone !== 'string') return '';
-  return phone.replace(/\D/g, '').slice(-10);
+  if (!phone) return '';
+  return String(phone).replace(/\D/g, '').slice(-10);
 }
 
 // Validates 10-digit Indian mobile (starts with 6, 7, 8, 9)
@@ -33,7 +33,7 @@ export function isValidIndianPhone(phone) {
 // Formats phone as "98765xxxxx"
 export function maskIndianPhone(phone) {
   const clean = cleanIndianPhone(phone);
-  if (clean.length < 5) return clean;
+  if (!clean || clean.length < 5) return clean || '';
   return `${clean.slice(0, 5)}xxxxx`;
 }
 
@@ -43,17 +43,17 @@ export function getCustomerDetails(c) {
   if (typeof c === 'string') {
     return { id: '', name: c, phone: '', cleanPhone: '', village: '', balanceOwed: 0, txCount: 0, udhaarStatus: 'No Pending Udhaar', createdAt: null, notes: '', creditLimit: 5000 };
   }
-  const name = c.name || c.customerName || c.customer_vendor_name || '';
-  const rawPhone = c.phone || c.customerPhone || c.customer_phone || '';
+  const name = String(c.name || c.customerName || c.customer_vendor_name || '').trim();
+  const rawPhone = String(c.phone || c.customerPhone || c.customer_phone || '').trim();
   const cleanPhone = cleanIndianPhone(rawPhone);
-  const village = c.village || c.village_address || '';
-  const balanceOwed = Number(c.balanceOwed ?? c.balance_owed ?? 0);
-  const id = c.id || c.customerId || '';
-  const txCount = Number(c.txCount ?? c.totalTransactions ?? (Array.isArray(c.history) ? c.history.length : 0));
+  const village = String(c.village || c.village_address || '').trim();
+  const balanceOwed = Number(c.balanceOwed ?? c.balance_owed ?? 0) || 0;
+  const id = String(c.id || c.customerId || '');
+  const txCount = Number(c.txCount ?? c.totalTransactions ?? (Array.isArray(c.history) ? c.history.length : 0)) || 0;
   const udhaarStatus = balanceOwed > 0 ? 'Udhaar Active' : 'No Pending Udhaar';
   const createdAt = c.created_at || c.createdAt || c.customerSince || null;
-  const notes = c.notes || '';
-  const creditLimit = Number(c.credit_limit ?? c.creditLimit ?? 5000);
+  const notes = String(c.notes || '');
+  const creditLimit = Number(c.credit_limit ?? c.creditLimit ?? 5000) || 5000;
 
   return { 
     id, 
@@ -191,7 +191,7 @@ export function searchCustomerSuggestions(query, customerList = [], limit = 6) {
     let score = 0;
 
     // Phone match
-    if (cleanDigits && details.cleanPhone.includes(cleanDigits)) {
+    if (cleanDigits && details.cleanPhone && details.cleanPhone.includes(cleanDigits)) {
       score = 70;
     }
 

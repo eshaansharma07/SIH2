@@ -10,9 +10,10 @@ dotenv.config();
 dotenv.config({ path: path.join(__dirname, '../.env') });
 dotenv.config({ path: path.join(__dirname, '../../.env') });
 
-let cachedClient = null;
-let cachedDb = null;
-let indexesInitialized = false;
+// Global caching across serverless invocations and module re-imports
+let cachedClient = globalThis.__saakhsetuMongoClient || null;
+let cachedDb = globalThis.__saakhsetuMongoDb || null;
+let indexesInitialized = globalThis.__saakhsetuIndexesInitialized || false;
 let lastFailureTimestamp = 0;
 const FAILURE_COOLDOWN_MS = 60000; // 1 minute cooldown after connection failure
 
@@ -28,6 +29,8 @@ export function isMongoConfigured() {
  */
 async function ensureIndexesAndMigrations(db) {
   if (indexesInitialized) return;
+  indexesInitialized = true;
+  globalThis.__saakhsetuIndexesInitialized = true;
   try {
     const shopsCol = db.collection('shops');
     const txCol = db.collection('transactions');
@@ -63,8 +66,6 @@ async function ensureIndexesAndMigrations(db) {
       },
       { upsert: true }
     );
-
-    indexesInitialized = true;
   } catch (err) {
     console.warn('[MongoDB] Index/migration notice:', err.message);
   }
@@ -76,13 +77,16 @@ async function ensureIndexesAndMigrations(db) {
 const sleep = (ms) => new Promise(res => setTimeout(res, ms));
 
 /**
- * Establishes or returns cached MongoDB connection with retry-with-backoff.
+ * Establishes or returns cached MongoDB connection with serverless connection hygiene.
  * 
- * Sizing rationale for maxPoolSize = 10:
- * In a serverless deployment (Vercel / AWS Lambda), each warm container maintains its own pool.
- * Shared/M0 MongoDB Atlas clusters have a connection limit of 500 connections.
- * Capping each container at 10 connections permits up to 50 concurrent Lambda execution units
- * without connection throttling, while providing sufficient connection reuse across warm starts.
+ * Connection Pool Sizing for M0 Atlas (500 connection limit):
+ * - maxPoolSize: 1 (serverless) / 2 (local): Each Lambda container processes requests
+ *   serially; 1 socket per container guarantees zero connection starvation across dozens
+ *   of concurrent Lambdas.
+ * - minPoolSize: 0: Allows connection pool to shrink to 0 when idle, preventing lingering
+ *   connections from accumulating across frozen containers.
+ * - maxIdleTimeMS: 5000: Aggressively closes any idle socket after 5 seconds of inactivity.
+ * - waitQueueTimeoutMS: 2000: Fails fast and falls back to SQLite rather than hanging requests.
  */
 export async function getMongoDb() {
   const uri = process.env.MONGODB_URI;
@@ -91,6 +95,11 @@ export async function getMongoDb() {
   }
 
   if (cachedDb) {
+    return cachedDb;
+  }
+  if (globalThis.__saakhsetuMongoDb) {
+    cachedDb = globalThis.__saakhsetuMongoDb;
+    cachedClient = globalThis.__saakhsetuMongoClient;
     return cachedDb;
   }
 
@@ -107,19 +116,23 @@ export async function getMongoDb() {
     try {
       if (!cachedClient) {
         cachedClient = new MongoClient(uri, {
-          maxPoolSize: 10,
-          minPoolSize: 1,
+          maxPoolSize: isServerless ? 1 : 2,
+          minPoolSize: 0,
+          maxIdleTimeMS: 5000,
           serverSelectionTimeoutMS: timeoutMs,
-          socketTimeoutMS: 5000,
+          socketTimeoutMS: 15000,
           connectTimeoutMS: timeoutMs,
+          waitQueueTimeoutMS: 2000,
         });
       }
 
       await cachedClient.connect();
       cachedDb = cachedClient.db('vyapaar_saathi');
+      globalThis.__saakhsetuMongoClient = cachedClient;
+      globalThis.__saakhsetuMongoDb = cachedDb;
 
-      // Initialize indexes and schema metadata asynchronously
-      ensureIndexesAndMigrations(cachedDb);
+      // Initialize indexes and schema metadata asynchronously without blocking request
+      ensureIndexesAndMigrations(cachedDb).catch(() => {});
 
       return cachedDb;
     } catch (err) {
@@ -136,11 +149,13 @@ export async function getMongoDb() {
         console.warn('[MongoDB] Connection unavailable. Falling back immediately to local SQLite store.');
         if (cachedClient) {
           try {
-            await cachedClient.close();
+            await cachedClient.close(true);
           } catch (_) {}
         }
         cachedClient = null;
         cachedDb = null;
+        globalThis.__saakhsetuMongoClient = null;
+        globalThis.__saakhsetuMongoDb = null;
         lastFailureTimestamp = Date.now();
         return null;
       }
@@ -149,9 +164,10 @@ export async function getMongoDb() {
 
   if (cachedClient) {
     try {
-      await cachedClient.close();
+      await cachedClient.close(true);
     } catch (_) {}
     cachedClient = null;
+    globalThis.__saakhsetuMongoClient = null;
   }
   lastFailureTimestamp = Date.now();
   return null;
@@ -177,13 +193,28 @@ export async function getBenchmarksCollection() {
   return db ? db.collection('peer_benchmarks') : null;
 }
 
+export async function getSchemesCollection() {
+  const db = await getMongoDb();
+  return db ? db.collection('government_schemes') : null;
+}
+
 export async function closeMongoConnection() {
-  if (cachedClient) {
+  const client = cachedClient || globalThis.__saakhsetuMongoClient;
+  if (client) {
     try {
-      await cachedClient.close();
+      await client.close(true);
     } catch (_) {}
-    cachedClient = null;
-    cachedDb = null;
   }
+  cachedClient = null;
+  cachedDb = null;
+  globalThis.__saakhsetuMongoClient = null;
+  globalThis.__saakhsetuMongoDb = null;
+  indexesInitialized = false;
+  globalThis.__saakhsetuIndexesInitialized = false;
+}
+
+if (typeof process !== 'undefined') {
+  process.on('SIGTERM', () => { closeMongoConnection().catch(() => {}); });
+  process.on('SIGINT', () => { closeMongoConnection().catch(() => {}); });
 }
 
