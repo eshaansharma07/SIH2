@@ -74,12 +74,6 @@ export function Sidebar({
       id: 'dossier', 
       label: language === 'hi' ? 'बैंक डॉसियर' : 'Bank Dossier', 
       icon: FileText 
-    },
-    { 
-      id: 'admin', 
-      label: language === 'hi' ? 'एडमिन पोर्टल' : 'Admin Portal', 
-      icon: ShieldCheck,
-      badge: 'DIC/Bank'
     }
   ];
 
@@ -225,6 +219,24 @@ export function Sidebar({
           >
             <Headphones className="w-4 h-4 text-stone-500 shrink-0" />
             <span>{language === 'hi' ? 'मदद और सहायता' : 'Help & Support'}</span>
+          </button>
+
+          {/* Institutional / Bank Officer Portal Access (Discrete) */}
+          <button
+            type="button"
+            onClick={() => {
+              setActiveTab('admin');
+              onClose?.();
+            }}
+            className="w-full mt-1.5 flex items-center justify-between px-3 py-1.5 rounded-xl text-[11px] font-medium text-stone-500 hover:text-[#0F3E2E] hover:bg-[#EAE4D7] transition-all cursor-pointer border border-transparent hover:border-stone-300/60"
+          >
+            <span className="flex items-center gap-2">
+              <ShieldCheck className="w-3.5 h-3.5 text-stone-400" />
+              <span>{language === 'hi' ? 'संस्थागत / बैंक कमान' : 'Bank & DIC Portal'}</span>
+            </span>
+            <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-stone-200/70 text-stone-600">
+              Officer
+            </span>
           </button>
         </div>
       </aside>

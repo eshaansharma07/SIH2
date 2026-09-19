@@ -457,34 +457,6 @@ export function Navbar({
           }
         }
       ]
-    },
-    { 
-      id: 'admin', 
-      label: language === 'hi' ? 'कमान केंद्र' : 'Admin Portal', 
-      icon: ShieldCheck,
-      menuTitle: language === 'hi' ? 'प्रशासनिक कमान केंद्र' : 'Institutional Command Center',
-      menuTagline: language === 'hi' ? 'लीड बैंक एवं डीआईसी के लिए एमएसएमई निगरानी।' : 'District MSME underwriting and government scheme monitoring.',
-      menuDescription: language === 'hi' ? '50-लेन-देन ऑडिट सत्यापन एवं समग्र व्यापार निगरानी।' : 'Review district-wide merchant audit milestones, CAM dossiers, and statutory scheme feeds.',
-      items: [
-        {
-          id: 'adm-metrics',
-          title: language === 'hi' ? 'कमान अवलोकन' : 'District Command Pulse',
-          description: language === 'hi' ? 'सकल उद्यम व व्यापार प्रवाह' : 'Overall MSME and transaction metrics',
-          action: () => {
-            setActiveTab('admin');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          }
-        },
-        {
-          id: 'adm-registry',
-          title: language === 'hi' ? 'सूक्ष्म उद्यम पंजी' : 'MSME Master Registry',
-          description: language === 'hi' ? 'पंजीकृत 70+ उद्यमों की सूची' : 'Searchable registered enterprises',
-          action: () => {
-            setActiveTab('admin');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          }
-        }
-      ]
     }
   ];
 
@@ -745,6 +717,21 @@ export function Navbar({
                       <span>{resetting ? 'Resetting...' : (language === 'hi' ? 'डेमो रीसेट करें' : 'Reset Demo Data')}</span>
                     </button>
                   )}
+
+                  <div className="h-[1px] bg-stone-100 my-1" />
+
+                  {/* Institutional / Bank Officer Portal Access */}
+                  <button
+                    type="button"
+                    onClick={() => { setActiveTab('admin'); setProfileOpen(false); }}
+                    className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-stone-700 hover:bg-[#FAF6EE] hover:text-[#0F3E2E] text-left transition-colors font-semibold cursor-pointer"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Landmark className="w-3.5 h-3.5 text-[#0F3E2E]" />
+                      <span>{language === 'hi' ? 'संस्थागत कमान केंद्र' : 'Bank & DIC Portal'}</span>
+                    </div>
+                    <span className="text-[9px] bg-stone-200/80 px-1 py-0.5 rounded font-mono text-stone-600">Officer</span>
+                  </button>
 
                   <div className="h-[1px] bg-stone-100 my-1" />
 
