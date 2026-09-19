@@ -66,6 +66,9 @@ export function BankDossierPage({ shop, isDemoMode, onNavigateTab, onBack }) {
             hour12: true
           }).format(new Date()));
 
+  const txCount = d?.creditEvaluation?.transactionCount ?? (isDemo ? 120 : 0);
+  const isUnrated = !isDemo && (d?.creditEvaluation?.isUnrated || !d?.creditEvaluation?.totalScore || txCount < 50);
+
   useEffect(() => {
     loadDossier();
   }, [shop?.id]);
@@ -291,39 +294,6 @@ export function BankDossierPage({ shop, isDemoMode, onNavigateTab, onBack }) {
     );
   }
 
-  const d = dossierData || (isDemo ? DEMO_DOSSIER : null);
-  const shopName = d?.shop?.name || shop?.name || (isDemo ? DEMO_DOSSIER.shop.name : 'Ramesh’s Kirana Store');
-  const ownerName = d?.shop?.ownerName || shop?.owner_name || (isDemo ? DEMO_DOSSIER.shop.ownerName : 'Ramesh Kumar');
-  const tradeName = d?.shop?.tradeName || shop?.trade_name || (isDemo ? DEMO_DOSSIER.shop.tradeName : 'Kirana & General Store');
-  const village = d?.shop?.village || shop?.village || (isDemo ? DEMO_DOSSIER.shop.village : 'Utraula Dehat');
-  const district = d?.shop?.district || shop?.district || (isDemo ? DEMO_DOSSIER.shop.district : 'Balrampur');
-  const state = d?.shop?.state || shop?.state || (isDemo ? DEMO_DOSSIER.shop.state : 'Uttar Pradesh');
-  const vintageYears = d?.shop?.vintageYears ?? shop?.vintage_years ?? (isDemo ? DEMO_DOSSIER.shop.vintageYears : 4);
-  const bankAccount = d?.shop?.bankAccount || shop?.bank_account_type || (isDemo ? DEMO_DOSSIER.shop.bankAccount : 'Aryavart Gramin Bank');
-
-  // Real timestamp logic: dynamic date formatting without hardcoded fallbacks for real shops
-  const formattedDate = isDemo
-    ? '18 Sep 2026, 09:41 AM'
-    : (d?.issueDate
-        ? new Intl.DateTimeFormat('en-IN', {
-            day: '2-digit',
-            month: 'short',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: true
-          }).format(new Date(d.issueDate))
-        : new Intl.DateTimeFormat('en-IN', {
-            day: '2-digit',
-            month: 'short',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: true
-          }).format(new Date()));
-
-  const txCount = d?.creditEvaluation?.transactionCount ?? (isDemo ? 120 : 0);
-  const isUnrated = !isDemo && (d?.creditEvaluation?.isUnrated || !d?.creditEvaluation?.totalScore || txCount < 50);
   return (
     <div className="space-y-6 pb-12 animate-fadeIn max-w-[1360px] mx-auto text-stone-900">
       
