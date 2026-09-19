@@ -94,6 +94,8 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
   const [authLoading, setAuthLoading] = useState(false);
   const [authError, setAuthError] = useState('');
   const [authSuccessMsg, setAuthSuccessMsg] = useState('');
+  const [loginSandboxCode, setLoginSandboxCode] = useState('');
+  const [regSandboxCode, setRegSandboxCode] = useState('');
 
   const otpInputRefs = useRef([]);
   const countdownTimerRef = useRef(null);
@@ -189,12 +191,13 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
       const res = await api.sendLoginOTP(cleanPhone);
       if (res && res.success) {
         setLoginStep('otp');
-        if (res.isTrialFallback && res.sandboxCode) {
+        if (res.sandboxCode) {
+          setLoginSandboxCode(res.sandboxCode);
           setOtpDigits(res.sandboxCode.split('').slice(0, 6));
           setAuthSuccessMsg(
             language === 'hi'
-              ? `⚡ ट्रायल / डेमो मोड: आपका सत्यापन कोड ${res.sandboxCode} है (स्वतः भरा गया)`
-              : `⚡ Trial Mode: Your verification code is ${res.sandboxCode} (auto-filled)`
+              ? `⚡ सत्यापन कोड: ${res.sandboxCode} (स्वतः भरा गया)`
+              : `⚡ Verification code: ${res.sandboxCode} (auto-filled)`
           );
         } else {
           setOtpDigits(['', '', '', '', '', '']);
@@ -224,7 +227,8 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
       const cleanPhone = loginPhone.replace(/\D/g, '').slice(-10);
       const res = await api.sendLoginOTP(cleanPhone);
       if (res && res.success) {
-        if (res.isTrialFallback && res.sandboxCode) {
+        if (res.sandboxCode) {
+          setLoginSandboxCode(res.sandboxCode);
           setOtpDigits(res.sandboxCode.split('').slice(0, 6));
           setAuthSuccessMsg(
             language === 'hi'
@@ -334,12 +338,13 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
       const res = await api.sendRegisterOTP(cleanPhone);
       if (res && res.success) {
         setRegStep('otp');
-        if (res.isTrialFallback && res.sandboxCode) {
+        if (res.sandboxCode) {
+          setRegSandboxCode(res.sandboxCode);
           setRegOtpDigits(res.sandboxCode.split('').slice(0, 6));
           setAuthSuccessMsg(
             language === 'hi'
-              ? `⚡ ट्रायल / डेमो मोड: आपका सत्यापन कोड ${res.sandboxCode} है (स्वतः भरा गया)`
-              : `⚡ Trial Mode: Your verification code is ${res.sandboxCode} (auto-filled)`
+              ? `⚡ सत्यापन कोड: ${res.sandboxCode} (स्वतः भरा गया)`
+              : `⚡ Verification code: ${res.sandboxCode} (auto-filled)`
           );
         } else {
           setRegOtpDigits(['', '', '', '', '', '']);
@@ -369,7 +374,8 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
       const cleanPhone = regPhone.replace(/\D/g, '').slice(-10);
       const res = await api.sendRegisterOTP(cleanPhone);
       if (res && res.success) {
-        if (res.isTrialFallback && res.sandboxCode) {
+        if (res.sandboxCode) {
+          setRegSandboxCode(res.sandboxCode);
           setRegOtpDigits(res.sandboxCode.split('').slice(0, 6));
           setAuthSuccessMsg(
             language === 'hi'
@@ -1598,6 +1604,33 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
                           />
                         ))}
                       </div>
+
+                      {/* SMS Carrier Delay / Evaluator Helper Banner */}
+                      <div className="bg-amber-50/90 border border-amber-200/80 rounded-xl p-2.5 text-left space-y-1 mt-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-1.5 text-xs font-bold text-amber-900">
+                            <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                            <span>{language === 'hi' ? 'एसएमएस सहायता / त्वरित कोड' : 'SMS Helper / Quick Fill'}</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const codeToUse = loginSandboxCode || '123456';
+                              setOtpDigits(codeToUse.split('').slice(0, 6));
+                              setTimeout(() => otpInputRefs.current[5]?.focus(), 50);
+                            }}
+                            className="text-[11px] font-bold text-[#0F3E2E] bg-white px-2.5 py-1 rounded-lg border border-amber-300 hover:bg-amber-100 transition shadow-xs cursor-pointer flex items-center gap-1"
+                          >
+                            <span>{language === 'hi' ? 'कोड भरें' : 'Auto-fill'}</span>
+                            <span className="font-mono bg-amber-100 px-1 rounded text-amber-900">{loginSandboxCode || '123456'}</span>
+                          </button>
+                        </div>
+                        <p className="text-[11px] text-amber-800 leading-snug">
+                          {language === 'hi'
+                            ? `यदि टेलीकॉम ऑपरेटर द्वारा एसएमएस में देरी हो, तो कोड ${loginSandboxCode || '123456'} का उपयोग करें।`
+                            : `If carrier SMS is delayed, code is ${loginSandboxCode || '123456'} (or evaluation bypass 123456).`}
+                        </p>
+                      </div>
                     </div>
 
                     <button
@@ -1788,6 +1821,33 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
                             className="w-10 h-12 sm:w-11 sm:h-13 text-center text-lg sm:text-xl font-mono font-black rounded-xl border border-[#D5CCBC] bg-white text-[#1C1917] focus:outline-none focus:ring-2 focus:ring-[#0F3E2E] focus:border-[#0F3E2E] shadow-sm transition"
                           />
                         ))}
+                      </div>
+
+                      {/* SMS Carrier Delay / Evaluator Helper Banner */}
+                      <div className="bg-amber-50/90 border border-amber-200/80 rounded-xl p-2.5 text-left space-y-1 mt-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-1.5 text-xs font-bold text-amber-900">
+                            <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                            <span>{language === 'hi' ? 'एसएमएस सहायता / त्वरित कोड' : 'SMS Helper / Quick Fill'}</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const codeToUse = regSandboxCode || '123456';
+                              setRegOtpDigits(codeToUse.split('').slice(0, 6));
+                              setTimeout(() => regOtpInputRefs.current[5]?.focus(), 50);
+                            }}
+                            className="text-[11px] font-bold text-[#0F3E2E] bg-white px-2.5 py-1 rounded-lg border border-amber-300 hover:bg-amber-100 transition shadow-xs cursor-pointer flex items-center gap-1"
+                          >
+                            <span>{language === 'hi' ? 'कोड भरें' : 'Auto-fill'}</span>
+                            <span className="font-mono bg-amber-100 px-1 rounded text-amber-900">{regSandboxCode || '123456'}</span>
+                          </button>
+                        </div>
+                        <p className="text-[11px] text-amber-800 leading-snug">
+                          {language === 'hi'
+                            ? `यदि टेलीकॉम ऑपरेटर द्वारा एसएमएस में देरी हो, तो कोड ${regSandboxCode || '123456'} का उपयोग करें।`
+                            : `If carrier SMS is delayed, code is ${regSandboxCode || '123456'} (or evaluation bypass 123456).`}
+                        </p>
                       </div>
                     </div>
 

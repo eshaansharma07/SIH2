@@ -68,18 +68,29 @@ export const dataStore = {
   },
 
   async findShopByPhoneOrId(input, digitsOnly) {
+    if (!input) return null;
+    const strInput = String(input).trim();
+    const cleanDigits = digitsOnly || strInput.replace(/\D/g, '').slice(-10);
+    const escapedInput = strInput.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
     const isMongo = await this.isPrimaryMongo();
     if (isMongo) {
       try {
         const col = await getShopsCollection();
-        const query = {
-          $or: [
-            { phone: input },
-            { id: input },
-            { name: { $regex: new RegExp(`^${input}$`, 'i') } },
-            ...(digitsOnly ? [{ phone: { $regex: digitsOnly } }] : [])
-          ]
-        };
+        const orConditions = [
+          { phone: strInput },
+          { id: strInput },
+          { name: { $regex: new RegExp(`^${escapedInput}$`, 'i') } }
+        ];
+
+        if (cleanDigits) {
+          orConditions.push({ phone: cleanDigits });
+          orConditions.push({ phone: `+91${cleanDigits}` });
+          orConditions.push({ phone: `+91 ${cleanDigits.slice(0, 5)} ${cleanDigits.slice(5)}` });
+          orConditions.push({ phone: { $regex: cleanDigits } });
+        }
+
+        const query = { $or: orConditions };
         const doc = await col.findOne(query, { sort: { is_demo: 1, created_at: -1 } });
         if (doc) return cleanDoc(doc);
       } catch (err) {
@@ -97,7 +108,7 @@ export const dataStore = {
       )
       ORDER BY is_demo ASC, created_at DESC
       LIMIT 1
-    `).get(input, digitsOnly || input, input, input) || null;
+    `).get(strInput, cleanDigits || strInput, strInput, strInput) || null;
   },
 
   async upsertShop(shopData) {

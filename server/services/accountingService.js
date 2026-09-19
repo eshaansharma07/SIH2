@@ -1,5 +1,6 @@
 import db from '../db/database.js';
 import dataStore from '../db/dataStore.js';
+import { getMongoDb } from '../db/mongoClient.js';
 
 /**
  * Vyapaar Accounting Domain Service
@@ -14,6 +15,29 @@ export const accountingService = {
 
   async getProducts(shopId, { search = '', category = '', lowStockOnly = false, limit = 100, offset = 0 } = {}) {
     if (!shopId) return [];
+
+    try {
+      const dbMongo = await getMongoDb();
+      if (dbMongo) {
+        const query = { shop_id: shopId, is_active: { $ne: 0 } };
+        if (category && category !== 'all') query.category = category;
+        if (search) {
+          const regex = new RegExp(search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+          query.$or = [{ name: regex }, { sku: regex }, { hsn_code: regex }];
+        }
+        let cursor = dbMongo.collection('accounting_products').find(query).sort({ name: 1 });
+        if (offset) cursor = cursor.skip(Number(offset));
+        if (limit) cursor = cursor.limit(Number(limit));
+        const docs = await cursor.toArray();
+        if (docs && docs.length > 0) {
+          let results = docs.map(({ _id, ...rest }) => rest);
+          if (lowStockOnly) {
+            results = results.filter(p => (p.current_stock ?? 0) <= (p.reorder_level ?? 10));
+          }
+          return results;
+        }
+      }
+    } catch (_) {}
 
     let query = 'SELECT * FROM products WHERE shop_id = ? AND is_active = 1';
     const params = [shopId];
@@ -41,6 +65,16 @@ export const accountingService = {
 
   async getProductById(shopId, id) {
     if (!shopId || !id) return null;
+    try {
+      const dbMongo = await getMongoDb();
+      if (dbMongo) {
+        const doc = await dbMongo.collection('accounting_products').findOne({ shop_id: shopId, id });
+        if (doc) {
+          const { _id, ...rest } = doc;
+          return rest;
+        }
+      }
+    } catch (_) {}
     return db.prepare('SELECT * FROM products WHERE shop_id = ? AND id = ?').get(shopId, id) || null;
   },
 
@@ -62,68 +96,111 @@ export const accountingService = {
 
     const existing = await this.getProductById(shopId, id);
 
-    if (existing) {
-      db.prepare(`
-        UPDATE products 
-        SET name = ?, sku = ?, hsn_code = ?, category = ?, unit = ?, 
-            purchase_price = ?, selling_price = ?, gst_rate = ?, 
-            current_stock = ?, reorder_level = ?, updated_at = CURRENT_TIMESTAMP
-        WHERE shop_id = ? AND id = ?
-      `).run(
-        name, sku, hsnCode, category, unit,
-        purchasePrice, sellingPrice, gstRate,
-        currentStock, reorderLevel, shopId, id
-      );
+    try {
+      if (existing) {
+        db.prepare(`
+          UPDATE products 
+          SET name = ?, sku = ?, hsn_code = ?, category = ?, unit = ?, 
+              purchase_price = ?, selling_price = ?, gst_rate = ?, 
+              current_stock = ?, reorder_level = ?, updated_at = CURRENT_TIMESTAMP
+          WHERE shop_id = ? AND id = ?
+        `).run(
+          name, sku, hsnCode, category, unit,
+          purchasePrice, sellingPrice, gstRate,
+          currentStock, reorderLevel, shopId, id
+        );
 
-      // If initial stock differed, log adjustment
-      const stockDiff = currentStock - existing.current_stock;
-      if (stockDiff !== 0) {
-        await this.logStockMovement(shopId, id, {
-          type: stockDiff > 0 ? 'adjustment_in' : 'adjustment_out',
-          quantity: stockDiff,
-          unitPrice: purchasePrice,
-          referenceType: 'manual_adjustment',
-          referenceId: 'edit',
-          notes: 'Product inventory updated manually'
-        });
-      }
-    } else {
-      db.prepare(`
-        INSERT INTO products (
-          id, shop_id, name, sku, hsn_code, category, unit,
-          purchase_price, selling_price, gst_rate, current_stock, reorder_level, is_active
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
-      `).run(
-        id, shopId, name, sku, hsnCode, category, unit,
-        purchasePrice, sellingPrice, gstRate, currentStock, reorderLevel
-      );
+        // If initial stock differed, log adjustment
+        const stockDiff = currentStock - (existing.current_stock ?? 0);
+        if (stockDiff !== 0) {
+          await this.logStockMovement(shopId, id, {
+            type: stockDiff > 0 ? 'adjustment_in' : 'adjustment_out',
+            quantity: stockDiff,
+            unitPrice: purchasePrice,
+            referenceType: 'manual_adjustment',
+            referenceId: 'edit',
+            notes: 'Product inventory updated manually'
+          });
+        }
+      } else {
+        db.prepare(`
+          INSERT INTO products (
+            id, shop_id, name, sku, hsn_code, category, unit,
+            purchase_price, selling_price, gst_rate, current_stock, reorder_level, is_active
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
+        `).run(
+          id, shopId, name, sku, hsnCode, category, unit,
+          purchasePrice, sellingPrice, gstRate, currentStock, reorderLevel
+        );
 
-      if (currentStock > 0) {
-        await this.logStockMovement(shopId, id, {
-          type: 'opening_stock',
-          quantity: currentStock,
-          unitPrice: purchasePrice,
-          referenceType: 'initial_stock',
-          referenceId: id,
-          notes: 'Initial inventory logged on creation'
-        });
+        if (currentStock > 0) {
+          await this.logStockMovement(shopId, id, {
+            type: 'opening_stock',
+            quantity: currentStock,
+            unitPrice: purchasePrice,
+            referenceType: 'initial_stock',
+            referenceId: id,
+            notes: 'Initial inventory logged on creation'
+          });
+        }
       }
+    } catch (_) {}
+
+    const prodDoc = {
+      id,
+      shop_id: shopId,
+      name,
+      sku,
+      hsn_code: hsnCode,
+      category,
+      unit,
+      purchase_price: purchasePrice,
+      selling_price: sellingPrice,
+      gst_rate: gstRate,
+      current_stock: currentStock,
+      reorder_level: reorderLevel,
+      is_active: 1,
+      updated_at: new Date().toISOString()
+    };
+
+    try {
+      const dbMongo = await getMongoDb();
+      if (dbMongo) {
+        await dbMongo.collection('accounting_products').updateOne(
+          { shop_id: shopId, id },
+          { $set: prodDoc },
+          { upsert: true }
+        );
+      }
+    } catch (mErr) {
+      console.warn('[AccountingService] Mongo product sync notice:', mErr.message);
     }
 
-    return this.getProductById(shopId, id);
+    return prodDoc;
   },
 
   async deleteProduct(shopId, id) {
     if (!shopId || !id) return false;
-    // Check if product is tied to invoices
-    const usedInInvoice = db.prepare('SELECT 1 FROM invoice_items WHERE product_id = ? LIMIT 1').get(id);
-    if (usedInInvoice) {
-      // Soft delete
-      db.prepare('UPDATE products SET is_active = 0, updated_at = CURRENT_TIMESTAMP WHERE shop_id = ? AND id = ?').run(shopId, id);
-    } else {
-      db.prepare('DELETE FROM stock_movements WHERE shop_id = ? AND product_id = ?').run(shopId, id);
-      db.prepare('DELETE FROM products WHERE shop_id = ? AND id = ?').run(shopId, id);
-    }
+    try {
+      const usedInInvoice = db.prepare('SELECT 1 FROM invoice_items WHERE product_id = ? LIMIT 1').get(id);
+      if (usedInInvoice) {
+        db.prepare('UPDATE products SET is_active = 0, updated_at = CURRENT_TIMESTAMP WHERE shop_id = ? AND id = ?').run(shopId, id);
+      } else {
+        db.prepare('DELETE FROM stock_movements WHERE shop_id = ? AND product_id = ?').run(shopId, id);
+        db.prepare('DELETE FROM products WHERE shop_id = ? AND id = ?').run(shopId, id);
+      }
+    } catch (_) {}
+
+    try {
+      const dbMongo = await getMongoDb();
+      if (dbMongo) {
+        await dbMongo.collection('accounting_products').updateOne(
+          { shop_id: shopId, id },
+          { $set: { is_active: 0, updated_at: new Date().toISOString() } }
+        );
+      }
+    } catch (_) {}
+
     return { success: true, id };
   },
 
@@ -219,11 +296,30 @@ export const accountingService = {
 
   async getSuppliers(shopId) {
     if (!shopId) return [];
+    try {
+      const dbMongo = await getMongoDb();
+      if (dbMongo) {
+        const docs = await dbMongo.collection('accounting_suppliers').find({ shop_id: shopId }).sort({ name: 1 }).toArray();
+        if (docs && docs.length > 0) {
+          return docs.map(({ _id, ...rest }) => rest);
+        }
+      }
+    } catch (_) {}
     return db.prepare('SELECT * FROM suppliers WHERE shop_id = ? ORDER BY name ASC').all(shopId);
   },
 
   async getSupplierById(shopId, id) {
     if (!shopId || !id) return null;
+    try {
+      const dbMongo = await getMongoDb();
+      if (dbMongo) {
+        const doc = await dbMongo.collection('accounting_suppliers').findOne({ shop_id: shopId, id });
+        if (doc) {
+          const { _id, ...rest } = doc;
+          return rest;
+        }
+      }
+    } catch (_) {}
     return db.prepare('SELECT * FROM suppliers WHERE shop_id = ? AND id = ?').get(shopId, id) || null;
   },
 
@@ -238,18 +334,43 @@ export const accountingService = {
     const address = data.address ? String(data.address).trim() : '';
     const state = data.state || 'Uttar Pradesh';
 
-    db.prepare(`
-      INSERT OR REPLACE INTO suppliers (
-        id, shop_id, name, phone, gstin, address, state
-      ) VALUES (?, ?, ?, ?, ?, ?, ?)
-    `).run(id, shopId, name, phone, gstin, address, state);
+    const record = { id, shop_id: shopId, name, phone, gstin, address, state };
 
-    return this.getSupplierById(shopId, id);
+    try {
+      db.prepare(`
+        INSERT OR REPLACE INTO suppliers (
+          id, shop_id, name, phone, gstin, address, state
+        ) VALUES (?, ?, ?, ?, ?, ?, ?)
+      `).run(id, shopId, name, phone, gstin, address, state);
+    } catch (_) {}
+
+    try {
+      const dbMongo = await getMongoDb();
+      if (dbMongo) {
+        await dbMongo.collection('accounting_suppliers').updateOne(
+          { shop_id: shopId, id },
+          { $set: record },
+          { upsert: true }
+        );
+      }
+    } catch (mErr) {
+      console.warn('[AccountingService] Mongo supplier sync notice:', mErr.message);
+    }
+
+    return record;
   },
 
   async deleteSupplier(shopId, id) {
     if (!shopId || !id) return false;
-    db.prepare('DELETE FROM suppliers WHERE shop_id = ? AND id = ?').run(shopId, id);
+    try {
+      db.prepare('DELETE FROM suppliers WHERE shop_id = ? AND id = ?').run(shopId, id);
+    } catch (_) {}
+    try {
+      const dbMongo = await getMongoDb();
+      if (dbMongo) {
+        await dbMongo.collection('accounting_suppliers').deleteOne({ shop_id: shopId, id });
+      }
+    } catch (_) {}
     return true;
   },
 

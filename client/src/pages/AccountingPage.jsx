@@ -1702,8 +1702,11 @@ function InvoiceFormModal({ shopId, products, language, onClose, onSuccess }) {
               </label>
               <input
                 type="tel"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={10}
                 value={customerPhone}
-                onChange={(e) => setCustomerPhone(e.target.value)}
+                onChange={(e) => setCustomerPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
                 placeholder="10-digit mobile number"
                 className="w-full px-3 py-2 text-xs sm:text-sm bg-stone-50 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-600/30 font-mono"
               />
@@ -2431,17 +2434,28 @@ function SupplierFormModal({ shopId, language, onClose, onSuccess }) {
   const [gstin, setGstin] = useState('');
   const [address, setAddress] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!name.trim()) return;
+    if (!name.trim()) {
+      setError(language === 'hi' ? 'कृपया सप्लायर का नाम दर्ज करें' : 'Please enter supplier name');
+      return;
+    }
+
+    const cleanPhone = phone.replace(/\D/g, '').trim();
+    if (cleanPhone && cleanPhone.length !== 10) {
+      setError(language === 'hi' ? 'कृपया 10 अंकों का मान्य फोन नंबर दर्ज करें' : 'Please enter a valid 10-digit phone number');
+      return;
+    }
 
     setSubmitting(true);
+    setError('');
     try {
       const res = await api.createSupplier({
         shopId,
         name: name.trim(),
-        phone: phone.trim() || undefined,
+        phone: cleanPhone || undefined,
         gstin: gstin.trim() || undefined,
         address: address.trim() || undefined,
         state: 'Uttar Pradesh'
@@ -2449,9 +2463,12 @@ function SupplierFormModal({ shopId, language, onClose, onSuccess }) {
 
       if (res?.success) {
         onSuccess(res.supplier);
+      } else {
+        setError(res?.error || (language === 'hi' ? 'सप्लायर सहेजने में विफल' : 'Failed to save supplier'));
       }
     } catch (err) {
-      console.error(err);
+      console.error('[SupplierFormModal] Error:', err);
+      setError(err.message || (language === 'hi' ? 'सप्लायर सहेजने में विफल। कृपया पुनः प्रयास करें।' : 'Failed to save supplier. Please try again.'));
     } finally {
       setSubmitting(false);
     }
@@ -2469,6 +2486,13 @@ function SupplierFormModal({ shopId, language, onClose, onSuccess }) {
           </button>
         </div>
 
+        {error && (
+          <div className="p-2.5 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 font-medium flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 text-red-600 flex-shrink-0" />
+            <span>{error}</span>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-3">
           <div>
             <label className="block text-xs font-semibold text-stone-700 mb-1">
@@ -2478,7 +2502,7 @@ function SupplierFormModal({ shopId, language, onClose, onSuccess }) {
               type="text"
               required
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => { setName(e.target.value); setError(''); }}
               placeholder="e.g. Balrampur Mandi Traders"
               className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded-xl text-xs sm:text-sm font-medium"
             />
@@ -2486,13 +2510,20 @@ function SupplierFormModal({ shopId, language, onClose, onSuccess }) {
 
           <div>
             <label className="block text-xs font-semibold text-stone-700 mb-1">
-              {language === 'hi' ? 'फोन नंबर' : 'Phone'}
+              {language === 'hi' ? 'फोन नंबर (केवल 10 अंक)' : 'Phone (10 digits only)'}
             </label>
             <input
               type="tel"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              maxLength={10}
               value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="10-digit phone"
+              onChange={(e) => {
+                const digits = e.target.value.replace(/\D/g, '').slice(0, 10);
+                setPhone(digits);
+                setError('');
+              }}
+              placeholder="e.g. 9876543210"
               className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded-xl text-xs sm:text-sm font-mono"
             />
           </div>
@@ -2504,7 +2535,7 @@ function SupplierFormModal({ shopId, language, onClose, onSuccess }) {
             <input
               type="text"
               value={gstin}
-              onChange={(e) => setGstin(e.target.value)}
+              onChange={(e) => setGstin(e.target.value.toUpperCase())}
               placeholder="09AABCU9603R1ZM"
               className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded-xl text-xs sm:text-sm font-mono uppercase"
             />
@@ -2527,16 +2558,16 @@ function SupplierFormModal({ shopId, language, onClose, onSuccess }) {
             <button
               type="button"
               onClick={onClose}
-              className="px-3 py-1.5 text-xs text-stone-600"
+              className="px-3 py-1.5 text-xs text-stone-600 hover:text-stone-900"
             >
               {language === 'hi' ? 'रद्द करें' : 'Cancel'}
             </button>
             <button
               type="submit"
-              disabled={submitting}
-              className="px-4 py-2 bg-[#1B2A4A] text-white rounded-xl text-xs font-bold disabled:opacity-50"
+              disabled={submitting || !name.trim()}
+              className="px-4 py-2 bg-[#1B2A4A] hover:bg-[#2A3E6D] text-white rounded-xl text-xs font-bold disabled:opacity-50 transition cursor-pointer"
             >
-              {submitting ? '...' : (language === 'hi' ? 'सप्लायर जोड़ें' : 'Save Supplier')}
+              {submitting ? (language === 'hi' ? 'सहेजा जा रहा है...' : 'Saving...') : (language === 'hi' ? 'सप्लायर जोड़ें' : 'Save Supplier')}
             </button>
           </div>
         </form>
@@ -2554,15 +2585,20 @@ function PaymentFormModal({ shopId, receivables, language, onClose, onSuccess })
   const [paymentMode, setPaymentMode] = useState('cash');
   const [notes, setNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
 
   const selectedCust = receivables?.customers?.find(c => c.customerId === selectedCustomerId);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     const amt = Number(amount);
-    if (!amt || amt <= 0) return;
+    if (!amt || amt <= 0) {
+      setError(language === 'hi' ? 'कृपया मान्य राशि दर्ज करें' : 'Please enter a valid positive amount');
+      return;
+    }
 
     setSubmitting(true);
+    setError('');
     try {
       const res = await api.recordPayment({
         shopId,
@@ -2576,9 +2612,12 @@ function PaymentFormModal({ shopId, receivables, language, onClose, onSuccess })
 
       if (res?.success) {
         onSuccess();
+      } else {
+        setError(res?.error || (language === 'hi' ? 'भुगतान दर्ज करने में विफल' : 'Failed to record payment'));
       }
     } catch (err) {
-      console.error(err);
+      console.error('[PaymentFormModal] Error:', err);
+      setError(err.message || (language === 'hi' ? 'भुगतान दर्ज करने में विफल। कृपया पुनः प्रयास करें।' : 'Failed to record payment. Please try again.'));
     } finally {
       setSubmitting(false);
     }
@@ -2595,6 +2634,13 @@ function PaymentFormModal({ shopId, receivables, language, onClose, onSuccess })
             <X className="w-5 h-5" />
           </button>
         </div>
+
+        {error && (
+          <div className="p-2.5 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 font-medium flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 text-red-600 flex-shrink-0" />
+            <span>{error}</span>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-3">
           <div>

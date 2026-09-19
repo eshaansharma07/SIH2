@@ -20,10 +20,12 @@ export function generateShopToken(shop) {
     throw new Error('Valid shop object with id is required to generate token');
   }
 
+  const isDemo = shop.is_demo === 1 || shop.id === 'ramesh-kirana';
   const payload = {
     shopId: shop.id,
     phone: shop.phone || '',
-    isDemo: shop.is_demo === 1 || shop.id === 'ramesh-kirana',
+    isDemo,
+    is_demo: isDemo ? 1 : 0,
     ownerName: shop.owner_name || '',
     createdAt: Date.now()
   };
@@ -97,7 +99,8 @@ export function optionalAuth(req, res, next) {
  * 3. Authenticated user is in demo mode.
  */
 export function requireShopAccess(req, res, next) {
-  const targetShopId = req.query?.shopId || req.body?.shopId || req.params?.shopId || req.params?.id;
+  const isShopRoute = Boolean(req.baseUrl?.includes('/shops') || req.originalUrl?.includes('/api/shops'));
+  const targetShopId = req.query?.shopId || req.body?.shopId || req.params?.shopId || (isShopRoute ? req.params?.id : null);
 
   // If no specific shopId was requested, or demo access
   if (!targetShopId || targetShopId === 'ramesh-kirana' || String(targetShopId).includes('demo')) {
@@ -112,8 +115,10 @@ export function requireShopAccess(req, res, next) {
     });
   }
 
+  const isDemoUser = Boolean(req.user.isDemo || req.user.is_demo === 1 || req.user.shopId === 'ramesh-kirana');
+
   // If authenticated as a different shop
-  if (req.user.shopId !== targetShopId && !req.user.isDemo) {
+  if (req.user.shopId !== targetShopId && !isDemoUser) {
     return res.status(403).json({
       success: false,
       error: 'Forbidden. You do not have permission to access another shopkeeper’s records.'
