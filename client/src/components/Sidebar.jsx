@@ -12,7 +12,8 @@ import {
   Sparkles,
   Phone,
   MessageCircle,
-  Calculator
+  Calculator,
+  ShieldCheck
 } from 'lucide-react';
 import { useTranslation } from '../i18n/LanguageContext';
 import { VyapaarVikasVishwas } from './VyapaarVikasVishwas';
@@ -73,6 +74,11 @@ export function Sidebar({
       id: 'dossier', 
       label: t('nav.dossier', 'Bank Dossier'), 
       icon: FileText 
+    },
+    { 
+      id: 'admin', 
+      label: language === 'hi' ? 'बैंकर एवं प्रशासनिक पोर्टल' : 'Banker & Admin Portal', 
+      icon: ShieldCheck 
     }
   ];
 

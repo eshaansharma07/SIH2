@@ -469,6 +469,53 @@ export function Navbar({
           }
         }
       ]
+    },
+    { 
+      id: 'admin', 
+      label: language === 'hi' ? 'बैंकर पोर्टल' : 'Banker & Admin', 
+      badge: 'Gov/LDM',
+      icon: ShieldCheck,
+      menuTitle: language === 'hi' ? 'बैंकर एवं प्रशासनिक पोर्टल' : 'Banker & MSME Command Center',
+      menuTagline: language === 'hi' ? 'ऋण स्वीकृति, फ्रॉड रडार एवं पीएसएल 7.5% निगरानी।' : 'Underwriting, anti-fraud surveillance & RBI PSL compliance.',
+      menuDescription: language === 'hi' ? 'बैंक प्रबंधकों एवं जिला उद्योग अधिकारियों के लिए केंद्रीय प्रणाली।' : 'Unified command center for Lead District Managers and Credit Officers.',
+      items: [
+        {
+          id: 'adm-queue',
+          title: language === 'hi' ? 'ऋण स्वीकृति कतार' : 'Underwriting Queue',
+          description: language === 'hi' ? 'लंबित आवेदन एवं नायक लिमिट स्वीकृति' : 'Appraise & sanction pending loans',
+          action: () => {
+            setActiveTab('admin');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }
+        },
+        {
+          id: 'adm-fraud',
+          title: language === 'hi' ? 'एंटी-फ्रॉड रडार' : 'Syndicate Fraud Radar',
+          description: language === 'hi' ? 'फर्जी म्यूल रिंग व टर्नओवर निगरानी' : 'Surveillance on round clusters & cash drain',
+          action: () => {
+            setActiveTab('admin');
+            window.dispatchEvent(new CustomEvent('saakhsetu:admin-tab', { detail: { tab: 'fraud' } }));
+          }
+        },
+        {
+          id: 'adm-psl',
+          title: language === 'hi' ? 'पीएसएल 7.5% अनुपालन' : 'RBI PSL 7.5% Meter',
+          description: language === 'hi' ? 'प्राथमिकता क्षेत्र सूक्ष्म-ऋण कोटा' : 'Priority sector mandate tracking',
+          action: () => {
+            setActiveTab('admin');
+            window.dispatchEvent(new CustomEvent('saakhsetu:admin-tab', { detail: { tab: 'psl' } }));
+          }
+        },
+        {
+          id: 'adm-udyam',
+          title: language === 'hi' ? 'उद्यम डायरेक्टरी' : 'Merchant & Udyam Directory',
+          description: language === 'hi' ? '1-क्लिक उद्यम व व्यापारी पंजीकरण' : 'Verify MSME Udyam & field onboarding',
+          action: () => {
+            setActiveTab('admin');
+            window.dispatchEvent(new CustomEvent('saakhsetu:admin-tab', { detail: { tab: 'directory' } }));
+          }
+        }
+      ]
     }
   ];
 
@@ -524,6 +571,11 @@ export function Navbar({
                   >
                     <Icon className={`w-3.5 h-3.5 shrink-0 transition-colors ${isActive ? 'text-[#0F3E2E] stroke-[2.25]' : 'text-stone-500'}`} />
                     <span>{item.label}</span>
+                    {item.badge && (
+                      <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded-md bg-amber-500/20 text-amber-900 border border-amber-500/30">
+                        {item.badge}
+                      </span>
+                    )}
 
                     {/* Subtle, Lightweight Active Underline Indicator */}
                     {isActive && (

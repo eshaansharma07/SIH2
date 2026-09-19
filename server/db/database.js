@@ -442,4 +442,38 @@ try {
   console.warn('Accounting schema migration notice:', e.message);
 }
 
+// Bank Underwriting & Loan Applications Schema Initialization
+try {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS loan_applications (
+      id TEXT PRIMARY KEY,
+      shop_id TEXT NOT NULL,
+      applicant_name TEXT NOT NULL,
+      trade_name TEXT NOT NULL,
+      district TEXT NOT NULL,
+      scheme_id TEXT NOT NULL,
+      scheme_name TEXT NOT NULL,
+      requested_amount REAL NOT NULL,
+      sanctioned_amount REAL DEFAULT 0,
+      interest_rate TEXT,
+      tenure_months INTEGER DEFAULT 36,
+      status TEXT DEFAULT 'pending',
+      credit_score INTEGER,
+      risk_tier TEXT,
+      integrity_index INTEGER DEFAULT 100,
+      mule_risk TEXT DEFAULT 'LOW',
+      bank_officer_notes TEXT,
+      sanction_ref TEXT,
+      submitted_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      reviewed_at DATETIME,
+      reviewed_by TEXT,
+      FOREIGN KEY(shop_id) REFERENCES shops(id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_loan_apps_shop_id ON loan_applications(shop_id);
+    CREATE INDEX IF NOT EXISTS idx_loan_apps_status ON loan_applications(status);
+  `);
+} catch (e) {
+  console.warn('Loan applications schema migration notice:', e.message);
+}
+
 export default db;

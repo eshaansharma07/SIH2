@@ -11,6 +11,7 @@ import customerRoutes from './routes/customerRoutes.js';
 import dpiRoutes from './routes/dpiRoutes.js';
 import ondcRoutes from './routes/ondcRoutes.js';
 import accountingRoutes from './routes/accountingRoutes.js';
+import adminRoutes from './routes/adminRoutes.js';
 import { seedDatabase } from './db/seed.js';
 
 dotenv.config();
@@ -57,13 +58,22 @@ const routeMap = [
   ['/customers', customerRoutes],
   ['/dpi', dpiRoutes],
   ['/ondc', ondcRoutes],
-  ['/accounting', accountingRoutes]
+  ['/accounting', accountingRoutes],
+  ['/admin', adminRoutes]
 ];
 
 for (const [routePath, router] of routeMap) {
   app.use(`/api${routePath}`, router);
   app.use(routePath, router);
 }
+
+// Catch-all 404 handler for API routes (returns JSON so client fetch won't fail on HTML parsing)
+app.all(['/api/*', '/api'], (req, res) => {
+  res.status(404).json({
+    success: false,
+    error: `API endpoint not found: ${req.method} ${req.originalUrl}`
+  });
+});
 
 // Root fallback
 app.get('/', (req, res) => {
@@ -93,7 +103,11 @@ try {
   console.log('Seed check:', e.message);
 }
 
-if (!process.env.VERCEL && process.env.NODE_ENV !== 'test') {
+const isTestRun = process.env.NODE_ENV === 'test' || 
+  process.execArgv.some(a => a.includes('test')) || 
+  process.argv.some(a => a.includes('test'));
+
+if (!process.env.VERCEL && !isTestRun) {
   app.listen(PORT, () => {
     console.log(`🚀 Vyapaar Setu Backend Server running at http://localhost:${PORT}`);
   });

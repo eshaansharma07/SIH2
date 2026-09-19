@@ -24,6 +24,7 @@ const CreditScorePage = lazyRetry(() => import('./pages/CreditScorePage').then(m
 const SchemeMatcherPage = lazyRetry(() => import('./pages/SchemeMatcherPage').then(m => ({ default: m.SchemeMatcherPage })), 'SchemeMatcherPage');
 const BankDossierPage = lazyRetry(() => import('./pages/BankDossierPage').then(m => ({ default: m.BankDossierPage })), 'BankDossierPage');
 const ShopProfilePage = lazyRetry(() => import('./pages/ShopProfilePage').then(m => ({ default: m.ShopProfilePage })), 'ShopProfilePage');
+const AdminDashboardPage = lazyRetry(() => import('./pages/AdminDashboardPage').then(m => ({ default: m.AdminDashboardPage })), 'AdminDashboardPage');
 const OnboardingPage = lazyRetry(() => import('./pages/OnboardingPage').then(m => ({ default: m.OnboardingPage })), 'OnboardingPage');
 const PublicPayPage = lazyRetry(() => import('./pages/PublicPayPage').then(m => ({ default: m.PublicPayPage })), 'PublicPayPage');
 const VoiceInputDialog = lazyRetry(() => import('./components/VoiceInputDialog').then(m => ({ default: m.VoiceInputDialog })), 'VoiceInputDialog');
@@ -591,6 +592,13 @@ export default function App() {
                             setRefreshKey(k => k + 1);
                           }}
                           onReloadDemo={handleReloadDemo}
+                        />
+                      )}
+
+                      {activeTab === 'admin' && (
+                        <AdminDashboardPage
+                          currentShop={currentShop}
+                          onNavigateTab={(tab) => changeTab(tab)}
                         />
                       )}
                     </Suspense>

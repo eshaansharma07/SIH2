@@ -475,6 +475,9 @@ export function seedDatabase(force = false) {
   // 6. Seed Realistic Vyapaar Accounting Data for Ramesh Kirana
   seedAccountingData();
 
+  // 7. Seed Regional Enterprises and Loan Applications for Banker Admin Portal
+  seedLoanApplications();
+
   console.log('✅ Database seeded: 4 months of realistic rural transactions & 14 statutory government schemes verified.');
 }
 
@@ -615,6 +618,98 @@ function seedAccountingData() {
     console.log('✅ Seeded Vyapaar Accounting products, suppliers, invoices, and purchases for Ramesh Kirana.');
   } catch (err) {
     console.warn('[Seed] Accounting seed notice:', err.message);
+  }
+}
+
+export function seedLoanApplications() {
+  try {
+    // 1. Seed Additional Regional Micro-Enterprises
+    const insertShop = db.prepare(`
+      INSERT OR REPLACE INTO shops (
+        id, name, owner_name, trade_type, trade_name, village, district, state,
+        vintage_years, monthly_revenue, ownership, bank_account_type, phone, password, owner_category, is_demo, is_udyam_verified, udyam_number
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+
+    insertShop.run(
+      'shukla-agri', 'Shukla Krishi & Fertilizer Kendra', 'Dinesh Shukla', 'fertilizer', 'Shukla Krishi Kendra',
+      'Utraula Dehat', 'Balrampur', 'Uttar Pradesh', 5.5, 95000, 'owned', 'State Bank of India',
+      '+91 98399 11223', '1234', 'general', 1, 1, 'UDYAM-UP-24-0029104'
+    );
+
+    insertShop.run(
+      'anand-general', 'Anand Daily Provisions', 'Anand Verma', 'kirana', 'Anand General Store',
+      'Pachpedwa', 'Balrampur', 'Uttar Pradesh', 3.0, 38000, 'rented', 'Punjab National Bank',
+      '+91 94150 78234', '1234', 'obc', 1, 1, 'UDYAM-UP-24-0056192'
+    );
+
+    insertShop.run(
+      'radha-tailors', 'Radha Boutique & Tailoring', 'Radha Devi', 'tailoring', 'Radha Silai Kendra',
+      'Tulsipur', 'Balrampur', 'Uttar Pradesh', 2.0, 24000, 'rented', 'Aryavart Gramin Bank',
+      '+91 91234 56789', '1234', 'sc', 1, 0, ''
+    );
+
+    insertShop.run(
+      'mule-shell-shop', 'Shree Balaji Wholesalers', 'Vikram Singh', 'wholesale', 'Balaji Trading Hub',
+      'Gainsari', 'Balrampur', 'Uttar Pradesh', 0.5, 350000, 'rented', 'Bank of Baroda',
+      '+91 98888 77777', '1234', 'general', 1, 0, ''
+    );
+
+    // 2. Clear old applications & insert fresh demo applications
+    db.prepare(`DELETE FROM loan_applications`).run();
+
+    const insertApp = db.prepare(`
+      INSERT OR REPLACE INTO loan_applications (
+        id, shop_id, applicant_name, trade_name, district, scheme_id, scheme_name,
+        requested_amount, sanctioned_amount, interest_rate, tenure_months, status,
+        credit_score, risk_tier, integrity_index, mule_risk, bank_officer_notes,
+        sanction_ref, submitted_at, reviewed_at, reviewed_by
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+
+    insertApp.run(
+      'app-bal-001', 'ramesh-kirana', 'Ramesh Kumar', "Ramesh's Kirana Store", 'Balrampur',
+      'mudra-kishor', 'PM MUDRA Yojana (Kishor)', 250000, 0, '8.5% p.a.', 36, 'pending',
+      742, 'Tier 1 Prime (Low Risk)', 92, 'LOW',
+      'Bahi-Khata ledger shows 4 months positive cashflow. Nayak Committee MPBF limit: ₹2,70,000.',
+      null, '2026-09-18 10:30:00', null, null
+    );
+
+    insertApp.run(
+      'app-bal-002', 'shukla-agri', 'Dinesh Shukla', 'Shukla Krishi & Fertilizer Kendra', 'Balrampur',
+      'up-odop', 'UP ODOP Margin Money Scheme', 500000, 450000, '8.0% p.a.', 48, 'approved',
+      785, 'Tier 1 Prime (Low Risk)', 96, 'LOW',
+      'Approved under UP ODOP agri-trade quota. 25% margin money subsidy approved for disbursement.',
+      'SBI-SANCT-BAL-2026-0042', '2026-09-15 14:20:00', '2026-09-17 11:00:00', 'Lead District Officer (SBI Balrampur)'
+    );
+
+    insertApp.run(
+      'app-bal-003', 'anand-general', 'Anand Verma', 'Anand Daily Provisions', 'Balrampur',
+      'pm-svanidhi', 'PM SVANidhi (स्वनिधि योजना)', 50000, 50000, '7.0% p.a. subsidy', 12, 'approved',
+      680, 'Tier 2 Moderate (Acceptable)', 88, 'LOW',
+      'Sanctioned with 7% interest subvention. Merchant maintains 82% UPI digital turnover share.',
+      'PNB-SANCT-BAL-2026-0819', '2026-09-12 09:15:00', '2026-09-14 16:30:00', 'Branch Manager (PNB Utraula)'
+    );
+
+    insertApp.run(
+      'app-bal-004', 'radha-tailors', 'Radha Devi', 'Radha Boutique & Tailoring', 'Balrampur',
+      'pm-vishwakarma', 'PM Vishwakarma Scheme (Tailoring)', 200000, 0, '5.0% concessional', 30, 'under_review',
+      715, 'Tier 2 Moderate (Acceptable)', 85, 'LOW',
+      'Awaiting physical verification of tailoring workshop by Gram Panchayat Nodal Officer.',
+      null, '2026-09-19 08:45:00', '2026-09-19 12:00:00', 'Field Officer (Aryavart Gramin Bank)'
+    );
+
+    insertApp.run(
+      'app-bal-005', 'mule-shell-shop', 'Vikram Singh', 'Shree Balaji Wholesalers', 'Balrampur',
+      'mudra-kishor', 'PM MUDRA Yojana (Kishor)', 400000, 0, '9.5% p.a.', 36, 'rejected',
+      410, 'High Risk (Subprime)', 25, 'HIGH',
+      'REJECTED ON FRAUD ALERT: High round-number turnover inflation (78% ₹1,000 clustering) and negative physical cash drawer deficit.',
+      null, '2026-09-17 16:10:00', '2026-09-18 10:00:00', 'Credit Risk Manager (Bank of Baroda Balrampur)'
+    );
+
+    console.log('✅ Seeded regional enterprises and 5 realistic loan applications for Banker Admin Portal.');
+  } catch (err) {
+    console.warn('[Seed] Loan applications seed notice:', err.message);
   }
 }
 

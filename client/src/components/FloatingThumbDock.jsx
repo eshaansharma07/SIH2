@@ -41,6 +41,13 @@ export function FloatingThumbDock({
       labelEn: 'Schemes',
       icon: Landmark
     };
+  } else if (activeTab === 'admin') {
+    fifthTab = {
+      id: 'admin',
+      labelHi: 'बैंकर',
+      labelEn: 'Admin',
+      icon: ShieldCheck
+    };
   }
 
   const leftNavItems = [
