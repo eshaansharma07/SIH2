@@ -520,6 +520,7 @@ export default function App() {
                         <CreditScorePage
                           shop={currentShop}
                           creditData={creditData}
+                          isDemoMode={isDemoMode}
                           onNavigateTab={(tab) => changeTab(tab)}
                         />
                       )}

@@ -91,7 +91,7 @@ export function getSchemeTier(score) {
   };
 }
 
-export function CreditScorePage({ shop, creditData, onNavigateTab }) {
+export function CreditScorePage({ shop, creditData, onNavigateTab, isDemoMode = false }) {
   const { t, language } = useTranslation();
 
   // Secondary interaction dialog states
@@ -101,7 +101,7 @@ export function CreditScorePage({ shop, creditData, onNavigateTab }) {
   const [activeRecommendationPillar, setActiveRecommendationPillar] = useState(null);
 
   // Score determination: use live creditData, shop foundation, or Ramesh baseline 809
-  const isDemo = Boolean(!shop?.id || shop?.id === 'ramesh-kirana' || shop?.is_demo);
+  const isDemo = Boolean(isDemoMode || shop?.is_demo === 1 || shop?.is_demo === true || shop?.id === 'ramesh-kirana');
   const txCount = creditData?.transactionCount ?? creditData?.metrics?.totalTransactions ?? (isDemo ? 120 : (creditData?.metrics?.loggedDays ?? 0));
   const requiredTransactions = creditData?.requiredTransactions || 50;
   const transactionsRemaining = Math.max(0, requiredTransactions - txCount);
