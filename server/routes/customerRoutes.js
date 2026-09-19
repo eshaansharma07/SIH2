@@ -1,7 +1,10 @@
 import express from 'express';
 import dataStore from '../db/dataStore.js';
+import { optionalAuth, requireShopAccess } from '../middleware/auth.js';
 
 const router = express.Router();
+router.use(optionalAuth);
+router.use(requireShopAccess);
 
 /**
  * Normalizes phone numbers by stripping country code (+91) and non-digits.

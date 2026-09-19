@@ -1,8 +1,9 @@
-import { test, describe, before } from 'node:test';
+import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert';
 import db from '../db/database.js';
 import { seedDatabase } from '../db/seed.js';
 import dataStore from '../db/dataStore.js';
+import { closeMongoConnection } from '../db/mongoClient.js';
 import { 
   validateGovernmentUrl, 
   parseRawGovernmentAnnouncement, 
@@ -124,4 +125,9 @@ describe('Government Scheme Scraping & Real-Time Ingestion Suite', () => {
     assert.ok(status.scrapedSchemesCount >= 1);
     assert.ok(status.monitoredSources.some(s => s.name.includes('PIB')));
   });
+
+  after(async () => {
+    await closeMongoConnection();
+  });
 });
+

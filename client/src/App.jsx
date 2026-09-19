@@ -319,6 +319,9 @@ export default function App() {
         console.warn('Demo reset notice (using seeded data):', e.message);
         return null;
       });
+      if (demoRes?.token) {
+        safeStorage.setItem('vyapaar_auth_token', demoRes.token);
+      }
       const demoShop = demoRes?.shop || demoShopDefault;
       safeStorage.setJSON('vyapaar_active_shop', demoShop);
       setCurrentShop(demoShop);
@@ -343,7 +346,10 @@ export default function App() {
   };
 
   // Real Registration / Login Complete
-  const handleRealRegistrationComplete = (newShop) => {
+  const handleRealRegistrationComplete = (newShop, token) => {
+    if (token) {
+      safeStorage.setItem('vyapaar_auth_token', token);
+    }
     if (newShop?.id) {
       safeStorage.setItem('vyapaar_active_shop_id', newShop.id);
       safeStorage.setJSON('vyapaar_active_shop', newShop);
@@ -363,6 +369,7 @@ export default function App() {
 
   // Switch to real registration from demo mode (MANUAL LOGOUT)
   const handleSwitchToRegister = () => {
+    safeStorage.removeItem('vyapaar_auth_token');
     safeStorage.removeItem('vyapaar_active_shop_id');
     safeStorage.removeItem('vyapaar_active_shop');
     safeStorage.removeItem('vyapaar_is_demo_mode');

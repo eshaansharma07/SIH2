@@ -11,11 +11,13 @@
     "seed": "cd server && npm run seed"
   },
   "dependencies": {
-    "better-sqlite3": "^11.8.1",
+    "better-sqlite3": "^12.11.1",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
-    "mongodb": "^7.6.0"
+    "jsonwebtoken": "^9.0.2",
+    "mongodb": "^7.6.0",
+    "twilio": "^5.4.5"
   },
   "keywords": ["rural-fintech", "micro-entrepreneurs", "kirana", "sih", "ai-advisory", "credit-scoring"]
 }

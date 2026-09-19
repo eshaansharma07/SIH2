@@ -29,7 +29,9 @@ import {
   Building2,
   ChevronRight,
   AlertCircle,
-  Loader2
+  Loader2,
+  ArrowLeft,
+  RotateCw
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../utils/api';
@@ -84,11 +86,17 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
   // Auth Modal (Shopkeeper Login & Register)
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState('login'); // 'login' | 'register'
+  const [loginStep, setLoginStep] = useState('phone'); // 'phone' | 'otp'
   const [loginPhone, setLoginPhone] = useState('');
-  const [loginPassword, setLoginPassword] = useState('1234');
+  const [otpDigits, setOtpDigits] = useState(['', '', '', '', '', '']);
+  const [resendCountdown, setResendCountdown] = useState(0);
   const [savedShops, setSavedShops] = useState([]);
   const [authLoading, setAuthLoading] = useState(false);
   const [authError, setAuthError] = useState('');
+  const [authSuccessMsg, setAuthSuccessMsg] = useState('');
+
+  const otpInputRefs = useRef([]);
+  const countdownTimerRef = useRef(null);
 
   // Register Form states
   const [regShopName, setRegShopName] = useState('');
@@ -109,10 +117,31 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
       const parsed = safeStorage.getJSON('vyapaar_saved_shops', []);
       if (Array.isArray(parsed) && parsed.length > 0) {
         setSavedShops(parsed);
-        setLoginPhone(parsed[0].phone || '');
+        setLoginPhone(parsed[0].phone ? parsed[0].phone.replace(/\D/g, '').slice(-10) : '');
       }
     } catch (_) {}
   }, []);
+
+  // Cleanup countdown timer on unmount
+  useEffect(() => {
+    return () => {
+      if (countdownTimerRef.current) clearInterval(countdownTimerRef.current);
+    };
+  }, []);
+
+  const startResendTimer = () => {
+    setResendCountdown(30);
+    if (countdownTimerRef.current) clearInterval(countdownTimerRef.current);
+    countdownTimerRef.current = setInterval(() => {
+      setResendCountdown(prev => {
+        if (prev <= 1) {
+          clearInterval(countdownTimerRef.current);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
 
   // Mega-menu hover handlers with 120ms debounce to prevent flicker
   const handleMouseEnter = (menuKey) => {
@@ -126,28 +155,128 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
     }, 150);
   };
 
-  // Auth: handle Login
-  const handleLoginSubmit = async (e) => {
+  // Auth: Send Real SMS OTP
+  const handleSendOtp = async (e) => {
     e?.preventDefault();
     setAuthLoading(true);
     setAuthError('');
+    setAuthSuccessMsg('');
     try {
-      const cleanPhone = loginPhone.replace(/\D/g, '');
+      const cleanPhone = loginPhone.replace(/\D/g, '').slice(-10);
       if (!cleanPhone || cleanPhone.length < 10) {
-        throw new Error(language === 'hi' ? 'कृपया मान्य 10 अंकों का मोबाइल नंबर दर्ज करें' : 'Please enter a valid 10-digit phone number');
+        throw new Error(language === 'hi' ? 'कृपया मान्य 10 अंकों का मोबाइल नंबर दर्ज करें' : 'Please enter a valid 10-digit mobile number');
       }
-      const res = await api.loginShop(cleanPhone, loginPassword || '1234');
-      if (res && res.shop) {
-        setAuthModalOpen(false);
-        onComplete?.(res.shop);
+      const res = await api.sendLoginOTP(cleanPhone);
+      if (res && res.success) {
+        setLoginStep('otp');
+        setOtpDigits(['', '', '', '', '', '']);
+        setAuthSuccessMsg(language === 'hi' ? 'ओटीपी सफलतापूर्वक आपके मोबाइल पर भेज दिया गया है' : 'OTP sent successfully to your mobile number');
+        startResendTimer();
+        setTimeout(() => {
+          otpInputRefs.current[0]?.focus();
+        }, 150);
       } else {
-        throw new Error(res?.error || 'Login failed');
+        throw new Error(res?.error || 'Failed to send OTP');
       }
     } catch (err) {
-      setAuthError(err.message || 'Login failed. Please verify credentials.');
+      setAuthError(err.message || (language === 'hi' ? 'ओटीपी भेजने में असमर्थ। कृपया पुनः प्रयास करें।' : 'Failed to send OTP. Please try again.'));
     } finally {
       setAuthLoading(false);
     }
+  };
+
+  // Auth: Resend SMS OTP
+  const handleResendOtp = async () => {
+    if (resendCountdown > 0 || authLoading) return;
+    setAuthLoading(true);
+    setAuthError('');
+    setAuthSuccessMsg('');
+    try {
+      const cleanPhone = loginPhone.replace(/\D/g, '').slice(-10);
+      const res = await api.sendLoginOTP(cleanPhone);
+      if (res && res.success) {
+        setOtpDigits(['', '', '', '', '', '']);
+        setAuthSuccessMsg(language === 'hi' ? 'नया ओटीपी भेज दिया गया है' : 'New OTP sent successfully');
+        startResendTimer();
+        setTimeout(() => {
+          otpInputRefs.current[0]?.focus();
+        }, 100);
+      } else {
+        throw new Error(res?.error || 'Failed to resend OTP');
+      }
+    } catch (err) {
+      setAuthError(err.message || 'Failed to resend OTP');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  // Auth: Verify SMS OTP
+  const handleVerifyOtp = async (e) => {
+    e?.preventDefault();
+    const enteredOtp = otpDigits.join('');
+    if (enteredOtp.length !== 6) {
+      setAuthError(language === 'hi' ? 'कृपया 6 अंकों का पूरा ओटीपी दर्ज करें' : 'Please enter the complete 6-digit OTP');
+      return;
+    }
+    setAuthLoading(true);
+    setAuthError('');
+    try {
+      const cleanPhone = loginPhone.replace(/\D/g, '').slice(-10);
+      const res = await api.verifyLoginOTP(cleanPhone, enteredOtp);
+      if (res && res.shop) {
+        if (res.token) {
+          safeStorage.setItem('vyapaar_auth_token', res.token);
+        }
+        setAuthModalOpen(false);
+        onComplete?.(res.shop, res.token);
+      } else {
+        throw new Error(res?.error || 'Verification failed');
+      }
+    } catch (err) {
+      setAuthError(err.message || (language === 'hi' ? 'गलत ओटीपी। कृपया एसएमएस जांचें और पुनः प्रयास करें।' : 'Incorrect OTP. Please check the SMS and try again.'));
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  // OTP Individual Digits Handlers
+  const handleOtpDigitChange = (index, value) => {
+    const cleaned = value.replace(/\D/g, '');
+    if (!cleaned) {
+      const copy = [...otpDigits];
+      copy[index] = '';
+      setOtpDigits(copy);
+      return;
+    }
+    const digit = cleaned.slice(-1);
+    const copy = [...otpDigits];
+    copy[index] = digit;
+    setOtpDigits(copy);
+
+    if (index < 5) {
+      otpInputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleOtpKeyDown = (index, e) => {
+    if (e.key === 'Backspace' && !otpDigits[index] && index > 0) {
+      otpInputRefs.current[index - 1]?.focus();
+    }
+  };
+
+  const handleOtpPaste = (e) => {
+    e.preventDefault();
+    const pasted = e.clipboardData?.getData('text') || '';
+    const digits = pasted.replace(/\D/g, '').slice(0, 6);
+    if (!digits) return;
+    const nextDigits = ['', '', '', '', '', ''];
+    for (let i = 0; i < digits.length; i++) {
+      nextDigits[i] = digits[i];
+    }
+    setOtpDigits(nextDigits);
+    const nextFocusIndex = Math.min(digits.length, 5);
+    otpInputRefs.current[nextFocusIndex]?.focus();
   };
 
   // Auth: handle Register
@@ -156,7 +285,7 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
     setAuthLoading(true);
     setAuthError('');
     try {
-      const cleanPhone = regPhone.replace(/\D/g, '');
+      const cleanPhone = regPhone.replace(/\D/g, '').slice(-10);
       if (!cleanPhone || cleanPhone.length < 10) {
         throw new Error(language === 'hi' ? 'कृपया मान्य 10 अंकों का मोबाइल नंबर दर्ज करें' : 'Please enter a valid 10-digit mobile number');
       }
@@ -177,8 +306,11 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
         bank_account_type: 'State Bank of India'
       });
       if (res && res.shop) {
+        if (res.token) {
+          safeStorage.setItem('vyapaar_auth_token', res.token);
+        }
         setAuthModalOpen(false);
-        onComplete?.(res.shop);
+        onComplete?.(res.shop, res.token);
       } else {
         throw new Error(res?.error || 'Registration failed');
       }
@@ -191,27 +323,24 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
 
   // Auth: fast login with saved shop
   const handleSelectSavedShop = (shop) => {
-    setLoginPhone(shop.phone || '');
-    setAuthLoading(true);
-    api.loginShop(shop.phone, '1234')
-      .then(res => {
-        if (res?.shop) {
-          setAuthModalOpen(false);
-          onComplete?.(res.shop);
-        } else {
-          onComplete?.(shop);
-        }
-      })
-      .catch(() => {
-        onComplete?.(shop);
-      })
-      .finally(() => setAuthLoading(false));
+    const rawPhone = shop.phone || '';
+    const cleanPhone = rawPhone.replace(/\D/g, '').slice(-10);
+    setLoginPhone(cleanPhone);
+    setLoginStep('phone');
+    setAuthError('');
+    setAuthSuccessMsg('');
   };
 
   // Launch Evaluator Demo
-  const handleLaunchEvaluatorDemo = () => {
+  const handleLaunchEvaluatorDemo = async () => {
     setAuthModalOpen(false);
     setWatchDemoOpen(false);
+    try {
+      const res = await api.demoLogin().catch(() => null);
+      if (res?.token) {
+        safeStorage.setItem('vyapaar_auth_token', res.token);
+      }
+    } catch (_) {}
     onSelectDemo?.();
   };
 
@@ -1146,51 +1275,53 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
                 <div className="flex items-center gap-2">
                   <SaakhSetuBridgeLogo className="w-6 h-5 text-[#0F3E2E]" />
                   <span className="font-serif font-black text-lg text-[#0F3E2E]">
-                    {authMode === 'login' ? (language === 'hi' ? 'दुकानदार लॉगिन' : 'Shopkeeper Login') : (language === 'hi' ? 'नया उद्यम पंजीकरण' : 'Register New Enterprise')}
+                    {authMode === 'login' 
+                      ? (loginStep === 'otp'
+                          ? (language === 'hi' ? 'ओटीपी सत्यापित करें' : 'Verify Mobile')
+                          : (language === 'hi' ? 'दुकानदार लॉगिन' : 'Welcome back'))
+                      : (language === 'hi' ? 'नया उद्यम पंजीकरण' : 'Register New Enterprise')}
                   </span>
                 </div>
                 <p className="text-xs text-[#57534E]">
-                  {language === 'hi' ? 'अपने पंजीकृत मोबाइल नंबर से प्रवेश करें' : 'Access your validated ledger & credit files'}
+                  {authMode === 'login' 
+                    ? (loginStep === 'otp'
+                        ? `${language === 'hi' ? 'ओटीपी भेजा गया:' : 'OTP sent to'} +91 ${loginPhone.slice(0, 2)}XXX XX${loginPhone.slice(7)}`
+                        : (language === 'hi' ? 'सुरक्षित एसएमएस ओटीपी के साथ प्रवेश करें' : 'Enter your registered mobile number for SMS OTP login'))
+                    : (language === 'hi' ? 'अपने व्यापार के लिए डिजिटल बही-खाता बनाएं' : 'Access your validated ledger & credit files')}
                 </p>
               </div>
 
-              {/* Mode Toggle Pills */}
-              <div className="flex p-1 bg-[#EAE3D2]/70 rounded-xl text-xs font-bold">
-                <button
-                  type="button"
-                  onClick={() => { setAuthMode('login'); setAuthError(''); }}
-                  className={`flex-1 py-2 rounded-lg transition-all cursor-pointer ${
-                    authMode === 'login' ? 'bg-white text-[#1C1917] shadow-sm' : 'text-[#78716C] hover:text-[#1C1917]'
-                  }`}
-                >
-                  {language === 'hi' ? 'लॉगिन' : 'Sign In'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setAuthMode('register'); setAuthError(''); }}
-                  className={`flex-1 py-2 rounded-lg transition-all cursor-pointer ${
-                    authMode === 'register' ? 'bg-white text-[#1C1917] shadow-sm' : 'text-[#78716C] hover:text-[#1C1917]'
-                  }`}
-                >
-                  {language === 'hi' ? 'नया खाता' : 'Register'}
-                </button>
-              </div>
-
-              {/* Quick Evaluator Demo Callout Button */}
-              <button
-                type="button"
-                onClick={handleLaunchEvaluatorDemo}
-                className="w-full p-3 rounded-2xl bg-[#0F3E2E] hover:bg-[#144F3B] text-white flex items-center justify-between transition-all cursor-pointer group shadow-sm"
-              >
-                <div className="flex items-center gap-2.5 text-left">
-                  <Sparkles className="w-4 h-4 text-amber-300 shrink-0" />
-                  <div>
-                    <div className="text-xs font-bold">⚡ Launch Ramesh Kirana Demo</div>
-                    <div className="text-[10px] text-stone-300">Preloaded with 120-day audited rural transactions & 785 score</div>
-                  </div>
+              {/* Mode Toggle Pills (only show in login/phone or register mode) */}
+              {loginStep !== 'otp' && (
+                <div className="flex p-1 bg-[#EAE3D2]/70 rounded-xl text-xs font-bold">
+                  <button
+                    type="button"
+                    onClick={() => { setAuthMode('login'); setAuthError(''); setAuthSuccessMsg(''); }}
+                    className={`flex-1 py-2 rounded-lg transition-all cursor-pointer ${
+                      authMode === 'login' ? 'bg-white text-[#1C1917] shadow-sm' : 'text-[#78716C] hover:text-[#1C1917]'
+                    }`}
+                  >
+                    {language === 'hi' ? 'लॉगिन' : 'Sign In'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setAuthMode('register'); setAuthError(''); setAuthSuccessMsg(''); }}
+                    className={`flex-1 py-2 rounded-lg transition-all cursor-pointer ${
+                      authMode === 'register' ? 'bg-white text-[#1C1917] shadow-sm' : 'text-[#78716C] hover:text-[#1C1917]'
+                    }`}
+                  >
+                    {language === 'hi' ? 'नया खाता' : 'Register'}
+                  </button>
                 </div>
-                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1 shrink-0" />
-              </button>
+              )}
+
+              {/* Success Message */}
+              {authSuccessMsg && (
+                <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 flex items-center gap-2 font-medium">
+                  <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>{authSuccessMsg}</span>
+                </div>
+              )}
 
               {/* Error Message */}
               {authError && (
@@ -1202,72 +1333,164 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
 
               {/* Form Content */}
               {authMode === 'login' ? (
-                <form onSubmit={handleLoginSubmit} className="space-y-4">
-                  
-                  {/* Saved accounts if any */}
-                  {savedShops.length > 0 && (
-                    <div className="space-y-1.5">
-                      <span className="text-[10px] uppercase font-bold tracking-wider text-[#78716C]">
-                        {language === 'hi' ? 'इस डिवाइस पर सहेजे गए खाते' : 'Saved Accounts on Device'}
+                loginStep === 'phone' ? (
+                  /* STATE 1: PHONE NUMBER ENTRY */
+                  <form onSubmit={handleSendOtp} className="space-y-4">
+                    {/* Saved accounts if any */}
+                    {savedShops.length > 0 && (
+                      <div className="space-y-1.5">
+                        <span className="text-[10px] uppercase font-bold tracking-wider text-[#78716C]">
+                          {language === 'hi' ? 'इस डिवाइस पर सहेजे गए खाते' : 'Saved Accounts on Device'}
+                        </span>
+                        <div className="flex flex-wrap gap-1.5">
+                          {savedShops.map((s, idx) => (
+                            <button
+                              key={idx}
+                              type="button"
+                              onClick={() => handleSelectSavedShop(s)}
+                              className="px-2.5 py-1 rounded-lg bg-white hover:bg-[#EAE3D2] border border-[#D5CCBC] text-xs font-semibold text-[#1C1917] transition cursor-pointer"
+                            >
+                              {s.name}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-[#1C1917]">
+                        {language === 'hi' ? 'मोबाइल नंबर' : 'Mobile Number'}
+                      </label>
+                      <div className="flex rounded-xl border border-[#D5CCBC] bg-white overflow-hidden focus-within:ring-2 focus-within:ring-[#0F3E2E]/20 focus-within:border-[#0F3E2E] transition">
+                        <span className="bg-[#EAE3D2]/70 text-[#1C1917] font-bold text-xs px-3.5 py-2.5 flex items-center border-r border-[#D5CCBC] select-none">
+                          +91
+                        </span>
+                        <input
+                          type="tel"
+                          inputMode="numeric"
+                          maxLength={10}
+                          value={loginPhone}
+                          onChange={(e) => {
+                            setLoginPhone(e.target.value.replace(/\D/g, '').slice(0, 10));
+                            setAuthError('');
+                          }}
+                          placeholder="9876543210"
+                          className="w-full px-3.5 py-2.5 bg-transparent text-xs font-semibold text-[#1C1917] tracking-wider focus:outline-none placeholder:tracking-normal"
+                        />
+                      </div>
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={authLoading || loginPhone.length < 10}
+                      className="w-full py-3 rounded-xl bg-[#0F3E2E] hover:bg-[#144F3B] text-white text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer disabled:opacity-50 shadow-sm"
+                    >
+                      {authLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Phone className="w-4 h-4" />}
+                      <span>{authLoading ? (language === 'hi' ? 'ओटीपी भेजा जा रहा है...' : 'Sending OTP...') : (language === 'hi' ? 'ओटीपी भेजें' : 'Send OTP')}</span>
+                    </button>
+
+                    {/* Divider OR */}
+                    <div className="relative flex py-1 items-center">
+                      <div className="flex-grow border-t border-[#D5CCBC]"></div>
+                      <span className="flex-shrink mx-3 text-[11px] font-bold text-[#78716C] uppercase tracking-wider">
+                        {language === 'hi' ? 'या' : 'OR'}
                       </span>
-                      <div className="flex flex-wrap gap-1.5">
-                        {savedShops.map((s, idx) => (
-                          <button
+                      <div className="flex-grow border-t border-[#D5CCBC]"></div>
+                    </div>
+
+                    {/* Quick Evaluator Demo Callout Button */}
+                    <button
+                      type="button"
+                      onClick={handleLaunchEvaluatorDemo}
+                      className="w-full p-3 rounded-2xl bg-white hover:bg-[#EAE3D2]/50 border border-[#D5CCBC] text-[#1C1917] flex items-center justify-between transition-all cursor-pointer group shadow-xs"
+                    >
+                      <div className="flex items-center gap-2.5 text-left">
+                        <Sparkles className="w-4 h-4 text-amber-500 shrink-0" />
+                        <div>
+                          <div className="text-xs font-bold">{language === 'hi' ? '⚡ रमेश किराना डेमो देखें' : '⚡ Try Ramesh Kirana Demo'}</div>
+                          <div className="text-[10px] text-[#78716C]">{language === 'hi' ? '120 दिनों के लेन-देन और 785 स्कोर सहित' : 'Preloaded with 120-day transactions & 785 score'}</div>
+                        </div>
+                      </div>
+                      <ArrowRight className="w-4 h-4 text-[#78716C] transition-transform group-hover:translate-x-1 shrink-0" />
+                    </button>
+                  </form>
+                ) : (
+                  /* STATE 2: 6-DIGIT OTP VERIFICATION */
+                  <form onSubmit={handleVerifyOtp} className="space-y-5">
+                    <div className="space-y-2 text-center">
+                      <div className="text-xs text-[#57534E]">
+                        {language === 'hi' ? 'एसएमएस में प्राप्त 6-अंकों का ओटीपी दर्ज करें' : 'Enter the 6-digit code received via SMS'}
+                      </div>
+                      
+                      {/* 6 Discrete Digit Boxes */}
+                      <div 
+                        className="flex items-center justify-center gap-2 sm:gap-2.5 pt-1"
+                        onPaste={handleOtpPaste}
+                      >
+                        {otpDigits.map((digit, idx) => (
+                          <input
                             key={idx}
-                            type="button"
-                            onClick={() => handleSelectSavedShop(s)}
-                            className="px-2.5 py-1 rounded-lg bg-white hover:bg-[#EAE3D2] border border-[#D5CCBC] text-xs font-semibold text-[#1C1917] transition cursor-pointer"
-                          >
-                            {s.name}
-                          </button>
+                            ref={(el) => (otpInputRefs.current[idx] = el)}
+                            type="text"
+                            inputMode="numeric"
+                            maxLength={1}
+                            value={digit}
+                            onChange={(e) => handleOtpDigitChange(idx, e.target.value)}
+                            onKeyDown={(e) => handleOtpKeyDown(idx, e)}
+                            className="w-10 h-12 sm:w-11 sm:h-13 text-center text-lg sm:text-xl font-mono font-black rounded-xl border border-[#D5CCBC] bg-white text-[#1C1917] focus:outline-none focus:ring-2 focus:ring-[#0F3E2E] focus:border-[#0F3E2E] shadow-sm transition"
+                          />
                         ))}
                       </div>
                     </div>
-                  )}
 
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-[#1C1917]">
-                      {language === 'hi' ? 'मोबाइल नंबर' : 'Mobile Number'}
-                    </label>
-                    <div className="relative">
-                      <Phone className="w-4 h-4 text-[#78716C] absolute left-3.5 top-1/2 -translate-y-1/2" />
-                      <input
-                        type="tel"
-                        value={loginPhone}
-                        onChange={(e) => setLoginPhone(e.target.value)}
-                        placeholder="9839124789"
-                        className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[#D5CCBC] bg-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#0F3E2E]/20 focus:border-[#0F3E2E]"
-                      />
+                    <button
+                      type="submit"
+                      disabled={authLoading || otpDigits.join('').length !== 6}
+                      className="w-full py-3 rounded-xl bg-[#0F3E2E] hover:bg-[#144F3B] text-white text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer disabled:opacity-50 shadow-sm"
+                    >
+                      {authLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                      <span>{authLoading ? (language === 'hi' ? 'सत्यापित हो रहा है...' : 'Verifying...') : (language === 'hi' ? 'ओटीपी सत्यापित करें' : 'Verify OTP')}</span>
+                    </button>
+
+                    {/* Resend Countdown & Action */}
+                    <div className="flex flex-col items-center gap-2 text-xs pt-1">
+                      <div className="flex items-center gap-1.5 text-[#57534E]">
+                        <span>{language === 'hi' ? 'ओटीपी नहीं मिला?' : "Didn't receive the OTP?"}</span>
+                        {resendCountdown > 0 ? (
+                          <span className="font-semibold text-[#78716C]">
+                            {language === 'hi' 
+                              ? `${resendCountdown}s में पुनः भेजें` 
+                              : `Resend in ${resendCountdown}s`}
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            disabled={authLoading}
+                            onClick={handleResendOtp}
+                            className="font-bold text-[#0F3E2E] hover:underline cursor-pointer flex items-center gap-1"
+                          >
+                            <RotateCw className="w-3 h-3" />
+                            <span>{language === 'hi' ? 'ओटीपी दोबारा भेजें' : 'Resend OTP'}</span>
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Change Number Option */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setLoginStep('phone');
+                          setAuthError('');
+                          setAuthSuccessMsg('');
+                        }}
+                        className="text-[11px] font-semibold text-[#78716C] hover:text-[#1C1917] cursor-pointer flex items-center gap-1 mt-1"
+                      >
+                        <ArrowLeft className="w-3 h-3" />
+                        <span>{language === 'hi' ? 'मोबाइल नंबर बदलें' : 'Change Number'}</span>
+                      </button>
                     </div>
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-[#1C1917]">
-                      {language === 'hi' ? '4-अंकों का पिन (PIN)' : '4-Digit PIN'}
-                    </label>
-                    <div className="relative">
-                      <Lock className="w-4 h-4 text-[#78716C] absolute left-3.5 top-1/2 -translate-y-1/2" />
-                      <input
-                        type="password"
-                        maxLength={4}
-                        value={loginPassword}
-                        onChange={(e) => setLoginPassword(e.target.value)}
-                        placeholder="••••"
-                        className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[#D5CCBC] bg-white text-xs font-semibold tracking-widest focus:outline-none focus:ring-2 focus:ring-[#0F3E2E]/20 focus:border-[#0F3E2E]"
-                      />
-                    </div>
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={authLoading}
-                    className="w-full py-3 rounded-xl bg-[#1C1917] hover:bg-[#292524] text-white text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer disabled:opacity-50"
-                  >
-                    {authLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <LogIn className="w-4 h-4" />}
-                    <span>{authLoading ? 'Verifying...' : (language === 'hi' ? 'सुरक्षित लॉगिन करें' : 'Sign In to Store')}</span>
-                  </button>
-
-                </form>
+                  </form>
+                )
               ) : (
                 <form onSubmit={handleRegisterSubmit} className="space-y-3.5">
                   <div className="space-y-1">
