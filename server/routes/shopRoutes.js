@@ -55,9 +55,9 @@ router.post(['/setup', '/register'], async (req, res) => {
       return res.status(400).json({ success: false, error: 'Shop name is required' });
     }
 
+    const finalOwnerName = (owner_name && String(owner_name).trim()) || name.trim();
     const finalTradeType = (trade_type && String(trade_type).trim()) || (trade_name && String(trade_name).trim()) || 'kirana';
     const finalTradeName = (trade_name && String(trade_name).trim()) || finalTradeType || 'Kirana & General Store';
-    const finalOwnerName = (owner_name && String(owner_name).trim()) || name.trim();
     const cleanPhone = phone ? String(phone).trim() : '';
 
     // Check if an existing real shop has this phone number
@@ -76,6 +76,7 @@ router.post(['/setup', '/register'], async (req, res) => {
 
     const id = `shop-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`;
     const finalPassword = (password && String(password).trim()) || '1234';
+    const phoneDigits = cleanPhone.replace(/\D/g, '');
 
     const newShop = {
       id,
@@ -90,7 +91,7 @@ router.post(['/setup', '/register'], async (req, res) => {
       monthly_revenue: Math.max(0, Number(monthly_revenue) || 45000),
       ownership: ownership || 'rented',
       bank_account_type: bank_account_type || 'State Bank of India',
-      phone: cleanPhone,
+      phone: phoneDigits || cleanPhone,
       password: finalPassword,
       owner_category: owner_category || 'general',
       is_demo: 0,

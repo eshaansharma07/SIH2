@@ -85,14 +85,13 @@ export function AdvisorChatPage({ shop, creditData, summaryData, initialPrompt =
     setLoading(true);
 
     try {
-      const res = await api.chatAdvisor(shop.id, text);
-      const reply = res.response || res.advice?.content || res.reply;
-      if (res.success && reply) {
+      const replyText = res?.response || res?.advice?.content || res?.content || res?.message || res?.reply;
+      if (res?.success && replyText) {
         setMessages(prev => [
           ...prev, 
           {
             role: 'assistant',
-            content: reply,
+            content: replyText,
             timestamp: new Date().toISOString()
           }
         ]);

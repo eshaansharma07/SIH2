@@ -32,7 +32,10 @@ export function lazyRetry(componentImport, componentName = 'Component') {
           errorMsg.includes('ChunkLoadError') ||
           errorMsg.includes('dynamically imported module') ||
           errorMsg.includes('error loading dynamically imported module') ||
-          errorMsg.includes('Importing a module script failed');
+          errorMsg.includes('Importing a module script failed') ||
+          errorMsg.includes('Load failed') ||
+          errorMsg.includes('Failed to load') ||
+          errorMsg.includes('load script');
 
         // If chunk error and we haven't already refreshed this session:
         if (isChunkError && !hasAlreadyRetried) {

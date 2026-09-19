@@ -41,25 +41,26 @@ function advisoryRateLimiter(req, res, next) {
 // Chat with Setu AI Advisor
 router.post('/chat', advisoryRateLimiter, async (req, res) => {
   try {
-    const { shopId, question, apiKey } = req.body;
-    const clientApiKey = apiKey || req.headers['x-gemini-key'] || req.headers['gemini-api-key'] || req.headers['x-api-key'] || req.headers['anthropic-api-key'];
+    const shopId = req.body.shopId || req.body.shop_id || 'ramesh-kirana';
+    const question = (req.body.question || req.body.message || req.body.query || '').trim();
+    const clientApiKey = req.body.apiKey || req.headers['x-gemini-key'] || req.headers['gemini-api-key'] || req.headers['x-api-key'] || req.headers['anthropic-api-key'];
 
-    if (!shopId) {
-      return res.status(400).json({ success: false, error: 'shopId is required' });
-    }
-
-    if (!question || !question.trim()) {
-      return res.status(400).json({ success: false, error: 'Question is required' });
+    if (!question) {
+      return res.status(400).json({ success: false, error: 'Question or message is required' });
     }
 
     const advice = await generateAdvisoryResponse(shopId, question, clientApiKey);
+    const content = advice?.content || 'Namaste! How may I assist you with your enterprise?';
+
     res.json({
       success: true,
       advice,
-      response: advice.content,
-      reply: advice.content,
-      answer: advice.content,
-      source: advice.source
+      response: content,
+      reply: content,
+      answer: content,
+      message: content,
+      content,
+      source: advice?.source
     });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
