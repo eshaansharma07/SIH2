@@ -240,6 +240,8 @@ export const api = {
   sendLoginOTP: (phone) => api.sendOTP(phone, 'login'),
   sendRegisterOTP: (phone) => api.sendOTP(phone, 'register'),
   verifyLoginOTP: (phone, otp) => request('/shop/verify-otp', { method: 'POST', body: JSON.stringify({ phone, otp }) }),
+  sendEmailOTP: (email, type = 'login') => request('/shop/send-email-otp', { method: 'POST', body: JSON.stringify({ email, type }) }),
+  verifyEmailOTP: (email, otp) => request('/shop/verify-email-otp', { method: 'POST', body: JSON.stringify({ email, otp }) }),
   demoLogin: () => request('/shop/demo-login', { method: 'POST' }),
   loginShop: async (phone, password) => {
     try {

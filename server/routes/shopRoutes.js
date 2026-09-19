@@ -3,6 +3,7 @@ import { seedDatabase } from '../db/seed.js';
 import dataStore from '../db/dataStore.js';
 import { normalizeIndianPhone, extract10Digits } from '../utils/phoneUtils.js';
 import { twilioVerifyService } from '../services/twilioVerifyService.js';
+import { emailVerifyService } from '../services/emailVerifyService.js';
 import { rateLimiterService } from '../services/rateLimiterService.js';
 import { generateShopToken } from '../middleware/auth.js';
 
@@ -51,9 +52,11 @@ router.post(['/setup', '/register'], async (req, res) => {
       ownership,
       bank_account_type,
       phone,
+      email,
       password,
       owner_category,
-      otp
+      otp,
+      verificationMethod
     } = req.body;
 
     if (!name || !name.trim()) {
@@ -67,25 +70,29 @@ router.post(['/setup', '/register'], async (req, res) => {
       return res.status(400).json({ success: false, error: 'Trade category is required' });
     }
 
-    const normalizedPhone = normalizeIndianPhone(phone);
-    if (!normalizedPhone) {
+    const cleanEmail = email ? String(email).trim().toLowerCase() : '';
+    const normalizedPhone = phone ? normalizeIndianPhone(phone) : '';
+
+    if (!normalizedPhone && !cleanEmail) {
       return res.status(400).json({
         success: false,
-        error: 'Please enter a valid 10-digit mobile number.'
+        error: 'Please enter a valid 10-digit mobile number or Gmail address.'
       });
     }
 
-    // Verify phone uniqueness for real shop accounts
-    const digitsOnly = extract10Digits(normalizedPhone);
-    const existingShop = await dataStore.findShopByPhoneOrId(normalizedPhone, digitsOnly);
-    if (existingShop && existingShop.is_demo !== 1) {
-      return res.status(409).json({
-        success: false,
-        error: 'An account with this mobile number already exists. Please log in instead.'
-      });
+    // Verify phone uniqueness if provided
+    if (normalizedPhone) {
+      const digitsOnly = extract10Digits(normalizedPhone);
+      const existingShop = await dataStore.findShopByPhoneOrId(normalizedPhone, digitsOnly);
+      if (existingShop && existingShop.is_demo !== 1) {
+        return res.status(409).json({
+          success: false,
+          error: 'An account with this mobile number already exists. Please log in instead.'
+        });
+      }
     }
 
-    // If OTP is provided, verify it with Twilio Verify v2
+    // If OTP is provided, verify it (either email OTP or Twilio phone OTP)
     if (otp) {
       const cleanOtp = String(otp).trim();
       if (!/^\d{6}$/.test(cleanOtp)) {
@@ -95,27 +102,37 @@ router.post(['/setup', '/register'], async (req, res) => {
         });
       }
 
-      // Check lockout status
-      const attemptCheck = rateLimiterService.checkVerifyAttempts(normalizedPhone);
-      if (!attemptCheck.allowed) {
-        return res.status(429).json({
-          success: false,
-          error: 'Too many verification attempts. Please wait and try again later.'
-        });
-      }
+      if (verificationMethod === 'email' || (cleanEmail && !normalizedPhone)) {
+        const emailCheck = await emailVerifyService.checkVerification(cleanEmail, cleanOtp);
+        if (!emailCheck.approved) {
+          return res.status(400).json({
+            success: false,
+            error: emailCheck.error || 'Incorrect OTP code sent to your email.'
+          });
+        }
+      } else if (normalizedPhone) {
+        // Check lockout status
+        const attemptCheck = rateLimiterService.checkVerifyAttempts(normalizedPhone);
+        if (!attemptCheck.allowed) {
+          return res.status(429).json({
+            success: false,
+            error: 'Too many verification attempts. Please wait and try again later.'
+          });
+        }
 
-      const verification = await twilioVerifyService.checkVerification(normalizedPhone, cleanOtp);
-      if (!verification.approved) {
-        rateLimiterService.recordVerifyFailure(normalizedPhone);
-        return res.status(400).json({
-          success: false,
-          error: 'Incorrect OTP. Please check the SMS and try again.'
-        });
-      }
+        const verification = await twilioVerifyService.checkVerification(normalizedPhone, cleanOtp);
+        if (!verification.approved) {
+          rateLimiterService.recordVerifyFailure(normalizedPhone);
+          return res.status(400).json({
+            success: false,
+            error: 'Incorrect OTP. Please check the code and try again.'
+          });
+        }
 
-      // Reset verify attempts upon approval
-      rateLimiterService.resetVerifyAttempts(normalizedPhone);
-    } else if (twilioVerifyService.isConfigured() && process.env.NODE_ENV !== 'test') {
+        // Reset verify attempts upon approval
+        rateLimiterService.resetVerifyAttempts(normalizedPhone);
+      }
+    } else if (process.env.NODE_ENV !== 'test') {
       return res.status(400).json({
         success: false,
         error: 'OTP verification is required to complete registration.'
@@ -138,7 +155,8 @@ router.post(['/setup', '/register'], async (req, res) => {
       monthly_revenue: Math.max(0, Number(monthly_revenue) || 0),
       ownership: ownership || 'rented',
       bank_account_type: bank_account_type || 'savings',
-      phone: normalizedPhone,
+      phone: normalizedPhone || '',
+      email: cleanEmail || '',
       password: finalPassword,
       owner_category: owner_category || 'general',
       is_demo: 0,
@@ -317,6 +335,96 @@ router.post('/verify-otp', async (req, res) => {
     return res.status(400).json({
       success: false,
       error: err.message || 'Verification failed. Please try again.'
+    });
+  }
+});
+
+// Send Real-Time Gmail / Email OTP via Nodemailer
+router.post('/send-email-otp', async (req, res) => {
+  try {
+    const { email, type = 'login' } = req.body;
+    if (!email || !String(email).trim()) {
+      return res.status(400).json({
+        success: false,
+        error: 'Please enter a valid Gmail / email address.'
+      });
+    }
+
+    const cleanEmail = String(email).trim().toLowerCase();
+    if (!cleanEmail.includes('@') || !cleanEmail.includes('.')) {
+      return res.status(400).json({
+        success: false,
+        error: 'Please enter a valid email format (e.g. user@gmail.com).'
+      });
+    }
+
+    const sendResult = await emailVerifyService.sendVerification(cleanEmail);
+
+    return res.json({
+      success: true,
+      message: `Verification code sent to ${cleanEmail}`,
+      email: cleanEmail,
+      sandboxCode: sendResult.sandboxCode || null
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      error: err.message || 'Failed to send email verification code.'
+    });
+  }
+});
+
+// Verify Real-Time Gmail / Email OTP & Issue Authenticated Session
+router.post('/verify-email-otp', async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+    if (!email || !String(email).trim()) {
+      return res.status(400).json({
+        success: false,
+        error: 'Please enter your email address.'
+      });
+    }
+    if (!otp || !String(otp).trim()) {
+      return res.status(400).json({
+        success: false,
+        error: 'Please enter the 6-digit verification code.'
+      });
+    }
+
+    const cleanEmail = String(email).trim().toLowerCase();
+    const cleanOtp = String(otp).trim();
+
+    const verification = await emailVerifyService.checkVerification(cleanEmail, cleanOtp);
+    if (!verification.approved) {
+      return res.status(400).json({
+        success: false,
+        error: verification.error || 'Incorrect verification code. Please check your Gmail and try again.'
+      });
+    }
+
+    // Try finding existing shop by email
+    const shop = db.prepare('SELECT * FROM shops WHERE LOWER(email) = ? LIMIT 1').get(cleanEmail);
+
+    if (!shop) {
+      return res.json({
+        success: true,
+        verified: true,
+        email: cleanEmail,
+        message: 'Email verified successfully. Proceed to enter enterprise details.'
+      });
+    }
+
+    const token = generateShopToken(shop);
+    return res.json({
+      success: true,
+      message: 'Email verified successfully',
+      shop,
+      token
+    });
+  } catch (err) {
+    return res.status(400).json({
+      success: false,
+      error: err.message || 'Email verification failed. Please try again.'
     });
   }
 });

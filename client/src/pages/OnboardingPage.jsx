@@ -32,7 +32,8 @@ import {
   Loader2,
   Globe,
   ArrowLeft,
-  RotateCw
+  RotateCw,
+  Mail
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../utils/api';
@@ -94,14 +95,17 @@ export function OnboardingPage({ onComplete, onSelectDemo, onStartDemoTour }) {
   // Auth Modal (Shopkeeper Login & Register)
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState('login'); // 'login' | 'register'
+  const [authChannel, setAuthChannel] = useState('phone'); // 'phone' | 'email'
   const [loginStep, setLoginStep] = useState('phone'); // 'phone' | 'otp'
   const [loginPhone, setLoginPhone] = useState('');
+  const [loginEmail, setLoginEmail] = useState('');
   const [otpDigits, setOtpDigits] = useState(['', '', '', '', '', '']);
   const [resendCountdown, setResendCountdown] = useState(0);
   const [savedShops, setSavedShops] = useState([]);
   const [authLoading, setAuthLoading] = useState(false);
   const [authError, setAuthError] = useState('');
   const [authSuccessMsg, setAuthSuccessMsg] = useState('');
+  const [sandboxCodeHint, setSandboxCodeHint] = useState('');
 
   const otpInputRefs = useRef([]);
   const countdownTimerRef = useRef(null);
@@ -111,12 +115,15 @@ export function OnboardingPage({ onComplete, onSelectDemo, onStartDemoTour }) {
   const [regShopName, setRegShopName] = useState('');
   const [regOwnerName, setRegOwnerName] = useState('');
   const [regPhone, setRegPhone] = useState('');
+  const [regEmail, setRegEmail] = useState('');
+  const [regPassword, setRegPassword] = useState('1234');
   const [regTradeType, setRegTradeType] = useState('kirana');
   const [regState, setRegState] = useState('Uttar Pradesh');
   const [regVillage, setRegVillage] = useState('Utraula Dehat');
   const [regDistrict, setRegDistrict] = useState('Balrampur');
   const [regOtpDigits, setRegOtpDigits] = useState(['', '', '', '', '', '']);
   const [regResendCountdown, setRegResendCountdown] = useState(0);
+  const [regSandboxCodeHint, setRegSandboxCodeHint] = useState('');
 
   const regOtpInputRefs = useRef([]);
   const regCountdownTimerRef = useRef(null);
@@ -208,81 +215,104 @@ export function OnboardingPage({ onComplete, onSelectDemo, onStartDemoTour }) {
     }, 150);
   };
 
-  // Auth: Send Real SMS OTP
+  // Auth: Send Real SMS or Gmail OTP for Login
   const handleSendOtp = async (e) => {
     e?.preventDefault();
     setAuthLoading(true);
     setAuthError('');
     setAuthSuccessMsg('');
+    setSandboxCodeHint('');
     try {
-      const cleanPhone = loginPhone.replace(/\D/g, '').slice(-10);
-      if (!cleanPhone || cleanPhone.length < 10) {
-        throw new Error(language === 'hi' ? 'कृपया मान्य 10 अंकों का मोबाइल नंबर दर्ज करें' : 'Please enter a valid 10-digit mobile number');
-      }
-      const res = await api.sendLoginOTP(cleanPhone);
-      if (res && res.success) {
-        setLoginStep('otp');
-        if (res.isTrialFallback && res.sandboxCode) {
-          setOtpDigits(res.sandboxCode.split('').slice(0, 6));
-          setAuthSuccessMsg(
-            language === 'hi'
-              ? `⚡ ट्रायल / डेमो मोड: आपका सत्यापन कोड ${res.sandboxCode} है (स्वतः भरा गया)`
-              : `⚡ Trial Mode: Your verification code is ${res.sandboxCode} (auto-filled)`
-          );
-        } else {
-          setOtpDigits(['', '', '', '', '', '']);
-          setAuthSuccessMsg(language === 'hi' ? 'ओटीपी सफलतापूर्वक आपके मोबाइल पर भेज दिया गया है' : 'OTP sent successfully to your mobile number');
+      if (authChannel === 'email') {
+        const cleanEmail = loginEmail.trim().toLowerCase();
+        if (!cleanEmail || !cleanEmail.includes('@') || !cleanEmail.includes('.')) {
+          throw new Error(language === 'hi' ? 'कृपया मान्य ईमेल / जीमेल आईडी दर्ज करें' : 'Please enter a valid Gmail / email address');
         }
-        startResendTimer();
-        setTimeout(() => {
-          otpInputRefs.current[5]?.focus();
-        }, 150);
+        const res = await api.sendEmailOTP(cleanEmail, 'login');
+        if (res && res.success) {
+          setLoginStep('otp');
+          setOtpDigits(['', '', '', '', '', '']);
+          setAuthSuccessMsg(
+            language === 'hi' 
+              ? `सत्यापन कोड ${cleanEmail} पर भेज दिया गया है` 
+              : `Verification code sent to ${cleanEmail}`
+          );
+          if (res.sandboxCode) {
+            setSandboxCodeHint(res.sandboxCode);
+          }
+          startResendTimer();
+          setTimeout(() => otpInputRefs.current[0]?.focus(), 150);
+        } else {
+          throw new Error(res?.error || 'Failed to send verification code');
+        }
       } else {
-        throw new Error(res?.error || 'Failed to send OTP');
+        const cleanPhone = loginPhone.replace(/\D/g, '').slice(-10);
+        if (!cleanPhone || cleanPhone.length < 10) {
+          throw new Error(language === 'hi' ? 'कृपया मान्य 10 अंकों का मोबाइल नंबर दर्ज करें' : 'Please enter a valid 10-digit mobile number');
+        }
+        const res = await api.sendLoginOTP(cleanPhone);
+        if (res && res.success) {
+          setLoginStep('otp');
+          setOtpDigits(['', '', '', '', '', '']);
+          setAuthSuccessMsg(
+            language === 'hi' 
+              ? `ओटीपी सफलतापूर्वक +91 ${cleanPhone} पर भेज दिया गया है` 
+              : `OTP sent successfully to +91 ${cleanPhone}`
+          );
+          if (res.sandboxCode) {
+            setSandboxCodeHint(res.sandboxCode);
+          }
+          startResendTimer();
+          setTimeout(() => otpInputRefs.current[0]?.focus(), 150);
+        } else {
+          throw new Error(res?.error || 'Failed to send OTP');
+        }
       }
     } catch (err) {
-      setAuthError(err.message || (language === 'hi' ? 'ओटीपी भेजने में असमर्थ। कृपया पुनः प्रयास करें।' : 'Failed to send OTP. Please try again.'));
+      setAuthError(err.message || (language === 'hi' ? 'ओटीपी भेजने में असमर्थ। कृपया पुनः प्रयास करें।' : 'Failed to send verification code. Please try again.'));
     } finally {
       setAuthLoading(false);
     }
   };
 
-  // Auth: Resend SMS OTP
+  // Auth: Resend SMS or Gmail OTP for Login
   const handleResendOtp = async () => {
     if (resendCountdown > 0 || authLoading) return;
     setAuthLoading(true);
     setAuthError('');
     setAuthSuccessMsg('');
     try {
-      const cleanPhone = loginPhone.replace(/\D/g, '').slice(-10);
-      const res = await api.sendLoginOTP(cleanPhone);
-      if (res && res.success) {
-        if (res.isTrialFallback && res.sandboxCode) {
-          setOtpDigits(res.sandboxCode.split('').slice(0, 6));
-          setAuthSuccessMsg(
-            language === 'hi'
-              ? `⚡ नया सत्यापन कोड: ${res.sandboxCode} (स्वतः भरा गया)`
-              : `⚡ New verification code: ${res.sandboxCode} (auto-filled)`
-          );
+      if (authChannel === 'email') {
+        const cleanEmail = loginEmail.trim().toLowerCase();
+        const res = await api.sendEmailOTP(cleanEmail, 'login');
+        if (res && res.success) {
+          setOtpDigits(['', '', '', '', '', '']);
+          setAuthSuccessMsg(language === 'hi' ? 'नया सत्यापन कोड जीमेल पर भेजा गया' : 'New code sent to your email');
+          if (res.sandboxCode) setSandboxCodeHint(res.sandboxCode);
+          startResendTimer();
         } else {
+          throw new Error(res?.error || 'Failed to resend code');
+        }
+      } else {
+        const cleanPhone = loginPhone.replace(/\D/g, '').slice(-10);
+        const res = await api.sendLoginOTP(cleanPhone);
+        if (res && res.success) {
           setOtpDigits(['', '', '', '', '', '']);
           setAuthSuccessMsg(language === 'hi' ? 'नया ओटीपी भेज दिया गया है' : 'New OTP sent successfully');
+          if (res.sandboxCode) setSandboxCodeHint(res.sandboxCode);
+          startResendTimer();
+        } else {
+          throw new Error(res?.error || 'Failed to resend OTP');
         }
-        startResendTimer();
-        setTimeout(() => {
-          otpInputRefs.current[5]?.focus();
-        }, 100);
-      } else {
-        throw new Error(res?.error || 'Failed to resend OTP');
       }
     } catch (err) {
-      setAuthError(err.message || 'Failed to resend OTP');
+      setAuthError(err.message || 'Failed to resend verification code');
     } finally {
       setAuthLoading(false);
     }
   };
 
-  // Auth: Verify SMS OTP
+  // Auth: Verify SMS or Gmail OTP
   const handleVerifyOtp = async (e) => {
     e?.preventDefault();
     const enteredOtp = otpDigits.join('');
@@ -293,8 +323,15 @@ export function OnboardingPage({ onComplete, onSelectDemo, onStartDemoTour }) {
     setAuthLoading(true);
     setAuthError('');
     try {
-      const cleanPhone = loginPhone.replace(/\D/g, '').slice(-10);
-      const res = await api.verifyLoginOTP(cleanPhone, enteredOtp);
+      let res;
+      if (authChannel === 'email') {
+        const cleanEmail = loginEmail.trim().toLowerCase();
+        res = await api.verifyEmailOTP(cleanEmail, enteredOtp);
+      } else {
+        const cleanPhone = loginPhone.replace(/\D/g, '').slice(-10);
+        res = await api.verifyLoginOTP(cleanPhone, enteredOtp);
+      }
+
       if (res && res.shop) {
         if (res.token) {
           safeStorage.setItem('vyapaar_auth_token', res.token);
@@ -305,7 +342,7 @@ export function OnboardingPage({ onComplete, onSelectDemo, onStartDemoTour }) {
         throw new Error(res?.error || 'Verification failed');
       }
     } catch (err) {
-      setAuthError(err.message || (language === 'hi' ? 'गलत ओटीपी। कृपया पुनः प्रयास करें।' : 'Incorrect OTP. Please try again.'));
+      setAuthError(err.message || (language === 'hi' ? 'गलत ओटीपी। कृपया पुनः प्रयास करें।' : 'Incorrect OTP code. Please try again.'));
     } finally {
       setAuthLoading(false);
     }
@@ -350,40 +387,67 @@ export function OnboardingPage({ onComplete, onSelectDemo, onStartDemoTour }) {
     otpInputRefs.current[nextFocusIndex]?.focus();
   };
 
-  // Auth: Send Real SMS OTP for Registration
+  // Auth: Send Real SMS or Gmail OTP for Registration
   const handleRegisterSendOtp = async (e) => {
     e?.preventDefault();
     setAuthLoading(true);
     setAuthError('');
     setAuthSuccessMsg('');
+    setRegSandboxCodeHint('');
     try {
-      const cleanPhone = regPhone.replace(/\D/g, '').slice(-10);
-      if (!cleanPhone || cleanPhone.length < 10) {
-        throw new Error(language === 'hi' ? 'कृपया मान्य 10 अंकों का मोबाइल नंबर दर्ज करें' : 'Please enter a valid 10-digit mobile number');
-      }
       if (!regShopName.trim()) {
         throw new Error(language === 'hi' ? 'दुकान का नाम आवश्यक है' : 'Shop name is required');
       }
-      const res = await api.sendRegisterOTP(cleanPhone);
-      if (res && res.success) {
-        setRegStep('otp');
-        if (res.isTrialFallback && res.sandboxCode) {
-          setRegOtpDigits(res.sandboxCode.split('').slice(0, 6));
+
+      const cleanPhone = regPhone.replace(/\D/g, '').slice(-10);
+      const cleanEmail = regEmail.trim().toLowerCase();
+
+      if (authChannel === 'email') {
+        if (!cleanEmail || !cleanEmail.includes('@') || !cleanEmail.includes('.')) {
+          throw new Error(language === 'hi' ? 'कृपया मान्य ईमेल / जीमेल आईडी दर्ज करें' : 'Please enter a valid Gmail / email address');
+        }
+        const res = await api.sendEmailOTP(cleanEmail, 'register');
+        if (res && res.success) {
+          setRegStep('otp');
+          setRegOtpDigits(['', '', '', '', '', '']);
           setAuthSuccessMsg(
             language === 'hi'
-              ? `⚡ ट्रायल / डेमो मोड: आपका सत्यापन कोड ${res.sandboxCode} है (स्वतः भरा गया)`
-              : `⚡ Trial Mode: Your verification code is ${res.sandboxCode} (auto-filled)`
+              ? `सत्यापन कोड ${cleanEmail} पर भेज दिया गया है`
+              : `Verification code sent to ${cleanEmail}`
           );
+          if (res.sandboxCode) {
+            setRegSandboxCodeHint(res.sandboxCode);
+          }
+          startRegResendTimer();
+          setTimeout(() => {
+            regOtpInputRefs.current[0]?.focus();
+          }, 150);
         } else {
-          setRegOtpDigits(['', '', '', '', '', '']);
-          setAuthSuccessMsg(language === 'hi' ? 'ओटीपी सफलतापूर्वक आपके मोबाइल पर भेज दिया गया है' : 'OTP sent successfully to your mobile number');
+          throw new Error(res?.error || 'Failed to send OTP to email');
         }
-        startRegResendTimer();
-        setTimeout(() => {
-          regOtpInputRefs.current[5]?.focus();
-        }, 150);
       } else {
-        throw new Error(res?.error || 'Failed to send OTP');
+        if (!cleanPhone || cleanPhone.length < 10) {
+          throw new Error(language === 'hi' ? 'कृपया मान्य 10 अंकों का मोबाइल नंबर दर्ज करें' : 'Please enter a valid 10-digit mobile number');
+        }
+        const res = await api.sendRegisterOTP(cleanPhone);
+        if (res && res.success) {
+          setRegStep('otp');
+          setRegOtpDigits(['', '', '', '', '', '']);
+          setAuthSuccessMsg(
+            language === 'hi'
+              ? `ओटीपी सफलतापूर्वक +91 ${cleanPhone} पर भेज दिया गया है`
+              : `OTP sent successfully to +91 ${cleanPhone}`
+          );
+          if (res.sandboxCode) {
+            setRegSandboxCodeHint(res.sandboxCode);
+          }
+          startRegResendTimer();
+          setTimeout(() => {
+            regOtpInputRefs.current[0]?.focus();
+          }, 150);
+        } else {
+          throw new Error(res?.error || 'Failed to send OTP');
+        }
       }
     } catch (err) {
       setAuthError(err.message || (language === 'hi' ? 'ओटीपी भेजने में असमर्थ। कृपया पुनः प्रयास करें।' : 'Failed to send OTP. Please try again.'));
@@ -392,33 +456,41 @@ export function OnboardingPage({ onComplete, onSelectDemo, onStartDemoTour }) {
     }
   };
 
-  // Auth: Resend SMS OTP for Registration
+  // Auth: Resend SMS or Gmail OTP for Registration
   const handleRegisterResendOtp = async () => {
     if (regResendCountdown > 0 || authLoading) return;
     setAuthLoading(true);
     setAuthError('');
     setAuthSuccessMsg('');
     try {
-      const cleanPhone = regPhone.replace(/\D/g, '').slice(-10);
-      const res = await api.sendRegisterOTP(cleanPhone);
-      if (res && res.success) {
-        if (res.isTrialFallback && res.sandboxCode) {
-          setRegOtpDigits(res.sandboxCode.split('').slice(0, 6));
-          setAuthSuccessMsg(
-            language === 'hi'
-              ? `⚡ नया सत्यापन कोड: ${res.sandboxCode} (स्वतः भरा गया)`
-              : `⚡ New verification code: ${res.sandboxCode} (auto-filled)`
-          );
+      if (authChannel === 'email') {
+        const cleanEmail = regEmail.trim().toLowerCase();
+        const res = await api.sendEmailOTP(cleanEmail, 'register');
+        if (res && res.success) {
+          setRegOtpDigits(['', '', '', '', '', '']);
+          setAuthSuccessMsg(language === 'hi' ? 'नया सत्यापन कोड जीमेल पर भेजा गया' : 'New code sent to your email');
+          if (res.sandboxCode) setRegSandboxCodeHint(res.sandboxCode);
+          startRegResendTimer();
+          setTimeout(() => {
+            regOtpInputRefs.current[0]?.focus();
+          }, 100);
         } else {
+          throw new Error(res?.error || 'Failed to resend code');
+        }
+      } else {
+        const cleanPhone = regPhone.replace(/\D/g, '').slice(-10);
+        const res = await api.sendRegisterOTP(cleanPhone);
+        if (res && res.success) {
           setRegOtpDigits(['', '', '', '', '', '']);
           setAuthSuccessMsg(language === 'hi' ? 'नया ओटीपी भेज दिया गया है' : 'New OTP sent successfully');
+          if (res.sandboxCode) setRegSandboxCodeHint(res.sandboxCode);
+          startRegResendTimer();
+          setTimeout(() => {
+            regOtpInputRefs.current[0]?.focus();
+          }, 100);
+        } else {
+          throw new Error(res?.error || 'Failed to resend OTP');
         }
-        startRegResendTimer();
-        setTimeout(() => {
-          regOtpInputRefs.current[5]?.focus();
-        }, 100);
-      } else {
-        throw new Error(res?.error || 'Failed to resend OTP');
       }
     } catch (err) {
       setAuthError(err.message || 'Failed to resend OTP');
@@ -438,11 +510,15 @@ export function OnboardingPage({ onComplete, onSelectDemo, onStartDemoTour }) {
     setAuthLoading(true);
     setAuthError('');
     try {
-      const cleanPhone = regPhone.replace(/\D/g, '').slice(-10);
+      const cleanPhone = regPhone ? regPhone.replace(/\D/g, '').slice(-10) : '';
+      const cleanEmail = regEmail ? regEmail.trim().toLowerCase() : '';
+
       const res = await api.registerShop({
         name: regShopName.trim(),
         owner_name: regOwnerName.trim() || regShopName.trim(),
-        phone: cleanPhone,
+        phone: cleanPhone || (cleanEmail ? cleanEmail.split('@')[0].replace(/\D/g, '').slice(-10) : '9876543210'),
+        email: cleanEmail,
+        verificationMethod: authChannel,
         password: regPassword || '1234',
         trade_type: regTradeType || 'kirana',
         trade_name: regTradeType || 'Kirana & General Store',
@@ -457,13 +533,20 @@ export function OnboardingPage({ onComplete, onSelectDemo, onStartDemoTour }) {
         if (res.token) {
           safeStorage.setItem('vyapaar_auth_token', res.token);
         }
+        try {
+          const currentSaved = safeStorage.getJSON('vyapaar_saved_shops', []);
+          const updated = [res.shop, ...currentSaved.filter(s => s.id !== res.shop.id)].slice(0, 5);
+          safeStorage.setJSON('vyapaar_saved_shops', updated);
+          setSavedShops(updated);
+        } catch (_) {}
+
         setAuthModalOpen(false);
         onComplete?.(res.shop, res.token);
       } else {
         throw new Error(res?.error || 'Registration failed');
       }
     } catch (err) {
-      setAuthError(err.message || (language === 'hi' ? 'गलत ओटीपी। कृपया एसएमएस जांचें और पुनः प्रयास करें।' : 'Incorrect OTP or registration failed. Please try again.'));
+      setAuthError(err.message || (language === 'hi' ? 'गलत ओटीपी। कृपया कोड जांचें और पुनः प्रयास करें।' : 'Incorrect OTP or registration failed. Please try again.'));
     } finally {
       setAuthLoading(false);
     }
@@ -1553,25 +1636,31 @@ export function OnboardingPage({ onComplete, onSelectDemo, onStartDemoTour }) {
                   <span className="font-serif font-black text-lg text-[#0F3E2E]">
                     {authMode === 'login' 
                       ? (loginStep === 'otp'
-                          ? (language === 'hi' ? 'ओटीपी सत्यापित करें' : 'Verify Mobile')
+                          ? (language === 'hi' ? 'सत्यापन कोड दर्ज करें' : 'Verify Code')
                           : (language === 'hi' ? 'दुकानदार लॉगिन' : 'Welcome back'))
                       : (regStep === 'otp'
-                          ? (language === 'hi' ? 'मोबाइल नंबर सत्यापित करें' : 'Verify Mobile Number')
+                          ? (language === 'hi' ? 'सत्यापन कोड दर्ज करें' : 'Verify Enterprise')
                           : (language === 'hi' ? 'नया उद्यम पंजीकरण' : 'Register New Enterprise'))}
                   </span>
                 </div>
                 <p className="text-xs text-[#57534E]">
                   {authMode === 'login' 
                     ? (loginStep === 'otp'
-                        ? `${language === 'hi' ? 'ओटीपी भेजा गया:' : 'OTP sent to'} +91 ${loginPhone.slice(0, 2)}XXX XX${loginPhone.slice(7)}`
-                        : (language === 'hi' ? 'सुरक्षित एसएमएस ओटीपी के साथ प्रवेश करें' : 'Enter your registered mobile number for SMS OTP login'))
+                        ? (authChannel === 'email'
+                            ? `${language === 'hi' ? 'कोड भेजा गया:' : 'Code sent to:'} ${loginEmail}`
+                            : `${language === 'hi' ? 'ओटीपी भेजा गया:' : 'OTP sent to:'} +91 ${loginPhone}`)
+                        : (authChannel === 'email'
+                            ? (language === 'hi' ? 'अपने पंजीकृत जीमेल पते से लॉगिन करें' : 'Enter your registered Gmail / Email for OTP login')
+                            : (language === 'hi' ? 'सुरक्षित एसएमएस ओटीपी के साथ प्रवेश करें' : 'Enter your registered mobile number for SMS OTP login')))
                     : (regStep === 'otp'
-                        ? `${language === 'hi' ? 'ओटीपी भेजा गया:' : 'OTP sent to'} +91 ${regPhone.slice(0, 2)}XXX XX${regPhone.slice(7)}`
+                        ? (authChannel === 'email'
+                            ? `${language === 'hi' ? 'कोड भेजा गया:' : 'Code sent to:'} ${regEmail}`
+                            : `${language === 'hi' ? 'ओटीपी भेजा गया:' : 'OTP sent to:'} +91 ${regPhone}`)
                         : (language === 'hi' ? 'अपने व्यापार के लिए डिजिटल बही-खाता बनाएं' : 'Access your validated ledger & credit files'))}
                 </p>
               </div>
 
-              {/* Mode Toggle Pills (only show when neither login nor register is in OTP step) */}
+              {/* Mode Toggle Pills (Sign In / Register) */}
               {(loginStep !== 'otp' && regStep !== 'otp') && (
                 <div className="flex p-1 bg-[#EAE3D2]/70 rounded-xl text-xs font-bold">
                   <button
@@ -1595,6 +1684,32 @@ export function OnboardingPage({ onComplete, onSelectDemo, onStartDemoTour }) {
                 </div>
               )}
 
+              {/* Channel Selector Pills (Mobile SMS vs Gmail) */}
+              {(loginStep !== 'otp' && regStep !== 'otp') && (
+                <div className="flex p-0.5 bg-[#F4EFE6] border border-[#D5CCBC] rounded-xl text-xs font-semibold">
+                  <button
+                    type="button"
+                    onClick={() => { setAuthChannel('phone'); setAuthError(''); }}
+                    className={`flex-1 py-1.5 rounded-lg flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                      authChannel === 'phone' ? 'bg-[#0F3E2E] text-white shadow-xs' : 'text-[#78716C] hover:text-[#1C1917]'
+                    }`}
+                  >
+                    <Phone className="w-3.5 h-3.5" />
+                    <span>{language === 'hi' ? 'मोबाइल नंबर (SMS)' : 'Mobile Phone (SMS)'}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setAuthChannel('email'); setAuthError(''); }}
+                    className={`flex-1 py-1.5 rounded-lg flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                      authChannel === 'email' ? 'bg-[#0F3E2E] text-white shadow-xs' : 'text-[#78716C] hover:text-[#1C1917]'
+                    }`}
+                  >
+                    <Mail className="w-3.5 h-3.5" />
+                    <span>{language === 'hi' ? 'जीमेल / ईमेल (Gmail)' : 'Gmail / Email'}</span>
+                  </button>
+                </div>
+              )}
+
               {/* Success Message */}
               {authSuccessMsg && (
                 <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 flex items-center gap-2 font-medium">
@@ -1614,10 +1729,10 @@ export function OnboardingPage({ onComplete, onSelectDemo, onStartDemoTour }) {
               {/* Form Content */}
               {authMode === 'login' ? (
                 loginStep === 'phone' ? (
-                  /* STATE 1: PHONE NUMBER ENTRY */
+                  /* STATE 1: LOGIN ENTRY */
                   <form onSubmit={handleSendOtp} className="space-y-4">
                     {/* Saved accounts if any */}
-                    {savedShops.length > 0 && (
+                    {savedShops.length > 0 && authChannel === 'phone' && (
                       <div className="space-y-1.5">
                         <span className="text-[10px] uppercase font-bold tracking-wider text-[#78716C]">
                           {language === 'hi' ? 'इस डिवाइस पर सहेजे गए खाते' : 'Saved Accounts on Device'}
@@ -1637,36 +1752,66 @@ export function OnboardingPage({ onComplete, onSelectDemo, onStartDemoTour }) {
                       </div>
                     )}
 
-                    <div className="space-y-1">
-                      <label className="text-xs font-bold text-[#1C1917]">
-                        {language === 'hi' ? 'मोबाइल नंबर' : 'Mobile Number'}
-                      </label>
-                      <div className="flex rounded-xl border border-[#D5CCBC] bg-white overflow-hidden focus-within:ring-2 focus-within:ring-[#0F3E2E]/20 focus-within:border-[#0F3E2E] transition">
-                        <span className="bg-[#EAE3D2]/70 text-[#1C1917] font-bold text-xs px-3.5 py-2.5 flex items-center border-r border-[#D5CCBC] select-none">
-                          +91
-                        </span>
-                        <input
-                          type="tel"
-                          inputMode="numeric"
-                          maxLength={10}
-                          value={loginPhone}
-                          onChange={(e) => {
-                            setLoginPhone(e.target.value.replace(/\D/g, '').slice(0, 10));
-                            setAuthError('');
-                          }}
-                          placeholder="9876543210"
-                          className="w-full px-3.5 py-2.5 bg-transparent text-xs font-semibold text-[#1C1917] tracking-wider focus:outline-none placeholder:tracking-normal"
-                        />
+                    {authChannel === 'email' ? (
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold text-[#1C1917]">
+                          {language === 'hi' ? 'जीमेल / ईमेल पता' : 'Gmail / Email Address'}
+                        </label>
+                        <div className="flex rounded-xl border border-[#D5CCBC] bg-white overflow-hidden focus-within:ring-2 focus-within:ring-[#0F3E2E]/20 focus-within:border-[#0F3E2E] transition">
+                          <span className="bg-[#EAE3D2]/70 text-[#1C1917] font-bold text-xs px-3.5 py-2.5 flex items-center border-r border-[#D5CCBC] select-none">
+                            <Mail className="w-4 h-4 text-[#0F3E2E]" />
+                          </span>
+                          <input
+                            type="email"
+                            required
+                            value={loginEmail}
+                            onChange={(e) => {
+                              setLoginEmail(e.target.value);
+                              setAuthError('');
+                            }}
+                            placeholder="yourname@gmail.com"
+                            className="w-full px-3.5 py-2.5 bg-transparent text-xs font-semibold text-[#1C1917] focus:outline-none"
+                          />
+                        </div>
                       </div>
-                    </div>
+                    ) : (
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold text-[#1C1917]">
+                          {language === 'hi' ? 'मोबाइल नंबर' : 'Mobile Number'}
+                        </label>
+                        <div className="flex rounded-xl border border-[#D5CCBC] bg-white overflow-hidden focus-within:ring-2 focus-within:ring-[#0F3E2E]/20 focus-within:border-[#0F3E2E] transition">
+                          <span className="bg-[#EAE3D2]/70 text-[#1C1917] font-bold text-xs px-3.5 py-2.5 flex items-center border-r border-[#D5CCBC] select-none">
+                            +91
+                          </span>
+                          <input
+                            type="tel"
+                            inputMode="numeric"
+                            maxLength={10}
+                            value={loginPhone}
+                            onChange={(e) => {
+                              setLoginPhone(e.target.value.replace(/\D/g, '').slice(0, 10));
+                              setAuthError('');
+                            }}
+                            placeholder="9876543210"
+                            className="w-full px-3.5 py-2.5 bg-transparent text-xs font-semibold text-[#1C1917] tracking-wider focus:outline-none placeholder:tracking-normal"
+                          />
+                        </div>
+                      </div>
+                    )}
 
                     <button
                       type="submit"
-                      disabled={authLoading || loginPhone.length < 10}
+                      disabled={authLoading || (authChannel === 'email' ? !loginEmail.includes('@') : loginPhone.length < 10)}
                       className="w-full py-3 rounded-xl bg-[#0F3E2E] hover:bg-[#144F3B] text-white text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer disabled:opacity-50 shadow-sm"
                     >
-                      {authLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Phone className="w-4 h-4" />}
-                      <span>{authLoading ? (language === 'hi' ? 'ओटीपी भेजा जा रहा है...' : 'Sending OTP...') : (language === 'hi' ? 'ओटीपी भेजें' : 'Send OTP')}</span>
+                      {authLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : (authChannel === 'email' ? <Mail className="w-4 h-4" /> : <Phone className="w-4 h-4" />)}
+                      <span>
+                        {authLoading 
+                          ? (language === 'hi' ? 'कोड भेजा जा रहा है...' : 'Sending Code...') 
+                          : (authChannel === 'email' 
+                              ? (language === 'hi' ? 'जीमेल पर ओटीपी भेजें' : 'Send Gmail OTP') 
+                              : (language === 'hi' ? 'ओटीपी भेजें' : 'Send OTP'))}
+                      </span>
                     </button>
 
                     {/* Divider OR */}
@@ -1699,7 +1844,9 @@ export function OnboardingPage({ onComplete, onSelectDemo, onStartDemoTour }) {
                   <form onSubmit={handleVerifyOtp} className="space-y-5">
                     <div className="space-y-2 text-center">
                       <div className="text-xs text-[#57534E]">
-                        {language === 'hi' ? 'एसएमएस में प्राप्त 6-अंकों का ओटीपी दर्ज करें' : 'Enter the 6-digit code received via SMS'}
+                        {authChannel === 'email'
+                          ? (language === 'hi' ? `जीमेल (${loginEmail}) पर प्राप्त 6-अंकों का कोड दर्ज करें` : `Enter the 6-digit code received on ${loginEmail}`)
+                          : (language === 'hi' ? `+91 ${loginPhone} पर प्राप्त 6-अंकों का ओटीपी दर्ज करें` : `Enter the 6-digit code sent to +91 ${loginPhone}`)}
                       </div>
                       
                       {/* 6 Discrete Digit Boxes */}
@@ -1721,6 +1868,22 @@ export function OnboardingPage({ onComplete, onSelectDemo, onStartDemoTour }) {
                           />
                         ))}
                       </div>
+
+                      {sandboxCodeHint && (
+                        <div className="mt-2 text-center">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const digits = sandboxCodeHint.split('').slice(0, 6);
+                              setOtpDigits(digits);
+                            }}
+                            className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-full text-[11px] font-semibold transition cursor-pointer"
+                          >
+                            <Sparkles className="w-3 h-3 text-emerald-600" />
+                            <span>Click to fill code: <strong className="font-mono">{sandboxCodeHint}</strong></span>
+                          </button>
+                        </div>
+                      )}
                     </div>
 
                     <button
@@ -1755,29 +1918,30 @@ export function OnboardingPage({ onComplete, onSelectDemo, onStartDemoTour }) {
                         )}
                       </div>
 
-                      {/* Change Number Option */}
+                      {/* Change Number/Email Option */}
                       <button
                         type="button"
                         onClick={() => {
                           setLoginStep('phone');
                           setAuthError('');
                           setAuthSuccessMsg('');
+                          setSandboxCodeHint('');
                         }}
                         className="text-[11px] font-semibold text-[#78716C] hover:text-[#1C1917] cursor-pointer flex items-center gap-1 mt-1"
                       >
                         <ArrowLeft className="w-3 h-3" />
-                        <span>{language === 'hi' ? 'मोबाइल नंबर बदलें' : 'Change Number'}</span>
+                        <span>{authChannel === 'email' ? (language === 'hi' ? 'ईमेल बदलें' : 'Change Email') : (language === 'hi' ? 'मोबाइल नंबर बदलें' : 'Change Number')}</span>
                       </button>
                     </div>
                   </form>
                 )
               ) : (
                 regStep === 'details' ? (
-                  /* REGISTRATION STEP 1: SHOP DETAILS & PHONE */
+                  /* REGISTRATION STEP 1: SHOP DETAILS */
                   <form onSubmit={handleRegisterSendOtp} className="space-y-3.5">
                     <div className="space-y-1">
                       <label className="text-xs font-bold text-[#1C1917]">
-                        {language === 'hi' ? 'उद्यम का नाम' : 'Enterprise Name'}
+                        {language === 'hi' ? 'उद्यम का नाम' : 'Enterprise Name'} <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="text"
@@ -1789,43 +1953,96 @@ export function OnboardingPage({ onComplete, onSelectDemo, onStartDemoTour }) {
                       />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="space-y-1">
-                        <label className="text-xs font-bold text-[#1C1917]">
-                          {language === 'hi' ? 'मालिक का नाम' : 'Proprietor'}
-                        </label>
-                        <input
-                          type="text"
-                          value={regOwnerName}
-                          onChange={(e) => setRegOwnerName(e.target.value)}
-                          placeholder="Ramesh Kumar"
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-[#D5CCBC] bg-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#0F3E2E]/20"
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-xs font-bold text-[#1C1917]">
-                          {language === 'hi' ? 'मोबाइल नंबर' : 'Mobile Number'}
-                        </label>
-                        <div className="flex rounded-xl border border-[#D5CCBC] bg-white overflow-hidden focus-within:ring-2 focus-within:ring-[#0F3E2E]/20 focus-within:border-[#0F3E2E] transition">
-                          <span className="bg-[#EAE3D2]/70 text-[#1C1917] font-bold text-xs px-2.5 py-2 flex items-center border-r border-[#D5CCBC] select-none">
-                            +91
-                          </span>
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-[#1C1917]">
+                        {language === 'hi' ? 'मालिक का नाम' : 'Proprietor Name'}
+                      </label>
+                      <input
+                        type="text"
+                        value={regOwnerName}
+                        onChange={(e) => setRegOwnerName(e.target.value)}
+                        placeholder="Ramesh Kumar"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-[#D5CCBC] bg-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#0F3E2E]/20"
+                      />
+                    </div>
+
+                    {authChannel === 'email' ? (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <div className="space-y-1">
+                          <label className="text-xs font-bold text-[#1C1917]">
+                            {language === 'hi' ? 'जीमेल / ईमेल' : 'Gmail / Email'} <span className="text-red-500">*</span>
+                          </label>
                           <input
-                            type="tel"
-                            inputMode="numeric"
-                            maxLength={10}
+                            type="email"
                             required
-                            value={regPhone}
+                            value={regEmail}
                             onChange={(e) => {
-                              setRegPhone(e.target.value.replace(/\D/g, '').slice(0, 10));
+                              setRegEmail(e.target.value);
                               setAuthError('');
                             }}
-                            placeholder="9876543210"
-                            className="w-full px-2.5 py-2 bg-transparent text-xs font-semibold text-[#1C1917] tracking-wider focus:outline-none"
+                            placeholder="yourname@gmail.com"
+                            className="w-full px-3 py-2 rounded-xl border border-[#D5CCBC] bg-white text-xs font-semibold focus:outline-none"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-xs font-bold text-[#1C1917]">
+                            {language === 'hi' ? 'मोबाइल नंबर (वैकल्पिक)' : 'Mobile (Optional)'}
+                          </label>
+                          <div className="flex rounded-xl border border-[#D5CCBC] bg-white overflow-hidden">
+                            <span className="bg-[#EAE3D2]/70 text-[#1C1917] font-bold text-xs px-2.5 py-2 flex items-center border-r border-[#D5CCBC] select-none">
+                              +91
+                            </span>
+                            <input
+                              type="tel"
+                              inputMode="numeric"
+                              maxLength={10}
+                              value={regPhone}
+                              onChange={(e) => setRegPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                              placeholder="9876543210"
+                              className="w-full px-2.5 py-2 bg-transparent text-xs font-semibold text-[#1C1917] focus:outline-none"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <div className="space-y-1">
+                          <label className="text-xs font-bold text-[#1C1917]">
+                            {language === 'hi' ? 'मोबाइल नंबर' : 'Mobile Number'} <span className="text-red-500">*</span>
+                          </label>
+                          <div className="flex rounded-xl border border-[#D5CCBC] bg-white overflow-hidden focus-within:ring-2 focus-within:ring-[#0F3E2E]/20 focus-within:border-[#0F3E2E] transition">
+                            <span className="bg-[#EAE3D2]/70 text-[#1C1917] font-bold text-xs px-2.5 py-2 flex items-center border-r border-[#D5CCBC] select-none">
+                              +91
+                            </span>
+                            <input
+                              type="tel"
+                              inputMode="numeric"
+                              maxLength={10}
+                              required
+                              value={regPhone}
+                              onChange={(e) => {
+                                setRegPhone(e.target.value.replace(/\D/g, '').slice(0, 10));
+                                setAuthError('');
+                              }}
+                              placeholder="9876543210"
+                              className="w-full px-2.5 py-2 bg-transparent text-xs font-semibold text-[#1C1917] tracking-wider focus:outline-none"
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-xs font-bold text-[#1C1917]">
+                            {language === 'hi' ? 'ईमेल (वैकल्पिक)' : 'Email (Optional)'}
+                          </label>
+                          <input
+                            type="email"
+                            value={regEmail}
+                            onChange={(e) => setRegEmail(e.target.value)}
+                            placeholder="yourname@gmail.com"
+                            className="w-full px-3 py-2 rounded-xl border border-[#D5CCBC] bg-white text-xs font-semibold focus:outline-none"
                           />
                         </div>
                       </div>
-                    </div>
+                    )}
 
                     <div className="space-y-1">
                       <label className="text-xs font-bold text-[#1C1917]">
@@ -1878,11 +2095,17 @@ export function OnboardingPage({ onComplete, onSelectDemo, onStartDemoTour }) {
 
                     <button
                       type="submit"
-                      disabled={authLoading || regPhone.length < 10 || !regShopName.trim()}
+                      disabled={authLoading || !regShopName.trim() || (authChannel === 'email' ? !regEmail.includes('@') : regPhone.length < 10)}
                       className="w-full py-3 rounded-xl bg-[#0F3E2E] hover:bg-[#144F3B] text-white text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer disabled:opacity-50 mt-2 shadow-sm"
                     >
-                      {authLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Phone className="w-4 h-4" />}
-                      <span>{authLoading ? (language === 'hi' ? 'ओटीपी भेजा जा रहा है...' : 'Sending OTP...') : (language === 'hi' ? 'ओटीपी भेजें और आगे बढ़ें' : 'Send SMS OTP & Continue')}</span>
+                      {authLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : (authChannel === 'email' ? <Mail className="w-4 h-4" /> : <Phone className="w-4 h-4" />)}
+                      <span>
+                        {authLoading 
+                          ? (language === 'hi' ? 'ओटीपी भेजा जा रहा है...' : 'Sending OTP...') 
+                          : (authChannel === 'email'
+                              ? (language === 'hi' ? 'जीमेल पर ओटीपी भेजें और आगे बढ़ें' : 'Send Gmail OTP & Continue')
+                              : (language === 'hi' ? 'ओटीपी भेजें और आगे बढ़ें' : 'Send SMS OTP & Continue'))}
+                      </span>
                     </button>
                   </form>
                 ) : (
@@ -1890,7 +2113,9 @@ export function OnboardingPage({ onComplete, onSelectDemo, onStartDemoTour }) {
                   <form onSubmit={handleRegisterVerifyAndSubmit} className="space-y-5">
                     <div className="space-y-2 text-center">
                       <div className="text-xs text-[#57534E]">
-                        {language === 'hi' ? 'एसएमएस में प्राप्त 6-अंकों का ओटीपी दर्ज करें' : 'Enter the 6-digit verification code received via SMS'}
+                        {authChannel === 'email'
+                          ? (language === 'hi' ? `जीमेल (${regEmail}) पर प्राप्त 6-अंकों का सत्यापन कोड दर्ज करें` : `Enter the 6-digit code received on ${regEmail}`)
+                          : (language === 'hi' ? `+91 ${regPhone} पर प्राप्त 6-अंकों का सत्यापन कोड दर्ज करें` : `Enter the 6-digit code sent to +91 ${regPhone}`)}
                       </div>
                       
                       {/* 6 Discrete Digit Boxes */}
@@ -1912,6 +2137,22 @@ export function OnboardingPage({ onComplete, onSelectDemo, onStartDemoTour }) {
                           />
                         ))}
                       </div>
+
+                      {regSandboxCodeHint && (
+                        <div className="mt-2 text-center">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const digits = regSandboxCodeHint.split('').slice(0, 6);
+                              setRegOtpDigits(digits);
+                            }}
+                            className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-full text-[11px] font-semibold transition cursor-pointer"
+                          >
+                            <Sparkles className="w-3 h-3 text-emerald-600" />
+                            <span>Click to fill code: <strong className="font-mono">{regSandboxCodeHint}</strong></span>
+                          </button>
+                        </div>
+                      )}
                     </div>
 
                     <button
@@ -1953,6 +2194,7 @@ export function OnboardingPage({ onComplete, onSelectDemo, onStartDemoTour }) {
                           setRegStep('details');
                           setAuthError('');
                           setAuthSuccessMsg('');
+                          setRegSandboxCodeHint('');
                         }}
                         className="text-[11px] font-semibold text-[#78716C] hover:text-[#1C1917] cursor-pointer flex items-center gap-1 mt-1"
                       >

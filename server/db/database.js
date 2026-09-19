@@ -210,6 +210,12 @@ try {
 }
 
 try {
+  db.exec("ALTER TABLE shops ADD COLUMN email TEXT DEFAULT '';");
+} catch (_) {
+  // Column already exists
+}
+
+try {
   db.exec('ALTER TABLE transactions ADD COLUMN customer_phone TEXT;');
 } catch (_) {
   // Column already exists
