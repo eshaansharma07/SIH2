@@ -259,7 +259,7 @@ export function Sidebar({
             <div className="flex items-center justify-between mb-1">
               <span className="text-[10px] text-amber-200/90 font-medium flex items-center gap-1">
                 <TrendingUp className="w-3 h-3 text-amber-300" />
-                <span>{getSiteText(language, 'sidebar', 'creditScoreTitle', 'Credit Score')}</span>
+                <span>{getSiteText(language, 'sidebar', 'creditScoreTitle', 'CIBIL Score')}</span>
               </span>
               <span className="text-[9px] bg-emerald-500/20 text-emerald-300 font-bold px-1.5 py-0.5 rounded-full border border-emerald-500/30">
                 {getSiteText(language, 'sidebar', 'primeBadge', 'Prime')}
