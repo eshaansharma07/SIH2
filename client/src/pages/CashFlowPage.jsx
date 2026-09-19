@@ -41,6 +41,7 @@ import { VoiceInputDialog } from '../components/VoiceInputDialog';
 import { DEMO_TRANSACTIONS, DEMO_SUMMARY, DEMO_UDHAAR_LEDGER } from '../data/demoData';
 import { getCustomerDetails, cleanIndianPhone, maskIndianPhone } from '../utils/customerMatcher';
 import { TricolorBrush } from '../components/TricolorBrush';
+import { getSiteText } from '../data/siteTranslations';
 
 export function CashFlowPage({ 
   shop, 
@@ -737,21 +738,15 @@ export function CashFlowPage({
           {/* Left Hero Typography */}
           <div className="lg:col-span-6 space-y-2 z-10">
             <h1 className="font-serif font-black text-3xl sm:text-4xl text-stone-900 tracking-tight leading-none">
-              Bahi-Khata
+              {getSiteText(language, 'cashflow', 'heroTitle', 'Bahi-Khata')}
             </h1>
 
             <p className="font-sans font-bold text-stone-800 text-sm sm:text-base leading-snug">
-              {language === 'hi'
-                ? 'हर लेन-देन, एक बेहतर कल की तरफ।'
-                : 'Har len-den, ek behtar kal ki taraf.'
-              }
+              {getSiteText(language, 'cashflow', 'heroTagline', 'Har len-den, ek behtar kal ki taraf.')}
             </p>
 
             <p className="text-stone-600 text-xs sm:text-sm leading-relaxed max-w-md">
-              {language === 'hi'
-                ? 'अपने दैनिक लेन-देन दर्ज करें, उधार प्रबंधित करें, स्टॉक गतिविधि ट्रैक करें और अपने व्यापार को व्यवस्थित रखें।'
-                : 'Record your daily transactions, manage udhaar, track inventory movement, and keep your business organised.'
-              }
+              {getSiteText(language, 'cashflow', 'heroSubtitle', 'Record your daily transactions, manage udhaar, track inventory movement, and keep your business organised.')}
             </p>
           </div>
 
@@ -766,7 +761,7 @@ export function CashFlowPage({
               {/* Authentic Motivational Calligraphic Strip */}
               <div className="px-4 py-2.5 bg-[#FAF7F2]/95 border-t border-[#EAE3D6] flex items-center justify-between flex-wrap gap-2">
                 <span className="font-serif italic font-bold text-xs sm:text-sm text-[#0F3E2E] tracking-wide">
-                  "छोटे हिसाब, बड़ी तस्वीर बनाते हैं।"
+                  {getSiteText(language, 'cashflow', 'heroQuote', '"छोटे हिसाब, बड़ी तस्वीर बनाते हैं।"')}
                 </span>
                 <TricolorBrush className="w-20 h-2.5 shrink-0" />
               </div>
@@ -793,11 +788,11 @@ export function CashFlowPage({
             <div className="flex items-center gap-2 mb-1">
               <FileText className={`w-4 h-4 ${selectedCategoryTab === 'all' ? 'text-white' : 'text-stone-500'}`} />
               <span className="font-serif font-bold text-xs">
-                {language === 'hi' ? 'सभी लेन-देन' : 'All Transactions'}
+                {getSiteText(language, 'cashflow', 'allTransactions', 'All Transactions')}
               </span>
             </div>
             <p className={`text-[10px] ${selectedCategoryTab === 'all' ? 'text-emerald-200' : 'text-stone-500'}`}>
-              View every record
+              {getSiteText(language, 'cashflow', 'allTransactionsSub', 'View every record')}
             </p>
           </button>
 
@@ -814,11 +809,11 @@ export function CashFlowPage({
             <div className="flex items-center gap-2 mb-1">
               <Users className={`w-4 h-4 ${selectedCategoryTab === 'customers' ? 'text-white' : 'text-emerald-700'}`} />
               <span className="font-serif font-bold text-xs">
-                {language === 'hi' ? 'ग्राहक खाता' : 'Customers'}
+                {getSiteText(language, 'cashflow', 'customers', 'Customers')}
               </span>
             </div>
             <p className={`text-[10px] ${selectedCategoryTab === 'customers' ? 'text-emerald-200' : 'text-stone-500'}`}>
-              Party accounts & ledger
+              {getSiteText(language, 'cashflow', 'customersSub', 'Party accounts & ledger')}
             </p>
           </button>
 
@@ -835,11 +830,11 @@ export function CashFlowPage({
             <div className="flex items-center gap-2 mb-1">
               <ShoppingCart className={`w-4 h-4 ${selectedCategoryTab === 'sales' ? 'text-white' : 'text-emerald-700'}`} />
               <span className="font-serif font-bold text-xs">
-                {language === 'hi' ? 'बिक्री' : 'Sales'}
+                {getSiteText(language, 'cashflow', 'sales', 'Sales')}
               </span>
             </div>
             <p className={`text-[10px] ${selectedCategoryTab === 'sales' ? 'text-emerald-200' : 'text-stone-500'}`}>
-              Money in
+              {getSiteText(language, 'cashflow', 'salesSub', 'Money in')}
             </p>
           </button>
 
@@ -856,11 +851,11 @@ export function CashFlowPage({
             <div className="flex items-center gap-2 mb-1">
               <ArrowDownRight className={`w-4 h-4 ${selectedCategoryTab === 'purchases' ? 'text-white' : 'text-indigo-600'}`} />
               <span className="font-serif font-bold text-xs">
-                {language === 'hi' ? 'खरीद' : 'Purchases'}
+                {getSiteText(language, 'cashflow', 'purchases', 'Purchases')}
               </span>
             </div>
             <p className={`text-[10px] ${selectedCategoryTab === 'purchases' ? 'text-emerald-200' : 'text-stone-500'}`}>
-              Money out
+              {getSiteText(language, 'cashflow', 'purchasesSub', 'Money out')}
             </p>
           </button>
 
@@ -877,11 +872,11 @@ export function CashFlowPage({
             <div className="flex items-center gap-2 mb-1">
               <BarChart3 className={`w-4 h-4 ${selectedCategoryTab === 'expenses' ? 'text-white' : 'text-teal-600'}`} />
               <span className="font-serif font-bold text-xs">
-                {language === 'hi' ? 'खर्च' : 'Expenses'}
+                {getSiteText(language, 'cashflow', 'expenses', 'Expenses')}
               </span>
             </div>
             <p className={`text-[10px] ${selectedCategoryTab === 'expenses' ? 'text-emerald-200' : 'text-stone-500'}`}>
-              Business costs
+              {getSiteText(language, 'cashflow', 'expensesSub', 'Business costs')}
             </p>
           </button>
 
@@ -898,11 +893,11 @@ export function CashFlowPage({
             <div className="flex items-center gap-2 mb-1">
               <IndianRupee className={`w-4 h-4 ${selectedCategoryTab === 'udhaar' ? 'text-white' : 'text-amber-600'}`} />
               <span className="font-serif font-bold text-xs">
-                {language === 'hi' ? 'उधार' : 'Udhaar'}
+                {getSiteText(language, 'cashflow', 'udhaar', 'Udhaar')}
               </span>
             </div>
             <p className={`text-[10px] ${selectedCategoryTab === 'udhaar' ? 'text-emerald-200' : 'text-stone-500'}`}>
-              Given & received
+              {getSiteText(language, 'cashflow', 'udhaarSub', 'Given & received')}
             </p>
           </button>
         </div>
@@ -920,7 +915,7 @@ export function CashFlowPage({
                 : 'bg-white/95 text-stone-700 border-stone-200/80 hover:text-stone-950 hover:border-stone-300 hover:bg-white'
             }`}
           >
-            <span>{language === 'hi' ? 'अन्य विकल्प' : 'More Actions'}</span>
+            <span>{getSiteText(language, 'cashflow', 'moreActions', 'More Actions')}</span>
             <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${moreActionsOpen ? 'rotate-180 text-white' : 'text-stone-500'}`} />
           </button>
 
@@ -930,7 +925,7 @@ export function CashFlowPage({
               className="hidden sm:block absolute right-0 top-full mt-2 w-60 z-[60] bg-white border border-stone-200/90 rounded-2xl p-1.5 shadow-[0_12px_36px_rgba(0,0,0,0.14)] space-y-1 text-xs select-none animate-in fade-in zoom-in-95 duration-150"
             >
               <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-stone-400 border-b border-stone-100 mb-1 flex items-center justify-between">
-                <span>{language === 'hi' ? 'त्वरित कार्य' : 'Actions'}</span>
+                <span>{getSiteText(language, 'cashflow', 'quickActions', 'Actions')}</span>
                 <span className="text-[9px] text-stone-400 lowercase font-normal">esc to close</span>
               </div>
 
@@ -945,10 +940,10 @@ export function CashFlowPage({
                 </div>
                 <div className="flex-1 min-w-0">
                   <span className="font-medium text-xs block truncate text-stone-800">
-                    {language === 'hi' ? 'बिक्री दर्ज करें' : 'Record Sale'}
+                    {getSiteText(language, 'cashflow', 'recordSale', 'Record Sale')}
                   </span>
                   <span className="text-[10px] text-stone-400 block truncate">
-                    {language === 'hi' ? 'दुकान की बिक्री' : 'Daily sales (Money In)'}
+                    {getSiteText(language, 'cashflow', 'salesSub', 'Money in')}
                   </span>
                 </div>
               </button>
@@ -964,10 +959,10 @@ export function CashFlowPage({
                 </div>
                 <div className="flex-1 min-w-0">
                   <span className="font-medium text-xs block truncate text-stone-800">
-                    {language === 'hi' ? 'खरीद दर्ज करें' : 'Record Purchase'}
+                    {getSiteText(language, 'cashflow', 'recordPurchase', 'Record Purchase')}
                   </span>
                   <span className="text-[10px] text-stone-400 block truncate">
-                    {language === 'hi' ? 'स्टॉक / माल खरीद' : 'Stock & goods'}
+                    {getSiteText(language, 'cashflow', 'purchasesSub', 'Money out')}
                   </span>
                 </div>
               </button>
@@ -983,10 +978,10 @@ export function CashFlowPage({
                 </div>
                 <div className="flex-1 min-w-0">
                   <span className="font-medium text-xs block truncate text-stone-800">
-                    {language === 'hi' ? 'खर्च जोड़ें' : 'Add Expense'}
+                    {getSiteText(language, 'cashflow', 'addExpense', 'Add Expense')}
                   </span>
                   <span className="text-[10px] text-stone-400 block truncate">
-                    {language === 'hi' ? 'बिजली, किराया आदि' : 'Bills, transport, misc'}
+                    {getSiteText(language, 'cashflow', 'expensesSub', 'Business costs')}
                   </span>
                 </div>
               </button>
@@ -1002,10 +997,10 @@ export function CashFlowPage({
                 </div>
                 <div className="flex-1 min-w-0">
                   <span className="font-medium text-xs block truncate text-stone-800">
-                    {language === 'hi' ? 'नया ग्राहक खाता' : 'Add Customer Account'}
+                    + {getSiteText(language, 'cashflow', 'customers', 'Customer')}
                   </span>
                   <span className="text-[10px] text-stone-400 block truncate">
-                    {language === 'hi' ? 'उधार खाता शुरू करें' : 'Open party khata'}
+                    {getSiteText(language, 'cashflow', 'customersSub', 'Party accounts & ledger')}
                   </span>
                 </div>
               </button>
@@ -1079,7 +1074,7 @@ export function CashFlowPage({
               >
                 <div className="flex items-center justify-between pb-2 border-b border-stone-100 mb-1">
                   <span className="font-serif font-bold text-xs text-stone-900 tracking-wide uppercase">
-                    {language === 'hi' ? 'कार्य व विकल्प' : 'Actions & Tools'}
+                    {getSiteText(language, 'cashflow', 'quickActions', 'Actions & Tools')}
                   </span>
                   <button
                     type="button"
@@ -1101,10 +1096,10 @@ export function CashFlowPage({
                     </div>
                     <div>
                       <span className="font-medium text-xs block text-stone-800">
-                        {language === 'hi' ? 'बिक्री दर्ज करें' : 'Record Sale'}
+                        {getSiteText(language, 'cashflow', 'recordSale', 'Record Sale')}
                       </span>
                       <span className="text-[10px] text-stone-400 block">
-                        {language === 'hi' ? 'दुकान की बिक्री' : 'Daily sales (Money In)'}
+                        {getSiteText(language, 'cashflow', 'salesSub', 'Daily sales (Money In)')}
                       </span>
                     </div>
                   </button>
@@ -1119,10 +1114,10 @@ export function CashFlowPage({
                     </div>
                     <div>
                       <span className="font-medium text-xs block text-stone-800">
-                        {language === 'hi' ? 'खरीद दर्ज करें' : 'Record Purchase'}
+                        {getSiteText(language, 'cashflow', 'recordPurchase', 'Record Purchase')}
                       </span>
                       <span className="text-[10px] text-stone-400 block">
-                        {language === 'hi' ? 'स्टॉक / माल खरीद' : 'Stock & goods'}
+                        {getSiteText(language, 'cashflow', 'purchasesSub', 'Stock & goods')}
                       </span>
                     </div>
                   </button>
@@ -1137,10 +1132,10 @@ export function CashFlowPage({
                     </div>
                     <div>
                       <span className="font-medium text-xs block text-stone-800">
-                        {language === 'hi' ? 'खर्च जोड़ें' : 'Add Expense'}
+                        {getSiteText(language, 'cashflow', 'addExpense', 'Add Expense')}
                       </span>
                       <span className="text-[10px] text-stone-400 block">
-                        {language === 'hi' ? 'बिजली, किराया आदि' : 'Bills, transport, misc'}
+                        {getSiteText(language, 'cashflow', 'expensesSub', 'Bills, transport, misc')}
                       </span>
                     </div>
                   </button>
@@ -1155,10 +1150,10 @@ export function CashFlowPage({
                     </div>
                     <div>
                       <span className="font-medium text-xs block text-stone-800">
-                        {language === 'hi' ? 'नया ग्राहक खाता' : 'Add Customer Account'}
+                        + {getSiteText(language, 'cashflow', 'customers', 'Customer')}
                       </span>
                       <span className="text-[10px] text-stone-400 block">
-                        {language === 'hi' ? 'उधार खाता शुरू करें' : 'Open party khata'}
+                        {getSiteText(language, 'cashflow', 'customersSub', 'Open party khata')}
                       </span>
                     </div>
                   </button>
@@ -1219,8 +1214,8 @@ export function CashFlowPage({
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder={
               selectedCategoryTab === 'customers'
-                ? "Search customers by name, phone, or village..."
-                : "Search transactions (e.g. Amul, Ramu, ₹500...)"
+                ? (language === 'hi' ? 'नाम या फ़ोन से ग्राहक खोजें...' : `${getSiteText(language, 'cashflow', 'customers', 'Customers')}...`)
+                : getSiteText(language, 'cashflow', 'searchPlaceholder', 'Search transactions (e.g. Amul, Ramu, ₹500...)')
             }
             className="w-full pl-9.5 pr-4 py-2 bg-transparent text-xs text-stone-900 placeholder:text-stone-400 focus:outline-none"
           />
@@ -1243,7 +1238,7 @@ export function CashFlowPage({
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#0F3E2E] hover:bg-[#165640] text-white font-bold text-xs shadow-2xs hover:shadow-md transition-all cursor-pointer shrink-0"
             >
               <UserPlus className="w-4 h-4" />
-              <span>{language === 'hi' ? '+ नया ग्राहक' : '+ Add Customer'}</span>
+              <span>+ {getSiteText(language, 'cashflow', 'customers', 'Add Customer')}</span>
             </button>
           ) : (
             <>
@@ -1254,10 +1249,10 @@ export function CashFlowPage({
                   onChange={(e) => setDatePreset(e.target.value)}
                   className="appearance-none bg-[#FAF8F5] border border-stone-200 rounded-xl px-3 py-1.5 pr-7 text-xs font-semibold text-stone-700 hover:border-stone-300 focus:outline-none focus:border-[#0F3E2E] cursor-pointer"
                 >
-                  <option value="all">📅 All Dates</option>
-                  <option value="today">Today</option>
-                  <option value="week">Past 7 Days</option>
-                  <option value="month">Past 30 Days</option>
+                  <option value="all">📅 {getSiteText(language, 'cashflow', 'allDates', 'All Dates')}</option>
+                  <option value="today">{getSiteText(language, 'cashflow', 'today', 'Today')}</option>
+                  <option value="week">{getSiteText(language, 'cashflow', 'past7Days', 'Past 7 Days')}</option>
+                  <option value="month">{getSiteText(language, 'cashflow', 'past30Days', 'Past 30 Days')}</option>
                 </select>
               </div>
 
@@ -1268,11 +1263,11 @@ export function CashFlowPage({
                   onChange={(e) => setTypeFilter(e.target.value)}
                   className="appearance-none bg-[#FAF8F5] border border-stone-200 rounded-xl px-3 py-1.5 pr-7 text-xs font-semibold text-stone-700 hover:border-stone-300 focus:outline-none focus:border-[#0F3E2E] cursor-pointer"
                 >
-                  <option value="all">Type: All</option>
-                  <option value="income">Sale (Income)</option>
-                  <option value="expense">Purchase / Expense</option>
-                  <option value="udhaar_given">Udhaar Given</option>
-                  <option value="udhaar_repaid">Udhaar Repaid</option>
+                  <option value="all">{getSiteText(language, 'cashflow', 'typeAll', 'Type: All')}</option>
+                  <option value="income">{getSiteText(language, 'cashflow', 'typeIncome', 'Sale (Income)')}</option>
+                  <option value="expense">{getSiteText(language, 'cashflow', 'typeExpense', 'Purchase / Expense')}</option>
+                  <option value="udhaar_given">{getSiteText(language, 'cashflow', 'typeUdhaarGiven', 'Udhaar Given')}</option>
+                  <option value="udhaar_repaid">{getSiteText(language, 'cashflow', 'typeUdhaarRepaid', 'Udhaar Repaid')}</option>
                 </select>
               </div>
 
@@ -1283,10 +1278,10 @@ export function CashFlowPage({
                   onChange={(e) => setPaymentFilter(e.target.value)}
                   className="appearance-none bg-[#FAF8F5] border border-stone-200 rounded-xl px-3 py-1.5 pr-7 text-xs font-semibold text-stone-700 hover:border-stone-300 focus:outline-none focus:border-[#0F3E2E] cursor-pointer"
                 >
-                  <option value="all">Payment Mode: All</option>
-                  <option value="cash">Cash</option>
-                  <option value="upi">UPI</option>
-                  <option value="khata">Udhaar / Khata</option>
+                  <option value="all">{getSiteText(language, 'cashflow', 'paymentAll', 'Payment Mode: All')}</option>
+                  <option value="cash">{getSiteText(language, 'cashflow', 'paymentCash', 'Cash')}</option>
+                  <option value="upi">{getSiteText(language, 'cashflow', 'paymentUpi', 'UPI')}</option>
+                  <option value="khata">{getSiteText(language, 'cashflow', 'paymentKhata', 'Udhaar / Khata')}</option>
                 </select>
               </div>
 
@@ -1298,7 +1293,7 @@ export function CashFlowPage({
                     onChange={(e) => setCategoryFilter(e.target.value)}
                     className="appearance-none bg-[#FAF8F5] border border-stone-200 rounded-xl px-3 py-1.5 pr-7 text-xs font-semibold text-stone-700 hover:border-stone-300 focus:outline-none focus:border-[#0F3E2E] cursor-pointer"
                   >
-                    <option value="all">Category: All</option>
+                    <option value="all">{getSiteText(language, 'cashflow', 'categoryAll', 'Category: All')}</option>
                     {availableCategories.map(cat => (
                       <option key={cat} value={cat}>{cat}</option>
                     ))}
@@ -1313,7 +1308,7 @@ export function CashFlowPage({
                 className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#0F3E2E] hover:bg-[#165640] text-white font-bold text-xs shadow-2xs hover:shadow-md transition-all cursor-pointer shrink-0"
               >
                 <Plus className="w-4 h-4" />
-                <span>Record Transaction</span>
+                <span>{getSiteText(language, 'cashflow', 'recordTxBtn', 'Record Transaction')}</span>
               </button>
             </>
           )}
@@ -1333,7 +1328,7 @@ export function CashFlowPage({
                   <div className="flex items-center gap-2">
                     <Users className="w-4 h-4 text-[#0F3E2E]" />
                     <h3 className="font-serif font-bold text-sm text-stone-900">
-                      {language === 'hi' ? 'ग्राहक एवं पार्टी खाता' : 'Customer & Party Directory'}
+                      {getSiteText(language, 'cashflow', 'customers', 'Customer')} & Party Directory
                     </h3>
                   </div>
                   <p className="text-[11px] text-stone-500 mt-0.5">
@@ -1347,7 +1342,7 @@ export function CashFlowPage({
                   className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#0F3E2E] hover:bg-[#165640] text-white font-bold text-xs btn-tactile cursor-pointer"
                 >
                   <UserPlus className="w-3.5 h-3.5" />
-                  <span>{language === 'hi' ? '+ नया ग्राहक' : '+ Add Customer'}</span>
+                  <span>+ {getSiteText(language, 'cashflow', 'customers', 'Add Customer')}</span>
                 </button>
               </div>
 
@@ -1356,11 +1351,11 @@ export function CashFlowPage({
                 <table className="w-full text-left border-collapse text-xs">
                   <thead>
                     <tr className="border-b border-stone-200/80 bg-[#FAF8F5]/40 text-stone-500 font-serif">
-                      <th className="py-3 px-3.5 sm:px-4 font-bold">Customer Name</th>
+                      <th className="py-3 px-3.5 sm:px-4 font-bold">{getSiteText(language, 'cashflow', 'thParty', 'Customer Name')}</th>
                       <th className="py-3 px-3 sm:px-4 font-bold">Phone Number</th>
                       <th className="py-3 px-3 sm:px-4 font-bold text-center">Transactions</th>
                       <th className="py-3 px-3 sm:px-4 font-bold text-center">Udhaar Status</th>
-                      <th className="py-3 px-3 sm:px-4 font-bold text-right">Action</th>
+                      <th className="py-3 px-3 sm:px-4 font-bold text-right">{getSiteText(language, 'cashflow', 'thActions', 'Action')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-stone-100">
@@ -1492,14 +1487,14 @@ export function CashFlowPage({
                 {/* Table Header */}
                 <thead>
                   <tr className="border-b border-stone-200/80 bg-[#FAF8F5]/60 text-stone-500 font-serif">
-                    <th className="py-3 px-3.5 sm:px-4 font-bold">Type</th>
-                    <th className="py-3 px-3 sm:px-4 font-bold">Particulars</th>
-                    <th className="py-3 px-3 sm:px-4 font-bold">Party / Customer</th>
-                    <th className="py-3 px-3 sm:px-4 font-bold">Date & Time</th>
-                    <th className="py-3 px-2 sm:px-3 font-bold text-center">Payment Mode</th>
-                    <th className="py-3 px-3 sm:px-4 font-bold">Category</th>
-                    <th className="py-3 px-3 sm:px-4 font-bold text-right">Amount</th>
-                    <th className="py-3 px-2 font-bold text-center">Actions</th>
+                    <th className="py-3 px-3.5 sm:px-4 font-bold">{getSiteText(language, 'cashflow', 'thType', 'Type')}</th>
+                    <th className="py-3 px-3 sm:px-4 font-bold">{getSiteText(language, 'cashflow', 'thParticulars', 'Particulars')}</th>
+                    <th className="py-3 px-3 sm:px-4 font-bold">{getSiteText(language, 'cashflow', 'thParty', 'Party / Customer')}</th>
+                    <th className="py-3 px-3 sm:px-4 font-bold">{getSiteText(language, 'cashflow', 'thDateTime', 'Date & Time')}</th>
+                    <th className="py-3 px-2 sm:px-3 font-bold text-center">{getSiteText(language, 'cashflow', 'thMode', 'Payment Mode')}</th>
+                    <th className="py-3 px-3 sm:px-4 font-bold">{getSiteText(language, 'cashflow', 'thCategory', 'Category')}</th>
+                    <th className="py-3 px-3 sm:px-4 font-bold text-right">{getSiteText(language, 'cashflow', 'thAmount', 'Amount')}</th>
+                    <th className="py-3 px-2 font-bold text-center">{getSiteText(language, 'cashflow', 'thActions', 'Actions')}</th>
                   </tr>
                 </thead>
 
@@ -1624,7 +1619,7 @@ export function CashFlowPage({
             {/* Pagination Controls */}
             <div className="p-3 sm:p-3.5 border-t border-stone-200/80 bg-[#FAF8F5]/50 flex items-center justify-between flex-wrap gap-2 text-xs text-stone-600">
               <span className="font-medium text-stone-500">
-                Showing{' '}
+                {getSiteText(language, 'cashflow', 'showingText', 'Showing')}{' '}
                 <strong className="text-stone-900 font-bold">
                   {filteredTransactions.length > 0 ? (currentPage - 1) * pageSize + 1 : 0}
                 </strong>
@@ -1711,7 +1706,7 @@ export function CashFlowPage({
           {/* Quick Actions Panel */}
           <div className="rounded-2xl bg-white border border-stone-200/90 p-4 sm:p-5 shadow-2xs space-y-3">
             <h3 className="font-serif font-bold text-sm text-stone-900 pb-1 border-b border-stone-100">
-              Quick Actions
+              {getSiteText(language, 'cashflow', 'quickActions', 'Quick Actions')}
             </h3>
 
             <div className="space-y-1.5">
@@ -1725,7 +1720,7 @@ export function CashFlowPage({
                   <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center">
                     <ShoppingCart className="w-3.5 h-3.5" />
                   </div>
-                  <span>Record Sale</span>
+                  <span>{getSiteText(language, 'cashflow', 'recordSale', 'Record Sale')}</span>
                 </div>
                 <ChevronRight className="w-4 h-4 text-stone-400 group-hover:text-stone-800 group-hover:translate-x-0.5 transition-all" />
               </button>
@@ -1740,7 +1735,7 @@ export function CashFlowPage({
                   <div className="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-700 flex items-center justify-center">
                     <FileText className="w-3.5 h-3.5" />
                   </div>
-                  <span>Record Purchase</span>
+                  <span>{getSiteText(language, 'cashflow', 'recordPurchase', 'Record Purchase')}</span>
                 </div>
                 <ChevronRight className="w-4 h-4 text-stone-400 group-hover:text-stone-800 group-hover:translate-x-0.5 transition-all" />
               </button>
@@ -1755,7 +1750,7 @@ export function CashFlowPage({
                   <div className="w-7 h-7 rounded-lg bg-teal-50 text-teal-700 flex items-center justify-center">
                     <BarChart3 className="w-3.5 h-3.5" />
                   </div>
-                  <span>Add Expense</span>
+                  <span>{getSiteText(language, 'cashflow', 'addExpense', 'Add Expense')}</span>
                 </div>
                 <ChevronRight className="w-4 h-4 text-stone-400 group-hover:text-stone-800 group-hover:translate-x-0.5 transition-all" />
               </button>
@@ -1770,7 +1765,7 @@ export function CashFlowPage({
                   <div className="w-7 h-7 rounded-lg bg-amber-50 text-amber-700 flex items-center justify-center">
                     <IndianRupee className="w-3.5 h-3.5" />
                   </div>
-                  <span>Manage Udhaar</span>
+                  <span>{getSiteText(language, 'cashflow', 'manageUdhaar', 'Manage Udhaar')}</span>
                 </div>
                 <ChevronRight className="w-4 h-4 text-stone-400 group-hover:text-stone-800 group-hover:translate-x-0.5 transition-all" />
               </button>
@@ -1783,10 +1778,10 @@ export function CashFlowPage({
               <div className="w-7 h-7 rounded-lg bg-amber-100/80 text-amber-700 flex items-center justify-center">
                 <Lightbulb className="w-3.5 h-3.5" />
               </div>
-              <h4 className="font-serif font-bold text-xs text-stone-900">Need Help?</h4>
+              <h4 className="font-serif font-bold text-xs text-stone-900">{getSiteText(language, 'cashflow', 'needHelp', 'Need Help?')}</h4>
             </div>
             <p className="text-[11px] text-stone-500 leading-relaxed">
-              Learn how to manage your Bahi-Khata efficiently.
+              {getSiteText(language, 'cashflow', 'needHelpSub', 'Learn how to manage your Bahi-Khata efficiently.')}
             </p>
             <button
               type="button"
@@ -1795,7 +1790,7 @@ export function CashFlowPage({
               }}
               className="mt-1 text-xs font-bold text-[#0F3E2E] hover:text-emerald-900 inline-flex items-center gap-1 cursor-pointer"
             >
-              <span>Watch Guide</span>
+              <span>{getSiteText(language, 'cashflow', 'watchGuide', 'Watch Guide')}</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>

@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { useTranslation } from '../i18n/LanguageContext';
 import { VyapaarVikasVishwas } from './VyapaarVikasVishwas';
+import { getSiteText } from '../data/siteTranslations';
 
 export function Sidebar({
   activeTab,
@@ -47,13 +48,13 @@ export function Sidebar({
     },
     { 
       id: 'inventory', 
-      label: language === 'hi' ? 'स्टॉक' : 'Inventory', 
+      label: getSiteText(language, 'nav', 'inventory', 'Inventory'), 
       icon: Package,
       action: 'wholesale'
     },
     { 
       id: 'customers', 
-      label: language === 'hi' ? 'ग्राहक (उधार)' : 'Customers (Udhaar)', 
+      label: getSiteText(language, 'nav', 'customers', 'Customers (Udhaar)'), 
       icon: Users,
       tab: 'cashflow',
       subTab: 'udhaar'
@@ -201,18 +202,18 @@ export function Sidebar({
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-600" />
                 </span>
                 <span className="font-serif font-bold text-[11px] text-[#0F3E2E]">
-                  {language === 'hi' ? 'आज का बही-खाता' : "Today's Ledger"}
+                  {getSiteText(language, 'sidebar', 'todayLedger', "Today's Ledger")}
                 </span>
               </div>
               <span className="text-[9px] font-bold text-emerald-800 bg-emerald-100/70 px-1.5 py-0.5 rounded-md">
-                Live
+                {getSiteText(language, 'sidebar', 'live', 'Live')}
               </span>
             </div>
 
             <div className="grid grid-cols-2 gap-2 pt-0.5 text-left">
               <div className="bg-[#FAF8F5] p-2 rounded-xl border border-stone-200/60">
                 <div className="text-[9px] text-stone-500 font-medium">
-                  {language === 'hi' ? 'कुल आवक (बिक्री)' : 'Sales Inflow'}
+                  {getSiteText(language, 'sidebar', 'salesInflow', 'Sales Inflow')}
                 </div>
                 <div className="font-bold text-xs text-stone-900 mt-0.5 tabular-nums">
                   ₹{Number(summaryData?.totalIncome || 84200).toLocaleString('en-IN')}
@@ -221,7 +222,7 @@ export function Sidebar({
 
               <div className="bg-[#FAF8F5] p-2 rounded-xl border border-stone-200/60">
                 <div className="text-[9px] text-stone-500 font-medium">
-                  {language === 'hi' ? 'बकाया उधार' : 'Pending Udhaar'}
+                  {getSiteText(language, 'sidebar', 'pendingUdhaar', 'Pending Udhaar')}
                 </div>
                 <div className="font-bold text-xs text-amber-700 mt-0.5 tabular-nums">
                   ₹{Number(summaryData?.pendingUdhaar || summaryData?.totalUdhaarGiven || 28400).toLocaleString('en-IN')}
@@ -239,7 +240,7 @@ export function Sidebar({
               className="w-full flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-xl bg-[#0F3E2E] hover:bg-[#165640] text-white text-[11px] font-bold shadow-2xs hover:shadow-xs transition-all cursor-pointer btn-tactile"
             >
               <Plus className="w-3.5 h-3.5" />
-              <span>{language === 'hi' ? 'बिक्री दर्ज करें' : '+ Record Sale'}</span>
+              <span>{getSiteText(language, 'sidebar', 'recordSaleBtn', '+ Record Sale')}</span>
             </button>
           </div>
 
@@ -254,10 +255,10 @@ export function Sidebar({
             <div className="flex items-center justify-between mb-1">
               <span className="text-[10px] text-amber-200/90 font-medium flex items-center gap-1">
                 <TrendingUp className="w-3 h-3 text-amber-300" />
-                <span>{language === 'hi' ? 'वैकल्पिक साख स्कोर' : 'Credit Score'}</span>
+                <span>{getSiteText(language, 'sidebar', 'creditScoreTitle', 'Credit Score')}</span>
               </span>
               <span className="text-[9px] bg-emerald-500/20 text-emerald-300 font-bold px-1.5 py-0.5 rounded-full border border-emerald-500/30">
-                Prime
+                {getSiteText(language, 'sidebar', 'primeBadge', 'Prime')}
               </span>
             </div>
             
@@ -266,11 +267,11 @@ export function Sidebar({
                 785 <span className="text-[10px] font-normal text-stone-300">/ 850</span>
               </div>
               <span className="text-[10px] text-amber-300 group-hover:underline flex items-center gap-0.5">
-                {language === 'hi' ? 'विवरण' : 'View CAM'} <ChevronRight className="w-3 h-3" />
+                {getSiteText(language, 'sidebar', 'viewCam', 'View CAM')} <ChevronRight className="w-3 h-3" />
               </span>
             </div>
             <p className="text-[9px] text-stone-300 mt-1 leading-tight">
-              Pre-qualified: ₹5,00,000 Mudra loan
+              {getSiteText(language, 'sidebar', 'mudraEligible', 'Pre-qualified: ₹5,00,000 Mudra loan')}
             </p>
           </div>
         </div>
@@ -289,7 +290,7 @@ export function Sidebar({
             className="w-full mt-1.5 flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-medium text-stone-600 hover:text-stone-900 hover:bg-[#EAE4D7] transition-all cursor-pointer border border-transparent hover:border-stone-300/60"
           >
             <Headphones className="w-4 h-4 text-stone-500 shrink-0" />
-            <span>{language === 'hi' ? 'मदद: 1800-889-SETU' : 'Help: 1800-889-SETU'}</span>
+            <span>{getSiteText(language, 'sidebar', 'helpBtn', 'Help: 1800-889-SETU')}</span>
           </button>
         </div>
       </aside>

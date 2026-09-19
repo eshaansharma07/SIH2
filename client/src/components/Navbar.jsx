@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { useTranslation } from '../i18n/LanguageContext';
 import { api } from '../utils/api';
+import { getSiteText } from '../data/siteTranslations';
 
 export function Navbar({ 
   activeTab, 
@@ -435,8 +436,8 @@ export function Navbar({
           </div>
 
           {/* Center: Primary Navigation Tabs & Floating Interactive Mega-Menu */}
-          <div ref={navRef} className="hidden lg:flex items-center justify-start xl:justify-center flex-1 min-w-0 relative">
-            <nav className="flex items-center gap-1 xl:gap-1.5 flex-nowrap">
+          <div ref={navRef} className="hidden xl:flex items-center justify-center flex-1 min-w-0 overflow-x-auto no-scrollbar mx-2 relative">
+            <nav className="flex items-center gap-1 xl:gap-1.5 flex-nowrap shrink-0 py-1">
               {navItems.map(item => {
                 const Icon = item.icon;
                 const isActive = activeTab === item.id;
@@ -540,7 +541,7 @@ export function Navbar({
           </div>
 
           {/* Right: Action Controls (Notifications, Language, Profile) */}
-          <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0 ml-auto justify-end">
+          <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0 ml-auto justify-end z-10 pl-2 bg-[#FAF8F5]/95">
             {/* Live Demo Tour Button - Relatable earthy design matching Vyapaar Setu aesthetic */}
             <button
               type="button"
@@ -554,7 +555,7 @@ export function Navbar({
               </span>
               <Compass className="w-3.5 h-3.5 text-[#0F3E2E] shrink-0" />
               <span className="inline font-serif font-bold text-[11px] sm:text-xs tracking-tight">
-                {language === 'hi' ? 'लाइव टूर' : 'Guided Demo'}
+                {getSiteText(language, 'nav', 'guidedDemo', 'Guided Demo')}
               </span>
             </button>
 
