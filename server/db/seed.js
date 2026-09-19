@@ -376,6 +376,7 @@ export function seedDatabase(force = false) {
 
   // 6. Seed Government Schemes into dynamic registry
   try {
+    db.prepare(`DELETE FROM government_schemes`).run();
     const insertScheme = db.prepare(`
       INSERT OR REPLACE INTO government_schemes (
         id, name, short_name, ministry, category, scope, applicable_states,

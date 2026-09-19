@@ -449,6 +449,16 @@ export const dataStore = {
 
   normalizeSchemeRow(row) {
     if (!row) return null;
+    const safeJsonParse = (val, fallback) => {
+      if (!val) return fallback;
+      if (typeof val !== 'string') return val;
+      try {
+        return JSON.parse(val);
+      } catch (_) {
+        return fallback;
+      }
+    };
+
     return {
       id: row.id,
       name: row.name,
@@ -456,7 +466,7 @@ export const dataStore = {
       ministry: row.ministry,
       category: row.category,
       scope: row.scope || 'central',
-      applicableStates: typeof row.applicable_states === 'string' ? JSON.parse(row.applicable_states || '[]') : (row.applicableStates || []),
+      applicableStates: safeJsonParse(row.applicable_states, row.applicableStates || []),
       maxLoanAmount: Number(row.max_loan_amount || row.maxLoanAmount || 0),
       loanRangeText: row.loan_range_text || row.loanRangeText,
       interestRate: row.interest_rate || row.interestRate,
@@ -469,9 +479,9 @@ export const dataStore = {
       lastVerified: row.last_verified || row.lastVerified,
       officialSourceUrl: row.official_source_url || row.officialSourceUrl,
       statutoryReference: row.statutory_reference || row.statutoryReference,
-      whyYouQualifyRules: typeof row.why_you_qualify_rules === 'string' ? JSON.parse(row.why_you_qualify_rules || '{}') : (row.whyYouQualifyRules || {}),
-      requiredDocuments: typeof row.required_documents === 'string' ? JSON.parse(row.required_documents || '[]') : (row.requiredDocuments || []),
-      applicationSteps: typeof row.application_steps === 'string' ? JSON.parse(row.application_steps || '[]') : (row.applicationSteps || []),
+      whyYouQualifyRules: safeJsonParse(row.why_you_qualify_rules, row.whyYouQualifyRules || {}),
+      requiredDocuments: safeJsonParse(row.required_documents, row.requiredDocuments || []),
+      applicationSteps: safeJsonParse(row.application_steps, row.applicationSteps || []),
       officialPortal: row.official_portal || row.officialPortal,
       isScraped: Boolean(row.is_scraped !== undefined ? row.is_scraped : row.isScraped),
       sourcePortal: row.source_portal || row.sourcePortal || 'official',

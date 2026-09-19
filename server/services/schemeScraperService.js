@@ -1,10 +1,8 @@
 import dataStore from '../db/dataStore.js';
-import https from 'https';
-import http from 'http';
 import { URL } from 'url';
 
 /**
- * SaakhSetu Government Scheme Scraping & Ingestion Service
+ * SaakhSetu Government Scheme Monitoring & Ingestion Service
  * 
  * Connected to official Indian Digital Public Infrastructure:
  * 1. PIB (Press Information Bureau) MSME & Finance Releases (pib.gov.in)
@@ -15,6 +13,39 @@ import { URL } from 'url';
 
 let lastSyncTimestamp = new Date().toISOString();
 let totalScrapesRun = 0;
+
+// Monitored official government feeds for real live health & RSS probing
+export const MONITORED_GOVT_FEEDS = [
+  {
+    id: 'pib',
+    name: 'Press Information Bureau (PIB)',
+    domain: 'pib.gov.in',
+    url: 'https://pib.gov.in',
+    rssUrl: 'https://pib.gov.in/RssMain.aspx?ModId=6',
+    description: 'Union Cabinet Decisions & MSME Press Releases'
+  },
+  {
+    id: 'myscheme',
+    name: 'MyScheme National Discovery Portal',
+    domain: 'myscheme.gov.in',
+    url: 'https://www.myscheme.gov.in',
+    description: 'Unified statutory scheme directory'
+  },
+  {
+    id: 'msme',
+    name: 'Ministry of MSME Circulars',
+    domain: 'msme.gov.in',
+    url: 'https://msme.gov.in',
+    description: 'Gazetted MSME notifications & policy circulars'
+  },
+  {
+    id: 'jansamarth',
+    name: 'JanSamarth National Credit Platform',
+    domain: 'jansamarth.in',
+    url: 'https://www.jansamarth.in',
+    description: 'Credit-linked government schemes'
+  }
+];
 
 // Verified list of allowed official statutory domains
 const ALLOWED_GOVT_DOMAINS = [
@@ -323,29 +354,135 @@ export function parseRawGovernmentAnnouncement(rawInput) {
 }
 
 /**
- * Main Scraper & Sync Engine
- * Discovers and ingests new government launches into the dynamic database store.
+ * Sends a real outbound HTTP probe to an official government portal.
+ * Measures genuine roundtrip latency and captures actual HTTP status.
+ */
+export async function probeGovernmentPortal(source) {
+  const startTime = Date.now();
+  const timeoutMs = process.env.NODE_ENV === 'test' ? 1200 : 3500;
+
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+    const response = await fetch(source.url, {
+      method: 'GET',
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+      },
+      signal: controller.signal
+    });
+
+    clearTimeout(timeoutId);
+    const latencyMs = Math.max(1, Date.now() - startTime);
+    const isOnline = response.status >= 200 && response.status < 500;
+
+    console.log(`📡 [GovtPortalScanner] Live probe: GET ${source.url} -> HTTP ${response.status} (${latencyMs}ms)`);
+
+    return {
+      name: source.name,
+      domain: source.domain,
+      url: source.url,
+      status: isOnline ? 'online' : 'unreachable',
+      httpStatus: response.status,
+      latencyMs,
+      lastCheckedAt: new Date().toISOString(),
+      liveProbe: true
+    };
+  } catch (err) {
+    const latencyMs = Math.max(1, Date.now() - startTime);
+    const isTimeout = err.name === 'AbortError';
+    console.warn(`⚠️ [GovtPortalScanner] Live probe notice: ${source.url} (${latencyMs}ms): ${err.message}`);
+
+    return {
+      name: source.name,
+      domain: source.domain,
+      url: source.url,
+      status: isTimeout ? 'timeout' : 'offline',
+      httpStatus: null,
+      latencyMs,
+      error: err.message,
+      lastCheckedAt: new Date().toISOString(),
+      liveProbe: true
+    };
+  }
+}
+
+/**
+ * Scans the live PIB RSS feed for recent releases.
+ */
+export async function scanLivePibFeed() {
+  const rssUrl = 'https://pib.gov.in/RssMain.aspx?ModId=6';
+  const startTime = Date.now();
+  const timeoutMs = process.env.NODE_ENV === 'test' ? 1000 : 3500;
+
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+    const response = await fetch(rssUrl, {
+      headers: { 'User-Agent': 'Mozilla/5.0' },
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+
+    if (response.ok) {
+      const xml = await response.text();
+      const items = (xml.match(/<item>[\s\S]*?<\/item>/g) || []).slice(0, 5);
+      const parsedItems = items.map(item => {
+        const titleMatch = item.match(/<title>([\s\S]*?)<\/title>/);
+        const linkMatch = item.match(/<link>([\s\S]*?)<\/link>/);
+        return {
+          title: titleMatch ? titleMatch[1].trim() : '',
+          link: linkMatch ? linkMatch[1].trim() : ''
+        };
+      }).filter(i => i.title);
+
+      const elapsed = Date.now() - startTime;
+      console.log(`📄 [GovtPortalScanner] Live PIB RSS: Discovered ${parsedItems.length} official press releases in ${elapsed}ms`);
+      return {
+        success: true,
+        itemCount: parsedItems.length,
+        items: parsedItems,
+        latencyMs: elapsed
+      };
+    }
+  } catch (err) {
+    console.warn(`[GovtPortalScanner] Live PIB RSS scan notice: ${err.message}`);
+  }
+  return { success: false, itemCount: 0, items: [], latencyMs: Date.now() - startTime };
+}
+
+/**
+ * Main Scanner & Scheme Synchronization Engine.
+ * Executes genuine live HTTP probes against official government infrastructure,
+ * scans the PIB statutory RSS feed, and ingests scheme catalog updates.
  */
 export async function syncGovernmentSchemes() {
   lastSyncTimestamp = new Date().toISOString();
   totalScrapesRun++;
 
-  console.log('📡 [SchemeScraper] Scanning official government feeds (PIB, MyScheme, MoMSME)...');
+  console.log('📡 [GovtPortalScanner] Dispatching live HTTP probes to official portals...');
 
+  // 1. Run live parallel HTTP probes & PIB RSS scan
+  const [probedSources, pibRssResult] = await Promise.all([
+    Promise.all(MONITORED_GOVT_FEEDS.map(probeGovernmentPortal)),
+    scanLivePibFeed()
+  ]);
+
+  // 2. Ingest catalog schemes into dynamic dataStore
   let ingestedCount = 0;
   const ingestedSchemes = [];
 
   for (const schemeData of LIVE_GOVERNMENT_FEED) {
     try {
-      const existing = await dataStore.getSchemeById(schemeData.id);
-      if (!existing) {
-        await dataStore.upsertScheme(schemeData);
-        ingestedCount++;
-        ingestedSchemes.push(schemeData);
-        console.log(`✨ [SchemeScraper] Ingested newly published scheme: "${schemeData.shortName}" (${schemeData.id})`);
-      }
+      await dataStore.upsertScheme(schemeData);
+      ingestedCount++;
+      ingestedSchemes.push(schemeData);
+      console.log(`✨ [SchemeIngestion] Synced scheme: "${schemeData.shortName}" (${schemeData.id})`);
     } catch (err) {
-      console.warn(`[SchemeScraper] Ingestion warning for ${schemeData.id}:`, err.message);
+      console.warn(`[SchemeIngestion] Ingestion warning for ${schemeData.id}:`, err.message);
     }
   }
 
@@ -358,44 +495,75 @@ export async function syncGovernmentSchemes() {
     newlyIngested: ingestedCount,
     ingestedSchemes: ingestedSchemes.map(s => ({ id: s.id, name: s.name, ministry: s.ministry })),
     totalActiveSchemes: allSchemes.length,
-    monitoredSources: [
-      { name: "Press Information Bureau (PIB)", domain: "pib.gov.in", status: "online", latencyMs: 120 },
-      { name: "MyScheme Portal", domain: "myscheme.gov.in", status: "online", latencyMs: 185 },
-      { name: "Ministry of MSME Circulars", domain: "msme.gov.in", status: "online", latencyMs: 95 },
-      { name: "JanSamarth Credit Platform", domain: "jansamarth.in", status: "online", latencyMs: 140 }
-    ]
+    pibRssFeed: {
+      scanned: pibRssResult.success,
+      releasesDiscovered: pibRssResult.itemCount,
+      recentReleases: pibRssResult.items
+    },
+    monitoredSources: probedSources
   };
 }
 
 /**
- * Allows on-demand scraping / ingestion of custom government circulars
- * (specifically built for live evaluator demonstration).
+ * Ingests a simulated or newly gazetted government circular.
+ * Performs real outbound URL verification if a source URL is supplied,
+ * measures actual parsing & persistence latency, and updates the shop match engine.
  */
 export async function ingestCustomCircular(inputData) {
   if (!inputData) throw new Error('Announcement payload is required');
   
+  const startTime = Date.now();
+
   if (inputData.sourceUrl && !validateGovernmentUrl(inputData.sourceUrl)) {
     throw new Error(`Security Guardrail: Source URL "${inputData.sourceUrl}" must originate from an authentic government domain (.gov.in / .nic.in / .org.in)`);
   }
 
+  // Real outbound check for the specified government source URL
+  let liveVerification = { verified: false, latencyMs: 0, httpStatus: null };
+  if (inputData.sourceUrl && process.env.NODE_ENV !== 'test') {
+    try {
+      const probeStart = Date.now();
+      const probeRes = await fetch(inputData.sourceUrl, {
+        method: 'GET',
+        headers: { 'User-Agent': 'Mozilla/5.0' },
+        signal: AbortSignal.timeout(3000)
+      });
+      liveVerification = {
+        verified: probeRes.status >= 200 && probeRes.status < 400,
+        latencyMs: Math.max(1, Date.now() - probeStart),
+        httpStatus: probeRes.status
+      };
+      console.log(`📡 [SchemeIngestion] Verified statutory source URL: ${inputData.sourceUrl} -> HTTP ${probeRes.status} (${liveVerification.latencyMs}ms)`);
+    } catch (err) {
+      console.warn(`[SchemeIngestion] Source URL check notice: ${err.message}`);
+    }
+  }
+
   const normalizedScheme = parseRawGovernmentAnnouncement(inputData);
+  normalizedScheme.isSimulated = true;
   await dataStore.upsertScheme(normalizedScheme);
 
-  console.log(`🎯 [SchemeScraper] Custom government circular scraped & ingested: "${normalizedScheme.name}"`);
+  const totalElapsedMs = Math.max(1, Date.now() - startTime);
+  console.log(`🎯 [SchemeIngestion] Custom circular parsed & ingested: "${normalizedScheme.name}" in ${totalElapsedMs}ms`);
+
   return {
     success: true,
     scheme: normalizedScheme,
-    latencyMs: 18,
+    latencyMs: totalElapsedMs,
     provenance: {
       verifiedDomain: true,
+      sourceUrlVerified: liveVerification.verified,
+      sourceHttpStatus: liveVerification.httpStatus,
+      sourceProbeLatencyMs: liveVerification.latencyMs,
       ingestedAt: new Date().toISOString(),
-      statutoryReference: normalizedScheme.statutoryReference
+      statutoryReference: normalizedScheme.statutoryReference,
+      isSimulated: true
     }
   };
 }
 
 /**
- * Returns scraper engine operational health and metadata.
+ * Returns scraper engine operational health, monitored portals, and scheme counts.
  */
 export async function getScraperStatus() {
   const allSchemes = await dataStore.getAllSchemes();
@@ -408,12 +576,13 @@ export async function getScraperStatus() {
     totalSchemes: allSchemes.length,
     scrapedSchemesCount: scrapedCount,
     baselineSchemesCount: allSchemes.length - scrapedCount,
-    pollingInterval: "Hourly automated cron + Real-time on-demand webhook",
-    monitoredSources: [
-      { name: "PIB MSME & Finance Feed", url: "https://pib.gov.in", status: "active" },
-      { name: "MyScheme Discovery Portal", url: "https://www.myscheme.gov.in", status: "active" },
-      { name: "Ministry of MSME Gazetted Orders", url: "https://msme.gov.in", status: "active" },
-      { name: "JanSamarth National Portal", url: "https://www.jansamarth.in", status: "active" }
-    ]
+    pollingMechanism: "Real-time HTTP health probe & RSS feed scan + Dynamic AST Ingestion Sandbox",
+    monitoredSources: MONITORED_GOVT_FEEDS.map(s => ({
+      id: s.id,
+      name: s.name,
+      domain: s.domain,
+      url: s.url,
+      description: s.description
+    }))
   };
 }
