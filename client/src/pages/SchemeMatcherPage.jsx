@@ -74,7 +74,7 @@ export function SchemeMatcherPage({ shop, creditData, onNavigateTab }) {
   const [loadingPacket, setLoadingPacket] = useState(false);
   const [copiedPacket, setCopiedPacket] = useState(false);
 
-  const handleOpenJanSamarth = async (schemeId = 'pm-mudra-kishor') => {
+  const handleOpenJanSamarth = async (schemeId = 'mudra-kishor') => {
     setLoadingPacket(true);
     setJanSamarthModalOpen(true);
     try {

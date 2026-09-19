@@ -67,7 +67,10 @@ router.get('/:id/jan-samarth-packet', async (req, res) => {
     const { id } = req.params;
     const shopId = req.query.shopId || 'ramesh-kirana';
 
-    const scheme = (await dataStore.getSchemeById(id)) || SCHEMES.find(s => s.id === id);
+    const cleanId = id.replace(/^pm-/, '');
+    const scheme = (await dataStore.getSchemeById(id)) || 
+      (await dataStore.getSchemeById(cleanId)) ||
+      SCHEMES.find(s => s.id === id || s.id === cleanId);
     if (!scheme) {
       return res.status(404).json({ success: false, error: 'Scheme not found' });
     }
