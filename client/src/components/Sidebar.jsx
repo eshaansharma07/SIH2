@@ -11,7 +11,9 @@ import {
   X, 
   Sparkles,
   Phone,
-  MessageCircle
+  MessageCircle,
+  Plus,
+  ChevronRight
 } from 'lucide-react';
 import { useTranslation } from '../i18n/LanguageContext';
 import { VyapaarVikasVishwas } from './VyapaarVikasVishwas';
@@ -22,7 +24,10 @@ export function Sidebar({
   currentShop,
   onOpenWholesale,
   isOpen = false,
-  onClose
+  onClose,
+  summaryData,
+  creditData,
+  onOpenKeypad
 }) {
   const { language, t } = useTranslation();
   const [helpOpen, setHelpOpen] = useState(false);
@@ -99,8 +104,8 @@ export function Sidebar({
   return (
     <>
       <aside className={`
-        fixed inset-y-0 left-0 z-40 w-56 xl:w-60 bg-[#F6F3EC] border-r border-[#ECE5D8] flex flex-col justify-between transition-transform duration-200 ease-in-out
-        lg:static lg:translate-x-0 shrink-0
+        fixed inset-y-0 left-0 z-40 w-56 xl:w-64 bg-[#F6F3EC] border-r border-[#ECE5D8] flex flex-col justify-between transition-transform duration-200 ease-in-out
+        lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 shrink-0 overflow-y-auto no-scrollbar
         ${isOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'}
       `}>
         {/* Top Section */}
@@ -139,7 +144,7 @@ export function Sidebar({
           </div>
 
           {/* Business Identity Card (Dark Forest Green Container) */}
-          <div className="relative rounded-2xl bg-[#123B2B] text-white p-3 sm:p-3.5 mb-5 shadow-sm overflow-hidden border border-[#0F3E2E]">
+          <div className="relative rounded-2xl bg-[#123B2B] text-white p-3 sm:p-3.5 mb-4 shadow-sm overflow-hidden border border-[#0F3E2E]">
             <div className="relative z-10 flex items-center gap-2.5">
               {/* Circular Store Avatar */}
               <div className="w-10 h-10 rounded-full border-2 border-amber-400/80 overflow-hidden shrink-0 bg-stone-800 flex items-center justify-center">
@@ -157,13 +162,6 @@ export function Sidebar({
                 <span className="text-[10px] text-amber-200/90 truncate font-medium">
                   {shopLocation}
                 </span>
-                
-                <div className="flex items-center gap-1 mt-1">
-                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-[#E5D7B7]/25 text-[#FFF9E6] border border-[#E5D7B7]/40 text-[9px] font-semibold">
-                    <Sparkles className="w-2.5 h-2.5 text-amber-300" />
-                    <span>Verified Enterprise</span>
-                  </span>
-                </div>
               </div>
             </div>
           </div>
@@ -180,7 +178,7 @@ export function Sidebar({
                   type="button"
                   onClick={() => handleItemClick(item)}
                   className={`
-                    w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs transition-all duration-200 text-left cursor-pointer
+                    w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs transition-all duration-200 text-left cursor-pointer
                     ${active 
                       ? 'bg-[#E3EBE4] text-[#0F3E2E] font-bold shadow-2xs border-l-[3px] border-[#15803D]' 
                       : 'text-stone-700 hover:text-stone-950 hover:bg-[#EFEAE0] font-medium'
@@ -193,12 +191,94 @@ export function Sidebar({
               );
             })}
           </nav>
+
+          {/* Space Utilization: Live Daily Ledger & Quick Action Card */}
+          <div className="mt-4 rounded-2xl bg-white/90 border border-[#E2D8C3] p-3 shadow-2xs space-y-2.5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-600" />
+                </span>
+                <span className="font-serif font-bold text-[11px] text-[#0F3E2E]">
+                  {language === 'hi' ? 'आज का बही-खाता' : "Today's Ledger"}
+                </span>
+              </div>
+              <span className="text-[9px] font-bold text-emerald-800 bg-emerald-100/70 px-1.5 py-0.5 rounded-md">
+                Live
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 pt-0.5 text-left">
+              <div className="bg-[#FAF8F5] p-2 rounded-xl border border-stone-200/60">
+                <div className="text-[9px] text-stone-500 font-medium">
+                  {language === 'hi' ? 'कुल आवक (बिक्री)' : 'Sales Inflow'}
+                </div>
+                <div className="font-bold text-xs text-stone-900 mt-0.5 tabular-nums">
+                  ₹{Number(summaryData?.totalIncome || 84200).toLocaleString('en-IN')}
+                </div>
+              </div>
+
+              <div className="bg-[#FAF8F5] p-2 rounded-xl border border-stone-200/60">
+                <div className="text-[9px] text-stone-500 font-medium">
+                  {language === 'hi' ? 'बकाया उधार' : 'Pending Udhaar'}
+                </div>
+                <div className="font-bold text-xs text-amber-700 mt-0.5 tabular-nums">
+                  ₹{Number(summaryData?.pendingUdhaar || summaryData?.totalUdhaarGiven || 28400).toLocaleString('en-IN')}
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Record Sale Button in Sidebar */}
+            <button
+              type="button"
+              onClick={() => {
+                onOpenKeypad?.('income');
+                onClose?.();
+              }}
+              className="w-full flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-xl bg-[#0F3E2E] hover:bg-[#165640] text-white text-[11px] font-bold shadow-2xs hover:shadow-xs transition-all cursor-pointer btn-tactile"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>{language === 'hi' ? 'बिक्री दर्ज करें' : '+ Record Sale'}</span>
+            </button>
+          </div>
+
+          {/* Alternative Credit Score & PSL Readiness Card */}
+          <div 
+            onClick={() => {
+              setActiveTab('credit');
+              onClose?.();
+            }}
+            className="mt-3 rounded-2xl bg-gradient-to-br from-[#123B2B] to-[#0A261C] text-white p-3 shadow-2xs border border-[#164D38] cursor-pointer hover:border-amber-400/50 transition-all group"
+          >
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[10px] text-amber-200/90 font-medium flex items-center gap-1">
+                <TrendingUp className="w-3 h-3 text-amber-300" />
+                <span>{language === 'hi' ? 'वैकल्पिक साख स्कोर' : 'Credit Score'}</span>
+              </span>
+              <span className="text-[9px] bg-emerald-500/20 text-emerald-300 font-bold px-1.5 py-0.5 rounded-full border border-emerald-500/30">
+                Prime
+              </span>
+            </div>
+            
+            <div className="flex items-baseline justify-between">
+              <div className="font-serif font-black text-lg text-white">
+                785 <span className="text-[10px] font-normal text-stone-300">/ 850</span>
+              </div>
+              <span className="text-[10px] text-amber-300 group-hover:underline flex items-center gap-0.5">
+                {language === 'hi' ? 'विवरण' : 'View CAM'} <ChevronRight className="w-3 h-3" />
+              </span>
+            </div>
+            <p className="text-[9px] text-stone-300 mt-1 leading-tight">
+              Pre-qualified: ₹5,00,000 Mudra loan
+            </p>
+          </div>
         </div>
 
         {/* Middle / Lower Decorative Artistic Area */}
-        <div className="p-4 sm:p-5 pt-2 flex flex-col items-center">
+        <div className="p-4 sm:p-5 pt-3 flex flex-col items-center">
           {/* Calligraphic 'Vyapaar Vikas Vishwas' Art */}
-          <div className="w-full my-2 flex justify-center opacity-95">
+          <div className="w-full my-1.5 flex justify-center opacity-90">
             <VyapaarVikasVishwas className="w-full" />
           </div>
 
@@ -206,10 +286,10 @@ export function Sidebar({
           <button
             type="button"
             onClick={() => setHelpOpen(true)}
-            className="w-full mt-2 flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium text-stone-600 hover:text-stone-900 hover:bg-[#EAE4D7] transition-all cursor-pointer border border-transparent hover:border-stone-300/60"
+            className="w-full mt-1.5 flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-medium text-stone-600 hover:text-stone-900 hover:bg-[#EAE4D7] transition-all cursor-pointer border border-transparent hover:border-stone-300/60"
           >
             <Headphones className="w-4 h-4 text-stone-500 shrink-0" />
-            <span>{language === 'hi' ? 'मदद और सहायता' : 'Help & Support'}</span>
+            <span>{language === 'hi' ? 'मदद: 1800-889-SETU' : 'Help: 1800-889-SETU'}</span>
           </button>
         </div>
       </aside>

@@ -18,7 +18,8 @@ import {
   ChevronRight,
   ArrowRight,
   Globe,
-  Check
+  Check,
+  Compass
 } from 'lucide-react';
 import { useTranslation } from '../i18n/LanguageContext';
 import { api } from '../utils/api';
@@ -540,15 +541,21 @@ export function Navbar({
 
           {/* Right: Action Controls (Notifications, Language, Profile) */}
           <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0 ml-auto justify-end">
-            {/* Live Demo Tour Button */}
+            {/* Live Demo Tour Button - Relatable earthy design matching Vyapaar Setu aesthetic */}
             <button
               type="button"
               onClick={() => onStartDemoTour?.()}
-              className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-amber-100/90 hover:bg-amber-200/80 text-amber-950 text-xs font-bold border border-amber-300/80 shadow-2xs hover:shadow-xs transition-all cursor-pointer btn-tactile shrink-0"
+              className="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-xl bg-[#F4EFE6] hover:bg-[#ECE4D5] text-[#0F3E2E] text-xs font-semibold border border-[#D5C7B0] hover:border-[#BAA98E] shadow-2xs hover:shadow-xs transition-all cursor-pointer btn-tactile shrink-0"
               title={language === 'hi' ? 'लाइव डेमो टूर चलाएं' : 'Start Live Guided Demo'}
             >
-              <Sparkles className="w-3.5 h-3.5 text-amber-700 fill-amber-500/40 shrink-0" />
-              <span className="hidden sm:inline lg:hidden xl:inline">{language === 'hi' ? 'लाइव टूर' : 'Demo Tour'}</span>
+              <span className="relative flex h-2 w-2 shrink-0">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-600" />
+              </span>
+              <Compass className="w-3.5 h-3.5 text-[#0F3E2E] shrink-0" />
+              <span className="inline font-serif font-bold text-[11px] sm:text-xs tracking-tight">
+                {language === 'hi' ? 'लाइव टूर' : 'Guided Demo'}
+              </span>
             </button>
 
             {/* Notification Bell */}
@@ -702,8 +709,8 @@ export function Navbar({
                     onClick={() => { onStartDemoTour?.(); setProfileOpen(false); }}
                     className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-stone-700 hover:bg-stone-100 hover:text-stone-900 text-left transition-colors"
                   >
-                    <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-                    <span>{language === 'hi' ? 'लाइव टूर देखें' : 'Start Demo Tour'}</span>
+                    <Compass className="w-3.5 h-3.5 text-[#0F3E2E]" />
+                    <span>{language === 'hi' ? 'लाइव टूर देखें' : 'Start Guided Demo'}</span>
                   </button>
 
                   {isDemoMode ? (

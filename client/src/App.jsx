@@ -494,6 +494,9 @@ export default function App() {
             onOpenWholesale={() => setWholesaleModalOpen(true)}
             isOpen={sidebarOpen}
             onClose={() => setSidebarOpen(false)}
+            summaryData={summaryData}
+            creditData={creditData}
+            onOpenKeypad={handleOpenKeypad}
           />
 
           {/* Right Main Area with Ambient Parchment Light */}
@@ -514,7 +517,7 @@ export default function App() {
             />
 
             {/* Main Page Container */}
-            <main className="flex-1 w-full min-w-0 px-4 sm:px-6 lg:px-8 py-4 sm:py-6 max-w-7xl xl:max-w-[1440px] mx-auto pb-28 sm:pb-32 lg:pb-12">
+            <main className="flex-1 w-full min-w-0 px-4 sm:px-6 lg:px-8 py-4 sm:py-6 max-w-7xl xl:max-w-[1536px] mx-auto pb-28 sm:pb-32 lg:pb-12">
               <PageErrorBoundary activeTab={activeTab} onResetTab={() => changeTab('dashboard')}>
                 <AnimatePresence mode="wait">
                   <motion.div
