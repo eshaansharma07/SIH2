@@ -752,7 +752,6 @@ function selectJudgingFallbackResponse(query, ctx, isEnglish = false) {
   }
 
   return `राम राम ${ctx.ownerName} जी! 🙏\n\nआपके प्रश्न: *"${query}"* के संदर्भ में:\n\n**${ctx.location}** में आपकी **${ctx.tradeCategory}** के लिए:\n- **दुकान की स्थिति**: पिछले 30 दिनों में ₹${ctx.last30DaysSummary.totalSales.toLocaleString('en-IN')} की बिक्री और ₹${ctx.metrics.netSurplus.toLocaleString('en-IN')} का शुद्ध मुनाफा दर्ज है।\n- **मुख्य सलाह**: दैनिक बही-खाता नियमित रूप से दर्ज करें और उधार को समय पर वसूलें, जिससे आपका साख सेतु स्कोर (${ctx.creditScore}/850) और मजबूत हो।\n- **सरकारी योजना**: आप कम ब्याज पर व्यापार विस्तार के लिए **${ctx.topMatchingScheme}** के पात्र हैं।\n\nआप मुझसे स्टॉक, खर्च घटाने, ग्राहकों की संख्या बढ़ाने अथवा बैंक लोन के बारे में कभी भी पूछ सकते हैं!`;
->>>>>>> main
 }
 
 function saveChatMessage(shopId, role, content) {

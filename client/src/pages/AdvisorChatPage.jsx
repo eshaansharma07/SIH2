@@ -173,6 +173,7 @@ export function AdvisorChatPage({ shop, creditData, summaryData, initialPrompt =
     setLoading(true);
 
     try {
+      const res = await api.chatAdvisor(shop.id, text);
       const rawReply = res?.response || res?.advice?.content || res?.content || res?.message || res?.reply;
       const reply = String(rawReply || '').replace(/\*/g, '').replace(/\s*[\u2014\u2013]\s*/g, ': ').replace(/[\u2014\u2013]/g, ': ').replace(/\s*--\s*/g, ': ').trim();
       
@@ -188,7 +189,6 @@ export function AdvisorChatPage({ shop, creditData, summaryData, initialPrompt =
             timestamp: new Date().toISOString()
           }
         ]);
-      }
       }
     } catch (err) {
       setMessages(prev => [

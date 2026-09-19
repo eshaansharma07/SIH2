@@ -1,4 +1,3 @@
-import Database from 'better-sqlite3';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
@@ -23,33 +22,76 @@ if (isServerless) {
   dbPath = tmpPath;
 }
 
-const db = new Database(dbPath);
-
-// Caching Map for prepared statements to prevent V8 Garbage Collector from triggering
-// Statement::~Statement() / node::RemoveEnvironmentCleanupHook(env != nullptr) SIGABRT crashes
-// in serverless execution environments (Node 20+ on Vercel / AWS Lambda).
-const statementCache = new Map();
-const originalPrepare = db.prepare.bind(db);
-db.prepare = function(sql) {
-  let stmt = statementCache.get(sql);
-  if (!stmt) {
-    stmt = originalPrepare(sql);
-    statementCache.set(sql, stmt);
-  }
-  return stmt;
-};
-
-// Configure pragmas safely based on environment
+let db;
 try {
-  if (isServerless) {
-    db.pragma('journal_mode = MEMORY');
-    db.pragma('synchronous = OFF');
-    db.pragma('temp_store = MEMORY');
-  } else {
-    db.pragma('journal_mode = WAL');
-  }
-} catch (e) {
-  // Ignore in environments where pragma is restricted
+  const { default: Database } = await import('better-sqlite3');
+  db = new Database(dbPath);
+
+  const statementCache = new Map();
+  const originalPrepare = db.prepare.bind(db);
+  db.prepare = function(sql) {
+    let stmt = statementCache.get(sql);
+    if (!stmt) {
+      stmt = originalPrepare(sql);
+      statementCache.set(sql, stmt);
+    }
+    return stmt;
+  };
+
+  try {
+    if (isServerless) {
+      db.pragma('journal_mode = MEMORY');
+      db.pragma('synchronous = OFF');
+      db.pragma('temp_store = MEMORY');
+    } else {
+      db.pragma('journal_mode = WAL');
+    }
+  } catch (e) {}
+} catch (loadErr) {
+  // Graceful fallback to Node's built-in node:sqlite (Node 22.5+)
+  const { DatabaseSync } = await import('node:sqlite');
+  const rawDb = new DatabaseSync(dbPath);
+  const sanitize = (val) => {
+    if (val === undefined) return null;
+    if (typeof val === 'boolean') return val ? 1 : 0;
+    return val;
+  };
+
+  const origPrepare = rawDb.prepare.bind(rawDb);
+  rawDb.prepare = function(sql) {
+    const stmt = origPrepare(sql);
+    return {
+      run: (...args) => stmt.run(...args.map(sanitize)),
+      get: (...args) => stmt.get(...args.map(sanitize)),
+      all: (...args) => stmt.all(...args.map(sanitize))
+    };
+  };
+
+  rawDb.pragma = (str) => {
+    try {
+      rawDb.exec(`PRAGMA ${str}`);
+    } catch (e) {}
+  };
+
+  rawDb.transaction = (fn) => {
+    return (...args) => {
+      rawDb.exec('BEGIN TRANSACTION');
+      try {
+        const result = fn(...args);
+        rawDb.exec('COMMIT');
+        return result;
+      } catch (err) {
+        rawDb.exec('ROLLBACK');
+        throw err;
+      }
+    };
+  };
+
+  try {
+    rawDb.pragma('journal_mode = WAL');
+  } catch (e) {}
+
+  db = rawDb;
 }
 
 // Initialize tables
