@@ -1,4 +1,4 @@
-import { MongoClient } from 'mongodb';
+import { getMongoDb, closeMongoConnection } from './mongoClient.js';
 import db from './database.js';
 import dotenv from 'dotenv';
 dotenv.config();
@@ -6,22 +6,19 @@ dotenv.config();
 /**
  * MongoDB Atlas Cloud Sync Utility
  * Backs up and syncs Ramesh's Kirana Store, 4-month bahi-khata transactions,
- * credit scores, and government schemes to MongoDB Atlas.
+ * credit scores, and government schemes to MongoDB Atlas using the managed
+ * singleton connection pool.
  */
 
 export async function syncToMongoDB() {
-  const uri = process.env.MONGODB_URI;
-  if (!uri) {
-    console.log('ℹ️ MONGODB_URI not set. Skipping cloud sync.');
-    return { success: false, message: 'MONGODB_URI not configured' };
+  const mongoDb = await getMongoDb();
+  if (!mongoDb) {
+    console.log('ℹ️ MongoDB not available. Skipping cloud sync.');
+    return { success: false, message: 'MongoDB not configured or unavailable' };
   }
 
-  const client = new MongoClient(uri);
-
   try {
-    console.log('🔄 Connecting to MongoDB Atlas...');
-    await client.connect();
-    const mongoDb = client.db('vyapaar_saathi');
+    console.log('🔄 Syncing local SQLite state to MongoDB Atlas...');
 
     // 1. Sync Shop Profile
     const shops = db.prepare('SELECT * FROM shops').all();
@@ -69,12 +66,14 @@ export async function syncToMongoDB() {
   } catch (err) {
     console.error('❌ MongoDB Sync Error:', err.message);
     return { success: false, error: err.message };
-  } finally {
-    await client.close();
   }
 }
 
 // Auto-run if executed directly
 if (process.argv[1] && process.argv[1].endsWith('mongoSync.js')) {
-  syncToMongoDB();
+  syncToMongoDB().finally(async () => {
+    await closeMongoConnection();
+    process.exit(0);
+  });
 }
+

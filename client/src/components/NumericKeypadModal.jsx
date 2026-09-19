@@ -25,10 +25,15 @@ export function NumericKeypadModal({
   initialCategory = null
 }) {
   const { t, language } = useTranslation();
+  const resolveSafeType = (t) => {
+    const valid = ['income', 'expense', 'udhaar_given', 'udhaar_repaid'];
+    return (typeof t === 'string' && valid.includes(t)) ? t : 'income';
+  };
   const [amountStr, setAmountStr] = useState('');
-  const [type, setType] = useState(initialType || 'income'); // 'income', 'expense', 'udhaar_given', 'udhaar_repaid'
+  const [type, setType] = useState(() => resolveSafeType(initialType)); // 'income', 'expense', 'udhaar_given', 'udhaar_repaid'
+  const isUdhaar = String(type || '').startsWith('udhaar');
   const [paymentMode, setPaymentMode] = useState('cash'); // 'cash', 'upi', 'khata'
-  const [category, setCategory] = useState(initialCategory || 'Daily Counter Sales');
+  const [category, setCategory] = useState(typeof initialCategory === 'string' ? initialCategory : 'Daily Counter Sales');
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [customerList, setCustomerList] = useState(() => getCachedCustomers(shopId));
@@ -82,9 +87,10 @@ export function NumericKeypadModal({
   // Reset/sync type and category when modal opens
   useEffect(() => {
     if (isOpen) {
-      setType(initialType || 'income');
+      const validInitial = resolveSafeType(initialType);
+      setType(validInitial);
       setPaymentMode('cash');
-      setCategory(initialCategory || (initialType === 'expense' ? 'Stock Purchase / माल खरीद' : 'Daily Counter Sales'));
+      setCategory(typeof initialCategory === 'string' ? initialCategory : (validInitial === 'expense' ? 'Stock Purchase / माल खरीद' : 'Daily Counter Sales'));
       setAmountStr('');
       setCustomerName('');
       setCustomerPhone('');
@@ -98,15 +104,15 @@ export function NumericKeypadModal({
   const customerSuggestions = searchCustomerSuggestions(customerName, customerList, 6);
 
   // Detect matching customer by exact 10-digit phone
-  const cleanEnteredPhone = customerPhone.replace(/\D/g, '').slice(-10);
+  const cleanEnteredPhone = String(customerPhone || '').replace(/\D/g, '').slice(-10);
   const phoneMatchedCustomer = cleanEnteredPhone.length === 10 && (!selectedCustomer || selectedCustomer.cleanPhone !== cleanEnteredPhone)
     ? findCustomerByPhone(cleanEnteredPhone, customerList)
     : null;
 
   const handleSelectCustomer = (customer) => {
     const details = getCustomerDetails(customer);
-    const name = details.name;
-    const phone = details.cleanPhone;
+    const name = details.name || '';
+    const phone = details.cleanPhone || '';
 
     setCustomerName(name);
     setSelectedCustomer(details);
@@ -124,12 +130,12 @@ export function NumericKeypadModal({
   };
 
   const handleCustomerNameChange = (e) => {
-    const val = e.target.value;
+    const val = e.target.value || '';
     setCustomerName(val);
     setShowSuggestions(true);
     setIsQuickCreateOpen(false);
 
-    if (selectedCustomer && val.trim().toLowerCase() !== selectedCustomer.name.toLowerCase()) {
+    if (selectedCustomer && val.trim().toLowerCase() !== String(selectedCustomer.name || '').toLowerCase()) {
       setSelectedCustomer(null);
       setIsPhoneLocked(false);
     }
@@ -227,7 +233,7 @@ export function NumericKeypadModal({
     }
 
     // Strict requirement: udhaar_given requires a valid 10-digit Indian phone
-    const cleanPhone = customerPhone.replace(/\D/g, '').slice(-10);
+    const cleanPhone = String(customerPhone || '').replace(/\D/g, '').slice(-10);
     if (type === 'udhaar_given') {
       if (!cleanPhone || !/^[6-9]\d{9}$/.test(cleanPhone)) {
         setErrorMessage(
@@ -248,7 +254,7 @@ export function NumericKeypadModal({
       type === 'udhaar_repaid' ? 'Partial Cash Clearing' : 
       'Monthly Grocery Khata'
     );
-    const assignedMode = type.startsWith('udhaar') ? 'khata' : paymentMode;
+    const assignedMode = isUdhaar ? 'khata' : paymentMode;
     const nowIso = new Date().toISOString();
 
     const localTx = {
@@ -259,7 +265,7 @@ export function NumericKeypadModal({
       type,
       payment_mode: assignedMode,
       category: assignedCategory,
-      customer_vendor_name: customerName.trim(),
+      customer_vendor_name: String(customerName || '').trim(),
       customer_phone: cleanPhone,
       customerPhone: cleanPhone,
       customer_id: selectedCustomer?.id || null,
@@ -273,9 +279,12 @@ export function NumericKeypadModal({
       const finalTx = res?.transaction || localTx;
 
       setSuccessToast(true);
-      onTransactionSaved?.(finalTx);
+      try {
+        onTransactionSaved?.(finalTx);
+      } catch (saveErr) {
+        console.warn('onTransactionSaved error:', saveErr);
+      }
       setShowStamp(true);
-      setSuccessToast(true);
       setTimeout(() => {
         setSuccessToast(false);
         setShowStamp(false);
@@ -291,8 +300,12 @@ export function NumericKeypadModal({
         onClose();
       }, 750);
     } catch (err) {
-      console.warn('Offline / network error, applying optimistic save:', err.message);
-      onTransactionSaved?.(localTx);
+      console.warn('Offline / network error, applying optimistic save:', err?.message);
+      try {
+        onTransactionSaved?.(localTx);
+      } catch (saveErr) {
+        console.warn('onTransactionSaved fallback error:', saveErr);
+      }
       setShowStamp(true);
       setSuccessToast(true);
       setTimeout(() => {
@@ -406,7 +419,7 @@ export function NumericKeypadModal({
               type="button"
               onClick={() => { setType('udhaar_given'); setCategory('Monthly Grocery Khata'); }}
               className={`py-2 text-xs font-extrabold rounded-lg transition-all cursor-pointer ${
-                type.startsWith('udhaar') 
+                isUdhaar 
                   ? 'bg-amber-500 text-white shadow-2xs' 
                   : 'text-stone-600 hover:text-stone-900'
               }`}
@@ -449,7 +462,7 @@ export function NumericKeypadModal({
           </div>
 
           {/* 4. Customer Name, Phone & Given/Repaid Sub-Toggle for Udhaar */}
-          {type.startsWith('udhaar') ? (
+          {isUdhaar ? (
             <div className="space-y-2 p-2.5 bg-[#FAF8F5]/70 border border-stone-300 rounded-xl">
               {/* Udhaar Sub-Toggle: Given vs Repaid */}
               <div className="grid grid-cols-2 gap-1 p-1 bg-stone-100/80 rounded-lg">
@@ -753,7 +766,7 @@ export function NumericKeypadModal({
                           : 'bg-white hover:bg-[#FAF8F5] text-stone-700 border-stone-300'
                       }`}
                     >
-                      <span>{name.split(' ')[0]}</span>
+                      <span>{String(name || '').split(' ')[0] || 'Customer'}</span>
                       {details.cleanPhone && (
                         <span className={`text-[8px] font-mono ${isSelected ? 'text-white/80' : 'text-emerald-700'}`}>
                           ✓

@@ -3,8 +3,11 @@ import dataStore from '../db/dataStore.js';
 import { calculateCreditScore } from '../services/creditScoringService.js';
 import { matchSchemesForShop } from '../services/schemeMatcherService.js';
 import { seedDatabase } from '../db/seed.js';
+import { optionalAuth, requireShopAccess } from '../middleware/auth.js';
 
 const router = express.Router();
+router.use(optionalAuth);
+router.use(requireShopAccess);
 
 // Generate Formal Bankable Financial Dossier aligned with RBI PSL Guidelines
 router.get('/generate', async (req, res) => {
@@ -35,7 +38,7 @@ router.get('/generate', async (req, res) => {
         txs = await dataStore.getTransactions(shopId, { limit: 1000 });
       } catch (e) {}
     }
-    const creditData = calculateCreditScore(shop, txs && txs.length > 0 ? txs : null);
+    const creditData = calculateCreditScore(shop, Array.isArray(txs) ? txs : null);
     const schemeData = matchSchemesForShop(shopId);
 
     const monthlySummary = {};

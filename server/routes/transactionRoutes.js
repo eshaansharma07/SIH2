@@ -1,8 +1,11 @@
 import express from 'express';
 import dataStore from '../db/dataStore.js';
 import { seedDatabase } from '../db/seed.js';
+import { optionalAuth, requireShopAccess } from '../middleware/auth.js';
 
 const router = express.Router();
+router.use(optionalAuth);
+router.use(requireShopAccess);
 
 // Get transactions for a shop
 router.get('/', async (req, res) => {

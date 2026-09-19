@@ -18,6 +18,11 @@ async function request(endpoint, options = {}) {
     'Expires': '0',
   };
 
+  const authToken = safeStorage.getItem('vyapaar_auth_token');
+  if (authToken) {
+    defaultHeaders['Authorization'] = `Bearer ${authToken}`;
+  }
+
   const fetchOptions = {
     ...options,
     cache: 'no-store',
@@ -99,6 +104,11 @@ export const api = {
       }
     }
   },
+  sendOTP: (phone, type = 'login') => request('/shop/send-otp', { method: 'POST', body: JSON.stringify({ phone, type }) }),
+  sendLoginOTP: (phone) => api.sendOTP(phone, 'login'),
+  sendRegisterOTP: (phone) => api.sendOTP(phone, 'register'),
+  verifyLoginOTP: (phone, otp) => request('/shop/verify-otp', { method: 'POST', body: JSON.stringify({ phone, otp }) }),
+  demoLogin: () => request('/shop/demo-login', { method: 'POST' }),
   loginShop: async (phone, password) => {
     try {
       return await request('/shop/login', { method: 'POST', body: JSON.stringify({ phone, password }) });
@@ -181,6 +191,13 @@ export const api = {
     return request(`/schemes${q}`);
   },
   getSchemeDetail: (id) => request(`/schemes/${id}`),
+  syncSchemes: () => request('/schemes/sync', { method: 'POST' }),
+  scrapeCustomScheme: (payload) => request('/schemes/scrape-custom', { 
+    method: 'POST', 
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload) 
+  }),
+  getScraperStatus: () => request('/schemes/status'),
 
   // Advisory
   chatAdvisor: (shopId, question, apiKey) => {

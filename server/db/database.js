@@ -7,8 +7,10 @@ const __dirname = path.dirname(__filename);
 
 let dbPath = path.join(__dirname, 'vyapaar_saathi.db');
 
+const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+
 // Handle Vercel / AWS Lambda read-only filesystem by using /tmp
-if (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME) {
+if (isServerless) {
   const tmpPath = path.join('/tmp', 'vyapaar_saathi.db');
   try {
     if (!fs.existsSync(tmpPath) && fs.existsSync(dbPath)) {
@@ -24,10 +26,32 @@ let db;
 try {
   const { default: Database } = await import('better-sqlite3');
   db = new Database(dbPath);
+
+  // Caching Map for prepared statements to prevent V8 Garbage Collector from triggering
+  // Statement::~Statement() / node::RemoveEnvironmentCleanupHook(env != nullptr) SIGABRT crashes
+  // in serverless execution environments (Node 20+ on Vercel / AWS Lambda).
+  const statementCache = new Map();
+  const originalPrepare = db.prepare.bind(db);
+  db.prepare = function(sql) {
+    let stmt = statementCache.get(sql);
+    if (!stmt) {
+      stmt = originalPrepare(sql);
+      statementCache.set(sql, stmt);
+    }
+    return stmt;
+  };
+
+  // Configure pragmas safely based on environment
   try {
-    db.pragma('journal_mode = WAL');
+    if (isServerless) {
+      db.pragma('journal_mode = MEMORY');
+      db.pragma('synchronous = OFF');
+      db.pragma('temp_store = MEMORY');
+    } else {
+      db.pragma('journal_mode = WAL');
+    }
   } catch (e) {
-    // Ignore in environments where WAL is restricted
+    // Ignore in environments where pragma is restricted
   }
 } catch (loadErr) {
   // Graceful fallback to Node's built-in node:sqlite (Node 22.5+)
@@ -174,7 +198,7 @@ try {
 }
 
 try {
-  db.exec("ALTER TABLE shops ADD COLUMN is_udyam_verified INTEGER DEFAULT 0;");
+  db.exec('ALTER TABLE shops ADD COLUMN is_udyam_verified INTEGER DEFAULT 0;');
 } catch (_) {
   // Column already exists
 }
@@ -214,6 +238,44 @@ try {
     );
     CREATE INDEX IF NOT EXISTS idx_customers_shop_id ON customers(shop_id);
     CREATE INDEX IF NOT EXISTS idx_customers_phone ON customers(phone);
+  `);
+} catch (_) {
+  // Table / index already exists
+}
+
+try {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS government_schemes (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      short_name TEXT NOT NULL,
+      ministry TEXT NOT NULL,
+      category TEXT NOT NULL,
+      scope TEXT DEFAULT 'central',
+      applicable_states TEXT DEFAULT '[]',
+      max_loan_amount REAL DEFAULT 0,
+      loan_range_text TEXT,
+      interest_rate TEXT,
+      subsidy_text TEXT,
+      collateral_required INTEGER DEFAULT 0,
+      collateral_text TEXT,
+      tenure TEXT,
+      plain_language_summary TEXT,
+      plain_language_summary_hi TEXT,
+      last_verified TEXT,
+      official_source_url TEXT,
+      statutory_reference TEXT,
+      why_you_qualify_rules TEXT,
+      required_documents TEXT,
+      application_steps TEXT,
+      official_portal TEXT,
+      is_scraped INTEGER DEFAULT 0,
+      source_portal TEXT DEFAULT 'official',
+      scraped_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE INDEX IF NOT EXISTS idx_gov_schemes_category ON government_schemes(category);
+    CREATE INDEX IF NOT EXISTS idx_gov_schemes_scope ON government_schemes(scope);
   `);
 } catch (_) {
   // Table / index already exists

@@ -54,7 +54,16 @@ let activeUtterance = null;
 
 export function stopSpeech() {
   if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-    window.speechSynthesis.cancel();
+    try {
+      if (activeUtterance) {
+        activeUtterance.onstart = null;
+        activeUtterance.onend = null;
+        activeUtterance.onerror = null;
+        activeUtterance.onpause = null;
+        activeUtterance.onresume = null;
+      }
+      window.speechSynthesis.cancel();
+    } catch (_) {}
     activeUtterance = null;
   }
 }
@@ -104,9 +113,8 @@ export function speak({
       if (e.error !== 'canceled' && e.error !== 'interrupted') {
         console.warn('[SaathiBol] Speech synthesis error:', e.error);
         onError?.(e);
-      } else {
-        onEnd?.();
       }
+      // When canceled or interrupted, do NOT trigger onEnd()
     };
 
     window.speechSynthesis.speak(utterance);

@@ -188,8 +188,8 @@ export function DashboardPage({
             <div className="pt-2">
               <button
                 type="button"
-                onClick={onOpenKeypad}
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#0F3E2E] hover:bg-[#165640] text-white font-bold text-xs sm:text-sm btn-tactile cursor-pointer"
+                onClick={() => onOpenKeypad ? onOpenKeypad('income') : null}
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#0F3E2E] hover:bg-[#165640] text-white font-bold text-xs sm:text-sm btn-tactile shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer transform hover:-translate-y-0.5 active:translate-y-0"
               >
                 <span>{language === 'hi' ? 'बिक्री दर्ज करें' : 'Record Sale'}</span>
                 <ArrowRight className="w-4 h-4" />
@@ -441,7 +441,7 @@ export function DashboardPage({
                   <CheckCircle2 className="w-6 h-6" />
                 </div>
                 <h3 className="font-serif font-bold text-lg text-stone-900">
-                  {language === 'hi' ? 'धन्यवाद रमेश जी!' : 'Thank you Ramesh Ji!'}
+                  {language === 'hi' ? `धन्यवाद ${shopOwner}!` : `Thank you ${shopOwner}!`}
                 </h3>
                 <p className="text-xs text-stone-600 max-w-xs mx-auto">
                   {language === 'hi'

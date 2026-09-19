@@ -58,4 +58,53 @@ test('Credit Scoring Service Suite', async (t) => {
     assert.ok(resultHuge.totalScore <= 850, `Score ${resultHuge.totalScore} must not exceed 850`);
     assert.ok(resultHuge.totalScore >= 300, `Score ${resultHuge.totalScore} must be at least 300`);
   });
+
+  await t.test('4. Real shop with under 50 transactions is unrated; unlocks formal score at 50 transactions', () => {
+    const newShop = {
+      id: 'new-kirana-store-01',
+      name: 'Sharma General Store',
+      vintage_years: 2,
+      bank_account_type: 'State Bank of India',
+      district: 'Balrampur'
+    };
+
+    // 0 transactions: must be locked under audit, no score, no previous score
+    const resultZero = calculateCreditScore(newShop, []);
+    assert.ok(resultZero, 'Result must exist');
+    assert.strictEqual(resultZero.isUnrated, true, 'Zero transactions must be unrated');
+    assert.strictEqual(resultZero.totalScore, null, 'Total score must be null for 0 transactions');
+    assert.strictEqual(resultZero.score, null, 'Score must be null for 0 transactions');
+    assert.strictEqual(resultZero.previousScore, null, 'Previous score must be null for 0 transactions');
+    assert.strictEqual(resultZero.requiredTransactions, 50, 'Must require 50 transactions');
+    assert.strictEqual(resultZero.transactionsRemaining, 50, 'Must have 50 transactions remaining');
+    assert.strictEqual(resultZero.transactionCount, 0, 'Transaction count must be 0');
+
+    // 1 transaction logged: still under audit
+    const tx1 = [{ id: 'tx-new-1', date: '2026-09-19', type: 'income', amount: 850, payment_mode: 'upi' }];
+    const resultOne = calculateCreditScore(newShop, tx1);
+    assert.strictEqual(resultOne.isUnrated, true, '1 transaction must remain unrated');
+    assert.strictEqual(resultOne.totalScore, null, 'Score must remain null');
+    assert.strictEqual(resultOne.transactionsRemaining, 49, 'Must have 49 remaining');
+    assert.strictEqual(resultOne.transactionCount, 1, 'Transaction count must be 1');
+
+    // 50 transactions logged: score unlocks into valid [300, 850] range
+    const tx50 = [];
+    for (let i = 1; i <= 50; i++) {
+      const day = String((i % 28) + 1).padStart(2, '0');
+      tx50.push({
+        id: `tx-50-${i}`,
+        date: `2026-08-${day}`,
+        type: i % 4 === 0 ? 'expense' : 'income',
+        amount: 500 + i * 20,
+        payment_mode: i % 3 === 0 ? 'upi' : 'cash'
+      });
+    }
+    const resultFifty = calculateCreditScore(newShop, tx50);
+    assert.strictEqual(resultFifty.isUnrated, false, 'Must unlock after 50 transactions');
+    assert.strictEqual(typeof resultFifty.totalScore, 'number', 'Score must be a number');
+    assert.ok(resultFifty.totalScore >= 300 && resultFifty.totalScore <= 850, `Score ${resultFifty.totalScore} must be within [300, 850]`);
+    assert.strictEqual(resultFifty.factors.length, 4, 'Must have 4 explainable pillars');
+    assert.strictEqual(resultFifty.transactionCount, 50, 'Transaction count should be 50');
+    assert.strictEqual(resultFifty.transactionsRemaining, 0, 'Remaining should be 0');
+  });
 });
