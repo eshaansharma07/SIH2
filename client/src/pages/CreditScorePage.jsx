@@ -109,6 +109,7 @@ export function CreditScorePage({ shop, creditData, onNavigateTab }) {
   const isDemo = !shop?.id || shop?.id === 'ramesh-kirana';
   const isUnrated = !isDemo && (creditData?.isUnrated && !creditData?.totalScore);
   const baseScore = isUnrated ? null : (creditData?.totalScore ?? (isDemo ? 786 : (creditData?.score ?? 615)));
+  const alternativeCreditScore = isUnrated ? null : (creditData?.alternativeScore || Math.round(300 + (((baseScore || 786) - 300) * 550 / 600)));
   const currentTier = getSchemeTier(baseScore);
   const factors = creditData?.factors || [];
 
@@ -504,6 +505,110 @@ export function CreditScorePage({ shop, creditData, onNavigateTab }) {
               <FileText className="w-3.5 h-3.5 text-stone-600" />
               <span>{language === 'hi' ? 'बैंक डॉसियर (CAM)' : 'Bank Dossier (CAM)'}</span>
             </button>
+          </div>
+        </div>
+
+        {/* Alternative Credit Score Dial Bento Card (Directly Below CIBIL Part) */}
+        <div className="w-full rounded-2xl bg-white border border-stone-200/80 p-5 sm:p-6 shadow-2xs">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+            
+            {/* Left 5 Cols: Alternative Credit Score Dial */}
+            <div className="lg:col-span-5 flex flex-col justify-between space-y-3">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-lg bg-amber-50 text-amber-800 flex items-center justify-center border border-amber-200/60">
+                    <FileText className="w-3.5 h-3.5" />
+                  </div>
+                  <span className="font-sans font-bold text-xs sm:text-sm text-stone-900">
+                    {language === 'hi' ? 'वैकल्पिक क्रेडिट स्कोर' : 'Alternative Credit Score'}
+                  </span>
+                </div>
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 border border-amber-300 text-amber-900 text-[11px] font-bold">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-700" />
+                  <span>300–850 PSL Scale</span>
+                </div>
+              </div>
+
+              <div className="w-full flex justify-center py-1">
+                {isUnrated ? (
+                  <div className="text-center p-4 border border-dashed border-stone-200 rounded-2xl bg-stone-50 w-full">
+                    <p className="text-xs text-stone-500">Record transactions to calculate credit score</p>
+                  </div>
+                ) : (
+                  <CreditGauge 
+                    score={alternativeCreditScore || 745} 
+                    maxScore={850} 
+                    minScore={300} 
+                    variant="editorial" 
+                    language={language}
+                    ratingLabel={language === 'hi' ? 'सक्षम एवं सुरक्षित (प्राइम बैंकेबल)' : 'Prime Bankable Assessment'}
+                  />
+                )}
+              </div>
+            </div>
+
+            {/* Center 3 Cols: Cashflow Underwriting Health */}
+            <div className="lg:col-span-3 flex flex-col justify-between space-y-3 lg:border-l lg:border-stone-100 lg:pl-6">
+              <div>
+                <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">Underwriting Assessment</span>
+                <div className="font-serif font-black text-xl text-[#0F3E2E] mt-0.5">
+                  {language === 'hi' ? 'सक्षम एवं सुरक्षित' : 'Prime Bankable'}
+                </div>
+                <p className="text-xs text-stone-600 mt-1 leading-relaxed">
+                  {language === 'hi'
+                    ? 'दैनिक बही-खाता एवं यूपीआई कैश-फ्लो के आधार पर बैंक-स्वीकृत रेटिंग।'
+                    : 'Bank-verified rating based on daily bahi-khata and digital UPI flow.'
+                  }
+                </p>
+              </div>
+
+              <div className="p-3 bg-[#FAF8F5] border border-stone-200/80 rounded-xl space-y-1">
+                <div className="text-[10px] font-bold text-stone-500 uppercase">Cash Flow Discipline</div>
+                <div className="text-xs font-bold text-stone-800">
+                  {language === 'hi' ? '121 सक्रिय दिन दर्ज • 87% उधार वसूली' : '121 Logged Days • 87% Recovery'}
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setIsBreakdownModalOpen(true)}
+                className="w-full px-3 py-2 rounded-xl border border-stone-200 bg-white hover:bg-stone-50 text-stone-800 text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <span>{language === 'hi' ? 'विस्तृत 4 स्तंभ देखें →' : 'View Pillar Breakdown →'}</span>
+              </button>
+            </div>
+
+            {/* Right 4 Cols: Collateral-Free Eligibility */}
+            <div className="lg:col-span-4 bg-[#FAF7F0] border border-[#EFE8DC] rounded-2xl p-5 flex flex-col justify-between space-y-3">
+              <div>
+                <div className="text-[10px] font-bold text-stone-500 uppercase tracking-wider">
+                  {language === 'hi' ? 'बिना बंधक कार्यशील पूंजी' : 'Collateral-Free Working Capital'}
+                </div>
+                <div className="font-serif font-black text-2xl text-[#0F3E2E] my-1">
+                  ₹50,000 – ₹5,00,000
+                </div>
+                <div className="inline-flex items-center gap-1.5 bg-white border border-emerald-300 text-emerald-800 px-2.5 py-0.5 rounded-full text-xs font-bold">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700" />
+                  <span>PM MUDRA Kishor & Shishu</span>
+                </div>
+              </div>
+
+              <p className="text-[11px] text-stone-600 leading-relaxed">
+                {language === 'hi'
+                  ? 'यह वैकल्पिक क्रेडिट स्कोर बैंकों को बिना पारंपरिक सिबिल के तुरंत मुद्रा ऋण स्वीकृति में सहायता करता है।'
+                  : 'This alternative credit score enables regional rural banks to sanction Mudra loans without a past credit card history.'
+                }
+              </p>
+
+              <button
+                type="button"
+                onClick={() => onNavigateTab?.('dossier')}
+                className="w-full bg-[#0F3E2E] hover:bg-[#165640] text-white text-xs font-bold py-2 px-3 rounded-xl btn-tactile text-center cursor-pointer"
+              >
+                {language === 'hi' ? 'प्रमाणित बैंक डॉसियर डाउनलोड करें →' : 'Download Certified Bank Dossier →'}
+              </button>
+            </div>
+
           </div>
         </div>
 
