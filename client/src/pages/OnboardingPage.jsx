@@ -168,6 +168,7 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
         owner_name: regOwnerName.trim() || regShopName.trim(),
         phone: cleanPhone,
         password: regPassword || '1234',
+        trade_type: regTradeType,
         trade_name: regTradeType,
         state: regState,
         district: regDistrict || 'Balrampur',

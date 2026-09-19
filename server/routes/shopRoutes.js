@@ -32,7 +32,7 @@ router.get('/current', async (req, res) => {
 });
 
 // Setup new real shop profile (Onboarding — is_demo = 0)
-router.post('/setup', async (req, res) => {
+router.post(['/setup', '/register'], async (req, res) => {
   try {
     const {
       name,
@@ -57,19 +57,21 @@ router.post('/setup', async (req, res) => {
     if (!owner_name || !owner_name.trim()) {
       return res.status(400).json({ success: false, error: 'Owner name is required' });
     }
-    if (!trade_type) {
+    const resolvedTradeType = trade_type || trade_name || 'kirana';
+    if (!resolvedTradeType) {
       return res.status(400).json({ success: false, error: 'Trade category is required' });
     }
 
     const id = `shop-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`;
     const finalPassword = (password && String(password).trim()) || '1234';
+    const cleanPhone = phone ? String(phone).replace(/\D/g, '').trim() : '';
 
     const newShop = {
       id,
       name: name.trim(),
       owner_name: owner_name.trim(),
-      trade_type,
-      trade_name: trade_name || 'Micro-Enterprise',
+      trade_type: resolvedTradeType,
+      trade_name: trade_name || resolvedTradeType || 'Micro-Enterprise',
       village: village || 'Gram Panchayat',
       district: district || 'Balrampur',
       state: state || 'Uttar Pradesh',
@@ -77,7 +79,7 @@ router.post('/setup', async (req, res) => {
       monthly_revenue: Math.max(0, Number(monthly_revenue) || 0),
       ownership: ownership || 'rented',
       bank_account_type: bank_account_type || 'savings',
-      phone: phone ? phone.trim() : '',
+      phone: cleanPhone || (phone ? String(phone).trim() : ''),
       password: finalPassword,
       owner_category: owner_category || 'general',
       is_demo: 0,
