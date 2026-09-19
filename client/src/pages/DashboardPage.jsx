@@ -20,6 +20,7 @@ import { safeStorage } from '../utils/safeStorage';
 import { TricolorBrush } from '../components/TricolorBrush';
 import { SurveyChecklistIcon } from '../components/SurveyChecklistIcon';
 import { getHeroContent } from '../utils/greetingUtils';
+import { getSiteText } from '../data/siteTranslations';
 
 export function DashboardPage({ 
   shop, 
@@ -120,48 +121,48 @@ export function DashboardPage({
   const bentoCards = [
     {
       id: 'sales',
-      title: language === 'hi' ? 'बिक्री' : 'Sales',
-      description: language === 'hi' ? 'अपनी बिक्री रिकॉर्ड देखें और प्रबंधित करें' : 'View and manage your sales records',
+      title: getSiteText(language, 'dashboard', 'cardSalesTitle', 'Sales'),
+      description: getSiteText(language, 'dashboard', 'cardSalesDesc', 'View and manage your sales records'),
       icon: ShoppingCart,
       iconBg: 'bg-[#E8F5E9] text-[#1B5E20] border-[#C8E6C9]',
       action: () => handleBentoClick('cashflow', { filter: 'income' })
     },
     {
       id: 'customers',
-      title: language === 'hi' ? 'ग्राहक' : 'Customers',
-      description: language === 'hi' ? 'ग्राहक खाते और उधार प्रबंधित करें' : 'Manage customer accounts and udhaar',
+      title: getSiteText(language, 'dashboard', 'cardCustomersTitle', 'Customers'),
+      description: getSiteText(language, 'dashboard', 'cardCustomersDesc', 'Manage customer accounts and udhaar'),
       icon: Users,
       iconBg: 'bg-[#FFF3E0] text-[#E65100] border-[#FFE0B2]',
       action: () => handleBentoClick('udhaar')
     },
     {
       id: 'inventory',
-      title: language === 'hi' ? 'स्टॉक' : 'Inventory',
-      description: language === 'hi' ? 'स्टॉक ट्रैक करें और कम-स्टॉक अलर्ट प्राप्त करें' : 'Track stock and get low-stock alerts',
+      title: getSiteText(language, 'dashboard', 'cardInventoryTitle', 'Inventory'),
+      description: getSiteText(language, 'dashboard', 'cardInventoryDesc', 'Track stock and get low-stock alerts'),
       icon: Package,
       iconBg: 'bg-[#E1F5FE] text-[#0277BD] border-[#B3E5FC]',
       action: () => handleBentoClick('wholesale')
     },
     {
       id: 'udhaar',
-      title: language === 'hi' ? 'उधार' : 'Udhaar',
-      description: language === 'hi' ? 'लंबित और वसूल किए गए भुगतान प्रबंधित करें' : 'Manage pending and recovered payments',
+      title: getSiteText(language, 'dashboard', 'cardUdhaarTitle', 'Udhaar'),
+      description: getSiteText(language, 'dashboard', 'cardUdhaarDesc', 'Manage pending and recovered payments'),
       icon: IndianRupee,
       iconBg: 'bg-[#FBE9E7] text-[#D84315] border-[#FFCCBC]',
       action: () => handleBentoClick('udhaar')
     },
     {
       id: 'purchases',
-      title: language === 'hi' ? 'खरीद' : 'Purchases',
-      description: language === 'hi' ? 'अपने खरीद रिकॉर्ड देखें' : 'View your purchase records',
+      title: getSiteText(language, 'dashboard', 'cardPurchasesTitle', 'Purchases'),
+      description: getSiteText(language, 'dashboard', 'cardPurchasesDesc', 'View your purchase records'),
       icon: FileText,
       iconBg: 'bg-[#EDE7F6] text-[#4527A0] border-[#D1C4E9]',
       action: () => handleBentoClick('cashflow', { filter: 'expense' })
     },
     {
       id: 'expenses',
-      title: language === 'hi' ? 'खर्च' : 'Expenses',
-      description: language === 'hi' ? 'अपने व्यावसायिक खर्च ट्रैक करें' : 'Track your business expenses',
+      title: getSiteText(language, 'dashboard', 'cardExpensesTitle', 'Expenses'),
+      description: getSiteText(language, 'dashboard', 'cardExpensesDesc', 'Track your business expenses'),
       icon: BarChart3,
       iconBg: 'bg-[#E0F2F1] text-[#00695C] border-[#B2DFDB]',
       action: () => handleBentoClick('cashflow', { filter: 'expense' })
@@ -217,7 +218,7 @@ export function DashboardPage({
               {/* Authentic Motivational Calligraphic Strip */}
               <div className="px-4 py-2.5 bg-[#FAF7F2]/95 border-t border-[#EBE4D8] flex items-center justify-between flex-wrap gap-2">
                 <span className="font-serif italic font-bold text-xs sm:text-sm text-[#0F3E2E] tracking-wide">
-                  "छोटे व्यापारी, बड़ी सोच रखते हैं।"
+                  {getSiteText(language, 'dashboard', 'heroQuote', '"Small accounts make the big picture."')}
                 </span>
                 <TricolorBrush className="w-20 h-2.5 shrink-0" />
               </div>
@@ -237,20 +238,17 @@ export function DashboardPage({
           <div className="flex items-center justify-between flex-wrap gap-2">
             <div>
               <h2 className="font-serif font-bold text-lg sm:text-xl text-stone-900 leading-tight">
-                {language === 'hi' ? 'आपकी व्यावसायिक गतिविधि' : 'Your Business Activity'}
+                {getSiteText(language, 'dashboard', 'activityTitle', 'Your Business Activity')}
               </h2>
               <p className="text-xs text-stone-500 mt-0.5">
-                {language === 'hi' 
-                  ? 'अपने रिकॉर्ड देखने और प्रबंधित करने के लिए एक अनुभाग चुनें।' 
-                  : 'Choose a section to view and manage your records.'
-                }
+                {getSiteText(language, 'dashboard', 'activitySub', 'Choose a section to view and manage your records.')}
               </p>
             </div>
 
             {/* Date Picker Pill */}
             <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-stone-200/90 text-xs font-semibold text-stone-700 shadow-2xs">
               <Calendar className="w-3.5 h-3.5 text-stone-500" />
-              <span>{language === 'hi' ? `आज, ${currentDateFormatted}` : `Today, ${currentDateFormatted}`}</span>
+              <span>{getSiteText(language, 'dashboard', 'today', 'Today')}, {currentDateFormatted}</span>
             </div>
           </div>
 
@@ -298,11 +296,11 @@ export function DashboardPage({
             {/* Top Row: Title & 2 min Badge */}
             <div className="flex items-center justify-between">
               <span className="font-serif font-bold text-sm text-stone-900">
-                {language === 'hi' ? 'त्वरित सर्वेक्षण' : 'Quick Survey'}
+                {getSiteText(language, 'dashboard', 'surveyTitle', 'Quick Survey')}
               </span>
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-stone-100 text-stone-600 text-[10px] font-semibold border border-stone-200/60">
                 <Clock className="w-2.5 h-2.5" />
-                <span>2 min</span>
+                <span>{getSiteText(language, 'dashboard', 'surveyTime', '2 min')}</span>
               </span>
             </div>
 
@@ -314,13 +312,10 @@ export function DashboardPage({
             {/* Content Copy */}
             <div className="text-center space-y-1">
               <h3 className="font-serif font-bold text-sm sm:text-base text-stone-900 leading-tight">
-                {language === 'hi' ? 'आपकी बेहतर सेवा के लिए' : 'Help us serve you better'}
+                {getSiteText(language, 'dashboard', 'surveyHeading', 'Help us serve you better')}
               </h3>
               <p className="text-[11px] text-stone-500 leading-relaxed max-w-[240px] mx-auto">
-                {language === 'hi'
-                  ? 'अपनी प्रतिक्रिया साझा करें और ग्रामीण व्यापार के लिए व्यापार सेतु को बेहतर बनाएं।'
-                  : 'Share your feedback and help improve Vyapaar Setu for rural businesses.'
-                }
+                {getSiteText(language, 'dashboard', 'surveySub', 'Share your feedback and help improve Saakh Setu for rural businesses.')}
               </p>
             </div>
 
@@ -330,7 +325,7 @@ export function DashboardPage({
               onClick={() => setSurveyOpen(true)}
               className="mt-4 w-full py-2.5 px-4 rounded-xl bg-[#0F3E2E] hover:bg-[#165640] text-white font-bold text-xs flex items-center justify-center gap-1.5 btn-tactile cursor-pointer"
             >
-              <span>{language === 'hi' ? 'सर्वेक्षण में भाग लें' : 'Take Survey'}</span>
+              <span>{getSiteText(language, 'dashboard', 'surveyCta', 'Take Survey')}</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -345,16 +340,10 @@ export function DashboardPage({
           {/* Left Text & CTA */}
           <div className="lg:col-span-6 space-y-2 z-10">
             <h2 className="font-serif font-bold text-xl sm:text-2xl text-stone-900 leading-tight">
-              {language === 'hi' 
-                ? 'ग्रामीण भारत के साथ मिलकर आगे बढ़ रहे हैं' 
-                : 'Growing Together With Rural India'
-              }
+              {getSiteText(language, 'dashboard', 'growingHeading', 'Growing Together With Rural India')}
             </h2>
             <p className="text-xs sm:text-sm text-stone-600 max-w-md leading-relaxed">
-              {language === 'hi'
-                ? 'नई सरकारी योजनाओं की खोज करें, अपना बैंक दस्तावेज़ तैयार करें और अपने व्यवसाय के लिए नए अवसर अनलॉक करें।'
-                : 'Discover new schemes, build your bank dossier, and unlock more opportunities for your business.'
-              }
+              {getSiteText(language, 'dashboard', 'growingSub', 'Discover new schemes, build your bank dossier, and unlock more opportunities for your business.')}
             </p>
 
             <div className="pt-2">
@@ -363,7 +352,7 @@ export function DashboardPage({
                 onClick={() => onNavigateTab('schemes')}
                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#0F3E2E] hover:bg-[#165640] text-white font-bold text-xs sm:text-sm btn-tactile cursor-pointer"
               >
-                <span>{language === 'hi' ? 'अवसर खोजें' : 'Explore Opportunities'}</span>
+                <span>{getSiteText(language, 'dashboard', 'growingCta', 'Explore Opportunities')}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </div>
@@ -380,7 +369,7 @@ export function DashboardPage({
               {/* Cultural Pride Caption Strip */}
               <div className="px-4 py-2 bg-[#FAF7F2]/95 border-t border-[#EAE3D6] flex items-center justify-between">
                 <span className="font-serif font-bold text-xs text-[#0F3E2E] tracking-wider">
-                  गाँव से गौरव तक
+                  {getSiteText(language, 'dashboard', 'growingBadge', 'गाँव से गौरव तक')}
                 </span>
                 <TricolorBrush className="w-16 h-2 shrink-0" />
               </div>
@@ -393,7 +382,7 @@ export function DashboardPage({
       {/* 4. CLEAN INSTITUTIONAL FOOTER */}
       <footer className="pt-4 pb-12 border-t border-stone-200/70 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-stone-500">
         <div className="flex items-center gap-2 text-center sm:text-left flex-wrap">
-          <span className="font-bold text-stone-800">© 2026 Vyapaar Setu</span>
+          <span className="font-bold text-stone-800">© 2026 Saakh Setu</span>
           <span className="text-stone-300">•</span>
           <span>Bridging Businesses to Credit</span>
           <span className="text-stone-300">•</span>
@@ -403,14 +392,14 @@ export function DashboardPage({
         <div className="flex items-center gap-4 text-[11px] font-medium text-stone-600">
           <button 
             type="button" 
-            onClick={() => alert('Vyapaar Setu adheres to strict RBI Priority Sector Lending borrower data privacy principles. All merchant records remain confidential.')}
+            onClick={() => alert('Saakh Setu adheres to strict RBI Priority Sector Lending borrower data privacy principles. All merchant records remain confidential.')}
             className="hover:text-stone-900 transition-colors cursor-pointer"
           >
             Privacy
           </button>
           <button 
             type="button" 
-            onClick={() => alert('Vyapaar Setu MSME Terms: Governed under RBI PSL norms and MSMED Act framework for Indian micro-enterprises.')}
+            onClick={() => alert('Saakh Setu MSME Terms: Governed under RBI PSL norms and MSMED Act framework for Indian micro-enterprises.')}
             className="hover:text-stone-900 transition-colors cursor-pointer"
           >
             Terms

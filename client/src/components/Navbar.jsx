@@ -432,11 +432,13 @@ export function Navbar({
             >
               <Menu className="w-5 h-5" />
             </button>
-            <span className="font-serif font-black text-sm text-[#0F3E2E]">व्यापार सेतु</span>
+            <span className="font-serif font-black text-sm text-[#0F3E2E]">
+              {getSiteText(language, 'brand', 'name', 'साख सेतु')}
+            </span>
           </div>
 
           {/* Center: Primary Navigation Tabs & Floating Interactive Mega-Menu */}
-          <div ref={navRef} className="hidden xl:flex items-center justify-center flex-1 min-w-0 overflow-x-auto no-scrollbar mx-2 relative">
+          <div ref={navRef} className="hidden md:flex items-center justify-center flex-1 min-w-0 overflow-x-auto no-scrollbar mx-1 sm:mx-2 relative">
             <nav className="flex items-center gap-1 xl:gap-1.5 flex-nowrap shrink-0 py-1">
               {navItems.map(item => {
                 const Icon = item.icon;
@@ -454,7 +456,7 @@ export function Navbar({
                     onMouseEnter={() => handleTabMouseEnter(item.id)}
                     onMouseLeave={handleTabMouseLeave}
                     className={`
-                      relative flex items-center gap-1.5 xl:gap-2 px-2.5 xl:px-3 py-1.5 xl:py-2 text-xs transition-all duration-150 cursor-pointer select-none rounded-xl whitespace-nowrap shrink-0
+                      relative flex items-center gap-1 xl:gap-1.5 px-2 xl:px-2.5 py-1.5 text-xs transition-all duration-150 cursor-pointer select-none rounded-xl whitespace-nowrap shrink-0
                       ${isActive 
                         ? 'text-[#0F3E2E] font-bold bg-[#0F3E2E]/6 shadow-2xs' 
                         : isHovered
@@ -468,7 +470,7 @@ export function Navbar({
 
                     {/* Subtle, Lightweight Active Underline Indicator */}
                     {isActive && (
-                      <span className="absolute bottom-1 left-2.5 right-2.5 xl:left-3 xl:right-3 h-[2px] bg-[#0F3E2E] rounded-full transition-all" />
+                      <span className="absolute bottom-1 left-2 right-2 xl:left-2.5 xl:right-2.5 h-[2px] bg-[#0F3E2E] rounded-full transition-all" />
                     )}
                   </button>
                 );
@@ -496,7 +498,7 @@ export function Navbar({
                             {activeHoverItem.menuTitle}
                           </span>
                           <span className="text-[10px] font-bold text-[#0F3E2E] bg-[#E8F0EA] px-2 py-0.5 rounded-full">
-                            Vyapaar Setu
+                            Saakh Setu
                           </span>
                         </div>
                         <div className="text-xs text-stone-700 font-medium">

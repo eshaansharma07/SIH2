@@ -127,8 +127,12 @@ export function Sidebar({
                 <circle cx="22" cy="7" r="2.2" fill="currentColor" />
               </svg>
               <div className="flex flex-col leading-none">
-                <span className="font-serif font-black text-base text-[#0F3E2E] tracking-tight">व्यापार सेतु</span>
-                <span className="text-[10px] font-sans font-bold text-[#0F3E2E]/80 tracking-wider">Vyapaar Setu</span>
+                <span className="font-serif font-black text-base text-[#0F3E2E] tracking-tight">
+                  {getSiteText(language, 'brand', 'name', 'साख सेतु')}
+                </span>
+                <span className="text-[10px] font-sans font-bold text-[#0F3E2E]/80 tracking-wider">
+                  Saakh Setu
+                </span>
               </div>
             </div>
 
