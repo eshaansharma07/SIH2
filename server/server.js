@@ -23,7 +23,7 @@ const PORT = process.env.PORT || 3001;
 app.use(cors({
   origin: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Cache-Control', 'Pragma']
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cache-Control', 'Pragma', 'x-admin-access']
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

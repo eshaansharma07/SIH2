@@ -293,6 +293,33 @@ export function BankDossierPage({ shop, isDemoMode, onNavigateTab, onBack }) {
   return (
     <div className="space-y-6 pb-12 animate-fadeIn max-w-[1360px] mx-auto text-stone-900">
       
+      {/* Institutional Officer Context Banner */}
+      {typeof sessionStorage !== 'undefined' && sessionStorage.getItem('saakhsetu_admin_unlocked') === 'true' && (
+        <div className="bg-[#FAF7F2] border border-[#E7DFD4] rounded-2xl p-3 sm:p-4 shadow-sm flex items-center justify-between gap-3 animate-in fade-in">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <span className="p-1.5 rounded-lg bg-[#123B2B] text-amber-300 shrink-0">
+              <ShieldCheck className="w-4 h-4" />
+            </span>
+            <div className="min-w-0">
+              <div className="text-xs font-bold text-stone-900 truncate">
+                {language === 'hi' ? 'संस्थागत ऋण समीक्षा दृश्य (Institutional Underwriting Mode)' : 'Institutional Underwriting Mode'}
+              </div>
+              <div className="text-[11px] text-stone-500 truncate">
+                {language === 'hi' ? `वर्तमान समीक्षा: ${shopName}` : `Inspecting Merchant: ${shopName}`}
+              </div>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => onNavigateTab ? onNavigateTab('admin') : (onBack ? onBack() : null)}
+            className="px-3 py-1.5 bg-[#123B2B] hover:bg-[#0F3224] text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shrink-0 shadow-sm"
+          >
+            <span>{language === 'hi' ? '← कमान केंद्र पर लौटें' : '← Back to Command Center'}</span>
+          </button>
+        </div>
+      )}
+
       {/* 1. HERO SECTION (EDITORIAL, AIRY, MATCHING APPROVED REFERENCE) */}
       <section className="relative overflow-hidden pt-2 pb-2">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 lg:gap-8">

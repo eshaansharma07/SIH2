@@ -23,6 +23,12 @@ async function request(endpoint, options = {}) {
     defaultHeaders['Authorization'] = `Bearer ${authToken}`;
   }
 
+  try {
+    if (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('saakhsetu_admin_unlocked') === 'true') {
+      defaultHeaders['x-admin-access'] = '7788';
+    }
+  } catch (_) {}
+
   const fetchOptions = {
     ...options,
     cache: 'no-store',
