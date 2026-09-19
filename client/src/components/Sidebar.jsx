@@ -74,8 +74,11 @@ export function Sidebar({
     if (item.action === 'wholesale') {
       onOpenWholesale?.();
     } else if (item.subTab === 'udhaar') {
+      try { sessionStorage.setItem('saakhsetu_cashflow_tab', 'udhaar'); } catch (_) {}
       setActiveTab('cashflow');
-      window.dispatchEvent(new CustomEvent('saakhsetu:switch-tab', { detail: { tab: 'udhaar' } }));
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('saakhsetu:switch-tab', { detail: { tab: 'udhaar' } }));
+      }, 50);
     } else {
       setActiveTab(item.id);
     }

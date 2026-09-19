@@ -68,12 +68,6 @@ export default function App() {
   const [keypadInitialType, setKeypadInitialType] = useState('income');
   const [keypadInitialCategory, setKeypadInitialCategory] = useState(null);
 
-  const handleOpenKeypad = (type = 'income', category = null) => {
-    setKeypadInitialType(type);
-    setKeypadInitialCategory(category);
-    setKeypadOpen(true);
-  };
-
   const [voiceModalOpen, setVoiceModalOpen] = useState(false);
   const [wholesaleModalOpen, setWholesaleModalOpen] = useState(false);
   const [demoTourOpen, setDemoTourOpen] = useState(false);
@@ -83,7 +77,29 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [latestTx, setLatestTx] = useState(null);
 
+  const handleOpenKeypad = (type = 'income', category = null) => {
+    const validTypes = ['income', 'expense', 'udhaar_given', 'udhaar_repaid'];
+    const safeType = typeof type === 'string' && validTypes.includes(type) ? type : 'income';
+    const safeCategory = typeof category === 'string' ? category : null;
+    setKeypadInitialType(safeType);
+    setKeypadInitialCategory(safeCategory);
+    setKeypadOpen(true);
+  };
+
   const changeTab = (tab) => {
+    if (tab === 'wholesale') {
+      setWholesaleModalOpen(true);
+      return;
+    }
+    if (tab === 'udhaar') {
+      try { sessionStorage.setItem('saakhsetu_cashflow_tab', 'udhaar'); } catch (_) {}
+      setActiveTab('cashflow');
+      safeStorage.setItem('vyapaar_active_tab', 'cashflow');
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('saakhsetu:switch-tab', { detail: { tab: 'udhaar' } }));
+      }, 50);
+      return;
+    }
     setActiveTab(tab);
     if (tab && tab !== 'onboarding') {
       safeStorage.setItem('vyapaar_active_tab', tab);

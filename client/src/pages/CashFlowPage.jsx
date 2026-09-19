@@ -139,6 +139,39 @@ export function CashFlowPage({
 
   // Custom event listeners for external navigation (from Overview Bento cards or Sidebar)
   useEffect(() => {
+    try {
+      const pendingTab = sessionStorage.getItem('saakhsetu_cashflow_tab');
+      if (pendingTab) {
+        sessionStorage.removeItem('saakhsetu_cashflow_tab');
+        if (pendingTab === 'sales') {
+          setSelectedCategoryTab('sales');
+          setTypeFilter('income');
+        } else if (pendingTab === 'purchases') {
+          setSelectedCategoryTab('purchases');
+          setTypeFilter('expense');
+        } else if (pendingTab === 'expenses') {
+          setSelectedCategoryTab('expenses');
+          setTypeFilter('expense');
+        } else if (pendingTab === 'udhaar') {
+          setSelectedCategoryTab('udhaar');
+          setTypeFilter('all');
+        } else if (pendingTab === 'customers') {
+          setSelectedCategoryTab('customers');
+        }
+      }
+      const pendingFilter = sessionStorage.getItem('saakhsetu_cashflow_filter');
+      if (pendingFilter) {
+        sessionStorage.removeItem('saakhsetu_cashflow_filter');
+        if (pendingFilter === 'income') {
+          setSelectedCategoryTab('sales');
+          setTypeFilter('income');
+        } else if (pendingFilter === 'expense') {
+          setSelectedCategoryTab('expenses');
+          setTypeFilter('expense');
+        }
+      }
+    } catch (_) {}
+
     const handleSwitch = (e) => {
       const target = e.detail?.tab || 'all';
       try { sessionStorage.setItem('saakhsetu_cashflow_tab', target); } catch (_) {}
@@ -1276,7 +1309,7 @@ export function CashFlowPage({
               {/* Primary CTA: + Record Transaction */}
               <button
                 type="button"
-                onClick={onOpenKeypad}
+                onClick={() => onOpenKeypad?.('income')}
                 className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#0F3E2E] hover:bg-[#165640] text-white font-bold text-xs shadow-2xs hover:shadow-md transition-all cursor-pointer shrink-0"
               >
                 <Plus className="w-4 h-4" />
@@ -1685,7 +1718,7 @@ export function CashFlowPage({
               {/* Record Sale */}
               <button
                 type="button"
-                onClick={onOpenKeypad}
+                onClick={() => onOpenKeypad?.('income')}
                 className="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-[#FAF8F5] border border-transparent hover:border-stone-200 text-xs font-medium text-stone-800 transition-all group cursor-pointer"
               >
                 <div className="flex items-center gap-2.5">
@@ -1700,7 +1733,7 @@ export function CashFlowPage({
               {/* Record Purchase */}
               <button
                 type="button"
-                onClick={onOpenKeypad}
+                onClick={() => onOpenKeypad?.('expense', 'Stock Purchase / माल खरीद')}
                 className="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-[#FAF8F5] border border-transparent hover:border-stone-200 text-xs font-medium text-stone-800 transition-all group cursor-pointer"
               >
                 <div className="flex items-center gap-2.5">
@@ -1715,7 +1748,7 @@ export function CashFlowPage({
               {/* Add Expense */}
               <button
                 type="button"
-                onClick={onOpenKeypad}
+                onClick={() => onOpenKeypad?.('expense', 'Operational Expense / खर्च')}
                 className="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-[#FAF8F5] border border-transparent hover:border-stone-200 text-xs font-medium text-stone-800 transition-all group cursor-pointer"
               >
                 <div className="flex items-center gap-2.5">
@@ -2119,7 +2152,7 @@ export function CashFlowPage({
               <button
                 type="button"
                 onClick={() => {
-                  onOpenKeypad();
+                  onOpenKeypad?.('income');
                 }}
                 className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#0F3E2E] hover:bg-[#165640] text-white font-bold text-xs shadow-2xs hover:shadow-md transition-all cursor-pointer"
               >

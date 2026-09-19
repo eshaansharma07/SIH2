@@ -15,6 +15,13 @@ import {
   setCachedCustomers 
 } from '../utils/customerMatcher';
 
+const VALID_KEYPAD_TYPES = ['income', 'expense', 'udhaar_given', 'udhaar_repaid'];
+const resolveSafeKeypadType = (t) => (typeof t === 'string' && VALID_KEYPAD_TYPES.includes(t) ? t : 'income');
+const resolveSafeKeypadCategory = (c, t) => {
+  if (typeof c === 'string' && c.trim()) return c;
+  return t === 'expense' ? 'Stock Purchase / माल खरीद' : 'Daily Counter Sales';
+};
+
 export function NumericKeypadModal({ 
   isOpen, 
   onClose, 
@@ -25,10 +32,13 @@ export function NumericKeypadModal({
   initialCategory = null
 }) {
   const { t, language } = useTranslation();
+  const safeInitType = resolveSafeKeypadType(initialType);
+  const safeInitCat = resolveSafeKeypadCategory(initialCategory, safeInitType);
+
   const [amountStr, setAmountStr] = useState('');
-  const [type, setType] = useState(initialType || 'income'); // 'income', 'expense', 'udhaar_given', 'udhaar_repaid'
+  const [type, setType] = useState(safeInitType); // 'income', 'expense', 'udhaar_given', 'udhaar_repaid'
   const [paymentMode, setPaymentMode] = useState('cash'); // 'cash', 'upi', 'khata'
-  const [category, setCategory] = useState(initialCategory || 'Daily Counter Sales');
+  const [category, setCategory] = useState(safeInitCat);
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [customerList, setCustomerList] = useState(() => getCachedCustomers(shopId));
@@ -82,9 +92,11 @@ export function NumericKeypadModal({
   // Reset/sync type and category when modal opens
   useEffect(() => {
     if (isOpen) {
-      setType(initialType || 'income');
+      const resolvedType = resolveSafeKeypadType(initialType);
+      const resolvedCat = resolveSafeKeypadCategory(initialCategory, resolvedType);
+      setType(resolvedType);
       setPaymentMode('cash');
-      setCategory(initialCategory || (initialType === 'expense' ? 'Stock Purchase / माल खरीद' : 'Daily Counter Sales'));
+      setCategory(resolvedCat);
       setAmountStr('');
       setCustomerName('');
       setCustomerPhone('');

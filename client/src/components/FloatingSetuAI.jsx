@@ -146,7 +146,7 @@ export function FloatingSetuAI({
       label: language === 'hi' ? 'नई बिक्री' : 'Record Sale',
       icon: PlusCircle,
       highlight: true,
-      action: () => { onOpenKeypad?.(); setIsOpen(false); }
+      action: () => { onOpenKeypad?.('income'); setIsOpen(false); }
     },
     {
       id: 'credit',

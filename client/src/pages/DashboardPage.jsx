@@ -44,12 +44,20 @@ export function DashboardPage({
     if (target === 'wholesale') {
       onOpenWholesale?.();
     } else if (target === 'udhaar') {
+      try { sessionStorage.setItem('saakhsetu_cashflow_tab', 'udhaar'); } catch (_) {}
       onNavigateTab?.('cashflow');
-      window.dispatchEvent(new CustomEvent('saakhsetu:switch-tab', { detail: { tab: 'udhaar' } }));
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('saakhsetu:switch-tab', { detail: { tab: 'udhaar' } }));
+      }, 50);
     } else if (target === 'cashflow') {
+      if (options.filter) {
+        try { sessionStorage.setItem('saakhsetu_cashflow_filter', options.filter); } catch (_) {}
+      }
       onNavigateTab?.('cashflow');
       if (options.filter) {
-        window.dispatchEvent(new CustomEvent('saakhsetu:filter-tx', { detail: { filter: options.filter } }));
+        setTimeout(() => {
+          window.dispatchEvent(new CustomEvent('saakhsetu:filter-tx', { detail: { filter: options.filter } }));
+        }, 50);
       }
     } else {
       onNavigateTab?.(target);
@@ -188,7 +196,7 @@ export function DashboardPage({
             <div className="pt-2">
               <button
                 type="button"
-                onClick={onOpenKeypad}
+                onClick={() => onOpenKeypad?.('income')}
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#0F3E2E] hover:bg-[#165640] text-white font-bold text-xs sm:text-sm btn-tactile cursor-pointer"
               >
                 <span>{language === 'hi' ? 'बिक्री दर्ज करें' : 'Record Sale'}</span>
