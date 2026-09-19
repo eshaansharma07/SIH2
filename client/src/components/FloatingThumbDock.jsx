@@ -121,7 +121,7 @@ export function FloatingThumbDock({
         <div className="flex flex-col items-center justify-center px-1 shrink-0">
           <button
             type="button"
-            onClick={onOpenKeypad}
+            onClick={() => onOpenKeypad?.('income')}
             aria-label="Record transaction"
             className="flex items-center justify-center w-11 h-11 rounded-full bg-gradient-to-tr from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-white shadow-lg shadow-amber-600/30 ring-4 ring-[#FAF8F5] active:scale-90 transition-all cursor-pointer -mt-3.5"
           >

@@ -25,10 +25,15 @@ export function NumericKeypadModal({
   initialCategory = null
 }) {
   const { t, language } = useTranslation();
+  const resolveSafeType = (t) => {
+    const valid = ['income', 'expense', 'udhaar_given', 'udhaar_repaid'];
+    return (typeof t === 'string' && valid.includes(t)) ? t : 'income';
+  };
   const [amountStr, setAmountStr] = useState('');
-  const [type, setType] = useState(initialType || 'income'); // 'income', 'expense', 'udhaar_given', 'udhaar_repaid'
+  const [type, setType] = useState(() => resolveSafeType(initialType)); // 'income', 'expense', 'udhaar_given', 'udhaar_repaid'
+  const isUdhaar = String(type || '').startsWith('udhaar');
   const [paymentMode, setPaymentMode] = useState('cash'); // 'cash', 'upi', 'khata'
-  const [category, setCategory] = useState(initialCategory || 'Daily Counter Sales');
+  const [category, setCategory] = useState(typeof initialCategory === 'string' ? initialCategory : 'Daily Counter Sales');
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [customerList, setCustomerList] = useState(() => getCachedCustomers(shopId));
@@ -82,9 +87,10 @@ export function NumericKeypadModal({
   // Reset/sync type and category when modal opens
   useEffect(() => {
     if (isOpen) {
-      setType(initialType || 'income');
+      const validInitial = resolveSafeType(initialType);
+      setType(validInitial);
       setPaymentMode('cash');
-      setCategory(initialCategory || (initialType === 'expense' ? 'Stock Purchase / माल खरीद' : 'Daily Counter Sales'));
+      setCategory(typeof initialCategory === 'string' ? initialCategory : (validInitial === 'expense' ? 'Stock Purchase / माल खरीद' : 'Daily Counter Sales'));
       setAmountStr('');
       setCustomerName('');
       setCustomerPhone('');
@@ -248,7 +254,7 @@ export function NumericKeypadModal({
       type === 'udhaar_repaid' ? 'Partial Cash Clearing' : 
       'Monthly Grocery Khata'
     );
-    const assignedMode = type.startsWith('udhaar') ? 'khata' : paymentMode;
+    const assignedMode = isUdhaar ? 'khata' : paymentMode;
     const nowIso = new Date().toISOString();
 
     const localTx = {
@@ -413,7 +419,7 @@ export function NumericKeypadModal({
               type="button"
               onClick={() => { setType('udhaar_given'); setCategory('Monthly Grocery Khata'); }}
               className={`py-2 text-xs font-extrabold rounded-lg transition-all cursor-pointer ${
-                type.startsWith('udhaar') 
+                isUdhaar 
                   ? 'bg-amber-500 text-white shadow-2xs' 
                   : 'text-stone-600 hover:text-stone-900'
               }`}
@@ -456,7 +462,7 @@ export function NumericKeypadModal({
           </div>
 
           {/* 4. Customer Name, Phone & Given/Repaid Sub-Toggle for Udhaar */}
-          {type.startsWith('udhaar') ? (
+          {isUdhaar ? (
             <div className="space-y-2 p-2.5 bg-[#FAF8F5]/70 border border-stone-300 rounded-xl">
               {/* Udhaar Sub-Toggle: Given vs Repaid */}
               <div className="grid grid-cols-2 gap-1 p-1 bg-stone-100/80 rounded-lg">

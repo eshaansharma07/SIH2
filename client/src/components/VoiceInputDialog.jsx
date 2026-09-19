@@ -76,6 +76,7 @@ export function VoiceInputDialog({
   const stepRef = useRef(step);
   stepRef.current = step;
 
+  const isUdhaar = String(type || '').startsWith('udhaar');
   const voiceSuggestions = searchCustomerSuggestions(customerName, customerList, 5);
 
   // Load shop customers if not passed (cached + network refresh)
@@ -288,7 +289,7 @@ export function VoiceInputDialog({
       const detectedType = parseTransactionType(rawText);
       setType(detectedType);
 
-      if (detectedType.startsWith('udhaar')) {
+      if (String(detectedType || '').startsWith('udhaar')) {
         setStep('customer');
         promptForStep('customer', { type: detectedType });
       } else {
@@ -402,9 +403,9 @@ export function VoiceInputDialog({
       shopId,
       amount: numAmount,
       type,
-      payment_mode: type.startsWith('udhaar') ? 'khata' : 'cash',
+      payment_mode: isUdhaar ? 'khata' : 'cash',
       category: category || (type === 'income' ? 'Daily Counter Sales' : type === 'expense' ? 'Stock Purchase' : 'Udhaar'),
-      customer_vendor_name: String(customerName || '').trim() || (type.startsWith('udhaar') ? 'Village Customer' : ''),
+      customer_vendor_name: String(customerName || '').trim() || (isUdhaar ? 'Village Customer' : ''),
       customer_phone: safePhone,
       customerPhone: safePhone,
       notes: `Voice Conversational Entry: "${amount} ${type}"`,
@@ -949,7 +950,7 @@ export function VoiceInputDialog({
                   </button>
                 </div>
 
-                {type.startsWith('udhaar') && (
+                {isUdhaar && (
                   <>
                     <div className="flex items-center justify-between pb-2 border-b border-paper-200">
                       <span className="text-xs font-extrabold text-indigoRural-600">

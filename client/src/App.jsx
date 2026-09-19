@@ -70,8 +70,11 @@ export default function App() {
   const [keypadInitialCategory, setKeypadInitialCategory] = useState(null);
 
   const handleOpenKeypad = (type = 'income', category = null) => {
-    setKeypadInitialType(type);
-    setKeypadInitialCategory(category);
+    const validTypes = ['income', 'expense', 'udhaar_given', 'udhaar_repaid'];
+    const safeType = (typeof type === 'string' && validTypes.includes(type)) ? type : 'income';
+    const safeCategory = typeof category === 'string' ? category : null;
+    setKeypadInitialType(safeType);
+    setKeypadInitialCategory(safeCategory);
     setKeypadOpen(true);
   };
 
@@ -642,7 +645,7 @@ export default function App() {
         <FloatingThumbDock 
           activeTab={activeTab}
           setActiveTab={changeTab}
-          onOpenKeypad={() => setKeypadOpen(true)}
+          onOpenKeypad={() => handleOpenKeypad('income')}
           creditScore={creditData?.totalScore || null}
         />
       )}

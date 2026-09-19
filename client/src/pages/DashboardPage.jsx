@@ -188,7 +188,7 @@ export function DashboardPage({
             <div className="pt-2">
               <button
                 type="button"
-                onClick={onOpenKeypad}
+                onClick={() => onOpenKeypad?.('income')}
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#0F3E2E] hover:bg-[#165640] text-white font-bold text-xs sm:text-sm shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer transform hover:-translate-y-0.5 active:translate-y-0"
               >
                 <span>{language === 'hi' ? 'बिक्री दर्ज करें' : 'Record Sale'}</span>
