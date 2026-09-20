@@ -2865,7 +2865,7 @@ function ThermalReceiptModal({ shop, invoice, language, onClose }) {
                 <div>
                   <div className="font-bold text-stone-800">{item.description || item.name}</div>
                   <div className="text-[10px] text-stone-500">
-                    {item.quantity} x ₹{item.unit_price} (GST {item.gst_rate}%)
+                    {item.quantity} x ₹{Number(item.unit_price ?? item.unitPrice ?? (Number(item.total) / (Number(item.quantity) || 1))).toFixed(2)} ({(Number(item.gst_rate ?? item.gstRate ?? 0)) > 0 ? `GST ${item.gst_rate ?? item.gstRate}%` : '0% GST Exempt'})
                   </div>
                 </div>
                 <div className="font-bold text-[#1B2A4A]">
@@ -2884,23 +2884,44 @@ function ThermalReceiptModal({ shop, invoice, language, onClose }) {
         <div className="space-y-1 text-xs font-mono border-b border-dashed border-stone-300 pb-3">
           <div className="flex justify-between text-stone-600">
             <span>Taxable Subtotal:</span>
-            <span>₹{Number(invoice.taxable_amount || invoice.subtotal).toFixed(2)}</span>
+            <span>₹{Number(invoice.taxable_amount || invoice.subtotal || 0).toFixed(2)}</span>
           </div>
           {!isInterstate ? (
             <>
-              <div className="flex justify-between text-stone-600">
+              <div className="flex justify-between text-stone-600 items-center">
                 <span>CGST:</span>
-                <span>₹{Number(invoice.cgst || 0).toFixed(2)}</span>
+                <span className="flex items-center gap-1.5">
+                  <span>₹{Number(invoice.cgst || 0).toFixed(2)}</span>
+                  {Number(invoice.cgst || 0) === 0 && (
+                    <span className="text-[9px] font-sans font-bold bg-emerald-50 text-emerald-700 px-1.5 py-0.2 rounded border border-emerald-200">
+                      Exempt (0%)
+                    </span>
+                  )}
+                </span>
               </div>
-              <div className="flex justify-between text-stone-600">
+              <div className="flex justify-between text-stone-600 items-center">
                 <span>SGST:</span>
-                <span>₹{Number(invoice.sgst || 0).toFixed(2)}</span>
+                <span className="flex items-center gap-1.5">
+                  <span>₹{Number(invoice.sgst || 0).toFixed(2)}</span>
+                  {Number(invoice.sgst || 0) === 0 && (
+                    <span className="text-[9px] font-sans font-bold bg-emerald-50 text-emerald-700 px-1.5 py-0.2 rounded border border-emerald-200">
+                      Exempt (0%)
+                    </span>
+                  )}
+                </span>
               </div>
             </>
           ) : (
-            <div className="flex justify-between text-stone-600">
+            <div className="flex justify-between text-stone-600 items-center">
               <span>IGST:</span>
-              <span>₹{Number(invoice.igst || 0).toFixed(2)}</span>
+              <span className="flex items-center gap-1.5">
+                <span>₹{Number(invoice.igst || 0).toFixed(2)}</span>
+                {Number(invoice.igst || 0) === 0 && (
+                  <span className="text-[9px] font-sans font-bold bg-emerald-50 text-emerald-700 px-1.5 py-0.2 rounded border border-emerald-200">
+                    Exempt (0%)
+                  </span>
+                )}
+              </span>
             </div>
           )}
           {Number(invoice.discount || 0) > 0 && (
