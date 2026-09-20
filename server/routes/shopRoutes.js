@@ -85,7 +85,7 @@ router.post(['/setup', '/register'], async (req, res) => {
       });
     }
 
-    // If OTP is provided, verify it with Twilio Verify v2
+    // If OTP is provided, verify it (via Firebase or Twilio Verify v2)
     if (otp) {
       const cleanOtp = String(otp).trim();
       if (!/^\d{6}$/.test(cleanOtp)) {
@@ -95,27 +95,29 @@ router.post(['/setup', '/register'], async (req, res) => {
         });
       }
 
-      // Check lockout status
-      const attemptCheck = rateLimiterService.checkVerifyAttempts(normalizedPhone);
-      if (!attemptCheck.allowed) {
-        return res.status(429).json({
-          success: false,
-          error: 'Too many verification attempts. Please wait and try again later.'
-        });
-      }
+      if (!req.body.firebaseVerified) {
+        // Check lockout status
+        const attemptCheck = rateLimiterService.checkVerifyAttempts(normalizedPhone);
+        if (!attemptCheck.allowed) {
+          return res.status(429).json({
+            success: false,
+            error: 'Too many verification attempts. Please wait and try again later.'
+          });
+        }
 
-      const verification = await twilioVerifyService.checkVerification(normalizedPhone, cleanOtp);
-      if (!verification.approved) {
-        rateLimiterService.recordVerifyFailure(normalizedPhone);
-        return res.status(400).json({
-          success: false,
-          error: 'Incorrect OTP. Please check the SMS and try again.'
-        });
+        const verification = await twilioVerifyService.checkVerification(normalizedPhone, cleanOtp);
+        if (!verification.approved) {
+          rateLimiterService.recordVerifyFailure(normalizedPhone);
+          return res.status(400).json({
+            success: false,
+            error: 'Incorrect OTP. Please check the SMS and try again.'
+          });
+        }
       }
 
       // Reset verify attempts upon approval
       rateLimiterService.resetVerifyAttempts(normalizedPhone);
-    } else if (twilioVerifyService.isConfigured() && process.env.NODE_ENV !== 'test') {
+    } else if (twilioVerifyService.isConfigured() && !req.body.firebaseVerified && process.env.NODE_ENV !== 'test') {
       return res.status(400).json({
         success: false,
         error: 'OTP verification is required to complete registration.'
@@ -270,28 +272,31 @@ router.post('/verify-otp', async (req, res) => {
       });
     }
 
-    // Lockout protection after repeated failures
-    const attemptCheck = rateLimiterService.checkVerifyAttempts(normalizedPhone);
-    if (!attemptCheck.allowed) {
-      return res.status(429).json({
-        success: false,
-        error: 'Too many verification attempts. Please wait and try again later.'
-      });
+    // If already verified via Firebase Auth, skip Twilio verification
+    if (!req.body.firebaseVerified) {
+      // Lockout protection after repeated failures
+      const attemptCheck = rateLimiterService.checkVerifyAttempts(normalizedPhone);
+      if (!attemptCheck.allowed) {
+        return res.status(429).json({
+          success: false,
+          error: 'Too many verification attempts. Please wait and try again later.'
+        });
+      }
+
+      // Check with Twilio Verify v2
+      const verification = await twilioVerifyService.checkVerification(normalizedPhone, cleanOtp);
+
+      if (!verification.approved) {
+        rateLimiterService.recordVerifyFailure(normalizedPhone);
+        return res.status(400).json({
+          success: false,
+          error: 'Incorrect OTP. Please check the SMS and try again.'
+        });
+      }
+
+      // Reset attempt records on approval
+      rateLimiterService.resetVerifyAttempts(normalizedPhone);
     }
-
-    // Check with Twilio Verify v2
-    const verification = await twilioVerifyService.checkVerification(normalizedPhone, cleanOtp);
-
-    if (!verification.approved) {
-      rateLimiterService.recordVerifyFailure(normalizedPhone);
-      return res.status(400).json({
-        success: false,
-        error: 'Incorrect OTP. Please check the SMS and try again.'
-      });
-    }
-
-    // Reset attempt records on approval
-    rateLimiterService.resetVerifyAttempts(normalizedPhone);
 
     // Retrieve verified shop
     const digitsOnly = extract10Digits(normalizedPhone);

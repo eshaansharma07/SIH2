@@ -31,7 +31,8 @@ import {
   AlertCircle,
   Loader2,
   ArrowLeft,
-  RotateCw
+  RotateCw,
+  Settings
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../utils/api';
@@ -39,6 +40,15 @@ import { safeStorage } from '../utils/safeStorage';
 import { useTranslation } from '../i18n/LanguageContext';
 import { INDIAN_STATES_AND_UTS, findStandardState } from '../data/indianStates';
 import { APP_NAME_EN, APP_NAME_HI, APP_TAGLINE_EN, APP_TAGLINE_HI } from '../config/brand';
+import { 
+  getFirebaseAuth, 
+  isFirebaseConfigured, 
+  getFirebaseConfig,
+  saveFirebaseConfig,
+  resetFirebaseConfig,
+  RecaptchaVerifier, 
+  signInWithPhoneNumber 
+} from '../config/firebase';
 
 // Vector SaakhSetu Bridge Logo Icon (exact match to reference image)
 export function SaakhSetuBridgeLogo({ className = "w-9 h-7 text-[#0F3E2E]" }) {
@@ -118,6 +128,78 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
   // Watch Demo Modal
   const [watchDemoOpen, setWatchDemoOpen] = useState(false);
 
+  // Firebase Real Phone Auth State (Any number support)
+  const [firebaseModalOpen, setFirebaseModalOpen] = useState(false);
+  const [firebaseActive, setFirebaseActive] = useState(() => isFirebaseConfigured());
+  const [fbConfigInput, setFbConfigInput] = useState(() => {
+    const cfg = getFirebaseConfig();
+    return cfg.apiKey ? JSON.stringify(cfg, null, 2) : '';
+  });
+  const [fbSaveMsg, setFbSaveMsg] = useState('');
+  const confirmationResultRef = useRef(null);
+  const regConfirmationResultRef = useRef(null);
+
+  const setupRecaptcha = (containerId = 'recaptcha-container') => {
+    try {
+      const auth = getFirebaseAuth();
+      if (!auth) return null;
+      if (window.recaptchaVerifier) {
+        try { window.recaptchaVerifier.clear(); } catch (_) {}
+        window.recaptchaVerifier = null;
+      }
+      window.recaptchaVerifier = new RecaptchaVerifier(auth, containerId, {
+        size: 'invisible',
+        callback: () => {
+          console.log('[Firebase] reCAPTCHA verified');
+        },
+        'expired-callback': () => {
+          setAuthError(language === 'hi' ? 'सुरक्षा सत्यापन समाप्त हो गया। कृपया पुनः प्रयास करें।' : 'reCAPTCHA expired. Please try again.');
+        }
+      });
+      return window.recaptchaVerifier;
+    } catch (err) {
+      console.warn('[Firebase] Recaptcha setup error:', err);
+      return null;
+    }
+  };
+
+  const handleSaveFirebaseConfig = () => {
+    try {
+      let parsed = null;
+      try {
+        parsed = JSON.parse(fbConfigInput);
+      } catch (_) {
+        const extract = (key) => {
+          const match = fbConfigInput.match(new RegExp(`${key}["']?\\s*:\\s*["']([^"']+)["']`)) ||
+                        fbConfigInput.match(new RegExp(`${key}=([^\\r\\n]+)`));
+          return match ? match[1].trim() : '';
+        };
+        parsed = {
+          apiKey: extract('apiKey') || extract('VITE_FIREBASE_API_KEY'),
+          authDomain: extract('authDomain') || extract('VITE_FIREBASE_AUTH_DOMAIN'),
+          projectId: extract('projectId') || extract('VITE_FIREBASE_PROJECT_ID'),
+          storageBucket: extract('storageBucket') || extract('VITE_FIREBASE_STORAGE_BUCKET'),
+          messagingSenderId: extract('messagingSenderId') || extract('VITE_FIREBASE_MESSAGING_SENDER_ID'),
+          appId: extract('appId') || extract('VITE_FIREBASE_APP_ID')
+        };
+      }
+
+      if (!parsed?.apiKey || !parsed?.projectId) {
+        throw new Error('Please provide at least apiKey and projectId in your Firebase configuration.');
+      }
+
+      saveFirebaseConfig(parsed);
+      setFirebaseActive(true);
+      setFbSaveMsg(language === 'hi' ? 'फायरबेस एसएमएस सफलतापूर्वक सक्रिय हो गया!' : 'Firebase SMS activated successfully!');
+      setTimeout(() => {
+        setFirebaseModalOpen(false);
+        setFbSaveMsg('');
+      }, 1200);
+    } catch (err) {
+      setFbSaveMsg(err.message || 'Invalid Firebase configuration');
+    }
+  };
+
   // Load saved device shops
   useEffect(() => {
     try {
@@ -177,7 +259,7 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
     }, 150);
   };
 
-  // Auth: Send Real SMS OTP
+  // Auth: Send Real SMS OTP (via Firebase Phone Auth or Server Gateway)
   const handleSendOtp = async (e) => {
     e?.preventDefault();
     setAuthLoading(true);
@@ -188,6 +270,36 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
       if (!cleanPhone || cleanPhone.length < 10) {
         throw new Error(language === 'hi' ? 'कृपया मान्य 10 अंकों का मोबाइल नंबर दर्ज करें' : 'Please enter a valid 10-digit mobile number');
       }
+
+      // 1. Try Firebase Phone Authentication if configured
+      const auth = getFirebaseAuth();
+      if (auth && isFirebaseConfigured()) {
+        try {
+          const appVerifier = setupRecaptcha('recaptcha-container');
+          if (appVerifier) {
+            const formattedPhone = `+91${cleanPhone}`;
+            const confirmationResult = await signInWithPhoneNumber(auth, formattedPhone, appVerifier);
+            confirmationResultRef.current = confirmationResult;
+            setLoginStep('otp');
+            setLoginSandboxCode('');
+            setOtpDigits(['', '', '', '', '', '']);
+            setAuthSuccessMsg(
+              language === 'hi'
+                ? `📱 असली SMS ओटीपी +91 ${cleanPhone} पर भेज दिया गया है`
+                : `📱 Real SMS OTP sent via Firebase to +91 ${cleanPhone}`
+            );
+            startResendTimer();
+            setTimeout(() => {
+              otpInputRefs.current[0]?.focus();
+            }, 150);
+            return;
+          }
+        } catch (fbErr) {
+          console.warn('[Firebase Auth] Dispatch failed, falling back to server gateway:', fbErr);
+        }
+      }
+
+      // 2. Server gateway fallback (Twilio / Sandbox)
       const res = await api.sendLoginOTP(cleanPhone);
       if (res && res.success) {
         setLoginStep('otp');
@@ -225,6 +337,29 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
     setAuthSuccessMsg('');
     try {
       const cleanPhone = loginPhone.replace(/\D/g, '').slice(-10);
+
+      // Try Firebase Resend
+      const auth = getFirebaseAuth();
+      if (auth && isFirebaseConfigured()) {
+        try {
+          const appVerifier = setupRecaptcha('recaptcha-container');
+          if (appVerifier) {
+            const formattedPhone = `+91${cleanPhone}`;
+            const confirmationResult = await signInWithPhoneNumber(auth, formattedPhone, appVerifier);
+            confirmationResultRef.current = confirmationResult;
+            setOtpDigits(['', '', '', '', '', '']);
+            setAuthSuccessMsg(language === 'hi' ? 'नया एसएमएस ओटीपी भेज दिया गया है' : 'New SMS OTP sent successfully via Firebase');
+            startResendTimer();
+            setTimeout(() => {
+              otpInputRefs.current[0]?.focus();
+            }, 100);
+            return;
+          }
+        } catch (fbErr) {
+          console.warn('[Firebase Auth] Resend failed, falling back:', fbErr);
+        }
+      }
+
       const res = await api.sendLoginOTP(cleanPhone);
       if (res && res.success) {
         if (res.sandboxCode) {
@@ -265,7 +400,20 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
     setAuthError('');
     try {
       const cleanPhone = loginPhone.replace(/\D/g, '').slice(-10);
-      const res = await api.verifyLoginOTP(cleanPhone, enteredOtp);
+      let firebaseVerified = false;
+
+      // If Firebase OTP was sent, confirm code with Firebase
+      if (confirmationResultRef.current) {
+        try {
+          await confirmationResultRef.current.confirm(enteredOtp);
+          firebaseVerified = true;
+        } catch (fbErr) {
+          console.error('[Firebase Verify] Code rejected:', fbErr);
+          throw new Error(language === 'hi' ? 'गलत ओटीपी। कृपया एसएमएस देखकर पुनः दर्ज करें।' : 'Incorrect OTP. Please check the SMS and try again.');
+        }
+      }
+
+      const res = await api.verifyLoginOTP(cleanPhone, enteredOtp, { firebaseVerified });
       if (res && res.shop) {
         if (res.token) {
           safeStorage.setItem('vyapaar_auth_token', res.token);
@@ -321,7 +469,7 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
     otpInputRefs.current[nextFocusIndex]?.focus();
   };
 
-  // Auth: Send Real SMS OTP for Registration
+  // Auth: Send Real SMS OTP for Registration (via Firebase Phone Auth or Server Gateway)
   const handleRegisterSendOtp = async (e) => {
     e?.preventDefault();
     setAuthLoading(true);
@@ -335,6 +483,36 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
       if (!regShopName.trim()) {
         throw new Error(language === 'hi' ? 'दुकान का नाम आवश्यक है' : 'Shop name is required');
       }
+
+      // 1. Try Firebase Phone Authentication if configured
+      const auth = getFirebaseAuth();
+      if (auth && isFirebaseConfigured()) {
+        try {
+          const appVerifier = setupRecaptcha('recaptcha-container');
+          if (appVerifier) {
+            const formattedPhone = `+91${cleanPhone}`;
+            const confirmationResult = await signInWithPhoneNumber(auth, formattedPhone, appVerifier);
+            regConfirmationResultRef.current = confirmationResult;
+            setRegStep('otp');
+            setRegSandboxCode('');
+            setRegOtpDigits(['', '', '', '', '', '']);
+            setAuthSuccessMsg(
+              language === 'hi'
+                ? `📱 असली SMS ओटीपी +91 ${cleanPhone} पर भेज दिया गया है`
+                : `📱 Real SMS OTP sent via Firebase to +91 ${cleanPhone}`
+            );
+            startRegResendTimer();
+            setTimeout(() => {
+              regOtpInputRefs.current[0]?.focus();
+            }, 150);
+            return;
+          }
+        } catch (fbErr) {
+          console.warn('[Firebase Auth Register] Dispatch failed, falling back:', fbErr);
+        }
+      }
+
+      // 2. Server gateway fallback
       const res = await api.sendRegisterOTP(cleanPhone);
       if (res && res.success) {
         setRegStep('otp');
@@ -372,6 +550,29 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
     setAuthSuccessMsg('');
     try {
       const cleanPhone = regPhone.replace(/\D/g, '').slice(-10);
+
+      // Try Firebase Resend
+      const auth = getFirebaseAuth();
+      if (auth && isFirebaseConfigured()) {
+        try {
+          const appVerifier = setupRecaptcha('recaptcha-container');
+          if (appVerifier) {
+            const formattedPhone = `+91${cleanPhone}`;
+            const confirmationResult = await signInWithPhoneNumber(auth, formattedPhone, appVerifier);
+            regConfirmationResultRef.current = confirmationResult;
+            setRegOtpDigits(['', '', '', '', '', '']);
+            setAuthSuccessMsg(language === 'hi' ? 'नया एसएमएस ओटीपी भेज दिया गया है' : 'New SMS OTP sent successfully via Firebase');
+            startRegResendTimer();
+            setTimeout(() => {
+              regOtpInputRefs.current[0]?.focus();
+            }, 100);
+            return;
+          }
+        } catch (fbErr) {
+          console.warn('[Firebase Auth Register] Resend failed, falling back:', fbErr);
+        }
+      }
+
       const res = await api.sendRegisterOTP(cleanPhone);
       if (res && res.success) {
         if (res.sandboxCode) {
@@ -412,6 +613,19 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
     setAuthError('');
     try {
       const cleanPhone = regPhone.replace(/\D/g, '').slice(-10);
+      let firebaseVerified = false;
+
+      // Confirm with Firebase if OTP was sent via Firebase
+      if (regConfirmationResultRef.current) {
+        try {
+          await regConfirmationResultRef.current.confirm(enteredOtp);
+          firebaseVerified = true;
+        } catch (fbErr) {
+          console.error('[Firebase Register Verify] Code rejected:', fbErr);
+          throw new Error(language === 'hi' ? 'गलत ओटीपी। कृपया एसएमएस जांचें और पुनः प्रयास करें।' : 'Incorrect OTP. Please check the SMS and try again.');
+        }
+      }
+
       const res = await api.registerShop({
         name: regShopName.trim(),
         owner_name: regOwnerName.trim() || regShopName.trim(),
@@ -423,7 +637,8 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
         village: regVillage || 'Utraula Dehat',
         vintage_years: 1,
         bank_account_type: 'State Bank of India',
-        otp: enteredOtp
+        otp: enteredOtp,
+        firebaseVerified
       });
       if (res && res.shop) {
         if (res.token) {
@@ -1478,6 +1693,29 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
                 </div>
               )}
 
+              {/* Firebase Real SMS Gateway Status & Configure Button */}
+              <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-stone-100/90 border border-[#D5CCBC]/60 text-xs">
+                <div className="flex items-center gap-2">
+                  <span className={`w-2 h-2 rounded-full ${firebaseActive ? 'bg-emerald-500 shadow-sm shadow-emerald-500/50' : 'bg-amber-500'}`} />
+                  <span className="font-semibold text-[#1C1917] text-[11px]">
+                    {firebaseActive 
+                      ? (language === 'hi' ? 'फ़ायरबेस लाइव एसएमएस (सभी नंबर समर्थित)' : 'Firebase Live SMS (Any Mobile Number)')
+                      : (language === 'hi' ? 'फ़ायरबेस एसएमएस: सेटअप करें' : 'Firebase SMS: Setup Required')}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => { setFirebaseModalOpen(true); setFbSaveMsg(''); }}
+                  className="text-[11px] font-bold text-[#0F3E2E] hover:underline flex items-center gap-1 cursor-pointer"
+                >
+                  <Settings className="w-3 h-3" />
+                  <span>{firebaseActive ? (language === 'hi' ? 'सेटिंग्स' : 'Config') : (language === 'hi' ? 'सेट करें' : 'Setup')}</span>
+                </button>
+              </div>
+
+              {/* Invisible reCAPTCHA container for Firebase Phone Auth */}
+              <div id="recaptcha-container"></div>
+
               {/* Success Message */}
               {authSuccessMsg && (
                 <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 flex items-center gap-2 font-medium">
@@ -1968,6 +2206,127 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
                   className="px-5 py-3 rounded-full bg-white hover:bg-[#EAE3D2] text-[#1C1917] border border-[#D5CCBC] text-xs font-semibold cursor-pointer"
                 >
                   Close
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ========================================================================= */}
+      {/* 11. FIREBASE SMS CONFIGURATION MODAL                                      */}
+      {/* ========================================================================= */}
+      <AnimatePresence>
+        {firebaseModalOpen && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-stone-950/60 backdrop-blur-md animate-fadeIn">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.16 }}
+              className="w-full max-w-lg bg-[#FAF7F2] rounded-3xl border border-[#D5CCBC] shadow-2xl p-6 sm:p-7 space-y-4 relative max-h-[90vh] overflow-y-auto"
+            >
+              <button
+                onClick={() => setFirebaseModalOpen(false)}
+                className="absolute top-5 right-5 p-1 text-[#78716C] hover:text-[#1C1917] rounded-full transition cursor-pointer"
+                aria-label="Close"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <div className="space-y-1">
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-bold">
+                  <Sparkles className="w-3 h-3" />
+                  <span>Real SMS to Any Indian Number (+91)</span>
+                </div>
+                <h3 className="font-serif font-bold text-xl text-[#1C1917]">
+                  {language === 'hi' ? 'फ़ायरबेस फ़ोन ऑथेंटिकेशन सेटअप' : 'Firebase SMS Authentication Setup'}
+                </h3>
+                <p className="text-xs text-[#57534E] leading-relaxed">
+                  {language === 'hi'
+                    ? 'फ़ायरबेस कंसोल से अपने वेब ऐप की कॉन्फ़िगरेशन (JSON या JS स्निपेट) यहाँ पेस्ट करें। यह बिना किसी नंबर प्रतिबंध के सीधे भारत के किसी भी 10-अंकीय मोबाइल नंबर पर लाइव एसएमएस ओटीपी भेजेगा।'
+                    : 'Paste your Firebase Web App configuration snippet from the Firebase Console. This enables real, high-delivery SMS OTP to ANY 10-digit mobile phone in India without carrier blocks.'}
+                </p>
+              </div>
+
+              {fbSaveMsg && (
+                <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 flex items-center gap-2 font-medium">
+                  <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>{fbSaveMsg}</span>
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs font-bold text-[#1C1917]">
+                  <label htmlFor="fb-config-textarea">
+                    Firebase Config ({language === 'hi' ? 'कंसोल से कॉपी किया गया स्निपेट' : 'SDK Config Snippet'}):
+                  </label>
+                  <span className="text-[10px] text-[#78716C] font-normal">
+                    Supports JSON or `const firebaseConfig = {'{ ... }'}`
+                  </span>
+                </div>
+                <textarea
+                  id="fb-config-textarea"
+                  rows={8}
+                  value={fbConfigInput}
+                  onChange={(e) => setFbConfigInput(e.target.value)}
+                  placeholder={`{\n  "apiKey": "AIzaSy...",\n  "authDomain": "your-app.firebaseapp.com",\n  "projectId": "your-project",\n  "storageBucket": "your-project.firebasestorage.app",\n  "messagingSenderId": "123456789",\n  "appId": "1:123:web:abc"\n}`}
+                  className="w-full p-3 font-mono text-xs rounded-xl bg-white border border-[#D5CCBC] focus:ring-2 focus:ring-[#0F3E2E]/20 focus:border-[#0F3E2E] focus:outline-none"
+                />
+              </div>
+
+              {/* Quick instructions */}
+              <div className="p-3 rounded-xl bg-amber-50/70 border border-amber-200/80 text-[11px] text-amber-900 space-y-1">
+                <div className="font-bold flex items-center gap-1.5">
+                  <HelpCircle className="w-3.5 h-3.5 text-amber-700" />
+                  <span>How to get this from Firebase Console:</span>
+                </div>
+                <ol className="list-decimal list-inside space-y-0.5 text-[10.5px] pl-1 text-amber-800">
+                  <li>Go to <strong>Firebase Console &rarr; Project Settings &rarr; General</strong></li>
+                  <li>Scroll down to <strong>Your apps</strong> &rarr; click Web App (<strong>&lt;/&gt;</strong>)</li>
+                  <li>Copy the <strong>firebaseConfig</strong> object and paste it in the box above</li>
+                </ol>
+              </div>
+
+              <div className="flex items-center gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const ok = saveFirebaseConfig(fbConfigInput);
+                    if (ok) {
+                      setFirebaseActive(true);
+                      setFbSaveMsg(language === 'hi' ? '✓ फ़ायरबेस सफलतापूर्वक सहेजा गया और सक्रिय है!' : '✓ Firebase configured & activated successfully!');
+                      setTimeout(() => {
+                        setFirebaseModalOpen(false);
+                      }, 1200);
+                    } else {
+                      setFbSaveMsg(language === 'hi' ? '✕ अमान्य कॉन्फ़िगरेशन। कृपया apiKey और projectId जांचें।' : '✕ Invalid config. Please ensure apiKey and projectId are present.');
+                    }
+                  }}
+                  className="flex-1 py-2.5 rounded-xl bg-[#0F3E2E] hover:bg-[#144F3B] text-white text-xs font-bold shadow-sm transition cursor-pointer"
+                >
+                  {language === 'hi' ? 'सहेजें और सक्रिय करें' : 'Save & Activate'}
+                </button>
+                {firebaseActive && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      resetFirebaseConfig();
+                      setFirebaseActive(false);
+                      setFbConfigInput('');
+                      setFbSaveMsg(language === 'hi' ? 'रीसेट कर दिया गया' : 'Reset to default');
+                    }}
+                    className="px-4 py-2.5 rounded-xl bg-white hover:bg-stone-100 text-red-600 border border-red-200 text-xs font-semibold cursor-pointer"
+                  >
+                    {language === 'hi' ? 'रीसेट' : 'Reset'}
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setFirebaseModalOpen(false)}
+                  className="px-4 py-2.5 rounded-xl bg-white hover:bg-[#EAE3D2] text-[#1C1917] border border-[#D5CCBC] text-xs font-semibold cursor-pointer"
+                >
+                  {language === 'hi' ? 'बंद करें' : 'Close'}
                 </button>
               </div>
             </motion.div>
