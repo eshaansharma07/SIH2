@@ -1,9 +1,19 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth, RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
 
+const DEFAULT_FIREBASE_CONFIG = {
+  apiKey: "AIzaSyDMExnoqroGyq4G0ZXr63Pt6msjSO24i_E",
+  authDomain: "sih2-a60bd.firebaseapp.com",
+  projectId: "sih2-a60bd",
+  storageBucket: "sih2-a60bd.firebasestorage.app",
+  messagingSenderId: "471721936740",
+  appId: "1:471721936740:web:689ff8ae790274e17edc71",
+  measurementId: "G-XNSMPQ85FJ"
+};
+
 /**
  * Retrieves Firebase Web SDK credentials.
- * Checks Vite environment variables (VITE_FIREBASE_*), localStorage, or window.__FIREBASE_CONFIG__.
+ * Checks Vite environment variables (VITE_FIREBASE_*), localStorage, window.__FIREBASE_CONFIG__, or default config.
  */
 export function getFirebaseConfig() {
   let localConfig = null;
@@ -13,12 +23,13 @@ export function getFirebaseConfig() {
   } catch (_) {}
 
   return {
-    apiKey: import.meta.env.VITE_FIREBASE_API_KEY || localConfig?.apiKey || window.__FIREBASE_CONFIG__?.apiKey || '',
-    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || localConfig?.authDomain || window.__FIREBASE_CONFIG__?.authDomain || '',
-    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || localConfig?.projectId || window.__FIREBASE_CONFIG__?.projectId || '',
-    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || localConfig?.storageBucket || window.__FIREBASE_CONFIG__?.storageBucket || '',
-    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || localConfig?.messagingSenderId || window.__FIREBASE_CONFIG__?.messagingSenderId || '',
-    appId: import.meta.env.VITE_FIREBASE_APP_ID || localConfig?.appId || window.__FIREBASE_CONFIG__?.appId || ''
+    apiKey: import.meta.env.VITE_FIREBASE_API_KEY || localConfig?.apiKey || window.__FIREBASE_CONFIG__?.apiKey || DEFAULT_FIREBASE_CONFIG.apiKey,
+    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || localConfig?.authDomain || window.__FIREBASE_CONFIG__?.authDomain || DEFAULT_FIREBASE_CONFIG.authDomain,
+    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || localConfig?.projectId || window.__FIREBASE_CONFIG__?.projectId || DEFAULT_FIREBASE_CONFIG.projectId,
+    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || localConfig?.storageBucket || window.__FIREBASE_CONFIG__?.storageBucket || DEFAULT_FIREBASE_CONFIG.storageBucket,
+    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || localConfig?.messagingSenderId || window.__FIREBASE_CONFIG__?.messagingSenderId || DEFAULT_FIREBASE_CONFIG.messagingSenderId,
+    appId: import.meta.env.VITE_FIREBASE_APP_ID || localConfig?.appId || window.__FIREBASE_CONFIG__?.appId || DEFAULT_FIREBASE_CONFIG.appId,
+    measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || localConfig?.measurementId || window.__FIREBASE_CONFIG__?.measurementId || DEFAULT_FIREBASE_CONFIG.measurementId
   };
 }
 
