@@ -109,12 +109,22 @@ export function requireShopAccess(req, res, next) {
 
   // Allow authorized institutional / bank officer access
   const isOfficerAccess = Boolean(
-    req.headers['x-admin-access'] === '7788' ||
-    req.headers['x-admin-key'] === 'saakhsetu_officer_7788' ||
+    req.headers?.['x-admin-access'] === '7788' ||
+    req.headers?.['x-admin-key'] === 'saakhsetu_officer_7788' ||
     req.user?.isAdmin ||
     req.user?.role === 'admin'
   );
   if (isOfficerAccess) {
+    return next();
+  }
+
+  // Allow public bank verification of Credit Appraisal Memos (scanned via QR code on official printed dossiers)
+  const isCamVerification = Boolean(
+    req.path?.endsWith('/cam') || 
+    req.originalUrl?.includes('/cam') ||
+    req.baseUrl?.includes('/cam')
+  );
+  if (isCamVerification && req.method === 'GET') {
     return next();
   }
 

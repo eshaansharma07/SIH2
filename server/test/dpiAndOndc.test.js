@@ -82,4 +82,64 @@ test('DPI Gateway, Credit CAM & ONDC Wholesale Suite', async (t) => {
     const digitalSub = disciplinePillar.subFactors.find(s => s.id === 'digital_adoption');
     assert.ok(digitalSub, 'Digital adoption subFactor must be present in Discipline pillar');
   });
+
+  await t.test('5. CAM HTTP verification endpoint supports public verification with JSON & HTML content negotiation', async () => {
+    const { default: router } = await import('../routes/creditRoutes.js');
+
+    // Find the cam route handler on creditRoutes
+    const camLayer = router.stack.find(s => s.route && (
+      (Array.isArray(s.route.path) && s.route.path.some(p => p.includes('cam'))) ||
+      (typeof s.route.path === 'string' && s.route.path.includes('cam'))
+    ));
+    assert.ok(camLayer, 'CAM route must be registered on creditRoutes');
+    const handler = camLayer.route.stack[0].handle;
+
+    // 5.1 Public verification with JSON format
+    let jsonBody = null;
+    let headersSet = {};
+    const mockResJson = {
+      status(code) { return this; },
+      json(data) { jsonBody = data; return this; },
+      set(k, v) { headersSet[k] = v; return this; },
+      send(html) { return this; }
+    };
+    const mockReqJson = {
+      params: { shopId: 'ramesh-kirana' },
+      query: { format: 'json' },
+      headers: { accept: 'application/json' },
+      method: 'GET'
+    };
+
+    await handler(mockReqJson, mockResJson);
+    assert.ok(jsonBody, 'Must return JSON body');
+    assert.strictEqual(jsonBody.success, true);
+    assert.ok(jsonBody.cam, 'Must contain cam payload');
+    assert.strictEqual(jsonBody.cam.documentType, 'CREDIT_APPRAISAL_MEMORANDUM');
+    assert.ok(jsonBody.cam.workingCapitalAssessment?.nayakCommitteeNorms, 'Nayak norms in HTTP payload');
+
+    // 5.2 Browser QR code scan returns official bank verification HTML certificate
+    let htmlContent = null;
+    const mockResHtml = {
+      status(code) { return this; },
+      json(data) { return this; },
+      set(k, v) { headersSet[k] = v; return this; },
+      send(html) { htmlContent = html; return this; }
+    };
+    const mockReqHtml = {
+      params: { shopId: 'ramesh-kirana' },
+      query: {},
+      headers: { accept: 'text/html,application/xhtml+xml' },
+      method: 'GET'
+    };
+
+    await handler(mockReqHtml, mockResHtml);
+    assert.ok(htmlContent, 'Must return HTML for browser scans');
+    assert.ok(headersSet['Content-Type']?.includes('text/html'), 'Content-Type must be text/html');
+    assert.ok(htmlContent.includes('SAAKHSETU'), 'Must include SaakhSetu branding');
+    assert.ok(htmlContent.includes('Nayak Committee Working Capital Assessment'), 'Must render Nayak Committee section');
+    assert.ok(htmlContent.includes('TAMPER-PROOF VERIFIED'), 'Must display verified status banner');
+
+    const { closeMongoConnection } = await import('../db/mongoClient.js');
+    await closeMongoConnection();
+  });
 });
