@@ -1,6 +1,6 @@
 <div align="center">
 
-# साखसेतु / व्यापार साथी (SaakhSetu • Vyapaar Saathi)
+# साखसेतु (SaakhSetu)
 ### *"India's Sovereign Rural Micro-Enterprise Ledger, DPI Scheme Radar & Cash-Flow Underwriting Engine"*
 **Smart India Hackathon (SIH 2026) — Problem Statement 26091**
 
@@ -8,9 +8,9 @@
   <em>An AI-powered, DPI-aligned micro-enterprise ledger, hyper-local demand forecasting radar, authentic statutory scheme pipeline, and transparent 4-pillar alternative credit underwriting engine for India's 63+ million rural micro-entrepreneurs.</em>
 </p>
 
-### 🌐 **Live Production App:** [https://saakhsetu.vercel.app](https://saakhsetu.vercel.app) *(Mirror: [vyapaar-saathi-nine.vercel.app](https://vyapaar-saathi-nine.vercel.app))*
+### 🌐 **Live Production App:** [https://saakhsetu.vercel.app](https://saakhsetu.vercel.app)
 
-[Architecture](#-architecture--data-flow) • [Dual Entry Modes](#-dual-entry-modes-evaluator-demo-vs-real-merchant) • [Core Modules](#-core-modules) • [Vyapaar Accounting](#-vyapaar-accounting--billing-gst-ready-kirana-erp) • [SMS OTP & Security](#-real-time-sms-otp-authentication--jwt-security) • [Verified Scheme Pipeline](#-verified-scheme-database--structured-ingestion-pipeline) • [Underwriting Engine](#-4-pillar-alternative-credit-scoring-math) • [Test Suite (64/64)](#-automated-test-suite-6464-passing) • [Quick Start](#-quick-start-instructions)
+[Architecture](#-architecture--data-flow) • [Dual Entry Modes](#-dual-entry-modes-evaluator-demo-vs-real-merchant) • [Core Modules](#-core-modules) • [Kirana Accounting](#-kirana-accounting--billing-gst-ready-erp) • [SMS OTP & Security](#-real-time-sms-otp-authentication--jwt-security) • [Verified Scheme Pipeline](#-verified-scheme-database--structured-ingestion-pipeline) • [Underwriting Engine](#-4-pillar-alternative-credit-scoring-math) • [Test Suite (95/95)](#-automated-test-suite-9595-passing) • [Quick Start](#-quick-start-instructions)
 
 ---
 
@@ -31,7 +31,7 @@ India's 63+ million rural micro-entrepreneurs (kirana grocers, village tailors, 
 
 ```
    ┌────────────────────────────────────────────────────────────────────────────┐
-   │                          SAAKHSETU / VYAPAAR SAATHI                        │
+   │                                  SAAKHSETU                                 │
    │           DPI India Stack Aligned • Mobile-First Responsive PWA           │
    └─────────────────────────────────────┬──────────────────────────────────────┘
                                          │
@@ -51,20 +51,20 @@ India's 63+ million rural micro-entrepreneurs (kirana grocers, village tailors, 
    │                       CORE ENGINE CAPABILITIES                            │
    ├──────────────────────────────┬────────────────────────────────────────────┤
    │ 1. Tactile Bahi-Khata Ledger │ Daily income, expenses, udhaar & UPI tracking │
-   │ 2. Real-Time SMS OTP Auth    │ Twilio Verify v2 + Trial Sandbox Resilience│
+   │ 2. Real-Time SMS OTP Auth    │ Firebase Phone Auth (Any +91) + Sandbox Fallback│
    │ 3. 4-Pillar Credit Scorer    │ 50-Tx Milestone Audit & Explainable 300-850 │
    │ 4. Verified Scheme Radar     │ Live portal probes + PIB RSS live feed scan   │
    │ 5. Scheme Ingestion Sandbox  │ Sub-30s dynamic AST parsing & shop matching   │
    │ 6. Saathi AI Advisor         │ Grounded Gemini 2.5 Flash with fallback net   │
    │ 7. Bank Loan Dossier (CAM)   │ Printable official RBI PSL & Nayak memo       │
    │ 8. ONDC Wholesale Discovery  │ Direct commodity wholesale procurement quotes │
-   │ 9. Vyapaar Accounting & ERP  │ GST-ready POS, inventory & 4-bucket aging     │
+   │ 9. Kirana Accounting & ERP   │ GST-ready POS, inventory & 4-bucket aging     │
    └──────────────────────────────┴────────────────────────────────────────────┘
 ```
 
 ---
 
-## 💼 Vyapaar Accounting & Billing (GST-Ready Kirana ERP)
+## 💼 Kirana Accounting & Billing (GST-Ready ERP)
 
 Functionally inspired by **BUSY Accounting**, SaakhSetu embeds a lightweight, high-speed accounting and enterprise-resource engine engineered specifically for rural micro-merchants and kirana owners. It bridges the gap between everyday counter sales and formal, statutory tax accounting without requiring complex bookkeeping software:
 
@@ -105,15 +105,15 @@ Functionally inspired by **BUSY Accounting**, SaakhSetu embeds a lightweight, hi
 
 ## 🔐 Real-Time SMS OTP Authentication & JWT Security
 
-SaakhSetu eliminates insecure static passwords and pins, replacing them with a secure 2-step mobile verification pipeline:
+SaakhSetu eliminates insecure static passwords and pins, replacing them with a sovereign 2-step mobile verification pipeline:
 
-1. **Twilio Verify v2 Engine (`server/services/twilioVerifyService.js`)**:
-   - Programmatically provisions SMS OTP verification codes dispatched over global cellular networks.
-   - Enforces canonical Indian E.164 phone normalization (`+91XXXXXXXXXX`) and UI phone masking (`+91 98XXX XX789`).
-2. **Trial Account Sandbox Fallback & Universal Evaluator Bypass**:
-   - Detects Twilio trial limitations, unverified carrier ID restrictions, and gateway blocks automatically.
-   - When trial limitations arise, issues an authentic 6-digit sandbox verification code stored with a 10-minute TTL, displaying an amber banner with auto-filled input boxes for instant 1-click verification.
-   - Hackathon judges can also verify with universal evaluation bypass code `123456`.
+1. **Firebase Phone Authentication (Direct Cellular SMS to Any Number)**:
+   - Dispatches real SMS OTP verification codes over Indian cellular networks directly to **ANY 10-digit mobile number** (`+91XXXXXXXXXX`) without carrier blocks or sandbox restrictions.
+   - Utilizes invisible Google `RecaptchaVerifier` for instant, frictionless bot protection.
+   - Once verified client-side via Firebase, the server issues an authentic session JWT without requiring Twilio lookup.
+2. **Server Gateway & Sandbox Fallback Safety Net**:
+   - Includes automatic failover to the backend Twilio Verify v2 gateway / Sandbox code generator (`server/services/twilioVerifyService.js`).
+   - If cellular connectivity or external APIs are constrained, an auto-filled 6-digit sandbox verification code allows immediate 1-click login and registration for evaluators.
 3. **JWT Session Authentication & Cryptographic Protection (`server/middleware/auth.js`)**:
    - Successfully verified phone numbers receive signed JSON Web Tokens (7-day validity).
    - `requireShopAccess` middleware strictly prevents cross-shop ledger tampering.
@@ -244,7 +244,7 @@ $$\text{Total Score} = 300 + 550 \times \left( \frac{\text{Consistency} + \text{
 
 ---
 
-## 🧪 Automated Test Suite (64/64 Passing)
+## 🧪 Automated Test Suite (95/95 Passing)
 
 The project includes a comprehensive end-to-end automated test suite running with the Node.js built-in test runner:
 
@@ -252,8 +252,8 @@ The project includes a comprehensive end-to-end automated test suite running wit
 npm --prefix server test
 ```
 
-### 100% Pass Rate Across 9 Test Suites:
-- **Vyapaar Accounting & Billing Domain Suite** (15/15):
+### 100% Pass Rate Across Test Suites:
+- **Kirana Accounting & Billing Domain Suite** (15/15):
   - Product catalog CRUD, automated SKU generation, and price bounds validation.
   - Audit-trailed stock adjustments with `stock_movements` ledger entries.
   - Intra-state GST computation with 50/50 CGST + SGST equal split.
@@ -324,7 +324,7 @@ cd ../client && npm install
 
 ### 2. Start Local Development
 ```bash
-# Terminal 1: Backend Server (Port 3001)
+# Terminal 1: Backend Server (Port 5001)
 cd server
 npm start
 

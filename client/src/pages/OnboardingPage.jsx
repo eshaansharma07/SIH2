@@ -1027,7 +1027,7 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
                         <p className="text-[11px] text-[#78716C]">In formal credit shadow</p>
                       </div>
                       <div className="space-y-1">
-                        <div className="font-serif font-black text-2xl sm:text-3xl text-[#0F3E2E]">300–850</div>
+                        <div className="font-serif font-black text-2xl sm:text-3xl text-[#0F3E2E] whitespace-nowrap">300–850</div>
                         <div className="text-xs font-bold text-[#1C1917]">Saakh Score Range</div>
                         <p className="text-[11px] text-[#78716C]">Aligned to RBI PSL norms</p>
                       </div>
@@ -1215,9 +1215,9 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
               </div>
 
               {/* Three Key Metrics Strip (Below Hero Copy) */}
-              <div className="pt-8 border-t border-[#E7DFD5]/80 grid grid-cols-3 gap-4 sm:gap-8 max-w-lg">
+              <div className="pt-8 border-t border-[#E7DFD5]/80 grid grid-cols-3 gap-3 sm:gap-6 max-w-xl">
                 <div>
-                  <div className="font-serif font-black text-2xl sm:text-3xl text-[#1C1917]">
+                  <div className="font-serif font-black text-2xl sm:text-3xl text-[#1C1917] whitespace-nowrap">
                     63M+
                   </div>
                   <div className="text-[11px] sm:text-xs text-[#78716C] font-medium mt-0.5">
@@ -1225,8 +1225,8 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
                   </div>
                 </div>
 
-                <div className="border-l border-[#E7DFD5] pl-4 sm:pl-8">
-                  <div className="font-serif font-black text-2xl sm:text-3xl text-[#1C1917]">
+                <div className="border-l border-[#E7DFD5] pl-3 sm:pl-6">
+                  <div className="font-serif font-black text-2xl sm:text-3xl text-[#1C1917] whitespace-nowrap">
                     300–850
                   </div>
                   <div className="text-[11px] sm:text-xs text-[#78716C] font-medium mt-0.5">
@@ -1234,8 +1234,8 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
                   </div>
                 </div>
 
-                <div className="border-l border-[#E7DFD5] pl-4 sm:pl-8">
-                  <div className="font-serif font-black text-2xl sm:text-3xl text-[#1C1917]">
+                <div className="border-l border-[#E7DFD5] pl-3 sm:pl-6">
+                  <div className="font-serif font-black text-2xl sm:text-3xl text-[#1C1917] whitespace-nowrap">
                     0
                   </div>
                   <div className="text-[11px] sm:text-xs text-[#78716C] font-medium mt-0.5">
