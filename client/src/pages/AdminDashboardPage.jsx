@@ -549,13 +549,13 @@ export function AdminDashboardPage({ onSelectShop, onNavigateTab }) {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-[#F6F1E8] border-b border-[#E7DFD4] text-[11px] font-bold text-stone-700 uppercase tracking-wider">
-                <th className="py-2.5 px-3 sm:px-4">Enterprise & Owner</th>
-                <th className="py-2.5 px-3">Trade</th>
-                <th className="py-2.5 px-3">Location</th>
-                <th className="py-2.5 px-3">50-Tx Audit Milestone</th>
-                <th className="py-2.5 px-3 text-right">Logged Volume</th>
-                <th className="py-2.5 px-3 text-center">Status</th>
-                <th className="py-2.5 px-3 sm:px-4 text-right">Action</th>
+                <th className="py-2.5 px-3 sm:px-4">{language === 'hi' ? 'उद्यम एवं स्वामी' : 'Enterprise & Owner'}</th>
+                <th className="py-2.5 px-3">{language === 'hi' ? 'व्यापार श्रेणी' : 'Trade'}</th>
+                <th className="py-2.5 px-3">{language === 'hi' ? 'स्थान' : 'Location'}</th>
+                <th className="py-2.5 px-3">{language === 'hi' ? '50-ऑडिट प्रगति' : '50-Tx Audit Milestone'}</th>
+                <th className="py-2.5 px-3 text-right">{language === 'hi' ? 'दर्ज कारोबार' : 'Logged Volume'}</th>
+                <th className="py-2.5 px-3 text-center">{language === 'hi' ? 'स्थिति' : 'Status'}</th>
+                <th className="py-2.5 px-3 sm:px-4 text-right">{language === 'hi' ? 'कार्रवाई' : 'Action'}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#EFE8DC] text-xs font-medium text-stone-800">
@@ -563,13 +563,13 @@ export function AdminDashboardPage({ onSelectShop, onNavigateTab }) {
                 <tr>
                   <td colSpan={7} className="py-10 text-center text-stone-500">
                     <RefreshCw className="w-5 h-5 animate-spin mx-auto mb-2 text-[#123B2B]" />
-                    <span>Loading enterprise records...</span>
+                    <span>{language === 'hi' ? 'उद्यम रिकॉर्ड लोड हो रहे हैं...' : 'Loading enterprise records...'}</span>
                   </td>
                 </tr>
               ) : shops.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="py-8 text-center text-stone-500">
-                    No micro-enterprises match the current filters.
+                    {language === 'hi' ? 'वर्तमान फिल्टर से कोई सूक्ष्म उद्यम मेल नहीं खाता।' : 'No micro-enterprises match the current filters.'}
                   </td>
                 </tr>
               ) : (
@@ -631,12 +631,12 @@ export function AdminDashboardPage({ onSelectShop, onNavigateTab }) {
                       {shop.isScored ? (
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#E8F0EA] text-[#0F3E2E] border border-[#C6DDD0]">
                           <CheckCircle2 className="w-3 h-3 text-emerald-700" />
-                          <span>सत्यापित (Scored)</span>
+                          <span>{language === 'hi' ? 'सत्यापित (Scored)' : 'Verified (Scored)'}</span>
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
                           <Clock className="w-3 h-3 text-amber-700" />
-                          <span>समीक्षाधीन</span>
+                          <span>{language === 'hi' ? 'समीक्षाधीन' : 'Under Audit'}</span>
                         </span>
                       )}
                     </td>
