@@ -16,6 +16,8 @@ import {
   ChevronLeft, 
   Clock, 
   Trash2, 
+  Pencil,
+  Check,
   Lightbulb, 
   Sprout, 
   X, 
@@ -83,6 +85,10 @@ export function CashFlowPage({
 
   // Modals & Drawers
   const [selectedTx, setSelectedTx] = useState(null); // Detail drawer
+  const [isEditingTx, setIsEditingTx] = useState(false);
+  const [editAmount, setEditAmount] = useState('');
+  const [editNotes, setEditNotes] = useState('');
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [isRegisterCustomerOpen, setIsRegisterCustomerOpen] = useState(false);
   const [selectedWhatsAppCustomer, setSelectedWhatsAppCustomer] = useState(null);
   const [isVoiceOpen, setIsVoiceOpen] = useState(false);
@@ -267,6 +273,41 @@ export function CashFlowPage({
       console.warn('Delete transaction error:', err.message);
     } finally {
       setDeletingId(null);
+    }
+  };
+
+  const startEditingTx = (tx) => {
+    setIsEditingTx(true);
+    setEditAmount(String(tx?.amount || ''));
+    setEditNotes(tx?.notes || '');
+  };
+
+  const handleUpdateTransaction = async () => {
+    if (!selectedTx) return;
+    const num = Number(editAmount);
+    if (!num || isNaN(num) || num <= 0) {
+      alert(language === 'hi' ? 'कृपया मान्य राशि दर्ज करें' : 'Please enter a valid amount');
+      return;
+    }
+
+    setIsSavingEdit(true);
+    try {
+      const updatePayload = {
+        amount: num,
+        notes: editNotes.trim()
+      };
+      const res = await api.updateTransaction(selectedTx.id, updatePayload, shop?.id);
+      const updatedTx = res?.transaction || { ...selectedTx, ...updatePayload };
+
+      setTransactions(prev => prev.map(t => t.id === selectedTx.id ? { ...t, ...updatedTx } : t));
+      setSelectedTx(updatedTx);
+      setIsEditingTx(false);
+      if (onTransactionSaved) onTransactionSaved(updatedTx);
+    } catch (err) {
+      console.warn('Update transaction error:', err.message);
+      alert(language === 'hi' ? 'लेन-देन अपडेट करने में विफल' : 'Failed to update transaction');
+    } finally {
+      setIsSavingEdit(false);
     }
   };
 
@@ -2135,16 +2176,66 @@ export function CashFlowPage({
               </button>
             </div>
 
-            {/* Amount Banner */}
-            <div className="p-4 rounded-2xl bg-white border border-stone-200/80 text-center space-y-0.5">
-              <span className="text-[10px] text-stone-500 font-medium">Transaction Amount</span>
-              <div className={`text-2xl sm:text-3xl font-serif font-black ${getTypeMeta(selectedTx).amountColor}`}>
-                ₹{Number(selectedTx.amount || 0).toLocaleString('en-IN')}
+            {/* Amount Banner or Edit Form */}
+            {isEditingTx ? (
+              <div className="p-4 rounded-2xl bg-white border border-stone-200/80 space-y-3">
+                <span className="text-[10px] text-stone-500 font-bold uppercase tracking-wider">
+                  {language === 'hi' ? 'लेन-देन संपादित करें' : 'Edit Transaction'}
+                </span>
+                <div>
+                  <label className="block text-[11px] font-semibold text-stone-600 mb-1">
+                    {language === 'hi' ? 'राशि (₹)' : 'Amount (₹)'}
+                  </label>
+                  <input
+                    type="number"
+                    value={editAmount}
+                    onChange={(e) => setEditAmount(e.target.value)}
+                    className="w-full px-3 py-2 border border-stone-300 rounded-xl font-mono text-base font-bold text-stone-900 focus:outline-none focus:ring-2 focus:ring-emerald-600"
+                    placeholder="500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-stone-600 mb-1">
+                    {language === 'hi' ? 'विवरण / नोट्स' : 'Notes / Description'}
+                  </label>
+                  <input
+                    type="text"
+                    value={editNotes}
+                    onChange={(e) => setEditNotes(e.target.value)}
+                    className="w-full px-3 py-2 border border-stone-300 rounded-xl text-xs text-stone-900 focus:outline-none focus:ring-2 focus:ring-emerald-600"
+                    placeholder="e.g. Counter sales"
+                  />
+                </div>
+                <div className="flex items-center gap-2 pt-1">
+                  <button
+                    type="button"
+                    disabled={isSavingEdit}
+                    onClick={handleUpdateTransaction}
+                    className="flex-1 px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold rounded-xl inline-flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                  >
+                    <Check className="w-3.5 h-3.5" />
+                    <span>{isSavingEdit ? (language === 'hi' ? 'सहेज रहे हैं...' : 'Saving...') : (language === 'hi' ? 'सहेजें' : 'Save')}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsEditingTx(false)}
+                    className="px-4 py-2 border border-stone-200 hover:bg-stone-50 text-stone-600 text-xs font-bold rounded-xl transition-colors cursor-pointer"
+                  >
+                    {language === 'hi' ? 'रद्द करें' : 'Cancel'}
+                  </button>
+                </div>
               </div>
-              <div className="pt-1">
-                {getPaymentBadge(selectedTx.payment_mode)}
+            ) : (
+              <div className="p-4 rounded-2xl bg-white border border-stone-200/80 text-center space-y-0.5">
+                <span className="text-[10px] text-stone-500 font-medium">Transaction Amount</span>
+                <div className={`text-2xl sm:text-3xl font-serif font-black ${getTypeMeta(selectedTx).amountColor}`}>
+                  ₹{Number(selectedTx.amount || 0).toLocaleString('en-IN')}
+                </div>
+                <div className="pt-1">
+                  {getPaymentBadge(selectedTx.payment_mode)}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Details Fields */}
             <div className="space-y-2.5 text-xs">
@@ -2170,6 +2261,12 @@ export function CashFlowPage({
                   <span className="font-mono text-stone-800 text-right">{selectedTx.customer_phone}</span>
                 </div>
               )}
+              {selectedTx.notes && (
+                <div className="flex justify-between py-1.5 border-b border-stone-100">
+                  <span className="text-stone-500">Notes:</span>
+                  <span className="text-stone-800 text-right italic">{selectedTx.notes}</span>
+                </div>
+              )}
             </div>
 
             {/* Actions */}
@@ -2178,16 +2275,30 @@ export function CashFlowPage({
                 type="button"
                 disabled={deletingId === selectedTx.id}
                 onClick={() => handleDeleteTransaction(selectedTx.id)}
-                className="px-4 py-2.5 rounded-xl border border-red-200 text-red-700 hover:bg-red-50 text-xs font-bold inline-flex items-center gap-1.5 transition-colors cursor-pointer"
+                className="px-3 py-2 rounded-xl border border-red-200 text-red-700 hover:bg-red-50 text-xs font-bold inline-flex items-center gap-1.5 transition-colors cursor-pointer"
               >
                 <Trash2 className="w-3.5 h-3.5" />
-                <span>{deletingId === selectedTx.id ? 'Deleting...' : 'Delete'}</span>
+                <span>{deletingId === selectedTx.id ? '...' : 'Delete'}</span>
               </button>
+
+              {!isEditingTx && (
+                <button
+                  type="button"
+                  onClick={() => startEditingTx(selectedTx)}
+                  className="px-3.5 py-2 rounded-xl border border-stone-200 bg-stone-50 hover:bg-stone-100 text-stone-800 text-xs font-bold inline-flex items-center gap-1.5 transition-colors cursor-pointer"
+                >
+                  <Pencil className="w-3.5 h-3.5 text-stone-600" />
+                  <span>{language === 'hi' ? 'संपादित करें' : 'Edit'}</span>
+                </button>
+              )}
 
               <button
                 type="button"
-                onClick={() => setSelectedTx(null)}
-                className="px-5 py-2.5 rounded-xl bg-[#0F3E2E] hover:bg-[#165640] text-white text-xs font-bold transition-all cursor-pointer"
+                onClick={() => {
+                  setSelectedTx(null);
+                  setIsEditingTx(false);
+                }}
+                className="px-4 py-2 rounded-xl bg-[#0F3E2E] hover:bg-[#165640] text-white text-xs font-bold transition-all cursor-pointer"
               >
                 Close
               </button>

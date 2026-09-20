@@ -143,6 +143,62 @@ router.post('/', async (req, res) => {
   }
 });
 
+// Edit an existing transaction
+router.put('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const shopId = req.query.shopId || req.body.shopId || '';
+
+    const existing = await dataStore.getTransactionById(id);
+    if (!existing) {
+      return res.status(404).json({ success: false, error: 'Transaction not found' });
+    }
+
+    const updateFields = {};
+    if (req.body.amount !== undefined) {
+      const num = Number(req.body.amount);
+      if (isNaN(num) || num <= 0 || num > 10000000) {
+        return res.status(400).json({ success: false, error: 'Valid transaction amount is required' });
+      }
+      updateFields.amount = num;
+    }
+    if (req.body.type !== undefined) {
+      const validTypes = ['income', 'expense', 'udhaar_given', 'udhaar_repaid'];
+      if (!validTypes.includes(req.body.type)) {
+        return res.status(400).json({ success: false, error: 'Valid transaction type is required' });
+      }
+      updateFields.type = req.body.type;
+    }
+    if (req.body.payment_mode !== undefined) {
+      const validModes = ['cash', 'upi', 'khata'];
+      if (!validModes.includes(req.body.payment_mode)) {
+        return res.status(400).json({ success: false, error: 'Valid payment mode is required' });
+      }
+      updateFields.payment_mode = req.body.payment_mode;
+    }
+    if (req.body.category !== undefined) {
+      updateFields.category = String(req.body.category).trim().slice(0, 100);
+    }
+    if (req.body.customer_vendor_name !== undefined) {
+      updateFields.customer_vendor_name = String(req.body.customer_vendor_name).trim().slice(0, 100);
+    }
+    if (req.body.customer_phone !== undefined) {
+      updateFields.customer_phone = String(req.body.customer_phone).trim().replace(/\D/g, '').slice(-10);
+    }
+    if (req.body.notes !== undefined) {
+      updateFields.notes = String(req.body.notes).trim().slice(0, 250);
+    }
+    if (req.body.date !== undefined && /^\d{4}-\d{2}-\d{2}$/.test(req.body.date)) {
+      updateFields.date = req.body.date;
+    }
+
+    const updated = await dataStore.updateTransaction(id, shopId, updateFields);
+    res.json({ success: true, transaction: updated });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // Delete a transaction (Accidental entry undo)
 router.delete('/:id', async (req, res) => {
   try {

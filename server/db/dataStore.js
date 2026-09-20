@@ -309,6 +309,52 @@ export const dataStore = {
     return txData;
   },
 
+  async updateTransaction(id, shopId = '', updateData = {}) {
+    if (!id) return null;
+    const existing = await this.getTransactionById(id);
+    if (!existing) return null;
+    if (shopId && existing.shop_id && existing.shop_id !== shopId) {
+      throw new Error('Unauthorized to update transaction for this shop');
+    }
+
+    const updated = {
+      ...existing,
+      ...updateData,
+      id,
+      shop_id: existing.shop_id || shopId,
+      updated_at: new Date().toISOString()
+    };
+
+    const isMongo = await this.isPrimaryMongo();
+    if (isMongo) {
+      try {
+        const col = await getTransactionsCollection();
+        await col.updateOne({ id }, { $set: updated });
+        if (isServerless) return updated;
+      } catch (err) {
+        console.warn('[DataStore] Mongo updateTransaction error:', err.message);
+      }
+    }
+
+    try {
+      db.prepare(`
+        UPDATE transactions SET
+          date = ?, type = ?, amount = ?, category = ?, payment_mode = ?,
+          customer_vendor_name = ?, customer_phone = ?, customer_id = ?, notes = ?
+        WHERE id = ?
+      `).run(
+        updated.date, updated.type, updated.amount, updated.category,
+        updated.payment_mode || 'cash', updated.customer_vendor_name || '',
+        updated.customer_phone || '', updated.customer_id || null,
+        updated.notes || '', id
+      );
+    } catch (err) {
+      console.warn('[DataStore] SQLite updateTransaction error:', err.message);
+    }
+
+    return updated;
+  },
+
   async deleteTransaction(id, shopId = '') {
     const isMongo = await this.isPrimaryMongo();
     if (isMongo) {

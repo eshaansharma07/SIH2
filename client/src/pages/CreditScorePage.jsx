@@ -339,10 +339,12 @@ export function CreditScorePage({ shop, creditData, onNavigateTab, isDemoMode = 
                 </div>
               ) : (
                 <CreditGauge 
-                  score={baseScore || 809} 
+                  score={isSimulatorModalOpen ? activeProjectedScore : (baseScore || 809)} 
                   variant="editorial" 
                   language={language}
-                  ratingLabel={language === 'hi' ? currentTier?.tierNameHi : currentTier?.tierName}
+                  ratingLabel={isSimulatorModalOpen
+                    ? (language === 'hi' ? projectedTier?.tierNameHi : projectedTier?.tierName)
+                    : (language === 'hi' ? currentTier?.tierNameHi : currentTier?.tierName)}
                 />
               )}
             </div>
@@ -1117,19 +1119,39 @@ export function CreditScorePage({ shop, creditData, onNavigateTab, isDemoMode = 
               </button>
             </div>
 
-            {/* Projected Score Metric Callout */}
-            <div className="bg-[#FAF8F5] border border-stone-200 rounded-2xl p-4 flex items-center justify-between">
-              <div>
-                <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">Projected Score</span>
-                <div className="font-serif font-black text-2xl text-[#0F3E2E] mt-0.5">
-                  {activeProjectedScore} <span className="text-xs text-stone-400 font-normal">/ 850</span>
+            {/* Projected Score Metric Callout with Live Animated CreditGauge */}
+            <div className="bg-[#FAF8F5] border border-stone-200 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-2xs">
+              <div className="flex items-center gap-3">
+                <CreditGauge 
+                  score={activeProjectedScore} 
+                  compact={true} 
+                  language={language}
+                  ratingLabel={language === 'hi' ? projectedTier.tierNameHi : projectedTier.tierName}
+                />
+                <div>
+                  <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">
+                    {language === 'hi' ? 'अनुमानित स्कोर' : 'Projected Score'}
+                  </span>
+                  <div className="font-serif font-black text-2xl text-[#0F3E2E] mt-0.5">
+                    {activeProjectedScore} <span className="text-xs text-stone-400 font-normal">/ 850</span>
+                  </div>
+                  <div className="text-xs font-semibold text-emerald-800 mt-0.5">
+                    {language === 'hi' ? projectedTier.tierNameHi : projectedTier.tierName}
+                  </div>
                 </div>
               </div>
-              <div className="text-right">
-                <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">Projected Boost</span>
+              <div className="text-right sm:border-l sm:border-stone-200/80 sm:pl-4 self-end sm:self-center">
+                <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">
+                  {language === 'hi' ? 'अनुमानित वृद्धि' : 'Projected Boost'}
+                </span>
                 <div className="text-base font-black text-emerald-700 mt-0.5">
                   +{activeDelta} points
                 </div>
+                {tierUpgraded && (
+                  <span className="inline-block mt-1 text-[10px] font-bold text-emerald-800 bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-full">
+                    {language === 'hi' ? 'उच्च ऋण श्रेणी!' : 'Higher Loan Tier!'}
+                  </span>
+                )}
               </div>
             </div>
 

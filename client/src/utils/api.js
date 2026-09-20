@@ -147,6 +147,8 @@ export const api = {
     }
   },
   syncPendingTransactions: () => syncPendingTransactions(),
+  updateTransaction: (id, data, shopId = '') => 
+    request(`/transactions/${id}${shopId ? `?shopId=${shopId}` : ''}`, { method: 'PUT', body: JSON.stringify(data) }),
   deleteTransaction: (id, shopId = '') => 
     request(`/transactions/${id}${shopId ? `?shopId=${shopId}` : ''}`, { method: 'DELETE' }),
   getTransactionSummary: (shopId) => request(`/transactions/summary?shopId=${shopId}`),
