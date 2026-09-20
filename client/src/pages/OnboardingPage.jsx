@@ -1693,26 +1693,6 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
                 </div>
               )}
 
-              {/* Firebase Real SMS Gateway Status & Configure Button */}
-              <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-stone-100/90 border border-[#D5CCBC]/60 text-xs">
-                <div className="flex items-center gap-2">
-                  <span className={`w-2 h-2 rounded-full ${firebaseActive ? 'bg-emerald-500 shadow-sm shadow-emerald-500/50' : 'bg-amber-500'}`} />
-                  <span className="font-semibold text-[#1C1917] text-[11px]">
-                    {firebaseActive 
-                      ? (language === 'hi' ? 'फ़ायरबेस लाइव एसएमएस (सभी नंबर समर्थित)' : 'Firebase Live SMS (Any Mobile Number)')
-                      : (language === 'hi' ? 'फ़ायरबेस एसएमएस: सेटअप करें' : 'Firebase SMS: Setup Required')}
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => { setFirebaseModalOpen(true); setFbSaveMsg(''); }}
-                  className="text-[11px] font-bold text-[#0F3E2E] hover:underline flex items-center gap-1 cursor-pointer"
-                >
-                  <Settings className="w-3 h-3" />
-                  <span>{firebaseActive ? (language === 'hi' ? 'सेटिंग्स' : 'Config') : (language === 'hi' ? 'सेट करें' : 'Setup')}</span>
-                </button>
-              </div>
-
               {/* Invisible reCAPTCHA container for Firebase Phone Auth */}
               <div id="recaptcha-container"></div>
 
