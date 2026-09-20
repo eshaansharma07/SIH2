@@ -44,12 +44,20 @@ export function Navbar({
   const [hoveredTab, setHoveredTab] = useState(null);
   const leaveTimerRef = useRef(null);
   const navRef = useRef(null);
+  const profileRef = useRef(null);
+  const notificationRef = useRef(null);
 
-  // Dismiss dropdown on outside pointer click or Escape key
+  // Dismiss dropdowns on outside pointer/mouse/touch click or Escape key
   useEffect(() => {
-    const handlePointerDown = (e) => {
+    const handleOutsideClick = (e) => {
       if (navRef.current && !navRef.current.contains(e.target)) {
         setHoveredTab(null);
+      }
+      if (profileRef.current && !profileRef.current.contains(e.target)) {
+        setProfileOpen(false);
+      }
+      if (notificationRef.current && !notificationRef.current.contains(e.target)) {
+        setNotificationOpen(false);
       }
     };
     const handleKeyDown = (e) => {
@@ -59,14 +67,25 @@ export function Navbar({
         setNotificationOpen(false);
       }
     };
-    document.addEventListener('pointerdown', handlePointerDown);
+    document.addEventListener('pointerdown', handleOutsideClick);
+    document.addEventListener('mousedown', handleOutsideClick);
+    document.addEventListener('touchstart', handleOutsideClick);
     document.addEventListener('keydown', handleKeyDown);
     return () => {
-      document.removeEventListener('pointerdown', handlePointerDown);
+      document.removeEventListener('pointerdown', handleOutsideClick);
+      document.removeEventListener('mousedown', handleOutsideClick);
+      document.removeEventListener('touchstart', handleOutsideClick);
       document.removeEventListener('keydown', handleKeyDown);
       if (leaveTimerRef.current) clearTimeout(leaveTimerRef.current);
     };
   }, []);
+
+  // Close dropdowns whenever navigation tab changes
+  useEffect(() => {
+    setProfileOpen(false);
+    setNotificationOpen(false);
+    setHoveredTab(null);
+  }, [activeTab]);
 
   // If on landing/onboarding, OnboardingPage provides its own dedicated masthead
   if (activeTab === 'onboarding' || !currentShop) {
@@ -591,7 +610,7 @@ export function Navbar({
           <div className="flex items-center gap-2 sm:gap-3 shrink-0 ml-auto lg:ml-0 lg:flex-1 lg:max-w-[280px] xl:max-w-[320px] justify-end">
             
             {/* Notification Bell */}
-            <div className="relative">
+            <div ref={notificationRef} className="relative">
               <button
                 type="button"
                 onClick={() => setNotificationOpen(!notificationOpen)}
@@ -640,7 +659,7 @@ export function Navbar({
             </button>
 
             {/* Profile Chip & Dropdown */}
-            <div className="relative">
+            <div ref={profileRef} className="relative">
               <button
                 type="button"
                 onClick={() => setProfileOpen(!profileOpen)}

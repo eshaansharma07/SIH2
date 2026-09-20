@@ -75,9 +75,16 @@ export function WholesaleDiscoveryModal({ isOpen, onClose }) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 animate-fadeIn">
+    <div 
+      className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 animate-fadeIn cursor-pointer"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
+    >
       <div 
-        className="bg-stone-50 rounded-2xl max-w-4xl w-full border border-stone-300 shadow-2xl overflow-hidden flex flex-col max-h-[90vh] my-auto"
+        className="bg-stone-50 rounded-2xl max-w-4xl w-full border border-stone-300 shadow-2xl overflow-hidden flex flex-col max-h-[90vh] my-auto cursor-default"
         role="dialog"
         aria-modal="true"
       >

@@ -337,8 +337,15 @@ export function NumericKeypadModal({
   const commonVillageCustomers = ['Masterji Ramswaroop', 'Dharmendra Yadav', 'Suresh Carpenter', 'Panchayat Sahayak Amit', 'Chachi Kunti Devi'];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-stone-950/60 backdrop-blur-md animate-fadeIn">
-      <div className="w-full max-w-sm bg-white rounded-2xl border border-stone-300 shadow-2xl overflow-hidden flex flex-col max-h-[95vh] transition-all">
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-stone-950/60 backdrop-blur-md animate-fadeIn cursor-pointer"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
+    >
+      <div className="w-full max-w-sm bg-white rounded-2xl border border-stone-300 shadow-2xl overflow-hidden flex flex-col max-h-[95vh] transition-all cursor-default">
         
         {/* Header */}
         <div className="px-5 pt-4 pb-2 flex items-center justify-between border-b border-stone-200">

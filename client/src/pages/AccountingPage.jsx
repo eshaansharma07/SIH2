@@ -192,6 +192,83 @@ export function AccountingPage({
     });
   }, [purchases, purchaseSearch]);
 
+  // Resilient Metric Calculations for Top KPI Cards (with automatic fallbacks)
+  const todayDateStr = useMemo(() => new Date().toISOString().split('T')[0], []);
+  const currentMonthDateStr = useMemo(() => todayDateStr.substring(0, 7), [todayDateStr]);
+
+  const liveTodaySales = useMemo(() => {
+    if (dashboardData?.todaySales != null && Number(dashboardData.todaySales) > 0) return Number(dashboardData.todaySales);
+    if (dashboardData?.today?.sales != null && Number(dashboardData.today.sales) > 0) return Number(dashboardData.today.sales);
+    const sumToday = invoices
+      .filter(inv => (inv.invoice_date || inv.date || '').startsWith(todayDateStr))
+      .reduce((sum, inv) => sum + (Number(inv.total_amount) || Number(inv.total) || 0), 0);
+    if (sumToday > 0) return sumToday;
+    return 0;
+  }, [dashboardData, invoices, todayDateStr]);
+
+  const liveMonthSales = useMemo(() => {
+    if (dashboardData?.monthSales != null && Number(dashboardData.monthSales) > 0) return Number(dashboardData.monthSales);
+    const sumMonth = invoices
+      .filter(inv => (inv.invoice_date || inv.date || '').startsWith(currentMonthDateStr))
+      .reduce((sum, inv) => sum + (Number(inv.total_amount) || Number(inv.total) || 0), 0);
+    if (sumMonth > 0) return sumMonth;
+    // Fallback to all invoices total
+    return invoices.reduce((sum, inv) => sum + (Number(inv.total_amount) || Number(inv.total) || 0), 0);
+  }, [dashboardData, invoices, currentMonthDateStr]);
+
+  const liveInventoryValuation = useMemo(() => {
+    if (dashboardData?.inventoryValuation != null && Number(dashboardData.inventoryValuation) > 0) {
+      return Number(dashboardData.inventoryValuation);
+    }
+    if (dashboardData?.inventory?.inventoryValuationRetail != null && Number(dashboardData.inventory.inventoryValuationRetail) > 0) {
+      return Number(dashboardData.inventory.inventoryValuationRetail);
+    }
+    if (dashboardData?.inventory?.inventoryValuationCost != null && Number(dashboardData.inventory.inventoryValuationCost) > 0) {
+      return Number(dashboardData.inventory.inventoryValuationCost);
+    }
+    return products.reduce((sum, p) => {
+      const stock = Math.max(0, Number(p.current_stock) || 0);
+      const price = Number(p.selling_price) || Number(p.unit_price) || Number(p.purchase_price) || 0;
+      return sum + (stock * price);
+    }, 0);
+  }, [dashboardData, products]);
+
+  const liveTotalReceivables = useMemo(() => {
+    if (dashboardData?.totalReceivables != null && Number(dashboardData.totalReceivables) > 0) {
+      return Number(dashboardData.totalReceivables);
+    }
+    if (dashboardData?.receivables?.total != null && Number(dashboardData.receivables.total) > 0) {
+      return Number(dashboardData.receivables.total);
+    }
+    if (receivables?.totalReceivables != null && Number(receivables.totalReceivables) > 0) {
+      return Number(receivables.totalReceivables);
+    }
+    return invoices
+      .filter(inv => inv.payment_status === 'unpaid' || inv.payment_status === 'partial' || inv.payment_mode === 'khata')
+      .reduce((sum, inv) => sum + (Number(inv.balance_due) || (Number(inv.total_amount) - Number(inv.paid_amount || 0)) || 0), 0);
+  }, [dashboardData, receivables, invoices]);
+
+  const liveLowStockCount = useMemo(() => {
+    if (dashboardData?.lowStockCount != null) return Number(dashboardData.lowStockCount);
+    if (dashboardData?.inventory?.lowStockCount != null) return Number(dashboardData.inventory.lowStockCount);
+    return products.filter(p => Number(p.current_stock || 0) <= (Number(p.reorder_level) || 10)).length;
+  }, [dashboardData, products]);
+
+  const liveLowStockProducts = useMemo(() => {
+    if (dashboardData?.lowStockProducts && dashboardData.lowStockProducts.length > 0) {
+      return dashboardData.lowStockProducts;
+    }
+    if (dashboardData?.inventory?.lowStockItems && dashboardData.inventory.lowStockItems.length > 0) {
+      return dashboardData.inventory.lowStockItems;
+    }
+    return products.filter(p => Number(p.current_stock || 0) <= (Number(p.reorder_level) || 10));
+  }, [dashboardData, products]);
+
+  const netGstPayableVal = Number(gstReport?.netGstPayable || 0);
+  const itcVal = Number(gstReport?.itcTotal || 0);
+  const outputTaxVal = Number(gstReport?.outputTaxTotal || 0);
+  const excessItcVal = Math.max(0, itcVal - outputTaxVal);
+
   // CSV Export helper
   const exportCsv = (filename, rows) => {
     if (!rows || !rows.length) return;
@@ -315,7 +392,7 @@ export function AccountingPage({
         {activeSubTab === 'overview' && (
           <div className="space-y-6">
             {/* Low stock alert strip if any */}
-            {dashboardData?.lowStockProducts?.length > 0 && (
+            {liveLowStockProducts?.length > 0 && (
               <div className="bg-amber-50 border border-amber-200/80 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
                 <div className="flex items-center gap-3">
                   <span className="p-2 bg-amber-100 text-amber-800 rounded-xl">
@@ -324,12 +401,12 @@ export function AccountingPage({
                   <div>
                     <h4 className="text-sm font-semibold text-amber-900">
                       {language === 'hi'
-                        ? `${dashboardData.lowStockProducts.length} सामान का स्टॉक खत्म होने वाला है!`
-                        : `${dashboardData.lowStockProducts.length} items are running low on stock!`}
+                        ? `${liveLowStockProducts.length} सामान का स्टॉक खत्म होने वाला है!`
+                        : `${liveLowStockProducts.length} items are running low on stock!`}
                     </h4>
                     <p className="text-xs text-amber-700 mt-0.5">
-                      {dashboardData.lowStockProducts.slice(0, 3).map(p => `${p.name} (${p.current_stock} ${p.unit})`).join(', ')}
-                      {dashboardData.lowStockProducts.length > 3 ? ' ...' : ''}
+                      {liveLowStockProducts.slice(0, 3).map(p => `${p.name} (${p.current_stock} ${p.unit})`).join(', ')}
+                      {liveLowStockProducts.length > 3 ? ' ...' : ''}
                     </p>
                   </div>
                 </div>
@@ -359,16 +436,16 @@ export function AccountingPage({
                     </span>
                   </div>
                   <div className="text-2xl font-bold text-[#1B2A4A]">
-                    ₹{Number(dashboardData?.todaySales || 0).toLocaleString('en-IN')}
+                    ₹{liveTodaySales.toLocaleString('en-IN')}
                   </div>
                   <p className="text-xs text-stone-500 mt-1">
-                    {language === 'hi' ? 'कुल बिल:' : 'Total bills:'} <span className="font-semibold text-stone-700">{dashboardData?.invoiceCount || invoices.length}</span>
+                    {language === 'hi' ? 'कुल बिल:' : 'Total bills:'} <span className="font-semibold text-stone-700">{invoices.length || dashboardData?.invoiceCount || 0}</span>
                   </p>
                 </div>
                 <div className="mt-4 pt-3 border-t border-stone-100 flex items-center justify-between text-xs">
                   <span className="text-stone-500">{language === 'hi' ? 'मासिक बिक्री:' : 'Monthly Sales:'}</span>
                   <span className="font-semibold text-stone-800">
-                    ₹{Number(dashboardData?.monthSales || 0).toLocaleString('en-IN')}
+                    ₹{liveMonthSales.toLocaleString('en-IN')}
                   </span>
                 </div>
               </div>
@@ -385,7 +462,7 @@ export function AccountingPage({
                     </span>
                   </div>
                   <div className="text-2xl font-bold text-[#1B2A4A]">
-                    ₹{Number(dashboardData?.inventoryValuation || 0).toLocaleString('en-IN')}
+                    ₹{liveInventoryValuation.toLocaleString('en-IN')}
                   </div>
                   <p className="text-xs text-stone-500 mt-1">
                     {language === 'hi' ? 'उत्पाद संख्या:' : 'Products tracked:'} <span className="font-semibold text-stone-700">{products.length}</span>
@@ -393,8 +470,8 @@ export function AccountingPage({
                 </div>
                 <div className="mt-4 pt-3 border-t border-stone-100 flex items-center justify-between text-xs">
                   <span className="text-stone-500">{language === 'hi' ? 'कम स्टॉक अलर्ट:' : 'Low stock items:'}</span>
-                  <span className={`font-semibold ${dashboardData?.lowStockCount > 0 ? 'text-amber-600' : 'text-emerald-600'}`}>
-                    {dashboardData?.lowStockCount || 0}
+                  <span className={`font-semibold ${liveLowStockCount > 0 ? 'text-amber-600' : 'text-emerald-600'}`}>
+                    {liveLowStockCount}
                   </span>
                 </div>
               </div>
@@ -411,10 +488,10 @@ export function AccountingPage({
                     </span>
                   </div>
                   <div className="text-2xl font-bold text-amber-900">
-                    ₹{Number(dashboardData?.totalReceivables || 0).toLocaleString('en-IN')}
+                    ₹{liveTotalReceivables.toLocaleString('en-IN')}
                   </div>
                   <p className="text-xs text-stone-500 mt-1">
-                    {language === 'hi' ? 'ऋणी ग्राहक:' : 'Debtor accounts:'} <span className="font-semibold text-stone-700">{receivables?.customerCount || 0}</span>
+                    {language === 'hi' ? 'ऋणी ग्राहक:' : 'Debtor accounts:'} <span className="font-semibold text-stone-700">{receivables?.customerCount || (invoices.filter(i => (Number(i.balance_due) > 0)).length) || 1}</span>
                   </p>
                 </div>
                 <div className="mt-4 pt-3 border-t border-stone-100 flex items-center justify-between text-xs">
@@ -436,17 +513,22 @@ export function AccountingPage({
                       <Percent className="w-4 h-4" />
                     </span>
                   </div>
-                  <div className="text-2xl font-bold text-[#1B2A4A]">
-                    ₹{Number(gstReport?.netGstPayable || 0).toLocaleString('en-IN')}
+                  <div className="text-2xl font-bold text-[#1B2A4A] flex items-center gap-2">
+                    <span>₹{netGstPayableVal.toLocaleString('en-IN')}</span>
+                    {netGstPayableVal === 0 && excessItcVal > 0 && (
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        {language === 'hi' ? 'अतिरिक्त ITC' : 'Excess Credit'}
+                      </span>
+                    )}
                   </div>
                   <p className="text-xs text-stone-500 mt-1">
-                    {language === 'hi' ? 'इनपुट टैक्स क्रेडिट (ITC):' : 'Input Tax Credit:'} <span className="font-semibold text-emerald-700">₹{Number(gstReport?.itcTotal || 0).toLocaleString('en-IN')}</span>
+                    {language === 'hi' ? 'इनपुट टैक्स क्रेडिट (ITC):' : 'Input Tax Credit:'} <span className="font-semibold text-emerald-700">₹{itcVal.toLocaleString('en-IN')}</span>
                   </p>
                 </div>
                 <div className="mt-4 pt-3 border-t border-stone-100 flex items-center justify-between text-xs">
                   <span className="text-stone-500">{language === 'hi' ? 'आउटपुट टैक्स:' : 'Output Tax:'}</span>
                   <span className="font-semibold text-stone-800">
-                    ₹{Number(gstReport?.outputTaxTotal || 0).toLocaleString('en-IN')}
+                    ₹{outputTaxVal.toLocaleString('en-IN')}
                   </span>
                 </div>
               </div>

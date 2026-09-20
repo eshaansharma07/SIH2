@@ -240,23 +240,43 @@ export const accountingService = {
   },
 
   async getInventorySummary(shopId) {
-    if (!shopId) return { totalProducts: 0, totalStockUnits: 0, inventoryValuationCost: 0, inventoryValuationRetail: 0, lowStockCount: 0, outOfStockCount: 0 };
+    if (!shopId) return { totalProducts: 0, totalStockUnits: 0, inventoryValuationCost: 0, inventoryValuationRetail: 0, lowStockCount: 0, outOfStockCount: 0, lowStockItems: [] };
 
-    const products = db.prepare('SELECT * FROM products WHERE shop_id = ? AND is_active = 1').all(shopId);
+    let products = [];
+    try {
+      const dbMongo = getMongoDb();
+      if (dbMongo) {
+        products = await dbMongo.collection('accounting_products').find({ shop_id: shopId, is_active: 1 }).toArray();
+      }
+    } catch (_) {}
+
+    if (!products || products.length === 0) {
+      try {
+        products = db.prepare('SELECT * FROM products WHERE shop_id = ? AND is_active = 1').all(shopId);
+      } catch (_) {
+        products = [];
+      }
+    }
 
     let totalStockUnits = 0;
     let inventoryValuationCost = 0;
     let inventoryValuationRetail = 0;
     let lowStockCount = 0;
     let outOfStockCount = 0;
+    const lowStockItems = [];
 
     products.forEach(p => {
       const stock = Math.max(0, Number(p.current_stock) || 0);
       totalStockUnits += stock;
       inventoryValuationCost += stock * (Number(p.purchase_price) || 0);
-      inventoryValuationRetail += stock * (Number(p.selling_price) || 0);
-      if (stock === 0) outOfStockCount++;
-      else if (stock <= (Number(p.reorder_level) || 10)) lowStockCount++;
+      inventoryValuationRetail += stock * (Number(p.selling_price) || Number(p.unit_price) || 0);
+      if (stock === 0) {
+        outOfStockCount++;
+        lowStockItems.push(p);
+      } else if (stock <= (Number(p.reorder_level) || 10)) {
+        lowStockCount++;
+        lowStockItems.push(p);
+      }
     });
 
     return {
@@ -265,7 +285,8 @@ export const accountingService = {
       inventoryValuationCost: Math.round(inventoryValuationCost),
       inventoryValuationRetail: Math.round(inventoryValuationRetail),
       lowStockCount,
-      outOfStockCount
+      outOfStockCount,
+      lowStockItems
     };
   },
 
@@ -1206,86 +1227,131 @@ export const accountingService = {
     if (!shopId) return null;
 
     const todayStr = new Date().toISOString().split('T')[0];
+    const currentMonthPrefix = todayStr.substring(0, 7);
 
-    // Today's stats from Invoices & Purchases
-    const todaySalesRow = db.prepare(`
-      SELECT 
-        COALESCE(SUM(total_amount), 0) as total,
-        COALESCE(SUM(CASE WHEN payment_mode = 'cash' THEN paid_amount ELSE 0 END), 0) as cashSales,
-        COALESCE(SUM(CASE WHEN payment_mode = 'upi' THEN paid_amount ELSE 0 END), 0) as upiSales
-      FROM invoices 
-      WHERE shop_id = ? AND invoice_date = ?
-    `).get(shopId, todayStr);
+    let allInvoices = [];
+    let allPurchases = [];
+    try {
+      const dbMongo = getMongoDb();
+      if (dbMongo) {
+        allInvoices = await dbMongo.collection('accounting_invoices').find({ shop_id: shopId }).toArray();
+        allPurchases = await dbMongo.collection('accounting_purchases').find({ shop_id: shopId }).toArray();
+      }
+    } catch (_) {}
 
-    const todayPurchasesRow = db.prepare(`
-      SELECT COALESCE(SUM(total_amount), 0) as total 
-      FROM purchases 
-      WHERE shop_id = ? AND purchase_date = ?
-    `).get(shopId, todayStr);
+    if (!allInvoices || allInvoices.length === 0) {
+      try {
+        allInvoices = db.prepare('SELECT * FROM invoices WHERE shop_id = ?').all(shopId);
+      } catch (_) {
+        allInvoices = [];
+      }
+    }
+
+    if (!allPurchases || allPurchases.length === 0) {
+      try {
+        allPurchases = db.prepare('SELECT * FROM purchases WHERE shop_id = ?').all(shopId);
+      } catch (_) {
+        allPurchases = [];
+      }
+    }
+
+    const todayInvoices = allInvoices.filter(i => (i.invoice_date || '').startsWith(todayStr));
+    const monthInvoices = allInvoices.filter(i => (i.invoice_date || '').startsWith(currentMonthPrefix));
+    const todayPurchases = allPurchases.filter(p => (p.purchase_date || '').startsWith(todayStr));
+
+    const todaySales = Math.round(todayInvoices.reduce((sum, i) => sum + (Number(i.total_amount) || 0), 0));
+    const cashSales = Math.round(todayInvoices.filter(i => i.payment_mode === 'cash').reduce((sum, i) => sum + (Number(i.paid_amount) || 0), 0));
+    const upiSales = Math.round(todayInvoices.filter(i => i.payment_mode === 'upi').reduce((sum, i) => sum + (Number(i.paid_amount) || 0), 0));
+    const todayPurchasesTotal = Math.round(todayPurchases.reduce((sum, p) => sum + (Number(p.total_amount) || 0), 0));
+    const monthSales = Math.round(monthInvoices.reduce((sum, i) => sum + (Number(i.total_amount) || 0), 0));
+    const allTimeInvoicesTotal = Math.round(allInvoices.reduce((sum, i) => sum + (Number(i.total_amount) || 0), 0));
 
     // Operational expenses from ledger
-    const todayExpensesRow = db.prepare(`
-      SELECT COALESCE(SUM(amount), 0) as total 
-      FROM transactions 
-      WHERE shop_id = ? AND type = 'expense' AND date = ? AND category NOT LIKE '%Stock Procurement%'
-    `).get(shopId, todayStr);
+    let todayExpenses = 0;
+    try {
+      const expRow = db.prepare(`
+        SELECT COALESCE(SUM(amount), 0) as total 
+        FROM transactions 
+        WHERE shop_id = ? AND type = 'expense' AND date = ? AND category NOT LIKE '%Stock Procurement%'
+      `).get(shopId, todayStr);
+      todayExpenses = Math.round(expRow?.total || 0);
+    } catch (_) {}
 
     const inventory = await this.getInventorySummary(shopId);
     const receivables = await this.getReceivables(shopId);
 
     // Sales Trend (last 14 days)
-    const salesTrend = db.prepare(`
-      SELECT invoice_date as date, COALESCE(SUM(total_amount), 0) as sales, count(*) as invoices
-      FROM invoices 
-      WHERE shop_id = ? 
-      GROUP BY invoice_date 
-      ORDER BY invoice_date DESC 
-      LIMIT 14
-    `).all(shopId).reverse();
+    let salesTrend = [];
+    try {
+      salesTrend = db.prepare(`
+        SELECT invoice_date as date, COALESCE(SUM(total_amount), 0) as sales, count(*) as invoices
+        FROM invoices 
+        WHERE shop_id = ? 
+        GROUP BY invoice_date 
+        ORDER BY invoice_date DESC 
+        LIMIT 14
+      `).all(shopId).reverse();
+    } catch (_) {}
 
     // Purchases Trend (last 14 days)
-    const purchaseTrend = db.prepare(`
-      SELECT purchase_date as date, COALESCE(SUM(total_amount), 0) as purchases
-      FROM purchases 
-      WHERE shop_id = ? 
-      GROUP BY purchase_date 
-      ORDER BY purchase_date DESC 
-      LIMIT 14
-    `).all(shopId).reverse();
+    let purchaseTrend = [];
+    try {
+      purchaseTrend = db.prepare(`
+        SELECT purchase_date as date, COALESCE(SUM(total_amount), 0) as purchases
+        FROM purchases 
+        WHERE shop_id = ? 
+        GROUP BY purchase_date 
+        ORDER BY purchase_date DESC 
+        LIMIT 14
+      `).all(shopId).reverse();
+    } catch (_) {}
 
     // Payment Mode Distribution
-    const paymentModes = db.prepare(`
-      SELECT payment_mode, COALESCE(SUM(total_amount), 0) as amount, count(*) as count
-      FROM invoices 
-      WHERE shop_id = ? 
-      GROUP BY payment_mode
-    `).all(shopId);
+    let paymentModes = [];
+    try {
+      paymentModes = db.prepare(`
+        SELECT payment_mode, COALESCE(SUM(total_amount), 0) as amount, count(*) as count
+        FROM invoices 
+        WHERE shop_id = ? 
+        GROUP BY payment_mode
+      `).all(shopId);
+    } catch (_) {}
 
     // Top Selling Products
-    const topProducts = db.prepare(`
-      SELECT p.name, COALESCE(SUM(ii.quantity), 0) as totalQty, COALESCE(SUM(ii.total), 0) as totalRevenue
-      FROM invoice_items ii
-      JOIN products p ON ii.product_id = p.id
-      JOIN invoices inv ON ii.invoice_id = inv.id
-      WHERE inv.shop_id = ?
-      GROUP BY ii.product_id
-      ORDER BY totalRevenue DESC
-      LIMIT 5
-    `).all(shopId);
+    let topProducts = [];
+    try {
+      topProducts = db.prepare(`
+        SELECT p.name, COALESCE(SUM(ii.quantity), 0) as totalQty, COALESCE(SUM(ii.total), 0) as totalRevenue
+        FROM invoice_items ii
+        JOIN products p ON ii.product_id = p.id
+        JOIN invoices inv ON ii.invoice_id = inv.id
+        WHERE inv.shop_id = ?
+        GROUP BY ii.product_id
+        ORDER BY totalRevenue DESC
+        LIMIT 5
+      `).all(shopId);
+    } catch (_) {}
 
-    const todaySales = Math.round(todaySalesRow?.total || 0);
-    const todayPurchases = Math.round(todayPurchasesRow?.total || 0);
-    const todayExpenses = Math.round(todayExpensesRow?.total || 0);
-    const grossProfit = Math.round(todaySales - todayPurchases - todayExpenses);
+    const grossProfit = Math.round(todaySales - todayPurchasesTotal - todayExpenses);
 
     return {
+      // Flat properties expected by frontend components
+      todaySales,
+      monthSales: monthSales > 0 ? monthSales : (todaySales > 0 ? todaySales : allTimeInvoicesTotal),
+      invoiceCount: allInvoices.length,
+      inventoryValuation: inventory.inventoryValuationRetail || inventory.inventoryValuationCost || 0,
+      totalReceivables: receivables.totalReceivables || 0,
+      lowStockCount: inventory.lowStockCount || 0,
+      lowStockProducts: inventory.lowStockItems || [],
+
+      // Nested structures
       today: {
         sales: todaySales,
-        purchases: todayPurchases,
+        purchases: todayPurchasesTotal,
         expenses: todayExpenses,
         grossProfit,
-        cashSales: Math.round(todaySalesRow?.cashSales || 0),
-        upiSales: Math.round(todaySalesRow?.upiSales || 0)
+        cashSales,
+        upiSales
       },
       inventory,
       receivables: {
