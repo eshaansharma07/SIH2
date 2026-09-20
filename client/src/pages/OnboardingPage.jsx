@@ -1178,10 +1178,6 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
             {/* LEFT COLUMN: Editorial Headline, Copy, Actions, Stats (7 Cols) */}
             <div className="lg:col-span-7 space-y-6 sm:space-y-8">
               
-              {/* Eyebrow Pill */}
-              <div className="inline-flex items-center px-3.5 py-1.5 rounded-full border border-[#D5CCBC] bg-[#FAF7F2] text-[11px] font-semibold text-[#57534E] tracking-tight">
-                RBI Priority Sector Lending • Smart India Hackathon 2026
-              </div>
 
               {/* Main Headline (Editorial Serif) */}
               <h1 className="font-serif font-black text-5xl sm:text-6xl md:text-7xl text-[#1C1917] tracking-tight leading-[1.04]">
