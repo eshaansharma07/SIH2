@@ -199,7 +199,7 @@ export const api = {
   getScraperStatus: () => request('/schemes/status'),
 
   // Advisory
-  chatAdvisor: (shopId, question) => {
+  chatAdvisor: (shopId, question, language = 'en') => {
     let userApiKey = '';
     try {
       userApiKey = safeStorage.getItem('vyapaar_gemini_api_key', '');
@@ -209,6 +209,7 @@ export const api = {
       body: JSON.stringify({ 
         shopId, 
         question, 
+        language,
         apiKey: userApiKey || undefined 
       }) 
     });

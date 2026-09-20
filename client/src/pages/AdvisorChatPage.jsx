@@ -85,7 +85,7 @@ export function AdvisorChatPage({ shop, creditData, summaryData, initialPrompt =
     setLoading(true);
 
     try {
-      const res = await api.chatAdvisor(shop.id, text);
+      const res = await api.chatAdvisor(shop.id, text, language);
       const replyText = res?.response || res?.advice?.content || res?.content || res?.message;
       if (res?.success && replyText) {
         setMessages(prev => [
@@ -114,6 +114,7 @@ export function AdvisorChatPage({ shop, creditData, summaryData, initialPrompt =
   };
 
   const sampleQuestions = [
+    { textHi: "दैनिक नकद या उधार बिक्री कैसे दर्ज करें?", textEn: "How do I record a daily cash or udhaar sale?" },
     { textHi: "दिवाली के लिए खाद्य तेल का कितना स्टॉक लूँ?", textEn: "How much edible oil stock for Diwali?" },
     { textHi: "ग्राहक उधार कैसे कम करें?", textEn: "How to reduce customer udhaar?" },
     { textHi: "क्या डीप-फ्रीज़र के लिए मुद्रा लोन मिलेगा?", textEn: "Can I get a MUDRA loan for a freezer?" },

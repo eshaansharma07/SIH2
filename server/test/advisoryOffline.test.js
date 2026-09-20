@@ -29,6 +29,23 @@ test('AI Advisory Offline Fallback Suite', async (t) => {
         'Response must address loan feasibility'
       );
     });
+
+    await t.test('3. Query about process to log transactions in English responds in English with exact POS & Keypad steps', async () => {
+      const response = await generateAdvisoryResponse('ramesh-kirana', 'How do I record a daily cash or udhaar sale in SaakhSetu?', '', 'en');
+      assert.ok(response, 'Response must exist');
+      assert.ok(response.content, 'Content must not be empty');
+      assert.ok(response.content.includes('POS Bill') || response.content.includes('Keypad'), 'Must explain POS or Keypad steps');
+      assert.ok(response.content.includes('Namaste'), 'Must be in English');
+      assert.ok(!response.content.includes('राम राम'), 'Must not be in Hindi when dashboard language is en');
+    });
+
+    await t.test('4. Query about recording sales in Hindi responds in Hindi with exact steps', async () => {
+      const response = await generateAdvisoryResponse('ramesh-kirana', 'दैनिक नकद या उधार बिक्री कैसे दर्ज करें?', '', 'hi');
+      assert.ok(response, 'Response must exist');
+      assert.ok(response.content, 'Content must not be empty');
+      assert.ok(response.content.includes('POS') || response.content.includes('कीपैड'), 'Must explain POS or Keypad in Hindi');
+      assert.ok(response.content.includes('राम राम'), 'Must be in Hindi when dashboard language is hi');
+    });
   } finally {
     process.env.GEMINI_API_KEY = origKey;
   }

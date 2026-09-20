@@ -28,10 +28,10 @@ export function FloatingSetuAI({
   const shopName = currentShop?.owner_name || 'Ramesh Ji';
 
   const quickQuestions = [
-    { label: language === 'hi' ? 'जल्दी सवाल' : 'Quick question', prompt: 'What are the top 3 priorities for my store today?' },
-    { label: language === 'hi' ? 'मार्गदर्शन' : 'Guide me', prompt: 'How do I improve my business credit profile?' },
-    { label: language === 'hi' ? 'योजना समझाएं' : 'Explain a scheme', prompt: 'Which government scheme gives 0% or low interest for my kirana store?' },
-    { label: language === 'hi' ? 'बिक्री कैसे दर्ज करें?' : 'How to record a sale?', prompt: 'How do I record a daily cash or udhaar sale in SaakhSetu?' }
+    { label: language === 'hi' ? 'दैनिक प्राथमिकताएं' : 'Priorities today', prompt: language === 'hi' ? 'मेरी दुकान के लिए आज की शीर्ष 3 प्राथमिकताएं क्या हैं?' : 'What are the top 3 priorities for my store today?' },
+    { label: language === 'hi' ? 'क्रेडिट स्कोर सुधार' : 'Credit score', prompt: language === 'hi' ? 'मैं अपनी दुकान का क्रेडिट स्कोर और रेटिंग कैसे सुधारूं?' : 'How do I improve my business credit profile?' },
+    { label: language === 'hi' ? 'सरकारी योजनाएं' : 'Government schemes', prompt: language === 'hi' ? 'मेरी किराना दुकान के लिए सबसे कम ब्याज वाली कौन सी सरकारी योजना है?' : 'Which government scheme gives 0% or low interest for my kirana store?' },
+    { label: language === 'hi' ? 'बिक्री कैसे दर्ज करें?' : 'How to record a sale?', prompt: language === 'hi' ? 'साख सेतु में दैनिक नकद या उधार बिक्री कैसे दर्ज करें?' : 'How do I record a daily cash or udhaar sale in SaakhSetu?' }
   ];
 
   useEffect(() => {
@@ -56,8 +56,12 @@ export function FloatingSetuAI({
 
     try {
       const shopId = currentShop?.id || 'ramesh-kirana';
-      const res = await api.chatAdvisor(shopId, text);
-      const reply = res?.response || res?.advice?.content || res?.content || res?.message || "Namaste! I have analyzed your query based on RBI PSL norms and your shop activity.";
+      const res = await api.chatAdvisor(shopId, text, language);
+      const reply = res?.response || res?.advice?.content || res?.content || res?.message || (
+        language === 'hi'
+          ? "नमस्ते! मैंने आपकी दुकान के बही-खाते और आरबीआई प्राथमिक क्षेत्र मानदंडों के आधार पर उत्तर तैयार किया है।"
+          : "Namaste! I have analyzed your query based on RBI PSL norms and your shop activity."
+      );
       
       setMessages(prev => [
         ...prev,
@@ -69,13 +73,21 @@ export function FloatingSetuAI({
       ]);
     } catch (err) {
       // Grounded rural fallback response
-      let fallbackText = `Namaste ${shopName}! `;
-      if (text.toLowerCase().includes('sale') || text.toLowerCase().includes('bahi') || text.toLowerCase().includes('record')) {
-        fallbackText += "To record a sale or udhaar, click the 'Record Sale →' button at the top of your Overview, or tap the '+' button in Bahi-Khata. You can also use voice to speak in Hindi!";
-      } else if (text.toLowerCase().includes('scheme') || text.toLowerCase().includes('mudra') || text.toLowerCase().includes('loan')) {
-        fallbackText += "Based on your verified kirana profile in UP, you match PM MUDRA Kishor (up to ₹5 Lakhs) and UP ODOP Margin Money Scheme. Go to the Schemes tab to review full benefits!";
+      const isEn = language !== 'hi';
+      let fallbackText = isEn ? `Namaste ${shopName}! 🙏\n\n` : `राम राम ${shopName}! 🙏\n\n`;
+      const lower = text.toLowerCase();
+      if (lower.includes('sale') || lower.includes('bahi') || lower.includes('record') || text.includes('बिक्री') || text.includes('दर्ज') || text.includes('खाता')) {
+        fallbackText += isEn
+          ? "To record a sale or udhaar, click '+ New Bill (POS)' in Accounting or tap 'Log Transaction' on your Dashboard. You can also use voice assistant (Setu Vani) to speak!"
+          : "बिक्री या उधार दर्ज करने के लिए 'व्यापार अकाउंटिंग' में '+ नया बिल (POS)' पर क्लिक करें अथवा डैशबोर्ड पर 'लेनदेन दर्ज करें' कीपैड का उपयोग करें। आप सेतु वाणी (माइक) से बोलकर भी एंट्री कर सकते हैं!";
+      } else if (lower.includes('scheme') || lower.includes('mudra') || lower.includes('loan') || text.includes('लोन') || text.includes('योजना')) {
+        fallbackText += isEn
+          ? "Based on your verified kirana profile in UP, you match PM MUDRA Kishor (up to ₹5 Lakhs) and UP ODOP Margin Money Scheme. Go to the Schemes tab to review full benefits!"
+          : "आपकी दुकान के रिकॉर्ड के अनुसार आप पीएम मुद्रा किशोर योजना (₹5 लाख तक) के 100% पात्र हैं। पूरी जानकारी के लिए 'सरकारी योजनाएं' टैब देखें!";
       } else {
-        fallbackText += "I am actively monitoring your daily bahi-khata and wholesale opportunities. Regularly logging daily entries helps build your institutional credit profile for low-interest bank loans.";
+        fallbackText += isEn
+          ? "I am actively monitoring your daily bahi-khata and wholesale opportunities. Regularly logging daily entries helps build your institutional credit profile for low-interest bank loans."
+          : "मैं आपके दैनिक बही-खाते और थोक भावों की निरंतर निगरानी कर रहा हूँ। नियमित प्रविष्टि से आपका क्रेडिट स्कोर मजबूत होता है और बैंक ऋण में मदद मिलती है।";
       }
 
       setMessages(prev => [

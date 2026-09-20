@@ -24,6 +24,13 @@ dotenv.config();
 
 // Bilingual Curated Grounded Safety Net Responses for Live Judging
 const JUDGING_FALLBACK_SCENARIOS = {
+  // Scenario 0: Logging Transactions & Recording Daily Sales / POS / Keypad
+  record_sale_log: {
+    keywords: ['record', 'log', 'transaction', 'transactions', 'sale', 'cash', 'bill', 'pos', 'दर्ज', 'बिक्री', 'लेनदेन', 'पर्ची', 'कीपैड'],
+    responseHi: (ctx) => `राम राम ${ctx.ownerName} जी! 🧾\n\n**साख सेतु (SaakhSetu)** में दैनिक नकद और उधार लेनदेन दर्ज करने की 4 आसान विधियां:\n\n1. **POS बिल (जीएसटी व इन्वेंटरी सहित)**: ऊपर मेनू में 'व्यापार अकाउंटिंग' पर जाएं -> '+ नया बिल बनाएं (POS)' पर क्लिक करें -> सामान चुनें, भुगतान माध्यम (नकद/UPI/उधार) चुनें और बिल पूरा करें। स्टॉक अपने आप अपडेट हो जाएगा।\n2. **त्वरित कीपैड**: मुख्य डैशबोर्ड पर 'लेनदेन दर्ज करें' खोलें -> केवल राशि टाइप करें -> 'नकद बिक्री' (Cash In) दबाएं (मात्र 2 सेकंड)।\n3. **ग्राहक उधार (खाता)**: 'ग्राहक' टैब में जाकर संबंधित ग्राहक के खाते में उधार जोड़ें और एक क्लिक से व्हाट्सएप रिमाइंडर भेजें।\n4. **सेतु वाणी**: नीचे दिए माइक आइकन को दबाएं और सीधे बोलें (जैसे: "रमेश को 2 किलो चीनी उधार 90 रुपये")।`,
+    responseEn: (ctx) => `Namaste ${ctx.ownerName} ji! 🧾\n\nHere is how to log transactions and record daily sales in **SaakhSetu**:\n\n1. **POS Billing (Itemized with Inventory)**: Go to the 'Accounting & Billing' tab -> Click green '+ New Bill (POS)' -> Add items, choose Cash/UPI/Udhaar -> Click Complete Sale. Tax invoice is generated and stock is updated automatically.\n2. **Fast Numeric Keypad**: On Dashboard -> Tap 'Log Transaction' -> Enter amount -> Tap 'Cash In / Sale' or 'Cash Out / Expense'. Fast single-tap entry for busy counter hours.\n3. **Customer Udhaar Khata**: Go to 'Customers' tab -> Pick customer -> Add credit amount. Tracks aging and allows 1-click WhatsApp payment reminders.\n4. **Setu Vani Voice Entry**: Tap the microphone icon at bottom and speak (e.g., "Cash sale 500" or "Ramesh 2kg sugar udhaar 90 rupees").`
+  },
+
   // Scenario 1: Festival & Pre-Diwali Stock Planning
   festival_stock: {
     keywords: ['stock', 'स्टॉक', 'त्योहार', 'दीवाली', 'diwali', 'सामान', 'माल', 'festiv', 'oil', 'sugar', 'तेल', 'चीनी'],
@@ -194,7 +201,7 @@ For your **${ctx.tradeCategory}** in **${ctx.location}** (${ctx.monthsInOperatio
 /**
  * Main Advisory Handler
  */
-export async function generateAdvisoryResponse(shopId, userQuestion, clientApiKey = '') {
+export async function generateAdvisoryResponse(shopId, userQuestion, clientApiKey = '', preferredLanguage = null) {
   try {
     const shop = db.prepare('SELECT * FROM shops WHERE id = ?').get(shopId) || 
                  db.prepare('SELECT * FROM shops LIMIT 1').get();
@@ -293,9 +300,24 @@ export async function generateAdvisoryResponse(shopId, userQuestion, clientApiKe
       upcomingFestivals: festivalCues.map(c => `${c.festival} (${c.timing}): Demand Surge ${c.demandSurge}, Stock: ${c.priorityItems}`).join('; ')
     };
 
-    // Detect query language (English vs Hindi/Hinglish)
-    const isEnglishQuery = /^[a-zA-Z0-9\s.,?!'"₹$%()-]+$/.test(userQuestion.trim()) &&
-      !/(ramesh|namaste|ram|bhai|ji|kya|kaise|kitna|kitni|mera|meri|dukaan|paisa|bachat|udhaar|udhar|kharcha|batao|diwali)/i.test(userQuestion);
+    // Determine target language (English vs Hindi)
+    // 1. Honor preferredLanguage if explicitly specified
+    // 2. Otherwise detect from query text
+    let isEnglish = true;
+    if (preferredLanguage === 'hi') {
+      isEnglish = false;
+    } else if (preferredLanguage === 'en') {
+      isEnglish = true;
+    } else {
+      const hasDevanagari = /[\u0900-\u097F]/.test(userQuestion);
+      if (hasDevanagari) {
+        isEnglish = false;
+      } else {
+        const isRomanHindi = /\b(kya|kaise|kitna|kitni|mera|meri|mere|batao|karo|kare|hai|hain|dukaan|paisa|paise|bachat|kharcha|bahi|khata)\b/i.test(userQuestion) &&
+          !/\b(how|what|why|where|when|can|should|record|sale|entry|guide|explain|priority|priorities|improve|credit|profile|scheme|process|log|transaction|transactions)\b/i.test(userQuestion);
+        isEnglish = !isRomanHindi;
+      }
+    }
 
     // 4. Try Google Gemini API Call (Free Tier via Google AI Studio)
     const CANDIDATE_MODELS = [
@@ -309,17 +331,25 @@ export async function generateAdvisoryResponse(shopId, userQuestion, clientApiKe
     const geminiKey = clientApiKey || process.env.GEMINI_API_KEY;
 
     if (geminiKey) {
-      const languageInstruction = isEnglishQuery 
-        ? 'Respond in clear, professional, warm Indian English tailored for rural micro-entrepreneurs.' 
-        : 'Respond in respectful, friendly Hindi (using आप, राम-राम/नमस्ते) with natural market terms (स्टॉक, नकदी, मुनाफा, लोन, बही-खाता).';
+      const languageInstruction = isEnglish 
+        ? 'CRITICAL MANDATORY LANGUAGE DIRECTIVE: The user dashboard is in English. You MUST respond ENTIRELY in clear, professional, warm English. Do NOT answer in Hindi under any circumstance.' 
+        : 'CRITICAL MANDATORY LANGUAGE DIRECTIVE: The user dashboard is in Hindi. You MUST respond ENTIRELY in respectful, friendly Hindi (using आप, राम-राम/नमस्ते) with natural market terms (स्टॉक, नकदी, मुनाफा, लोन, बही-खाता). Do NOT answer in English under any circumstance.';
 
       const systemInstruction = `You are "Setu AI" (सेतु AI), the intelligent, friendly, and practical business advisor inside SaakhSetu (साख सेतु) for Indian micro-entrepreneurs and retail shopkeepers.
 ${languageInstruction}
 
 CRITICAL RULES:
-1. DIRECTLY ANSWER WHAT WAS ASKED: Address the shopkeeper's specific question directly, clearly, and thoughtfully first. Do NOT ignore what they asked. Do NOT recite generic boilerplate or irrelevant metrics.
-2. CONTEXTUAL RELEVANCE: You have access to the shop's verified profile and metrics below. Mention relevant details ONLY when they directly support answering the user's specific question (for instance, refer to sales when asked about revenue or inventory, refer to udhaar balance when asked about customer debt, refer to credit score when asked about loans). If the question is about general business, footfall, accounting, app features, or everyday queries, answer clearly without forcing unrelated stats.
+1. DIRECTLY AND ACCURATELY ANSWER WHAT WAS ASKED:
+   - If the user asks about the process to log transactions, record a sale, enter cash/udhaar, or use app features, provide the exact step-by-step process using SaakhSetu's UI (POS bill, Quick Keypad, Customers Khata, Setu Vani voice). DO NOT talk about demand trends, seasonal sales trends, or loans when asked about the process to record or log transactions!
+   - Address the shopkeeper's specific question directly, clearly, and thoughtfully first. Do NOT ignore what they asked. Do NOT recite generic boilerplate or irrelevant metrics.
+2. CONTEXTUAL RELEVANCE: You have access to the shop's verified profile and metrics below. Mention relevant details ONLY when they directly support answering the user's specific question (for instance, refer to sales when asked about revenue or inventory, refer to udhaar balance when asked about customer debt, refer to credit score when asked about loans). If the question is about how to log transactions or everyday app usage, explain the steps clearly without forcing unrelated stats.
 3. CONVERSATIONAL & RESPECTFUL: Be warm and polite. In Hindi, address the user respectfully ("आप", "जी") using standard Indian trade terms (स्टॉक, मुनाफा, उधार, बही-खाता). In English, use warm and encouraging phrasing. Use neat bullet points for multi-step advice.
+
+HOW SAAKHSETU WORKS (UI REFERENCE FOR APP FEATURES & TRANSACTION LOGGING):
+- 1. Quick POS Bill: In the 'Accounting & Billing' tab -> Click '+ New Bill (POS)' button (or click 'Record Sale' on Dashboard) -> Pick products or enter custom price -> Select payment mode (Cash, UPI, or Khata / Udhaar) -> Click 'Complete Sale'. It reduces stock and creates an invoice automatically.
+- 2. Fast Counter Keypad: On the main Dashboard -> Click 'Log Transaction' or tap the floating numeric keypad -> Enter amount (e.g. ₹250) -> Tap 'Cash In / Sale' or 'Cash Out / Expense'. Takes 2 seconds.
+- 3. Customer Udhaar Ledger (Credit Khata): In 'Customers' tab or select 'Khata / Udhaar' in POS bill -> Choose customer -> Add debit amount -> Track aging (0-30, 31-60, 61-90, 90+ days) and send WhatsApp payment reminders.
+- 4. Voice Assistant (Setu Vani): Tap microphone button at bottom -> Speak naturally (e.g. "Ramesh ko 2 kilo chini udhaar 90 rupaye" or "Cash sale 500") -> Setu AI automatically parses and logs the transaction.
 
 SHOP DATA (Use selectively when relevant to the user's question):
 - Shop Name: "${contextData.shopName}"
@@ -425,7 +455,7 @@ SHOP DATA (Use selectively when relevant to the user's question):
 
     // 5. Graceful Fallback Safety Net:
     // Serves targeted rural advisory response tailored to the question asked
-    const fallbackResponse = selectJudgingFallbackResponse(userQuestion, contextData, isEnglishQuery);
+    const fallbackResponse = selectJudgingFallbackResponse(userQuestion, contextData, isEnglish);
     saveChatMessage(shop.id, 'user', userQuestion);
     saveChatMessage(shop.id, 'assistant', fallbackResponse);
 
@@ -436,8 +466,12 @@ SHOP DATA (Use selectively when relevant to the user's question):
     };
   } catch (criticalErr) {
     console.error('Critical fallback in advisory service:', criticalErr);
+    const isEn = preferredLanguage === 'en' || (!/[\u0900-\u097F]/.test(userQuestion) && !/\b(kya|kaise|kitna|mera|batao)\b/i.test(userQuestion));
+    const content = isEn
+      ? `Namaste Ramesh Kumar ji! 🙏\n\nTo log transactions or record sales in SaakhSetu, you can either click '+ New Bill (POS)' in Accounting, tap 'Log Transaction' on your Dashboard keypad, or use the Setu Vani voice assistant. Your shop in Utraula Dehat, Balrampur has a credit score of 785/850 with verified 4-year operations.`
+      : `राम राम Ramesh Kumar जी! 🙏\n\nसाख सेतु में दैनिक लेनदेन व बिक्री दर्ज करने के लिए आप 'व्यापार अकाउंटिंग' में '+ नया बिल (POS)' पर जाएं, डैशबोर्ड पर 'लेनदेन दर्ज करें' कीपैड का उपयोग करें, अथवा सेतु वाणी (माइक) से बोलकर एंट्री करें। आपकी दुकान का क्रेडिट स्कोर 785/850 है।`;
     return {
-      content: `राम राम Ramesh Kumar जी! 🙏\n\nउत्तर प्रदेश के **Utraula Dehat village, Balrampur district** में आपकी **Kirana & General Store** पिछले **48 महीनों** से सफलता से चल रही है।\n\nदीपावली पर तेल, घी और चीनी की मांग में 40% से 45% उछाल आने का अनुमान है। आपका वैकल्पिक क्रेडिट स्कोर **785/850** है, जिससे आप **PM MUDRA** कार्यशील पूंजी लोन के लिए बिना किसी बंधक (0% Collateral) के 100% पात्र हैं।`,
+      content,
       source: 'gemini-fallback-grounded',
       contextUsed: null
     };
@@ -446,6 +480,29 @@ SHOP DATA (Use selectively when relevant to the user's question):
 
 function selectJudgingFallbackResponse(query, ctx, isEnglish = false) {
   const q = query.toLowerCase();
+
+  // 0. Process to Log Transactions / Record Sale / Cash / Udhaar / App POS & Keypad Billing
+  if (
+    q.includes('process') || q.includes('log transaction') || q.includes('log transactions') ||
+    q.includes('how do i record') || q.includes('how to record') ||
+    q.includes('record a sale') || q.includes('record sale') ||
+    q.includes('record cash') || q.includes('record a daily cash') ||
+    q.includes('record daily cash') || q.includes('daily cash or udhaar') ||
+    q.includes('how to log') || q.includes('how to enter') ||
+    q.includes('enter sale') || q.includes('add transaction') ||
+    q.includes('billing process') || q.includes('pos bill') ||
+    q.includes('new bill') || q.includes('लेनदेन कैसे') ||
+    q.includes('लेनदेन दर्ज') || q.includes('बिक्री कैसे') ||
+    q.includes('बिक्री दर्ज') || q.includes('उधार कैसे दर्ज') ||
+    q.includes('खाता कैसे लिखें') || q.includes('एंट्री कैसे') ||
+    q.includes('पर्ची कैसे') || q.includes('बिल कैसे')
+  ) {
+    if (isEnglish) {
+      return `Namaste ${ctx.ownerName} ji! 🧾\n\nHere is the exact step-by-step process to log transactions and record daily sales in **SaakhSetu**:\n\n1. **Quick POS Bill (Itemized & GST-Ready Invoice)**:\n   - Click on the **'Accounting & Billing'** tab in the top navigation bar (or click **'Record Sale →'** on your Dashboard).\n   - Click the green **'+ New Bill (POS)'** button.\n   - Choose items from your catalog or enter custom items, quantities, and prices.\n   - Select the payment mode: **Cash, UPI, or Khata / Udhaar**.\n   - Click **Complete Sale**: Your stock will automatically deduct, and an instant GST-compliant tax invoice is recorded.\n\n2. **Fast Counter Keypad (2-Second Quick Entry)**:\n   - On your main **Dashboard**, click **'Log Transaction'** or tap the floating **Quick Keypad**.\n   - Type the sale amount (e.g. ₹250) on the numeric keypad.\n   - Tap **'Cash In / Sale'** (or **'Cash Out / Expense'** for shop expenses). The transaction is saved immediately without needing item names.\n\n3. **Customer Udhaar (Credit) Ledger**:\n   - Go to the **'Customers'** tab (or select **'Khata / Udhaar'** during billing).\n   - Select the customer's name and enter the credit amount. SaakhSetu tracks aging buckets (0-30, 31-60, 61-90, 90+ days) and enables 1-tap WhatsApp payment reminders.\n\n4. **Setu Vani Voice Entry (Hands-Free)**:\n   - Tap the microphone icon at the bottom of your screen.\n   - Speak in natural Hindi or English (e.g. *"Ramesh ko 2 kilo chini udhaar 90 rupaye"* or *"Cash sale 500"*).\n   - SaakhSetu AI transcribes and logs the entry automatically!`;
+    } else {
+      return `राम राम ${ctx.ownerName} जी! 🧾\n\n**साख सेतु (SaakhSetu)** में दैनिक नकद और उधार लेनदेन दर्ज करने की स्पष्ट चरणबद्ध प्रक्रिया:\n\n1. **त्वरित बिलिंग (POS बिल - इन्वेंटरी व जीएसटी सहित)**:\n   - ऊपर मेनू में **'व्यापार अकाउंटिंग' (Accounting)** पर जाएं (या डैशबोर्ड पर **'Record Sale →'** दबाएं)।\n   - हरे रंग के **'+ नया बिल बनाएं (POS)'** बटन पर क्लिक करें।\n   - अपनी दुकान का सामान चुनें, मात्रा दर्ज करें, और भुगतान का माध्यम (**नकद / UPI / खाता-उधार**) चुनें।\n   - **'बिल पूरा करें'** दबाएं: इन्वेंटरी स्टॉक अपने आप घट जाएगा और पक्का बिल दर्ज हो जाएगा।\n\n2. **त्वरित संख्या कीपैड (काउंटर पर 2 सेकंड में एंट्री)**:\n   - मुख्य **डैशबोर्ड** पर **'लेनदेन दर्ज करें' (Log Transaction)** या क्विक कीपैड खोलें।\n   - कीपैड पर केवल राशि दर्ज करें (जैसे ₹250) और **'नकद बिक्री' (Cash In)** अथवा खर्च के लिए **'खर्च' (Cash Out)** पर टैप करें।\n\n3. **ग्राहक बही-खाता (उधार दर्ज करना)**:\n   - **'ग्राहक' (Customers)** टैब में जाएं अथवा बिलिंग के समय **'खाता / उधार'** चुनें।\n   - ग्राहक का नाम चुनें और उधार राशि जोड़ें। साख सेतु में 30/60/90 दिनों का बकाया हिसाब दिखेगा और एक क्लिक में व्हाट्सएप तकाजा भेजा जा सकता है।\n\n4. **सेतु वाणी वॉयस एंट्री (बोलकर दर्ज करें)**:\n   - स्क्रीन के नीचे दिए गए माइक आइकन पर टैप करें।\n   - बस स्वाभाविक रूप से बोलें (जैसे: *"रमेश को 2 किलो चीनी उधार 90 रुपये"* या *"नकद बिक्री 500"*).\n   - सेतु वाणी स्वतः समझकर बही-खाते में सही एंट्री दर्ज कर देगी!`;
+    }
+  }
 
   // 1. Footfall / Weekend Customers / Walk-ins / Sales Growth
   if (

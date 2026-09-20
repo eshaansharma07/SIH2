@@ -44,12 +44,13 @@ router.post('/chat', advisoryRateLimiter, async (req, res) => {
     const shopId = req.body.shopId || req.body.shop_id || 1;
     const question = (req.body.question || req.body.message || req.body.query || '').trim();
     const apiKey = req.body.apiKey;
+    const language = (req.body.language || 'en').toLowerCase();
 
     if (!question) {
       return res.status(400).json({ success: false, error: 'Question or message is required' });
     }
 
-    const advice = await generateAdvisoryResponse(shopId, question, apiKey);
+    const advice = await generateAdvisoryResponse(shopId, question, apiKey, language);
     const content = advice?.content || 'Namaste! How may I assist you with your enterprise?';
 
     res.json({ 
