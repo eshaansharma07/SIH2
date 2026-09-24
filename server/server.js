@@ -12,6 +12,7 @@ import dpiRoutes from './routes/dpiRoutes.js';
 import ondcRoutes from './routes/ondcRoutes.js';
 import accountingRoutes from './routes/accountingRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
+import docsRoute from './routes/docsRoute.js';
 import { seedDatabase } from './db/seed.js';
 
 dotenv.config();
@@ -77,7 +78,9 @@ const routeMap = [
   ['/dpi', dpiRoutes],
   ['/ondc', ondcRoutes],
   ['/accounting', accountingRoutes],
-  ['/admin', adminRoutes]
+  ['/admin', adminRoutes],
+  ['/docs', docsRoute],
+  ['/api-docs', docsRoute]
 ];
 
 for (const [routePath, router] of routeMap) {
@@ -113,7 +116,12 @@ try {
   console.log('Seed check:', e.message);
 }
 
-if (!process.env.VERCEL && process.env.NODE_ENV !== 'test') {
+const isTestEnv = process.env.NODE_ENV === 'test' || 
+                  process.env.npm_lifecycle_event === 'test' || 
+                  process.execArgv.includes('--test') ||
+                  process.argv.some(arg => arg.includes('test'));
+
+if (!process.env.VERCEL && !isTestEnv) {
   app.listen(PORT, () => {
     console.log(`🚀 SaakhSetu Backend Server running at http://localhost:${PORT}`);
   });

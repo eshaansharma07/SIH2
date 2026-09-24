@@ -5,7 +5,7 @@ const router = express.Router();
 
 const UDYAM_REGEX = /^UDYAM-[A-Z]{2}-\d{2}-\d{7}$/i;
 
-// Reusable mock data disclosures conforming to SIH guidelines
+// Reusable mock data disclosures conforming to DPI guidelines
 const DPI_DISCLOSURES = {
   accountAggregator: {
     isMock: true,

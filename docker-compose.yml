@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  saakhsetu-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: saakhsetu-platform
+    restart: unless-stopped
+    ports:
+      - "5001:5001"
+    environment:
+      - NODE_ENV=production
+      - PORT=5001
+      - JWT_SECRET=saakhsetu_production_super_secret_jwt_2026
+      - CORS_ORIGIN=*
+    volumes:
+      # Persist SQLite database volume across container restarts
+      - saakhsetu-db-data:/app/server/db
+
+volumes:
+  saakhsetu-db-data:
+    driver: local

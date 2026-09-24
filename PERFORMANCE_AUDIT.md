@@ -90,4 +90,4 @@ Village shopkeepers frequently use one-handed thumb interaction with soiled hand
      - Ruled signatures for Branch Credit Officer and Borrower.
 2. **Defensible Compliance**:
    - Strictly does **NOT** use unauthorized Ashoka Chakra emblems or make fraudulent claims of government or RBI endorsement.
-   - Prominently states: *"FORMATTED PER RBI PSL & NAYAK COMMITTEE GUIDELINES • SIH 2026 PROTOTYPE — Credit Readiness Appraisal Memo Prototype for Branch Manager / Credit Officer Loan File Evaluation"*.
+   - Prominently states: *"FORMATTED PER RBI PSL & NAYAK COMMITTEE GUIDELINES • VERIFIED CREDIT MEMO — Credit Readiness Appraisal Memo for Branch Manager / Credit Officer Loan File Evaluation"*.

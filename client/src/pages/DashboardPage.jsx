@@ -19,6 +19,7 @@ import { useTranslation } from '../i18n/LanguageContext';
 import { safeStorage } from '../utils/safeStorage';
 import { TricolorBrush } from '../components/TricolorBrush';
 import { SurveyChecklistIcon } from '../components/SurveyChecklistIcon';
+import { SeasonalDemandCalendarWidget } from '../components/SeasonalDemandCalendarWidget';
 
 export function DashboardPage({ 
   shop, 
@@ -327,6 +328,15 @@ export function DashboardPage({
           </div>
         </div>
 
+      </section>
+
+      {/* 2.5. SEASONAL DEMAND RADAR & FESTIVAL CALENDAR (Session 7) */}
+      <section className="w-full">
+        <SeasonalDemandCalendarWidget 
+          shop={shop} 
+          onOpenWholesale={onOpenWholesale} 
+          onNavigateTab={onNavigateTab} 
+        />
       </section>
 
       {/* 3. GROWING TOGETHER WITH RURAL INDIA */}

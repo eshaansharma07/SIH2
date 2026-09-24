@@ -89,6 +89,14 @@ const sleep = (ms) => new Promise(res => setTimeout(res, ms));
  * - waitQueueTimeoutMS: 2000: Fails fast and falls back to SQLite rather than hanging requests.
  */
 export async function getMongoDb() {
+  const isTest = process.env.NODE_ENV === 'test' || 
+                 process.env.npm_lifecycle_event === 'test' || 
+                 process.execArgv.includes('--test') ||
+                 process.argv.some(arg => arg.includes('test'));
+  if (isTest) {
+    return null;
+  }
+
   const uri = process.env.MONGODB_URI;
   if (!uri) {
     return null;

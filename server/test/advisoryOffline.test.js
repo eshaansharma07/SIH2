@@ -1,8 +1,9 @@
-import { test } from 'node:test';
+import { test, after } from 'node:test';
 import assert from 'node:assert';
 import db from '../db/database.js';
 import { seedDatabase } from '../db/seed.js';
 import { generateAdvisoryResponse } from '../services/aiAdvisoryService.js';
+import { closeMongoConnection } from '../db/mongoClient.js';
 
 test('AI Advisory Offline Fallback Suite', async (t) => {
   seedDatabase();
@@ -49,4 +50,8 @@ test('AI Advisory Offline Fallback Suite', async (t) => {
   } finally {
     process.env.GEMINI_API_KEY = origKey;
   }
+
+  after(async () => {
+    await closeMongoConnection();
+  });
 });

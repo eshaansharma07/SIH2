@@ -146,7 +146,7 @@ export function PublicPayPage() {
 
       {/* Footer */}
       <footer className="max-w-md mx-auto w-full text-center text-[10px] text-stone-400">
-        साख सेतु (SaakhSetu) • Smart India Hackathon 2026
+        साख सेतु (SaakhSetu) • Sovereign Rural MSME Platform
       </footer>
     </div>
   );

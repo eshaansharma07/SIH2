@@ -265,7 +265,7 @@ export function InteractiveDemoTour({
               {currentStepData.badge}
             </span>
             <span className="hidden sm:inline text-xs text-stone-200/60 font-medium">
-              | Smart India Hackathon 2026 Prototype • PSL Documentation Format
+              | Sovereign MSME Prototype • RBI PSL Documentation Format
             </span>
           </div>
 

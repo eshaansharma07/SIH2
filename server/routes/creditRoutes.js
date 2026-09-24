@@ -372,7 +372,7 @@ router.get(['/:shopId/cam', '/cam'], async (req, res) => {
       <div class="footer-note">
         Digital Credit Appraisal Memorandum issued under the SaakhSetu Alternative Credit Underwriting Protocol.<br>
         Aligned with Reserve Bank of India (RBI) Priority Sector Lending (PSL) & Nayak Committee Working Capital Norms.<br>
-        Smart India Hackathon 2026 Innovation Stack.
+        Sovereign Rural Micro-Enterprise Innovation Stack.
       </div>
     </div>
   </div>

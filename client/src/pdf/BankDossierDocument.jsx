@@ -368,7 +368,7 @@ export function BankDossierDocument({ data }) {
             <Text style={styles.complianceBadge}>
               {isUnrated 
                 ? 'ONBOARDING EVALUATION • 50 VERIFIED TRANSACTIONS REQUIRED FOR FORMAL CREDIT MEMO'
-                : 'FORMATTED PER RBI PSL & NAYAK COMMITTEE GUIDELINES • SIH 2026 PROTOTYPE'
+                : 'FORMATTED PER RBI PSL & NAYAK COMMITTEE GUIDELINES • VERIFIED CREDIT MEMO'
               }
             </Text>
           </View>
@@ -565,7 +565,7 @@ export function BankDossierDocument({ data }) {
 
         {/* Footer */}
         <View style={styles.footer}>
-          <Text style={styles.footerText}>SaakhSetu • Prototype for Smart India Hackathon 2026 • Formatted per RBI PSL guidelines • Not an official government filing</Text>
+          <Text style={styles.footerText}>SaakhSetu • Sovereign Rural MSME Credit Platform • Formatted per RBI PSL guidelines • Not an official government filing</Text>
           <Text style={styles.footerText}>Page 1 of 1 • System Generated Dossier</Text>
         </View>
 

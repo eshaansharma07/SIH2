@@ -2,6 +2,7 @@ import express from 'express';
 import dataStore from '../db/dataStore.js';
 import { getScraperStatus, syncGovernmentSchemes } from '../services/schemeScraperService.js';
 import { SCHEMES } from '../db/schemesData.js';
+import { messageQueue } from '../services/messageQueueService.js';
 
 const router = express.Router();
 
@@ -77,6 +78,41 @@ router.post('/sync-schemes', async (req, res) => {
     });
   } catch (err) {
     console.error('[AdminRoutes] Error syncing schemes:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * GET /api/admin/queue/stats
+ * Telemetry and metrics for the Asynchronous Message Broker & Dead Letter Queue (Sessions 15 & 16).
+ */
+router.get('/queue/stats', (req, res) => {
+  try {
+    const stats = messageQueue.getQueueStats();
+    res.json({
+      success: true,
+      timestamp: new Date().toISOString(),
+      architecture: 'Asynchronous Event-Driven Producer-Consumer Broker',
+      stats
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * GET /api/admin/queue/dlq
+ * Inspects all messages currently routed to the Dead Letter Queue.
+ */
+router.get('/queue/dlq', (req, res) => {
+  try {
+    const dlq = messageQueue.getDeadLetterQueue();
+    res.json({
+      success: true,
+      count: dlq.length,
+      deadLetterQueue: dlq
+    });
+  } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
 });

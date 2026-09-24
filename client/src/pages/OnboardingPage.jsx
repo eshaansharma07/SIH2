@@ -1062,7 +1062,7 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
                         Re-engineering Rural Lending on India's Digital Public Infrastructure
                       </h4>
                       <p className="text-xs text-[#57534E] leading-relaxed">
-                        Built for Smart India Hackathon 2026. SaakhSetu bridges low-literacy shopkeepers with priority sector credit without requiring formal CA balance sheets, collateral, or traditional CIBIL histories.
+                        SaakhSetu bridges low-literacy rural micro-entrepreneurs with Priority Sector Lending (PSL) credit without requiring formal balance sheets, collateral, or traditional CIBIL histories.
                       </p>
                     </div>
                     <div className="col-span-5 border-l border-[#E7DFD5] pl-8 space-y-2.5 text-xs font-bold text-[#1C1917]">
@@ -1072,8 +1072,8 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
                       <button onClick={() => scrollToSection('four-pillars')} className="block hover:text-[#0F3E2E] transition">
                         → Our 4-Pillar Underwriting Approach
                       </button>
-                      <button onClick={() => scrollToSection('sih-section')} className="block hover:text-[#0F3E2E] transition">
-                        → Smart India Hackathon 2026 Submission
+                      <button onClick={() => scrollToSection('about-section')} className="block hover:text-[#0F3E2E] transition">
+                        → National Rural Credit Architecture
                       </button>
                       <button onClick={() => setAuthModalOpen(true)} className="block hover:text-[#0F3E2E] transition">
                         → Evaluator Demo & Documentation Access
@@ -1134,12 +1134,12 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
 
               <button 
                 onClick={() => {
-                  scrollToSection('sih-section');
+                  scrollToSection('about-section');
                 }}
                 className="w-full text-left py-2 flex items-center justify-between"
               >
-                <span>About & SIH 2026</span>
-                <span className="text-xs text-[#78716C]">Prototype</span>
+                <span>About & Architecture</span>
+                <span className="text-xs text-[#78716C]">Architecture</span>
               </button>
             </div>
 
@@ -1460,20 +1460,16 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
       </section>
 
       {/* ========================================================================= */}
-      {/* 6. CTA / OPPORTUNITIES & SIH 2026 SECTION                                  */}
+      {/* 6. CTA / SOVEREIGN DIGITAL PUBLIC INFRASTRUCTURE SECTION                 */}
       {/* ========================================================================= */}
-      <section id="sih-section" className="pt-14 sm:pt-16 pb-0 border-t border-[#E7DFD5]/80 bg-[#FAF7F2] text-center relative overflow-hidden">
+      <section id="about-section" className="pt-14 sm:pt-16 pb-0 border-t border-[#E7DFD5]/80 bg-[#FAF7F2] text-center relative overflow-hidden">
         <div className="max-w-4xl mx-auto px-4 sm:px-8 space-y-6 relative z-10">
           
-          {/* SIH 2026 National Emblem Lockup */}
-          <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-white/90 border border-[#E7DFD5] shadow-2xs">
-            <img 
-              src="/assets/saakhsetu/sih-emblem.png" 
-              alt="Smart India Hackathon 2026 Emblem" 
-              className="w-5 h-5 object-contain"
-            />
+          {/* Sovereign Digital Public Infrastructure Lockup */}
+          <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/90 border border-[#E7DFD5] shadow-2xs">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-600 animate-pulse"></span>
             <span className="text-xs font-semibold text-[#1C1917] tracking-tight">
-              Smart India Hackathon 2026 • Ideas for a Viksit Bharat
+              Sovereign Digital Public Infrastructure • Designed for Rural Bharat
             </span>
           </div>
 
@@ -1563,14 +1559,14 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
               <button onClick={() => scrollToSection('four-pillars')} className="hover:text-[#0F3E2E] cursor-pointer">
                 Impact
               </button>
-              <button onClick={() => scrollToSection('sih-section')} className="hover:text-[#0F3E2E] cursor-pointer">
+              <button onClick={() => scrollToSection('about-section')} className="hover:text-[#0F3E2E] cursor-pointer">
                 About
               </button>
               <span className="text-[#D5CCBC]">|</span>
               <button onClick={() => alert('SaakhSetu operates on strict RBI Priority Sector Lending borrower data privacy principles.')} className="hover:text-[#0F3E2E] cursor-pointer">
                 Privacy
               </button>
-              <button onClick={() => alert('Prototype terms: SIH 2026 Evaluation Sandbox.')} className="hover:text-[#0F3E2E] cursor-pointer">
+              <button onClick={() => alert('Terms: SaakhSetu Sovereign Rural Micro-Enterprise Platform.')} className="hover:text-[#0F3E2E] cursor-pointer">
                 Terms
               </button>
             </div>
@@ -1612,7 +1608,7 @@ export function OnboardingPage({ onComplete, onSelectDemo }) {
           </div>
 
           <div className="text-[11px] text-[#A8A29E] text-center sm:text-left border-t border-[#E7DFD5]/60 pt-4">
-            © 2026 SaakhSetu. Smart India Hackathon Prototype. All rights reserved.
+            © 2026 SaakhSetu. Sovereign Rural Micro-Enterprise Platform. All rights reserved.
           </div>
 
         </div>

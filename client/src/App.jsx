@@ -653,7 +653,7 @@ export default function App() {
         </ModalErrorBoundary>
       )}
 
-      {/* Interactive Animated Guided Demo Tour for SIH Judges */}
+      {/* Interactive Animated Guided Demo Tour for Evaluators */}
       {demoTourOpen && (
         <ModalErrorBoundary
           isOpen={demoTourOpen}
@@ -701,7 +701,7 @@ export default function App() {
             </span>
           </div>
           <p className="text-[11px] text-stone-500 max-w-2xl mx-auto leading-relaxed">
-            National Micro-Enterprise Credit & Seasonal Demand Radar. A sovereign micro-enterprise prototype built for Smart India Hackathon 2026, referencing Nayak Committee & RBI Priority Sector Lending norms. Not an official government service.
+            National Micro-Enterprise Credit & Seasonal Demand Radar. A sovereign micro-enterprise prototype referencing Nayak Committee & RBI Priority Sector Lending norms. Not an official government service.
           </p>
           <div className="flex items-center justify-center gap-1.5 pt-1">
             <span className="w-1.5 h-1.5 rounded-full bg-red-600" />
